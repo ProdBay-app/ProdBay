@@ -1,19 +1,22 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import LoginPage from './components/LoginPage';
 import Home from './components/Home';
-import NewProject from './components/client/NewProject';
-import ClientDashboard from './components/client/ClientDashboard';
-import ProducerDashboard from './components/producer/ProducerDashboard';
-import SupplierManagement from './components/producer/SupplierManagement';
-import AdminDashboard from './components/admin/AdminDashboard';
-import QuoteSubmission from './components/supplier/QuoteSubmission';
+
+// Lazy-loaded routes to avoid eager initialization side-effects (e.g., Supabase client)
+const NewProject = lazy(() => import('./components/client/NewProject'));
+const ClientDashboard = lazy(() => import('./components/client/ClientDashboard'));
+const ProducerDashboard = lazy(() => import('./components/producer/ProducerDashboard'));
+const SupplierManagement = lazy(() => import('./components/producer/SupplierManagement'));
+const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
+const QuoteSubmission = lazy(() => import('./components/supplier/QuoteSubmission'));
 
 function App() {
   return (
     <Router>
-      <Routes>
+      <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
+        <Routes>
         {/* Login page - outside of layout */}
         <Route path="/" element={<LoginPage />} />
         
@@ -45,7 +48,8 @@ function App() {
         
         {/* Catch all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </Router>
   );
 }

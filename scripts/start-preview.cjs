@@ -1,6 +1,6 @@
 const { spawn } = require('node:child_process');
 
-const port = process.env.PORT || 4173;
+const port = process.env.PORT || 4174;
 
 const proc = spawn(
   'node',

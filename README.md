@@ -63,28 +63,49 @@ ProdBay is a comprehensive production management web application that connects c
 ## Getting Started
 
 ### Prerequisites
-- Node.js 16+ 
-- Supabase account
+- Node.js 18+ (recommend 20 LTS)
+- Supabase account (hosted) or Supabase CLI for local
 
 ### Setup
 
-1. **Clone and Install**
+1. **Install dependencies**
    ```bash
    npm install
    ```
 
 2. **Database Setup**
-   - Create a new Supabase project
-   - Click "Connect to Supabase" in the top right of Bolt
-   - The database schema will be automatically created
+   - Create a Supabase project (dashboard) OR run `supabase start` (CLI) for local
+   - Apply schema from `supabase/migrations/20250820125716_crimson_disk.sql` using the SQL editor or CLI
 
 3. **Environment Variables**
-   The environment variables will be automatically set when you connect to Supabase.
+   - Copy one of the examples and fill in your values
+   ```bash
+   # local dev
+   cp env.local.example .env.local
+   # production build preview
+   cp env.production.example .env.production
+   ```
+   Required keys (Vite will expose only `VITE_` prefixed):
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
 
 4. **Start Development**
    ```bash
    npm run dev
+   # http://localhost:5173
    ```
+
+5. **Production build and local preview**
+   ```bash
+   npm run build
+   npm run start
+   # default: http://localhost:4174 (set PORT=xxxx to override)
+   ```
+
+### Troubleshooting blank page after build
+- Ensure `.env.production` exists and contains valid `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` before running `npm run build`.
+- Check DevTools Console for messages starting with `[Supabase]` indicating missing env.
+- Rebuild after setting envs.
 
 ## Automated Workflows
 
