@@ -75,7 +75,7 @@ ProdBay is a comprehensive production management web application that connects c
 5. Set Node version (Project Settings → Environment): Node 18+ is required (we declare `engines.node >=18`).
 6. Apply database schema in your Supabase project using the SQL in `supabase/migrations/20250820125716_crimson_disk.sql`.
 7. Deploy. Railway will serve the static build via Vite preview.
-
+ 
 Notes:
 - The app requires valid Supabase vars at build time. Ensure variables are present in Railway before the first deployment.
 - Default port is taken from `PORT` env; our script falls back to 4174 for local runs.
