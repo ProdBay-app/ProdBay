@@ -12,12 +12,6 @@ ProdBay is a comprehensive production management web application that connects c
 
 ### 👥 User Roles
 
-#### Client Portal
-- Submit project briefs with requirements and parameters
-- Real-time project dashboard with progress tracking
-- Cost and timeline visibility
-- Producer communication channel
-
 #### Producer Portal
 - Project oversight dashboard
 - Asset management and coordination
@@ -149,12 +143,6 @@ Notes:
 
 ## User Journey
 
-### For Clients
-1. Visit `/client/new` to create a new project
-2. Fill out project brief with requirements
-3. Monitor progress at `/client/dashboard`
-4. Track costs, timelines, and status updates
-
 ### For Producers  
 1. Access `/producer/dashboard` to view all projects
 2. Review automatically created assets
@@ -163,10 +151,9 @@ Notes:
 5. Accept quotes and track project progress
 
 ### For Suppliers
-1. Receive email notification with quote request
-2. Click unique link to access quote submission form
-3. Submit cost and capacity details
-4. Receive notification of quote acceptance/rejection
+1. Access `/supplier/quotes` to view quotes you have submitted
+2. Use `/supplier/submit` to upload a new quote for an asset
+3. Alternatively, follow unique email links to submit quotes for specific requests
 
 ## Key Automation Features
 

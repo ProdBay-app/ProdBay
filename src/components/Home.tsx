@@ -84,42 +84,6 @@ const Home: React.FC = () => {
 
         {/* User Portals */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-          {/* Client Portal */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="bg-blue-600 text-white p-6">
-              <Building2 className="h-12 w-12 mb-4" />
-              <h3 className="text-2xl font-bold">Client Portal</h3>
-              <p className="opacity-90 mt-2">Submit projects and track progress</p>
-            </div>
-            <div className="p-6">
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-gray-700">Submit project briefs</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-gray-700">Real-time project dashboard</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-gray-700">Cost and timeline visibility</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-gray-700">Producer communication</span>
-                </li>
-              </ul>
-              <Link
-                to="/client/new"
-                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <span>Start New Project</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-
           {/* Producer Portal */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="bg-teal-600 text-white p-6">
@@ -183,9 +147,7 @@ const Home: React.FC = () => {
                 </li>
               </ul>
               <div className="bg-gray-100 rounded-lg p-4 text-center">
-                <p className="text-gray-600 text-sm">
-                  Suppliers receive email invitations with unique quote submission links
-                </p>
+                <p className="text-gray-600 text-sm">Suppliers can use the portal to upload quotes and view their status</p>
               </div>
             </div>
           </div>
@@ -250,16 +212,16 @@ const Home: React.FC = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/client/new"
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              Start as Client
-            </Link>
-            <Link
               to="/producer/dashboard"
               className="px-8 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
             >
               Access Producer Portal
+            </Link>
+            <Link
+              to="/supplier/quotes"
+              className="px-8 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors"
+            >
+              Access Supplier Portal
             </Link>
           </div>
         </div>

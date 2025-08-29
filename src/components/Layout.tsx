@@ -6,10 +6,10 @@ const Layout: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isClientPath = currentPath.startsWith('/client');
+  const isClientPath = false; // client portal removed
   const isProducerPath = currentPath.startsWith('/producer');
   const isAdminPath = currentPath.startsWith('/admin');
-  const isSupplierPath = currentPath.startsWith('/quote');
+  const isSupplierPath = currentPath.startsWith('/supplier') || currentPath.startsWith('/quote');
 
   const getNavColor = () => {
     if (isClientPath) return 'bg-blue-600';
@@ -20,16 +20,16 @@ const Layout: React.FC = () => {
   };
 
   const getNavLinks = () => {
-    if (isClientPath) {
-      return [
-        { to: '/client/new', label: 'New Project', icon: FileText },
-        { to: '/client/dashboard', label: 'Dashboard', icon: Building2 }
-      ];
-    }
     if (isProducerPath) {
       return [
         { to: '/producer/dashboard', label: 'Projects', icon: Building2 },
         { to: '/producer/suppliers', label: 'Suppliers', icon: Users }
+      ];
+    }
+    if (isSupplierPath) {
+      return [
+        { to: '/supplier/quotes', label: 'My Quotes', icon: FileText },
+        { to: '/supplier/submit', label: 'Submit Quote', icon: FileText }
       ];
     }
     if (isAdminPath) {
@@ -41,7 +41,6 @@ const Layout: React.FC = () => {
   };
 
   const getUserTypeLabel = () => {
-    if (isClientPath) return 'Client Portal';
     if (isProducerPath) return 'Producer Portal';
     if (isAdminPath) return 'Admin Portal';
     if (isSupplierPath) return 'Supplier Portal';

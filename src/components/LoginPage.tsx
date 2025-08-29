@@ -47,25 +47,24 @@ const LoginPage: React.FC = () => {
 
         {/* Login Options Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {/* Client Login */}
+          {/* Supplier Portal */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-blue-600 text-white p-6 text-center">
-              <Building2 className="h-12 w-12 mx-auto mb-4" />
-              <h3 className="text-xl font-bold">Client Portal</h3>
-              <p className="opacity-90 mt-2">Submit projects and track progress</p>
+            <div className="bg-orange-600 text-white p-6 text-center">
+              <Users className="h-12 w-12 mx-auto mb-4" />
+              <h3 className="text-xl font-bold">Supplier Portal</h3>
+              <p className="opacity-90 mt-2">Upload and manage your quotes</p>
             </div>
             <div className="p-6">
               <ul className="space-y-2 mb-6 text-sm text-gray-600">
-                <li>• Submit new project briefs</li>
-                <li>• Monitor project progress</li>
-                <li>• View costs and timelines</li>
-                <li>• Communicate with producers</li>
+                <li>• Submit quotes for assets</li>
+                <li>• View status of submitted quotes</li>
+                <li>• Manage notes and capacity</li>
               </ul>
               <Link
-                to="/client/dashboard"
-                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                to="/supplier/quotes"
+                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
               >
-                <span>Client Login</span>
+                <span>Supplier Access</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -120,7 +119,7 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Supplier Information */}
+        {/* Information */}
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
           <div className="flex items-start space-x-4">
             <div className="bg-orange-100 rounded-full p-3">
@@ -131,13 +130,12 @@ const LoginPage: React.FC = () => {
                 Supplier Access
               </h3>
               <p className="text-orange-800 mb-3">
-                Suppliers receive personalized email invitations with unique links to submit quotes. 
-                No separate login is required for suppliers.
+                Suppliers can manage their quotes via the Supplier Portal or unique email links.
               </p>
               <div className="flex items-center space-x-2 text-orange-700">
                 <Mail className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  Quote requests are sent directly to supplier email addresses
+                  Quote requests can still be sent directly to supplier email addresses
                 </span>
               </div>
             </div>
