@@ -50,7 +50,7 @@ export class AutomationService {
         .single();
 
       if (asset && !error) {
-        createdAssets.push(asset);
+        createdAssets.push(asset as unknown as Asset);
       }
     }
 
@@ -58,7 +58,7 @@ export class AutomationService {
   }
 
   // Find relevant suppliers based on asset requirements
-  static async findRelevantSuppliers(assetName: string): Promise<Supplier[]> {
+  static async findRelevantSuppliers(assetName: string, requiredTags: string[] = []): Promise<Supplier[]> {
     const { data: suppliers, error } = await supabase
       .from('suppliers')
       .select('*');
@@ -66,17 +66,28 @@ export class AutomationService {
     if (error || !suppliers) return [];
 
     // Match suppliers based on service categories
-    return suppliers.filter(supplier => 
-      supplier.service_categories.some(category => 
+    const assetMatched = (suppliers as unknown as Supplier[]).filter((supplier: Supplier) => 
+      (supplier.service_categories as unknown as string[]).some((category: string) => 
         category.toLowerCase().includes(assetName.toLowerCase()) ||
         assetName.toLowerCase().includes(category.toLowerCase())
       )
     );
+
+    if (!requiredTags || requiredTags.length === 0) return assetMatched;
+
+    const tagsLower = requiredTags.map(t => t.toLowerCase());
+    return assetMatched.filter((supplier: Supplier) =>
+      (supplier.service_categories as unknown as string[]).some((cat: string) => tagsLower.includes(cat.toLowerCase()))
+    );
   }
 
   // Send quote requests to suppliers (simulated email)
-  static async sendQuoteRequestsForAsset(asset: Asset): Promise<void> {
-    const relevantSuppliers = await this.findRelevantSuppliers(asset.asset_name);
+  static async sendQuoteRequestsForAsset(
+    asset: Asset,
+    requiredTags: string[] = [],
+    from: { name: string; email: string } | null = null
+  ): Promise<void> {
+    const relevantSuppliers = await this.findRelevantSuppliers(asset.asset_name, requiredTags);
     
     for (const supplier of relevantSuppliers) {
       // Create quote record with unique token
@@ -86,23 +97,46 @@ export class AutomationService {
           supplier_id: supplier.id,
           asset_id: asset.id,
           status: 'Submitted'
-        })
+        } as any)
         .select()
         .single();
 
       if (quote && !error) {
-        // In a real implementation, this would send an actual email
-        console.log(`Email sent to ${supplier.contact_email}:`);
-        console.log(`Quote Request for: ${asset.asset_name}`);
-        console.log(`Specifications: ${asset.specifications}`);
-        console.log(`Quote submission link: ${window.location.origin}/quote/${quote.quote_token}`);
+        const fnUrl = import.meta.env.VITE_EMAIL_FUNCTION_URL || '';
+        const fnKey = import.meta.env.VITE_EMAIL_FUNCTION_KEY || '';
+        const subject = `Quote Request: ${asset.asset_name}`;
+        const body = `Please provide a quote for ${asset.asset_name}.\n\nSpecifications: ${asset.specifications || ''}\n\nSubmit here: ${window.location.origin}/quote/${quote.quote_token}`;
+        if (fnUrl && fnKey && from) {
+          try {
+            await fetch(fnUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${fnKey}`
+              },
+              body: JSON.stringify({
+                from: `${from.name} <${from.email}>`,
+                to: supplier.contact_email,
+                subject,
+                text: body
+              })
+            });
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error('Email send failed', e);
+          }
+        } else {
+          // Fallback to console if function not configured
+          // eslint-disable-next-line no-console
+          console.log(`Email (simulated) to ${supplier.contact_email}: ${subject}`);
+        }
       }
     }
 
     // Update asset status to Quoting
     await supabase
       .from('assets')
-      .update({ status: 'Quoting' })
+      .update({ status: 'Quoting' } as any)
       .eq('id', asset.id);
   }
 
@@ -118,13 +152,13 @@ export class AutomationService {
       // Update quote status
       await supabase
         .from('quotes')
-        .update({ status: 'Accepted' })
+        .update({ status: 'Accepted' } as any)
         .eq('id', quoteId);
 
       // Reject other quotes for the same asset
       await supabase
         .from('quotes')
-        .update({ status: 'Rejected' })
+        .update({ status: 'Rejected' } as any)
         .eq('asset_id', quote.asset_id)
         .neq('id', quoteId);
 
@@ -134,7 +168,7 @@ export class AutomationService {
         .update({ 
           assigned_supplier_id: quote.supplier_id,
           status: 'Approved'
-        })
+        } as any)
         .eq('id', quote.asset_id);
     }
   }

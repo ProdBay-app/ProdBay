@@ -12,12 +12,6 @@ ProdBay is a comprehensive production management web application that connects c
 
 ### 👥 User Roles
 
-#### Client Portal
-- Submit project briefs with requirements and parameters
-- Real-time project dashboard with progress tracking
-- Cost and timeline visibility
-- Producer communication channel
-
 #### Producer Portal
 - Project oversight dashboard
 - Asset management and coordination
@@ -71,14 +65,15 @@ ProdBay is a comprehensive production management web application that connects c
    - Optional `PORT` (Railway provides one; our start script reads it)
 4. Build & start commands (Railway auto-detects):
    - Build: `npm run build`
-   - Start: `npm run start`
+   - Start: `npm run start` (serves `dist/` with Express and SPA fallback so deep links like `/supplier/submit` work)
 5. Set Node version (Project Settings → Environment): Node 18+ is required (we declare `engines.node >=18`).
 6. Apply database schema in your Supabase project using the SQL in `supabase/migrations/20250820125716_crimson_disk.sql`.
 7. Deploy. Railway will serve the static build via Vite preview.
-
+ 
 Notes:
 - The app requires valid Supabase vars at build time. Ensure variables are present in Railway before the first deployment.
 - Default port is taken from `PORT` env; our script falls back to 4174 for local runs.
+- If using `vite preview`, deep links may 404 or redirect; we ship an Express server with SPA fallback to fix this.
 
 
 ### Prerequisites
@@ -149,12 +144,6 @@ Notes:
 
 ## User Journey
 
-### For Clients
-1. Visit `/client/new` to create a new project
-2. Fill out project brief with requirements
-3. Monitor progress at `/client/dashboard`
-4. Track costs, timelines, and status updates
-
 ### For Producers  
 1. Access `/producer/dashboard` to view all projects
 2. Review automatically created assets
@@ -163,10 +152,9 @@ Notes:
 5. Accept quotes and track project progress
 
 ### For Suppliers
-1. Receive email notification with quote request
-2. Click unique link to access quote submission form
-3. Submit cost and capacity details
-4. Receive notification of quote acceptance/rejection
+1. Access `/supplier/quotes` to view quotes you have submitted
+2. Use `/supplier/submit` to upload a new quote for an asset
+3. Alternatively, follow unique email links to submit quotes for specific requests
 
 ## Key Automation Features
 

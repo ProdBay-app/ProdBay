@@ -5,12 +5,13 @@ import LoginPage from './components/LoginPage';
 import Home from './components/Home';
 
 // Lazy-loaded routes to avoid eager initialization side-effects (e.g., Supabase client)
-const NewProject = lazy(() => import('./components/client/NewProject'));
-const ClientDashboard = lazy(() => import('./components/client/ClientDashboard'));
+// Removed Client Portal
 const ProducerDashboard = lazy(() => import('./components/producer/ProducerDashboard'));
 const SupplierManagement = lazy(() => import('./components/producer/SupplierManagement'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 const QuoteSubmission = lazy(() => import('./components/supplier/QuoteSubmission'));
+const SupplierDashboard = lazy(() => import('./components/supplier/SupplierDashboard'));
+const SupplierSubmitQuote = lazy(() => import('./components/supplier/SupplierSubmitQuote'));
 
 function App() {
   return (
@@ -23,11 +24,11 @@ function App() {
         {/* Marketing home page - outside of layout */}
         <Route path="/home" element={<Home />} />
         
-        {/* Client routes */}
-        <Route path="/client" element={<Layout />}>
-          <Route index element={<Navigate to="/client/dashboard" replace />} />
-          <Route path="new" element={<NewProject />} />
-          <Route path="dashboard" element={<ClientDashboard />} />
+        {/* Supplier routes */}
+        <Route path="/supplier" element={<Layout />}>
+          <Route index element={<Navigate to="/supplier/quotes" replace />} />
+          <Route path="quotes" element={<SupplierDashboard />} />
+          <Route path="submit" element={<SupplierSubmitQuote />} />
         </Route>
         
         {/* Producer routes */}
