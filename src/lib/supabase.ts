@@ -71,3 +71,11 @@ export interface Quote {
   supplier?: Supplier;
   asset?: Asset;
 }
+
+export interface ProducerSettings {
+  id: string;
+  from_name: string;
+  from_email: string;
+  created_at: string;
+  updated_at: string;
+}
