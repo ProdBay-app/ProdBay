@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Package, 
-  Building2, 
   Users, 
   Shield, 
   ArrowRight,
@@ -162,3 +161,5 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
+// Build stamp footer is shown on layout pages; duplicate minimal stamp here for root route
+export const __BUILD_STAMP__ = import.meta.env.VITE_BUILD_ID;
