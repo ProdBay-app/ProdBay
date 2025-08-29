@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom';
-import { Building2, Users, Package, FileText, Shield, BarChart3 } from 'lucide-react';
+import { Building2, Users, Package, FileText, BarChart3 } from 'lucide-react';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -93,6 +93,11 @@ const Layout: React.FC = () => {
       <main className="max-w-7xl mx-auto py-8 px-4">
         <Outlet />
       </main>
+
+      {/* Build stamp for deployment verification */}
+      <div className="text-xs text-gray-400 px-4 py-2 text-right">
+        {import.meta.env.VITE_BUILD_ID ? `Build: ${import.meta.env.VITE_BUILD_ID}` : null}
+      </div>
     </div>
   );
 };
