@@ -61,6 +61,25 @@ ProdBay is a comprehensive production management web application that connects c
 - Status tracking with unique tokens
 
 ## Getting Started
+## Deploying to Railway
+
+1. Push your repo to GitHub/GitLab.
+2. In Railway, create a New Project → Deploy from Repo → select this repo.
+3. Configure variables in Railway → Variables:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - Optional `PORT` (Railway provides one; our start script reads it)
+4. Build & start commands (Railway auto-detects):
+   - Build: `npm run build`
+   - Start: `npm run start`
+5. Set Node version (Project Settings → Environment): Node 18+ is required (we declare `engines.node >=18`).
+6. Apply database schema in your Supabase project using the SQL in `supabase/migrations/20250820125716_crimson_disk.sql`.
+7. Deploy. Railway will serve the static build via Vite preview.
+
+Notes:
+- The app requires valid Supabase vars at build time. Ensure variables are present in Railway before the first deployment.
+- Default port is taken from `PORT` env; our script falls back to 4174 for local runs.
+
 
 ### Prerequisites
 - Node.js 18+ (recommend 20 LTS)
