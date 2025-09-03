@@ -150,11 +150,3 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 CREATE TRIGGER update_assets_updated_at BEFORE UPDATE ON assets FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 CREATE TRIGGER update_quotes_updated_at BEFORE UPDATE ON quotes FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
-
--- Insert sample data
-INSERT INTO suppliers (supplier_name, contact_email, service_categories) VALUES
-  ('TechPrint Solutions', 'orders@techprint.com', '{"Printing", "Graphics", "Banners"}'),
-  ('EventStage Pro', 'quotes@eventstage.com', '{"Staging", "Audio", "Lighting"}'),
-  ('Catering Masters', 'bookings@cateringmasters.com', '{"Catering", "Food", "Beverages"}'),
-  ('Creative Design Hub', 'projects@designhub.com', '{"Design", "Branding", "Marketing"}'),
-  ('Logistics Express', 'dispatch@logisticsexpress.com', '{"Transport", "Logistics", "Delivery"}');
