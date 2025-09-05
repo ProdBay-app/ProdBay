@@ -3,13 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   Package, 
   Users, 
-  Building2, 
   ArrowRight, 
   CheckCircle,
   FileText, 
   DollarSign,
   Clock
 } from 'lucide-react';
+import { APP_NAME, USER_THEMES } from '../constants';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const Home: React.FC = () => {
             title="Go to Home"
           >
             <Package className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">ProdBay</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
           </div>
         </div>
       </div>
@@ -86,7 +86,7 @@ const Home: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
           {/* Producer Portal */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="bg-teal-600 text-white p-6">
+            <div className={`${USER_THEMES.PRODUCER.primary} text-white p-6`}>
               <Package className="h-12 w-12 mb-4" />
               <h3 className="text-2xl font-bold">Producer Portal</h3>
               <p className="opacity-90 mt-2">Manage projects and suppliers</p>
@@ -112,7 +112,7 @@ const Home: React.FC = () => {
               </ul>
               <Link
                 to="/producer/dashboard"
-                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                className={`flex items-center justify-center space-x-2 w-full px-4 py-3 ${USER_THEMES.PRODUCER.primary} text-white rounded-lg ${USER_THEMES.PRODUCER.hover} transition-colors`}
               >
                 <span>Access Dashboard</span>
                 <ArrowRight className="h-4 w-4" />
@@ -122,7 +122,7 @@ const Home: React.FC = () => {
 
           {/* Supplier Portal */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="bg-orange-600 text-white p-6">
+            <div className={`${USER_THEMES.SUPPLIER.primary} text-white p-6`}>
               <Users className="h-12 w-12 mb-4" />
               <h3 className="text-2xl font-bold">Supplier Portal</h3>
               <p className="opacity-90 mt-2">Receive and submit quotes</p>
@@ -213,13 +213,13 @@ const Home: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/producer/dashboard"
-              className="px-8 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
+              className={`px-8 py-3 ${USER_THEMES.PRODUCER.primary} text-white rounded-lg font-medium ${USER_THEMES.PRODUCER.hover} transition-colors`}
             >
               Access Producer Portal
             </Link>
             <Link
               to="/supplier/quotes"
-              className="px-8 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors"
+              className={`px-8 py-3 ${USER_THEMES.SUPPLIER.primary} text-white rounded-lg font-medium ${USER_THEMES.SUPPLIER.hover} transition-colors`}
             >
               Access Supplier Portal
             </Link>

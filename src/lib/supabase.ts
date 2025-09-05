@@ -3,25 +3,28 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Guard against missing environment variables to avoid runtime crashes/
-// blank screens in production builds. Provide a minimal no-op client if absent.
-let supabaseFallback = null as ReturnType<typeof createClient> | null;
+// Guard against missing environment variables to avoid runtime crashes
+// Provide a minimal no-op client if environment variables are missing
+let supabaseClient: ReturnType<typeof createClient>;
+
 try {
   if (!supabaseUrl || !supabaseAnonKey) {
-    // eslint-disable-next-line no-console
     console.error(
       '[Supabase] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. ' +
       'Set them in your .env.local or .env.production before building.'
     );
+    // Create a fallback client that will fail gracefully
+    supabaseClient = createClient('http://localhost', 'invalid');
   } else {
-    supabaseFallback = createClient(supabaseUrl, supabaseAnonKey);
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
   }
 } catch (error) {
-  // eslint-disable-next-line no-console
   console.error('[Supabase] Failed to initialize client:', error);
+  // Fallback to invalid client
+  supabaseClient = createClient('http://localhost', 'invalid');
 }
 
-export const supabase = supabaseFallback ?? createClient('http://localhost', 'invalid');
+export const supabase = supabaseClient;
 
 // Database types
 export interface Project {

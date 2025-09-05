@@ -1,22 +1,21 @@
 import React from 'react';
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom';
 import { Building2, Users, Package, FileText, BarChart3 } from 'lucide-react';
+import { APP_NAME, USER_THEMES } from '../constants';
 
 const Layout: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isClientPath = false; // client portal removed
   const isProducerPath = currentPath.startsWith('/producer');
   const isAdminPath = currentPath.startsWith('/admin');
   const isSupplierPath = currentPath.startsWith('/supplier') || currentPath.startsWith('/quote');
 
   const getNavColor = () => {
-    if (isClientPath) return 'bg-blue-600';
-    if (isProducerPath) return 'bg-teal-600';
-    if (isAdminPath) return 'bg-gray-800';
-    if (isSupplierPath) return 'bg-orange-600';
-    return 'bg-gray-800';
+    if (isProducerPath) return USER_THEMES.PRODUCER.primary;
+    if (isAdminPath) return USER_THEMES.ADMIN.primary;
+    if (isSupplierPath) return USER_THEMES.SUPPLIER.primary;
+    return USER_THEMES.ADMIN.primary;
   };
 
   const getNavLinks = () => {
@@ -59,7 +58,7 @@ const Layout: React.FC = () => {
                 title="Go to Home"
               >
                 <Package className="h-8 w-8" />
-                <span className="text-xl font-bold">ProdBay</span>
+                <span className="text-xl font-bold">{APP_NAME}</span>
                 <span className="text-sm opacity-75">| {getUserTypeLabel()}</span>
               </Link>
               

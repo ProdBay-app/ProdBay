@@ -8,6 +8,7 @@ import {
   Mail,
   Info
 } from 'lucide-react';
+import { APP_NAME, USER_THEMES } from '../constants';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ const LoginPage: React.FC = () => {
             title="Go to Home"
           >
             <Package className="h-10 w-10 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">ProdBay</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{APP_NAME}</h1>
           </div>
           <p className="text-center text-gray-600 mt-2">Production Management Platform</p>
         </div>
@@ -37,7 +38,7 @@ const LoginPage: React.FC = () => {
         {/* Welcome Section */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to ProdBay
+            Welcome to {APP_NAME}
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Choose your role to access your personalized dashboard and manage your production workflow
@@ -48,7 +49,7 @@ const LoginPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {/* Supplier Portal */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-orange-600 text-white p-6 text-center">
+            <div className={`${USER_THEMES.SUPPLIER.primary} text-white p-6 text-center`}>
               <Users className="h-12 w-12 mx-auto mb-4" />
               <h3 className="text-xl font-bold">Supplier Portal</h3>
               <p className="opacity-90 mt-2">Upload and manage your quotes</p>
@@ -61,7 +62,7 @@ const LoginPage: React.FC = () => {
               </ul>
               <Link
                 to="/supplier/quotes"
-                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                className={`flex items-center justify-center space-x-2 w-full px-4 py-3 ${USER_THEMES.SUPPLIER.primary} text-white rounded-lg ${USER_THEMES.SUPPLIER.hover} transition-colors font-medium`}
               >
                 <span>Supplier Access</span>
                 <ArrowRight className="h-4 w-4" />
@@ -71,7 +72,7 @@ const LoginPage: React.FC = () => {
 
           {/* Producer Login */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-teal-600 text-white p-6 text-center">
+            <div className={`${USER_THEMES.PRODUCER.primary} text-white p-6 text-center`}>
               <Package className="h-12 w-12 mx-auto mb-4" />
               <h3 className="text-xl font-bold">Producer Portal</h3>
               <p className="opacity-90 mt-2">Manage projects and suppliers</p>
@@ -85,7 +86,7 @@ const LoginPage: React.FC = () => {
               </ul>
               <Link
                 to="/producer/dashboard"
-                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
+                className={`flex items-center justify-center space-x-2 w-full px-4 py-3 ${USER_THEMES.PRODUCER.primary} text-white rounded-lg ${USER_THEMES.PRODUCER.hover} transition-colors font-medium`}
               >
                 <span>Producer Login</span>
                 <ArrowRight className="h-4 w-4" />
@@ -95,7 +96,7 @@ const LoginPage: React.FC = () => {
 
           {/* Admin Login */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gray-800 text-white p-6 text-center">
+            <div className={`${USER_THEMES.ADMIN.primary} text-white p-6 text-center`}>
               <Shield className="h-12 w-12 mx-auto mb-4" />
               <h3 className="text-xl font-bold">Admin Portal</h3>
               <p className="opacity-90 mt-2">System administration</p>
@@ -109,7 +110,7 @@ const LoginPage: React.FC = () => {
               </ul>
               <Link
                 to="/admin/dashboard"
-                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium"
+                className={`flex items-center justify-center space-x-2 w-full px-4 py-3 ${USER_THEMES.ADMIN.primary} text-white rounded-lg ${USER_THEMES.ADMIN.hover} transition-colors font-medium`}
               >
                 <span>Admin Login</span>
                 <ArrowRight className="h-4 w-4" />
@@ -148,7 +149,7 @@ const LoginPage: React.FC = () => {
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-2">Demo Access Information:</p>
               <p className="text-blue-700">
-                This is a demonstration version of ProdBay. In a production environment, 
+                This is a demonstration version of {APP_NAME}. In a production environment, 
                 proper authentication would be implemented with secure login credentials, 
                 user sessions, and role-based access control.
               </p>
@@ -161,5 +162,3 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
-// Build stamp footer is shown on layout pages; duplicate minimal stamp here for root route
-export const __BUILD_STAMP__ = import.meta.env.VITE_BUILD_ID;

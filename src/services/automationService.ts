@@ -1,23 +1,15 @@
 import { supabase } from '../lib/supabase';
 import type { Project, Asset, Supplier } from '../lib/supabase';
+import { ASSET_KEYWORDS } from '../constants';
 
 export class AutomationService {
   // Parse brief description to identify required assets
   static parseAssetsFromBrief(briefDescription: string): string[] {
-    const assetKeywords = {
-      'printing': ['print', 'banner', 'poster', 'flyer', 'brochure', 'signage'],
-      'staging': ['stage', 'platform', 'backdrop', 'display'],
-      'audio': ['sound', 'speaker', 'microphone', 'audio', 'music'],
-      'lighting': ['light', 'lighting', 'illumination', 'led'],
-      'catering': ['food', 'catering', 'meal', 'refreshment', 'beverage'],
-      'transport': ['transport', 'delivery', 'logistics', 'shipping'],
-      'design': ['design', 'graphic', 'branding', 'logo', 'creative']
-    };
 
     const brief = briefDescription.toLowerCase();
     const identifiedAssets: string[] = [];
 
-    Object.entries(assetKeywords).forEach(([category, keywords]) => {
+    Object.entries(ASSET_KEYWORDS).forEach(([category, keywords]) => {
       const found = keywords.some(keyword => brief.includes(keyword));
       if (found) {
         identifiedAssets.push(category.charAt(0).toUpperCase() + category.slice(1));
@@ -66,19 +58,21 @@ export class AutomationService {
     if (error || !suppliers) return [];
 
     // Match suppliers based on service categories
-    const assetMatched = (suppliers as unknown as Supplier[]).filter((supplier: Supplier) => 
-      (supplier.service_categories as unknown as string[]).some((category: string) => 
+    const assetMatched = suppliers.filter((supplier) => {
+      const categories = supplier.service_categories as string[];
+      return categories.some((category) => 
         category.toLowerCase().includes(assetName.toLowerCase()) ||
         assetName.toLowerCase().includes(category.toLowerCase())
-      )
-    );
+      );
+    });
 
-    if (!requiredTags || requiredTags.length === 0) return assetMatched;
+    if (!requiredTags || requiredTags.length === 0) return assetMatched as unknown as Supplier[];
 
     const tagsLower = requiredTags.map(t => t.toLowerCase());
-    return assetMatched.filter((supplier: Supplier) =>
-      (supplier.service_categories as unknown as string[]).some((cat: string) => tagsLower.includes(cat.toLowerCase()))
-    );
+    return assetMatched.filter((supplier) => {
+      const categories = supplier.service_categories as string[];
+      return categories.some((cat) => tagsLower.includes(cat.toLowerCase()));
+    }) as unknown as Supplier[];
   }
 
   // Send quote requests to suppliers (simulated email)
@@ -97,7 +91,7 @@ export class AutomationService {
           supplier_id: supplier.id,
           asset_id: asset.id,
           status: 'Submitted'
-        } as any)
+        })
         .select()
         .single();
 
@@ -136,7 +130,7 @@ export class AutomationService {
     // Update asset status to Quoting
     await supabase
       .from('assets')
-      .update({ status: 'Quoting' } as any)
+      .update({ status: 'Quoting' })
       .eq('id', asset.id);
   }
 
@@ -152,24 +146,24 @@ export class AutomationService {
       // Update quote status
       await supabase
         .from('quotes')
-        .update({ status: 'Accepted' } as any)
+        .update({ status: 'Accepted' })
         .eq('id', quoteId);
 
       // Reject other quotes for the same asset
       await supabase
         .from('quotes')
-        .update({ status: 'Rejected' } as any)
-        .eq('asset_id', quote.asset_id)
+        .update({ status: 'Rejected' })
+        .eq('asset_id', (quote as any).asset_id)
         .neq('id', quoteId);
 
       // Update asset with assigned supplier
       await supabase
         .from('assets')
         .update({ 
-          assigned_supplier_id: quote.supplier_id,
+          assigned_supplier_id: (quote as any).supplier_id,
           status: 'Approved'
-        } as any)
-        .eq('id', quote.asset_id);
+        })
+        .eq('id', (quote as any).asset_id);
     }
   }
 

@@ -1,7 +1,8 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "prodbay",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Production Management Platform - Streamline your production workflow from initial brief to final delivery",
   "type": "module",
   "scripts": {
     "dev": "vite",

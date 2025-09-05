@@ -1,11 +1,10 @@
-import React, { Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import LoginPage from './components/LoginPage';
 import Home from './components/Home';
 
 // Lazy-loaded routes to avoid eager initialization side-effects (e.g., Supabase client)
-// Removed Client Portal
 const ProducerDashboard = lazy(() => import('./components/producer/ProducerDashboard'));
 const SupplierManagement = lazy(() => import('./components/producer/SupplierManagement'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
