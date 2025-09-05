@@ -60,21 +60,7 @@ export const StatusBadge: React.FC<{ status: string; className?: string }> = ({
   );
 };
 
-// Common loading spinner component
-export const LoadingSpinner: React.FC<{ size?: 'sm' | 'md' | 'lg'; className?: string }> = ({ 
-  size = 'md', 
-  className = '' 
-}) => {
-  const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-6 w-6',
-    lg: 'h-8 w-8'
-  };
-
-  return (
-    <div className={`animate-spin rounded-full border-2 border-gray-300 border-t-blue-600 ${sizeClasses[size]} ${className}`} />
-  );
-};
+// Note: LoadingSpinner component has been moved to its own file: components/LoadingSpinner.tsx
 
 // Common error message component
 export const ErrorMessage: React.FC<{ message: string; className?: string }> = ({ 
@@ -173,7 +159,7 @@ export const Button: React.FC<{
       onClick={onClick}
       disabled={disabled || loading}
     >
-      {loading && <LoadingSpinner size="sm" className="mr-2" />}
+      {loading && <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-white mr-2" />}
       {children}
     </button>
   );

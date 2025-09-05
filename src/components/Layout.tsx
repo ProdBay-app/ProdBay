@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom';
 import { Building2, Users, Package, FileText, BarChart3 } from 'lucide-react';
 import { APP_NAME, USER_THEMES } from '../constants';
+import { getEnvVars } from '../utils/env';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -95,7 +96,7 @@ const Layout: React.FC = () => {
 
       {/* Build stamp for deployment verification */}
       <div className="text-xs text-gray-400 px-4 py-2 text-right">
-        {import.meta.env.VITE_BUILD_ID ? `Build: ${import.meta.env.VITE_BUILD_ID}` : null}
+        {getEnvVars().VITE_BUILD_ID ? `Build: ${getEnvVars().VITE_BUILD_ID}` : null}
       </div>
     </div>
   );

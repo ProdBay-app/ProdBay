@@ -11,6 +11,8 @@ import {
   Clock,
   Building2 
 } from 'lucide-react';
+import { ErrorMessage } from '../../utils/ui';
+import LoadingSpinner from '../LoadingSpinner';
 
 const QuoteSubmission: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -25,6 +27,7 @@ const QuoteSubmission: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogoClick = () => {
     navigate('/');
@@ -48,7 +51,7 @@ const QuoteSubmission: React.FC = () => {
             project:projects(*)
           )
         `)
-        .eq('quote_token', token)
+        .eq('quote_token', token!)
         .single();
 
       if (quoteError || !quoteData) {
@@ -56,20 +59,20 @@ const QuoteSubmission: React.FC = () => {
         return;
       }
 
-      setQuote(quoteData);
-      setAsset(quoteData.asset);
-      setSupplier(quoteData.supplier);
+      setQuote(quoteData as unknown as Quote);
+      setAsset(quoteData.asset as unknown as Asset);
+      setSupplier(quoteData.supplier as unknown as Supplier);
 
       // If quote already has data, populate form
-      if (quoteData.cost > 0 || quoteData.notes_capacity) {
+      if ((quoteData.cost as number) > 0 || quoteData.notes_capacity) {
         setFormData({
-          cost: quoteData.cost || 0,
-          notes_capacity: quoteData.notes_capacity || ''
+          cost: (quoteData.cost as number) || 0,
+          notes_capacity: (quoteData.notes_capacity as string) || ''
         });
       }
 
       // Check if already submitted
-      if (quoteData.cost > 0 && quoteData.status === 'Submitted') {
+      if ((quoteData.cost as number) > 0 && quoteData.status === 'Submitted') {
         setSubmitted(true);
       }
     } catch (error) {
@@ -82,6 +85,7 @@ const QuoteSubmission: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    setError(null);
 
     try {
       const { error } = await supabase
@@ -96,10 +100,9 @@ const QuoteSubmission: React.FC = () => {
       if (error) throw error;
 
       setSubmitted(true);
-      alert('Quote submitted successfully!');
     } catch (error) {
       console.error('Error submitting quote:', error);
-      alert('Failed to submit quote. Please try again.');
+      setError(error instanceof Error ? error.message : 'Failed to submit quote. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -107,8 +110,8 @@ const QuoteSubmission: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <LoadingSpinner size="lg" text="Loading quote details..." />
       </div>
     );
   }
@@ -226,6 +229,8 @@ const QuoteSubmission: React.FC = () => {
                 <h2 className="text-xl font-semibold">Submit Your Quote</h2>
               </div>
 
+              {error && <ErrorMessage message={error} className="mb-6" />}
+              
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="cost" className="block text-sm font-medium text-gray-700 mb-2">

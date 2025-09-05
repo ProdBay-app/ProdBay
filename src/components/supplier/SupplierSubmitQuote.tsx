@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import type { Asset, Supplier } from '../../lib/supabase';
-import { DollarSign, FileText, Send, Package } from 'lucide-react';
+import type { Asset } from '../../lib/supabase';
+import { FileText, Send } from 'lucide-react';
+import { ErrorMessage, SuccessMessage } from '../../utils/ui';
 
 const SupplierSubmitQuote: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -11,6 +12,8 @@ const SupplierSubmitQuote: React.FC = () => {
     notes_capacity: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     loadAssets();
@@ -31,7 +34,11 @@ const SupplierSubmitQuote: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.asset_id || formData.cost <= 0) return;
+    
     setSubmitting(true);
+    setError(null);
+    setSuccess(null);
+    
     try {
       // In a real app, supplier_id is from auth. For MVP, pick first supplier or a placeholder.
       let supplierId: string | null = null;
@@ -39,8 +46,7 @@ const SupplierSubmitQuote: React.FC = () => {
       supplierId = suppliers && suppliers.length > 0 ? suppliers[0].id : null;
 
       if (!supplierId) {
-        alert('No supplier found. Please ask admin to create a supplier entry.');
-        return;
+        throw new Error('No supplier found. Please ask admin to create a supplier entry.');
       }
 
       const { error } = await supabase
@@ -54,11 +60,12 @@ const SupplierSubmitQuote: React.FC = () => {
         });
 
       if (error) throw error;
-      alert('Quote submitted successfully');
+      
+      setSuccess('Quote submitted successfully!');
       setFormData({ asset_id: '', cost: 0, notes_capacity: '' });
     } catch (err) {
       console.error('Failed to submit quote', err);
-      alert('Failed to submit quote');
+      setError(err instanceof Error ? err.message : 'Failed to submit quote');
     } finally {
       setSubmitting(false);
     }
@@ -72,6 +79,9 @@ const SupplierSubmitQuote: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Submit Quote</h1>
         </div>
 
+        {error && <ErrorMessage message={error} className="mb-6" />}
+        {success && <SuccessMessage message={success} className="mb-6" />}
+        
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Asset *</label>

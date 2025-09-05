@@ -1,26 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
+import { validateRequiredEnvVars } from '../utils/env';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-// Guard against missing environment variables to avoid runtime crashes
-// Provide a minimal no-op client if environment variables are missing
+// Initialize Supabase client with proper error handling
 let supabaseClient: ReturnType<typeof createClient>;
 
 try {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error(
-      '[Supabase] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. ' +
-      'Set them in your .env.local or .env.production before building.'
-    );
-    // Create a fallback client that will fail gracefully
-    supabaseClient = createClient('http://localhost', 'invalid');
-  } else {
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-  }
+  const { VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY } = validateRequiredEnvVars();
+  supabaseClient = createClient(VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY);
+  console.log('[Supabase] Client initialized successfully');
 } catch (error) {
   console.error('[Supabase] Failed to initialize client:', error);
-  // Fallback to invalid client
+  // Create a fallback client that will fail gracefully
   supabaseClient = createClient('http://localhost', 'invalid');
 }
 
@@ -51,6 +41,7 @@ export interface Asset {
   created_at: string;
   updated_at: string;
   assigned_supplier?: Supplier;
+  project?: Project;
 }
 
 export interface Supplier {

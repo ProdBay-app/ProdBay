@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { Supplier } from '../../lib/supabase';
 import { Users, Mail, Plus, Tag, Edit, Trash2 } from 'lucide-react';
+import { ErrorMessage, SuccessMessage } from '../../utils/ui';
 
 const SupplierManagement: React.FC = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -13,6 +14,8 @@ const SupplierManagement: React.FC = () => {
     service_categories: [] as string[]
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const availableCategories = [
     'Printing', 'Graphics', 'Banners', 'Staging', 'Audio', 'Lighting',
@@ -71,9 +74,12 @@ const SupplierManagement: React.FC = () => {
       });
 
       await loadSuppliers();
+      setSuccess(editingSupplier ? 'Supplier updated successfully!' : 'Supplier added successfully!');
+      setError(null);
     } catch (error) {
       console.error('Error saving supplier:', error);
-      alert('Failed to save supplier');
+      setError('Failed to save supplier');
+      setSuccess(null);
     }
   };
 
@@ -98,9 +104,12 @@ const SupplierManagement: React.FC = () => {
 
       if (error) throw error;
       await loadSuppliers();
+      setSuccess('Supplier deleted successfully!');
+      setError(null);
     } catch (error) {
       console.error('Error deleting supplier:', error);
-      alert('Failed to delete supplier');
+      setError('Failed to delete supplier');
+      setSuccess(null);
     }
   };
 
@@ -133,6 +142,9 @@ const SupplierManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {error && <ErrorMessage message={error} className="mb-4" />}
+      {success && <SuccessMessage message={success} className="mb-4" />}
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Supplier Management</h1>

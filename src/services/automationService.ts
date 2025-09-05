@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
-import type { Project, Asset, Supplier } from '../lib/supabase';
+import type { Project, Asset, Supplier, Quote } from '../lib/supabase';
 import { ASSET_KEYWORDS } from '../constants';
+import { getEnvVars } from '../utils/env';
 
 export class AutomationService {
   // Parse brief description to identify required assets
@@ -41,7 +42,12 @@ export class AutomationService {
         .select()
         .single();
 
-      if (asset && !error) {
+      if (error) {
+        console.error(`Failed to create asset ${assetName}:`, error);
+        continue;
+      }
+
+      if (asset) {
         createdAssets.push(asset as unknown as Asset);
       }
     }
@@ -96,17 +102,17 @@ export class AutomationService {
         .single();
 
       if (quote && !error) {
-        const fnUrl = import.meta.env.VITE_EMAIL_FUNCTION_URL || '';
-        const fnKey = import.meta.env.VITE_EMAIL_FUNCTION_KEY || '';
+        const envVars = getEnvVars();
         const subject = `Quote Request: ${asset.asset_name}`;
         const body = `Please provide a quote for ${asset.asset_name}.\n\nSpecifications: ${asset.specifications || ''}\n\nSubmit here: ${window.location.origin}/quote/${quote.quote_token}`;
-        if (fnUrl && fnKey && from) {
+        
+        if (envVars.VITE_EMAIL_FUNCTION_URL && envVars.VITE_EMAIL_FUNCTION_KEY && from) {
           try {
-            await fetch(fnUrl, {
+            await fetch(envVars.VITE_EMAIL_FUNCTION_URL, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${fnKey}`
+                'Authorization': `Bearer ${envVars.VITE_EMAIL_FUNCTION_KEY}`
               },
               body: JSON.stringify({
                 from: `${from.name} <${from.email}>`,
@@ -116,12 +122,10 @@ export class AutomationService {
               })
             });
           } catch (e) {
-            // eslint-disable-next-line no-console
             console.error('Email send failed', e);
           }
         } else {
           // Fallback to console if function not configured
-          // eslint-disable-next-line no-console
           console.log(`Email (simulated) to ${supplier.contact_email}: ${subject}`);
         }
       }
@@ -153,17 +157,17 @@ export class AutomationService {
       await supabase
         .from('quotes')
         .update({ status: 'Rejected' })
-        .eq('asset_id', (quote as any).asset_id)
+        .eq('asset_id', (quote as unknown as Quote).asset_id)
         .neq('id', quoteId);
 
       // Update asset with assigned supplier
       await supabase
         .from('assets')
         .update({ 
-          assigned_supplier_id: (quote as any).supplier_id,
+          assigned_supplier_id: (quote as unknown as Quote).supplier_id,
           status: 'Approved'
         })
-        .eq('id', (quote as any).asset_id);
+        .eq('id', (quote as unknown as Quote).asset_id);
     }
   }
 

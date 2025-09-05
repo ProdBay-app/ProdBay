@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { Quote, Asset, Project } from '../../lib/supabase';
-import { FileText, CheckCircle, XCircle, Clock, Package, Eye } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
 
 interface SupplierQuote extends Quote {
   asset?: Asset;
@@ -26,7 +26,7 @@ const SupplierDashboard: React.FC = () => {
 
       if (error) throw error;
 
-      const withProject: SupplierQuote[] = (data || []).map((q: any) => ({
+      const withProject: SupplierQuote[] = (data || []).map((q: Quote & { asset?: Asset & { project?: Project } }) => ({
         ...q,
         project: q.asset?.project,
       }));

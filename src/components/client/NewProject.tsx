@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { AutomationService } from '../../services/automationService';
 import { FileText, Calendar, DollarSign, MapPin, Send } from 'lucide-react';
+import { ErrorMessage, SuccessMessage } from '../../utils/ui';
 
 const NewProject: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +16,8 @@ const NewProject: React.FC = () => {
     timeline_deadline: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -27,6 +30,8 @@ const NewProject: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
+    setSuccess(null);
 
     try {
       // Create project
@@ -37,20 +42,24 @@ const NewProject: React.FC = () => {
         .single();
 
       if (projectError || !project) {
-        throw new Error('Failed to create project');
+        throw new Error(projectError?.message || 'Failed to create project');
       }
 
       // Automatically create assets based on brief
       await AutomationService.createAssetsForProject(
-        project.id, 
+        project.id as string, 
         formData.brief_description
       );
 
-      // Navigate to client dashboard
-      navigate(`/client/dashboard?project=${project.id}`);
+      setSuccess('Project created successfully! Redirecting...');
+      
+      // Navigate to client dashboard after a brief delay
+      setTimeout(() => {
+        navigate(`/client/dashboard?project=${project.id}`);
+      }, 1500);
     } catch (error) {
       console.error('Error creating project:', error);
-      alert('Failed to create project. Please try again.');
+      setError(error instanceof Error ? error.message : 'Failed to create project. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -67,6 +76,9 @@ const NewProject: React.FC = () => {
           </div>
         </div>
 
+        {error && <ErrorMessage message={error} className="mb-6" />}
+        {success && <SuccessMessage message={success} className="mb-6" />}
+        
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

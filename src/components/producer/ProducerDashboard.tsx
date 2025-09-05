@@ -306,7 +306,6 @@ const ProducerDashboard: React.FC = () => {
         .order('supplier_name');
       setSuppliers((data || []) as unknown as Supplier[]);
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error('Failed to load suppliers', e);
     }
   };
@@ -391,7 +390,6 @@ const ProducerDashboard: React.FC = () => {
       await loadProjectDetails(selectedProject.id);
       setShowAssetModal(false);
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('Failed to save asset', err);
       alert('Failed to save asset');
     } finally {
@@ -415,7 +413,6 @@ const ProducerDashboard: React.FC = () => {
         await loadProjectDetails(selectedProject.id);
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('Failed to delete asset', err);
       alert('Failed to delete asset');
     }
@@ -428,7 +425,6 @@ const ProducerDashboard: React.FC = () => {
       await loadProjectDetails(selectedProject.id);
       alert(`Quote requests sent for ${tagSelectionAsset.asset_name}`);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Error sending to suppliers:', error);
       alert('Failed to send quote requests');
     } finally {
