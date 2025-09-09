@@ -18,11 +18,11 @@ function App() {
     <Router>
       <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
         <Routes>
-        {/* Login page - outside of layout */}
-        <Route path="/" element={<LoginPage />} />
+        {/* Public landing page - outside of layout */}
+        <Route path="/" element={<Home />} />
         
-        {/* Marketing home page - outside of layout */}
-        <Route path="/home" element={<Home />} />
+        {/* Login page - outside of layout */}
+        <Route path="/login" element={<LoginPage />} />
         
         {/* Supplier routes */}
         <Route path="/supplier" element={<Layout />}>

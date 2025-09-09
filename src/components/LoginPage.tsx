@@ -1,19 +1,38 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Package, 
-  Users, 
-  Shield, 
   ArrowRight,
-  Mail,
-  Info
+  Eye,
+  EyeOff,
+  Users,
+  Shield
 } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingRole, setLoadingRole] = useState<string | null>(null);
 
   const handleLogoClick = () => {
     navigate('/');
+  };
+
+  const handleRoleLogin = async (role: string, route: string) => {
+    setLoadingRole(role);
+    setIsLoading(true);
+    
+    // Mock authentication - simulate API call delay
+    setTimeout(() => {
+      // For demo purposes, navigate directly to the specified dashboard
+      // In a real app, this would validate credentials and redirect based on user role
+      navigate(route);
+      setIsLoading(false);
+      setLoadingRole(null);
+    }, 1000);
   };
 
   return (
@@ -33,126 +52,136 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-16">
-        {/* Welcome Section */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to ProdBay
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Choose your role to access your personalized dashboard and manage your production workflow
-          </p>
-        </div>
-
-        {/* Login Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {/* Supplier Portal */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-orange-600 text-white p-6 text-center">
-              <Users className="h-12 w-12 mx-auto mb-4" />
-              <h3 className="text-xl font-bold">Supplier Portal</h3>
-              <p className="opacity-90 mt-2">Upload and manage your quotes</p>
-            </div>
-            <div className="p-6">
-              <ul className="space-y-2 mb-6 text-sm text-gray-600">
-                <li>• Submit quotes for assets</li>
-                <li>• View status of submitted quotes</li>
-                <li>• Manage notes and capacity</li>
-              </ul>
-              <Link
-                to="/supplier/quotes"
-                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
-              >
-                <span>Supplier Access</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+      <div className="max-w-md mx-auto px-4 py-16">
+        {/* Login Form */}
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Welcome Back
+            </h2>
+            <p className="text-gray-600">
+              Sign in to access your ProdBay dashboard
+            </p>
           </div>
 
-          {/* Producer Login */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-teal-600 text-white p-6 text-center">
-              <Package className="h-12 w-12 mx-auto mb-4" />
-              <h3 className="text-xl font-bold">Producer Portal</h3>
-              <p className="opacity-90 mt-2">Manage projects and suppliers</p>
+          <div className="space-y-6">
+            {/* Demo Form Fields - Visual Only */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter your email (demo mode)"
+              />
             </div>
-            <div className="p-6">
-              <ul className="space-y-2 mb-6 text-sm text-gray-600">
-                <li>• Oversee all active projects</li>
-                <li>• Manage asset requirements</li>
-                <li>• Coordinate with suppliers</li>
-                <li>• Review and accept quotes</li>
-              </ul>
-              <Link
-                to="/producer/dashboard"
-                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
-              >
-                <span>Producer Login</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
 
-          {/* Admin Login */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-            <div className="bg-gray-800 text-white p-6 text-center">
-              <Shield className="h-12 w-12 mx-auto mb-4" />
-              <h3 className="text-xl font-bold">Admin Portal</h3>
-              <p className="opacity-90 mt-2">System administration</p>
-            </div>
-            <div className="p-6">
-              <ul className="space-y-2 mb-6 text-sm text-gray-600">
-                <li>• System configuration</li>
-                <li>• User management</li>
-                <li>• Analytics and reporting</li>
-                <li>• Platform oversight</li>
-              </ul>
-              <Link
-                to="/admin/dashboard"
-                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium"
-              >
-                <span>Admin Login</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Information */}
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
-          <div className="flex items-start space-x-4">
-            <div className="bg-orange-100 rounded-full p-3">
-              <Users className="h-6 w-6 text-orange-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-orange-900 mb-2">
-                Supplier Access
-              </h3>
-              <p className="text-orange-800 mb-3">
-                Suppliers can manage their quotes via the Supplier Portal or unique email links.
-              </p>
-              <div className="flex items-center space-x-2 text-orange-700">
-                <Mail className="h-4 w-4" />
-                <span className="text-sm font-medium">
-                  Quote requests can still be sent directly to supplier email addresses
-                </span>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your password (demo mode)"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Information Section */}
-        <div className="mt-12 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <div className="flex items-start space-x-3">
-            <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-            <div className="text-sm text-blue-800">
-              <p className="font-medium mb-2">Demo Access Information:</p>
-              <p className="text-blue-700">
-                This is a demonstration version of ProdBay. In a production environment, 
-                proper authentication would be implemented with secure login credentials, 
-                user sessions, and role-based access control.
-              </p>
+            {/* Role Selection Buttons */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-700 text-center mb-4">
+                Choose your role to access the dashboard:
+              </h3>
+              
+              {/* Producer Login */}
+              <button
+                onClick={() => handleRoleLogin('producer', '/producer/dashboard')}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading && loadingRole === 'producer' ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Signing in as Producer...</span>
+                  </>
+                ) : (
+                  <>
+                    <Package className="h-4 w-4" />
+                    <span>Log in as Producer</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+
+              {/* Supplier Login */}
+              <button
+                onClick={() => handleRoleLogin('supplier', '/supplier/quotes')}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading && loadingRole === 'supplier' ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Signing in as Supplier...</span>
+                  </>
+                ) : (
+                  <>
+                    <Users className="h-4 w-4" />
+                    <span>Log in as Supplier</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+
+              {/* Admin Login */}
+              <button
+                onClick={() => handleRoleLogin('admin', '/admin/dashboard')}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading && loadingRole === 'admin' ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Signing in as Admin...</span>
+                  </>
+                ) : (
+                  <>
+                    <Shield className="h-4 w-4" />
+                    <span>Log in as Admin</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
             </div>
+          </div>
+
+          {/* Demo Information */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Demo Mode:</strong> This is a demonstration version with role-based access. 
+              Click any role button above to access the corresponding dashboard. 
+              Form fields are for visual purposes only.
+            </p>
           </div>
         </div>
       </div>
