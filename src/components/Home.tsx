@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   Package, 
   Users, 
-  Building2, 
   ArrowRight, 
   CheckCircle,
   FileText, 
@@ -82,8 +81,8 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* User Portals */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+        {/* User Portals - Informational Only */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
           {/* Producer Portal */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="bg-teal-600 text-white p-6">
@@ -110,13 +109,9 @@ const Home: React.FC = () => {
                   <span className="text-gray-700">Quote review and acceptance</span>
                 </li>
               </ul>
-              <Link
-                to="/producer/dashboard"
-                className="flex items-center justify-center space-x-2 w-full px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
-              >
-                <span>Access Dashboard</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <div className="bg-teal-50 rounded-lg p-4 text-center">
+                <p className="text-teal-700 text-sm font-medium">Access your producer dashboard after login</p>
+              </div>
             </div>
           </div>
 
@@ -146,8 +141,8 @@ const Home: React.FC = () => {
                   <span className="text-gray-700">Direct project access</span>
                 </li>
               </ul>
-              <div className="bg-gray-100 rounded-lg p-4 text-center">
-                <p className="text-gray-600 text-sm">Suppliers can use the portal to upload quotes and view their status</p>
+              <div className="bg-orange-50 rounded-lg p-4 text-center">
+                <p className="text-orange-700 text-sm font-medium">Suppliers can access via email links or login</p>
               </div>
             </div>
           </div>
@@ -208,22 +203,20 @@ const Home: React.FC = () => {
             Ready to streamline your production process?
           </h3>
           <p className="text-lg text-gray-600 mb-8">
-            Choose your role to get started with ProdBay today
+            Get started with ProdBay and transform your production workflow today
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/producer/dashboard"
-              className="px-8 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
+              to="/login"
+              className="px-8 py-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-lg shadow-lg hover:shadow-xl"
             >
-              Access Producer Portal
-            </Link>
-            <Link
-              to="/supplier/quotes"
-              className="px-8 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors"
-            >
-              Access Supplier Portal
+              Get Started
+              <ArrowRight className="h-5 w-5 inline ml-2" />
             </Link>
           </div>
+          <p className="text-sm text-gray-500 mt-4">
+            Secure login required to access your personalized dashboard
+          </p>
         </div>
       </div>
     </div>
