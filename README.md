@@ -5,7 +5,7 @@ ProdBay is a comprehensive production management web application that connects c
 ## Features
 
 ### 🎯 Core Functionality
-- **Smart Brief Parsing**: Automatically identify required assets from project descriptions
+- **Smart Brief Parsing**: Automatically identify required assets from project descriptions (Railway backend)
 - **Supplier Network Management**: Intelligent matching with relevant suppliers
 - **Quote Management**: Streamlined quote collection and comparison
 - **Real-time Tracking**: Monitor project progress and status updates
@@ -25,7 +25,8 @@ ProdBay is a comprehensive production management web application that connects c
 
 ## Technology Stack
 
-- **Frontend**: React 18 with TypeScript
+- **Frontend**: React 18 with TypeScript (Vercel)
+- **Backend**: Node.js with Express (Railway)
 - **Styling**: Tailwind CSS
 - **Database**: Supabase (PostgreSQL)
 - **Icons**: Lucide React
@@ -121,13 +122,27 @@ Notes:
 - Check DevTools Console for messages starting with `[Supabase]` indicating missing env.
 - Rebuild after setting envs.
 
+## Architecture
+
+### Frontend (Vercel)
+- React 18 with TypeScript
+- Tailwind CSS for styling
+- Communicates with Railway backend via REST API
+
+### Backend (Railway)
+- Node.js with Express
+- Handles brief processing and asset creation
+- Connects to Supabase database
+- RESTful API endpoints
+
 ## Automated Workflows
 
 ### Project Creation Flow
 1. Client submits project brief
-2. System automatically parses brief to identify required assets
-3. Assets are created in database with specifications
-4. Relevant suppliers are identified based on service categories
+2. Frontend sends brief to Railway backend API
+3. Backend parses brief to identify required assets
+4. Assets are created in Supabase database
+5. Relevant suppliers are identified based on service categories
 
 ### Quote Request Flow
 1. Producer reviews assets and clicks "Send to Suppliers"

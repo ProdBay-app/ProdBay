@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { AutomationService } from '../../services/automationService';
+import { RailwayApiService } from '../../services/railwayApiService';
 import type { Project, Asset, Quote, Supplier } from '../../lib/supabase';
 import { 
   CheckCircle, 
@@ -188,7 +189,15 @@ const ProducerDashboard: React.FC = () => {
         if (projectError || !project) throw projectError || new Error('Failed to create project');
         const createdProject = project as unknown as Project;
         if (autoCreateAssets && projectForm.brief_description) {
-          await AutomationService.createAssetsForProject(createdProject.id, projectForm.brief_description);
+          // Use Railway API for brief processing
+          const briefResult = await RailwayApiService.processBrief(createdProject.id, projectForm.brief_description);
+          if (!briefResult.success) {
+            console.warn('Brief processing failed:', briefResult.error?.message);
+            alert(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
+          } else {
+            console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
+            alert(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated from your brief.`);
+          }
         }
         await loadProjects();
         setSelectedProject(createdProject);

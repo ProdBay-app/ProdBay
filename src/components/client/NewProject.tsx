@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { AutomationService } from '../../services/automationService';
+import { RailwayApiService } from '../../services/railwayApiService';
 import { FileText, Calendar, DollarSign, MapPin, Send } from 'lucide-react';
 
 const NewProject: React.FC = () => {
@@ -15,6 +15,7 @@ const NewProject: React.FC = () => {
     timeline_deadline: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'creating-project' | 'processing-brief' | 'success' | 'error'>('idle');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -27,6 +28,7 @@ const NewProject: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitStatus('creating-project');
 
     try {
       // Create project
@@ -40,16 +42,30 @@ const NewProject: React.FC = () => {
         throw new Error('Failed to create project');
       }
 
-      // Automatically create assets based on brief
-      await AutomationService.createAssetsForProject(
+      // Process brief using Railway API
+      setSubmitStatus('processing-brief');
+      const briefResult = await RailwayApiService.processBrief(
         project.id, 
         formData.brief_description
       );
 
+      if (!briefResult.success) {
+        console.warn('Brief processing failed:', briefResult.error?.message);
+        // Show a warning but continue - project was created successfully
+        alert(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
+      } else {
+        console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
+        // Show success message
+        alert(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated from your brief.`);
+      }
+
+      setSubmitStatus('success');
+      
       // Navigate to client dashboard
       navigate(`/client/dashboard?project=${project.id}`);
     } catch (error) {
       console.error('Error creating project:', error);
+      setSubmitStatus('error');
       alert('Failed to create project. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -176,7 +192,13 @@ const NewProject: React.FC = () => {
               className="flex items-center space-x-2 px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="h-4 w-4" />
-              <span>{isSubmitting ? 'Creating Project...' : 'Create Project'}</span>
+              <span>
+                {submitStatus === 'creating-project' && 'Creating Project...'}
+                {submitStatus === 'processing-brief' && 'Processing Brief...'}
+                {submitStatus === 'success' && 'Project Created!'}
+                {submitStatus === 'error' && 'Failed - Try Again'}
+                {submitStatus === 'idle' && 'Create Project'}
+              </span>
             </button>
           </div>
         </form>
