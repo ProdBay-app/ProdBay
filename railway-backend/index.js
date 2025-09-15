@@ -19,7 +19,12 @@ const corsOptions = {
     
     const allowedOrigins = process.env.ALLOWED_ORIGINS 
       ? process.env.ALLOWED_ORIGINS.split(',')
-      : ['http://localhost:5173', 'http://localhost:3000'];
+      : [
+          'http://localhost:5173', 
+          'http://localhost:3000',
+          'https://prodbay-9i262gg61-clive-arias-projects.vercel.app',
+          'https://prodbay.vercel.app'
+        ];
     
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
