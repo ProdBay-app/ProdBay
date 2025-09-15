@@ -8,7 +8,7 @@ WORKDIR /app
 COPY railway-backend/package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy application code from railway-backend directory
 COPY railway-backend/ .
