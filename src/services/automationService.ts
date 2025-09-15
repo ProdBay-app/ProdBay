@@ -2,60 +2,13 @@ import { supabase } from '../lib/supabase';
 import type { Project, Asset, Supplier } from '../lib/supabase';
 
 export class AutomationService {
-  // Parse brief description to identify required assets
-  static parseAssetsFromBrief(briefDescription: string): string[] {
-    const assetKeywords = {
-      'printing': ['print', 'banner', 'poster', 'flyer', 'brochure', 'signage'],
-      'staging': ['stage', 'platform', 'backdrop', 'display'],
-      'audio': ['sound', 'speaker', 'microphone', 'audio', 'music'],
-      'lighting': ['light', 'lighting', 'illumination', 'led'],
-      'catering': ['food', 'catering', 'meal', 'refreshment', 'beverage'],
-      'transport': ['transport', 'delivery', 'logistics', 'shipping'],
-      'design': ['design', 'graphic', 'branding', 'logo', 'creative']
-    };
-
-    const brief = briefDescription.toLowerCase();
-    const identifiedAssets: string[] = [];
-
-    Object.entries(assetKeywords).forEach(([category, keywords]) => {
-      const found = keywords.some(keyword => brief.includes(keyword));
-      if (found) {
-        identifiedAssets.push(category.charAt(0).toUpperCase() + category.slice(1));
-      }
-    });
-
-    // Default assets if none identified
-    if (identifiedAssets.length === 0) {
-      identifiedAssets.push('General Requirements');
-    }
-
-    return identifiedAssets;
-  }
-
-  // Create assets for a project based on brief parsing
-  static async createAssetsForProject(projectId: string, briefDescription: string): Promise<Asset[]> {
-    const assetNames = this.parseAssetsFromBrief(briefDescription);
-    const createdAssets: Asset[] = [];
-
-    for (const assetName of assetNames) {
-      const { data: asset, error } = await supabase
-        .from('assets')
-        .insert({
-          project_id: projectId,
-          asset_name: assetName,
-          specifications: `Requirements for ${assetName.toLowerCase()} based on project brief`,
-          status: 'Pending'
-        })
-        .select()
-        .single();
-
-      if (asset && !error) {
-        createdAssets.push(asset as unknown as Asset);
-      }
-    }
-
-    return createdAssets;
-  }
+  // Note: Brief processing functions have been migrated to Railway backend
+  // - parseAssetsFromBrief() -> RailwayApiService.processBrief()
+  // - createAssetsForProject() -> RailwayApiService.processBrief()
+  // 
+  // The remaining functions below are still used by the frontend for:
+  // - Quote management (acceptQuote, updateProjectStatus)
+  // - Supplier communication (sendQuoteRequestsForAsset, findRelevantSuppliers)
 
   // Find relevant suppliers based on asset requirements
   static async findRelevantSuppliers(assetName: string, requiredTags: string[] = []): Promise<Supplier[]> {

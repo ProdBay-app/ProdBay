@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["nodejs_22", "npm-9_x"]
+
+[phases.install]
+cmds = ["npm ci --only=production"]
+
+[phases.build]
+cmds = ["echo 'Backend service - no build step needed'"]
+
+[start]
+cmd = "node index.js"
+
+[variables]
+NODE_ENV = "production"
