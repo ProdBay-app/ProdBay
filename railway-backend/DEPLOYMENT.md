@@ -34,9 +34,9 @@ This guide will help you deploy the ProdBay backend service to Railway.
    ```
 
 3. **Deploy:**
-   - Railway will automatically detect the Node.js project
-   - It will install dependencies and start the server
-   - The deployment will be available at a Railway-generated URL
+   - Railway will use the Dockerfile to build and deploy the Node.js backend
+   - The service will be available at a Railway-generated URL
+   - Make sure the deployment shows "Dockerfile" as the build method, not "Nixpacks"
 
 ## Step 3: Get Your Railway URL
 
@@ -54,7 +54,7 @@ This guide will help you deploy the ProdBay backend service to Railway.
 
 2. **Test Brief Processing:**
    ```bash
-   curl -X POST https://your-service.railway.app/api/process-brief \
+   curl -X POST https://efficient-tranquility-development.up.railway.app/api/process-brief \
      -H "Content-Type: application/json" \
      -d '{
        "projectId": "123e4567-e89b-12d3-a456-426614174000",
@@ -96,16 +96,22 @@ VITE_RAILWAY_API_URL=https://your-service.railway.app
 
 ### Common Issues
 
-1. **Database Connection Failed:**
+1. **405 Method Not Allowed Error:**
+   - This happens when Railway detects the project as a frontend instead of backend
+   - Solution: Ensure Railway is using the Dockerfile (check build logs)
+   - If using Nixpacks, make sure `nixpacks.toml` is properly configured
+   - Redeploy the service after adding the Dockerfile
+
+2. **Database Connection Failed:**
    - Verify `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are correct
    - Check that your Supabase project is active
    - Ensure the database schema is properly set up
 
-2. **CORS Errors:**
+3. **CORS Errors:**
    - Update `ALLOWED_ORIGINS` to include your frontend domain
    - Check that your frontend is making requests to the correct Railway URL
 
-3. **Service Not Starting:**
+4. **Service Not Starting:**
    - Check the deployment logs for error messages
    - Verify all required environment variables are set
    - Ensure the `package.json` scripts are correct
