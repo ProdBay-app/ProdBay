@@ -8,6 +8,16 @@ This guide will help you deploy the ProdBay backend service to Railway.
 2. Supabase project with the ProdBay database schema
 3. Supabase service role key
 
+## Railway Configuration Files
+
+The project includes multiple configuration files for Railway:
+
+- **`railway.toml`** - Primary Railway configuration (preferred)
+- **`nixpacks.toml`** - Alternative Nixpacks configuration  
+- **`Dockerfile`** - Docker-based deployment option
+
+Railway will prioritize `railway.toml` over other configuration methods.
+
 ## Step 1: Prepare Your Repository
 
 1. Create a new repository for the backend service
@@ -34,9 +44,9 @@ This guide will help you deploy the ProdBay backend service to Railway.
    ```
 
 3. **Deploy:**
-   - Railway will use the Dockerfile to build and deploy the Node.js backend
+   - Railway will use the `railway.toml` configuration to deploy the Node.js backend
    - The service will be available at a Railway-generated URL
-   - Make sure the deployment shows "Dockerfile" as the build method, not "Nixpacks"
+   - Make sure the deployment shows "Dockerfile" as the build method in the configuration
 
 ## Step 3: Get Your Railway URL
 
@@ -54,7 +64,7 @@ This guide will help you deploy the ProdBay backend service to Railway.
 
 2. **Test Brief Processing:**
    ```bash
-   curl -X POST https://efficient-tranquility-development.up.railway.app/api/process-brief \
+   curl -X POST https://humorous-encouragement-development.up.railway.app/api/process-brief \
      -H "Content-Type: application/json" \
      -d '{
        "projectId": "123e4567-e89b-12d3-a456-426614174000",
@@ -98,9 +108,10 @@ VITE_RAILWAY_API_URL=https://your-service.railway.app
 
 1. **405 Method Not Allowed Error:**
    - This happens when Railway detects the project as a frontend instead of backend
-   - Solution: Ensure Railway is using the Dockerfile (check build logs)
+   - Solution: Ensure Railway is using the `railway.toml` configuration with `builder = "DOCKERFILE"`
+   - Check the Railway dashboard configuration tab to verify the builder setting
    - If using Nixpacks, make sure `nixpacks.toml` is properly configured
-   - Redeploy the service after adding the Dockerfile
+   - Redeploy the service after adding the correct configuration files
 
 2. **Database Connection Failed:**
    - Verify `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are correct
