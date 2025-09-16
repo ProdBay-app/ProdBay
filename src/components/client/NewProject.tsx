@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { RailwayApiService } from '../../services/railwayApiService';
-import { FileText, Calendar, DollarSign, MapPin, Send } from 'lucide-react';
+import { FileText, Calendar, DollarSign, MapPin, Send, Brain, Sparkles } from 'lucide-react';
 
 const NewProject: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ const NewProject: React.FC = () => {
     financial_parameters: 0,
     timeline_deadline: ''
   });
+  const [useAIAllocation, setUseAIAllocation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'creating-project' | 'processing-brief' | 'success' | 'error'>('idle');
 
@@ -45,8 +46,16 @@ const NewProject: React.FC = () => {
       // Process brief using Railway API
       setSubmitStatus('processing-brief');
       const briefResult = await RailwayApiService.processBrief(
-        project.id, 
-        formData.brief_description
+        String(project.id), 
+        formData.brief_description,
+        {
+          useAI: useAIAllocation,
+          projectContext: {
+            financial_parameters: formData.financial_parameters,
+            timeline_deadline: formData.timeline_deadline,
+            physical_parameters: formData.physical_parameters
+          }
+        }
       );
 
       if (!briefResult.success) {
@@ -55,8 +64,11 @@ const NewProject: React.FC = () => {
         alert(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
       } else {
         console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
-        // Show success message
-        alert(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated from your brief.`);
+        // Show success message with AI info if applicable
+        const aiInfo = briefResult.data?.aiData 
+          ? ` using AI (${Math.round(briefResult.data.aiData.confidence * 100)}% confidence)`
+          : '';
+        alert(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated from your brief${aiInfo}.`);
       }
 
       setSubmitStatus('success');
@@ -134,6 +146,37 @@ const NewProject: React.FC = () => {
             />
           </div>
 
+          {/* AI Allocation Toggle */}
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+            <div className="flex items-center space-x-3 mb-3">
+              <Brain className="h-6 w-6 text-purple-600" />
+              <h3 className="text-lg font-semibold text-gray-900">AI-Powered Asset Allocation</h3>
+              <Sparkles className="h-5 w-5 text-purple-500" />
+            </div>
+            <p className="text-gray-600 mb-4">
+              Enable AI to intelligently analyze your brief and suggest optimal assets with detailed specifications.
+            </p>
+            <label className="inline-flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useAIAllocation}
+                onChange={(e) => setUseAIAllocation(e.target.checked)}
+                className="w-5 h-5 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Use AI-powered asset allocation
+              </span>
+            </label>
+            {useAIAllocation && (
+              <div className="mt-3 p-3 bg-purple-100 rounded-lg">
+                <p className="text-sm text-purple-800">
+                  ✨ AI will analyze your brief to identify assets, create detailed specifications, 
+                  and suggest optimal supplier allocations with confidence scores.
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="physical_parameters" className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
@@ -194,7 +237,7 @@ const NewProject: React.FC = () => {
               <Send className="h-4 w-4" />
               <span>
                 {submitStatus === 'creating-project' && 'Creating Project...'}
-                {submitStatus === 'processing-brief' && 'Processing Brief...'}
+                {submitStatus === 'processing-brief' && (useAIAllocation ? 'AI Processing Brief...' : 'Processing Brief...')}
                 {submitStatus === 'success' && 'Project Created!'}
                 {submitStatus === 'error' && 'Failed - Try Again'}
                 {submitStatus === 'idle' && 'Create Project'}

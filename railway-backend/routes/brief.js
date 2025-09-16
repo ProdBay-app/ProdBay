@@ -8,7 +8,7 @@ const router = express.Router();
  */
 router.post('/process-brief', async (req, res) => {
   try {
-    const { projectId, briefDescription } = req.body;
+    const { projectId, briefDescription, useAI, projectContext } = req.body;
 
     // Validate request body
     if (!projectId || !briefDescription) {
@@ -66,13 +66,20 @@ router.post('/process-brief', async (req, res) => {
     }
 
     // Process the brief
-    const result = await BriefProcessor.processBrief(projectId, briefDescription);
+    const result = await BriefProcessor.processBrief(projectId, briefDescription, {
+      useAI: useAI || false,
+      projectContext: projectContext || {}
+    });
 
     // Return success response
+    const message = result.aiData 
+      ? `AI-powered brief processing completed. ${result.createdAssets.length} assets created with ${Math.round(result.aiData.confidence * 100)}% confidence.`
+      : `Brief processed successfully. ${result.createdAssets.length} assets created.`;
+    
     res.status(200).json({
       success: true,
       data: result,
-      message: `Brief processed successfully. ${result.createdAssets.length} assets created.`
+      message
     });
 
   } catch (error) {

@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const briefRoutes = require('./routes/brief');
 const supplierRoutes = require('./routes/suppliers');
+const aiAllocationRoutes = require('./routes/aiAllocation');
 const { testConnection } = require('./config/database');
 
 const app = express();
@@ -55,6 +56,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api', briefRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api', aiAllocationRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -67,7 +69,12 @@ app.get('/', (req, res) => {
       'GET /api/health': 'Health check endpoint',
       'GET /api/suppliers/suggestions/:assetId': 'Get suggested suppliers for an asset',
       'POST /api/suppliers/send-quote-requests': 'Send quote requests to selected suppliers',
-      'GET /api/suppliers/health': 'Supplier service health check'
+      'GET /api/suppliers/health': 'Supplier service health check',
+      'POST /api/ai-allocate-assets': 'AI-powered asset analysis from brief',
+      'POST /api/ai-suggest-suppliers': 'AI-powered supplier suggestions',
+      'POST /api/ai-allocate-project': 'Complete AI allocation for project',
+      'POST /api/ai-create-assets': 'Create assets based on AI analysis',
+      'GET /api/ai-health': 'AI service health check'
     }
   });
 });

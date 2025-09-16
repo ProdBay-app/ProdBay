@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { AutomationService } from '../../services/automationService';
 import { RailwayApiService } from '../../services/railwayApiService';
 import { SupplierApiService, type SuggestedSupplier } from '../../services/supplierApiService';
+import { AIAllocationService, type AIAssetSuggestion, type AISupplierAllocation } from '../../services/aiAllocationService';
 import type { Project, Asset, Quote, Supplier } from '../../lib/supabase';
 import { 
   CheckCircle, 
@@ -14,7 +15,11 @@ import {
   Eye,
   Plus,
   Pencil,
-  Trash
+  Trash,
+  Brain,
+  Sparkles,
+  Zap,
+  Target
 } from 'lucide-react';
 
 const ProducerDashboard: React.FC = () => {
@@ -60,6 +65,17 @@ const ProducerDashboard: React.FC = () => {
   const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
   const [sendingRequests, setSendingRequests] = useState(false);
+
+  // AI Allocation state
+  const [showAIAllocationModal, setShowAIAllocationModal] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<{
+    assets: AIAssetSuggestion[];
+    allocations: AISupplierAllocation[];
+    reasoning: string;
+    confidence: number;
+  } | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [aiProcessingType, setAiProcessingType] = useState<'assets' | 'suppliers' | 'complete'>('assets');
 
   useEffect(() => {
     loadProjects();
@@ -305,7 +321,7 @@ const ProducerDashboard: React.FC = () => {
       const result = await SupplierApiService.sendQuoteRequests(
         supplierSelectionAsset.id,
         selectedSupplierIds,
-        from
+        from ? { name: String(from.name), email: String(from.email) } : undefined
       );
 
       await loadProjectDetails(selectedProject!.id);
@@ -521,6 +537,104 @@ const ProducerDashboard: React.FC = () => {
     }
   };
 
+  // AI Allocation Functions
+  const openAIAllocation = (type: 'assets' | 'suppliers' | 'complete') => {
+    if (!selectedProject) return;
+    setAiProcessingType(type);
+    setShowAIAllocationModal(true);
+    setAiSuggestions(null);
+  };
+
+  const performAIAnalysis = async () => {
+    if (!selectedProject) return;
+    
+    setLoadingAI(true);
+    try {
+      let result;
+      
+      switch (aiProcessingType) {
+        case 'assets':
+          result = await AIAllocationService.analyzeBriefForAssets(
+            selectedProject.brief_description,
+            {
+              financial_parameters: selectedProject.financial_parameters,
+              timeline_deadline: selectedProject.timeline_deadline,
+              physical_parameters: selectedProject.physical_parameters
+            }
+          );
+          break;
+          
+        case 'suppliers':
+          result = await AIAllocationService.suggestSuppliersForAssets(assets, selectedProject.id);
+          break;
+          
+        case 'complete':
+          result = await AIAllocationService.performCompleteAllocation(
+            selectedProject.id,
+            selectedProject.brief_description,
+            {
+              financial_parameters: selectedProject.financial_parameters,
+              timeline_deadline: selectedProject.timeline_deadline,
+              physical_parameters: selectedProject.physical_parameters
+            }
+          );
+          break;
+      }
+
+      if (result.success && result.data) {
+        setAiSuggestions({
+          assets: result.data.assets || [],
+          allocations: result.data.allocations || [],
+          reasoning: result.data.reasoning || '',
+          confidence: result.data.confidence || 0
+        });
+      } else {
+        alert(`AI analysis failed: ${result.error?.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('AI analysis error:', error);
+      alert('AI analysis failed. Please try again.');
+    } finally {
+      setLoadingAI(false);
+    }
+  };
+
+  const applyAISuggestions = async () => {
+    if (!aiSuggestions || !selectedProject) return;
+    
+    try {
+      // Apply asset suggestions
+      if (aiSuggestions.assets.length > 0) {
+        const result = await AIAllocationService.createAssetsFromAI(selectedProject.id, aiSuggestions.assets);
+        if (!result.success) {
+          throw new Error(result.error?.message || 'Failed to create assets');
+        }
+      }
+
+      // Apply supplier allocations
+      if (aiSuggestions.allocations.length > 0) {
+        for (const allocation of aiSuggestions.allocations) {
+          const asset = assets.find(a => a.asset_name === allocation.asset_name);
+          if (asset) {
+            await supabase
+              .from('assets')
+              .update({ assigned_supplier_id: allocation.recommended_supplier_id })
+              .eq('id', asset.id);
+          }
+        }
+      }
+
+      // Reload project details
+      await loadProjectDetails(selectedProject.id);
+      setShowAIAllocationModal(false);
+      setAiSuggestions(null);
+      alert('AI suggestions applied successfully!');
+    } catch (error) {
+      console.error('Error applying AI suggestions:', error);
+      alert('Failed to apply AI suggestions. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -642,13 +756,49 @@ const ProducerDashboard: React.FC = () => {
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold">Asset Management</h2>
-                  <button
-                    onClick={openCreateAsset}
-                    className="flex items-center space-x-2 px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>New Asset</span>
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={openCreateAsset}
+                      className="flex items-center space-x-2 px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>New Asset</span>
+                    </button>
+                    <div className="relative group">
+                      <button
+                        className="flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded text-sm hover:from-purple-700 hover:to-blue-700"
+                      >
+                        <Brain className="h-4 w-4" />
+                        <span>AI Allocation</span>
+                        <Sparkles className="h-3 w-3" />
+                      </button>
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                        <div className="py-1">
+                          <button
+                            onClick={() => openAIAllocation('assets')}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                          >
+                            <Target className="h-4 w-4" />
+                            <span>AI Asset Analysis</span>
+                          </button>
+                          <button
+                            onClick={() => openAIAllocation('suppliers')}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                          >
+                            <Zap className="h-4 w-4" />
+                            <span>AI Supplier Matching</span>
+                          </button>
+                          <button
+                            onClick={() => openAIAllocation('complete')}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                          >
+                            <Brain className="h-4 w-4" />
+                            <span>Complete AI Allocation</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-6">
                   {assets.map((asset) => {
@@ -1170,6 +1320,163 @@ const ProducerDashboard: React.FC = () => {
                   </div>
                 </div>
               </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* AI Allocation Modal */}
+      {showAIAllocationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
+            <div className="mb-6">
+              <div className="flex items-center space-x-3 mb-2">
+                <Brain className="h-6 w-6 text-purple-600" />
+                <h3 className="text-xl font-semibold">
+                  {aiProcessingType === 'assets' && 'AI Asset Analysis'}
+                  {aiProcessingType === 'suppliers' && 'AI Supplier Matching'}
+                  {aiProcessingType === 'complete' && 'Complete AI Allocation'}
+                </h3>
+                <Sparkles className="h-5 w-5 text-purple-500" />
+              </div>
+              <p className="text-gray-600 text-sm">
+                {aiProcessingType === 'assets' && 'Analyze the project brief to identify and suggest optimal assets with detailed specifications.'}
+                {aiProcessingType === 'suppliers' && 'Match existing assets to the most suitable suppliers based on expertise and capabilities.'}
+                {aiProcessingType === 'complete' && 'Perform complete AI-powered analysis and allocation for the entire project.'}
+              </p>
+            </div>
+
+            {!aiSuggestions ? (
+              <div className="text-center py-8">
+                {loadingAI ? (
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                    <p className="text-gray-600">AI is analyzing your project...</p>
+                    <p className="text-sm text-gray-500">This may take a few moments</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+                      <h4 className="font-semibold text-gray-900 mb-2">Ready to analyze</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Click the button below to start AI analysis of your project.
+                      </p>
+                      <button
+                        onClick={performAIAnalysis}
+                        className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 mx-auto"
+                      >
+                        <Brain className="h-5 w-5" />
+                        <span>Start AI Analysis</span>
+                        <Sparkles className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* AI Results Summary */}
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">AI Analysis Complete</h4>
+                      <p className="text-sm text-gray-600">
+                        Confidence: {Math.round(aiSuggestions.confidence * 100)}%
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-green-700 font-medium">Ready</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Reasoning */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">AI Reasoning</h4>
+                  <p className="text-sm text-gray-700">{aiSuggestions.reasoning}</p>
+                </div>
+
+                {/* Asset Suggestions */}
+                {aiSuggestions.assets.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3">Suggested Assets ({aiSuggestions.assets.length})</h4>
+                    <div className="space-y-3">
+                      {aiSuggestions.assets.map((asset, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <h5 className="font-medium text-gray-900">{asset.asset_name}</h5>
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                asset.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                asset.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {asset.priority} priority
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                asset.estimated_cost_range === 'high' ? 'bg-red-100 text-red-800' :
+                                asset.estimated_cost_range === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {asset.estimated_cost_range} cost
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600">{asset.specifications}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Supplier Allocations */}
+                {aiSuggestions.allocations.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3">Supplier Allocations ({aiSuggestions.allocations.length})</h4>
+                    <div className="space-y-3">
+                      {aiSuggestions.allocations.map((allocation, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <h5 className="font-medium text-gray-900">{allocation.asset_name}</h5>
+                            <div className="flex items-center space-x-2">
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {Math.round(allocation.confidence * 100)}% confidence
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">
+                            <strong>Recommended:</strong> {allocation.recommended_supplier_name}
+                          </p>
+                          <p className="text-sm text-gray-600">{allocation.reasoning}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAIAllocationModal(false);
+                      setAiSuggestions(null);
+                    }}
+                    className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={applyAISuggestions}
+                    className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700"
+                  >
+                    <Brain className="h-4 w-4" />
+                    <span>Apply AI Suggestions</span>
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

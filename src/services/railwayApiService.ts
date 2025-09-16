@@ -8,6 +8,12 @@ const RAILWAY_API_URL = import.meta.env.VITE_RAILWAY_API_URL || '';
 export interface ProcessBriefRequest {
   projectId: string;
   briefDescription: string;
+  useAI?: boolean;
+  projectContext?: {
+    financial_parameters?: number;
+    timeline_deadline?: string;
+    physical_parameters?: string;
+  };
 }
 
 export interface ProcessBriefResponse {
@@ -17,6 +23,11 @@ export interface ProcessBriefResponse {
     identifiedAssets: string[];
     createdAssets: any[];
     processingTime: number;
+    aiData?: {
+      reasoning: string;
+      confidence: number;
+      aiAssets: any[];
+    };
   };
   message?: string;
   error?: {
@@ -31,9 +42,14 @@ export class RailwayApiService {
    * Process a project brief using the Railway backend
    * @param projectId - UUID of the project
    * @param briefDescription - The project brief text
+   * @param options - Processing options including AI settings
    * @returns Promise with the processing result
    */
-  static async processBrief(projectId: string, briefDescription: string): Promise<ProcessBriefResponse> {
+  static async processBrief(
+    projectId: string, 
+    briefDescription: string, 
+    options: { useAI?: boolean; projectContext?: any } = {}
+  ): Promise<ProcessBriefResponse> {
     if (!RAILWAY_API_URL) {
       throw new Error('Railway API URL not configured. Please set VITE_RAILWAY_API_URL environment variable.');
     }
@@ -46,7 +62,9 @@ export class RailwayApiService {
         },
         body: JSON.stringify({
           projectId,
-          briefDescription
+          briefDescription,
+          useAI: options.useAI || false,
+          projectContext: options.projectContext || {}
         })
       });
 
