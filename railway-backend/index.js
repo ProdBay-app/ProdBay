@@ -19,20 +19,52 @@ const corsOptions = {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     
-    const allowedOrigins = process.env.ALLOWED_ORIGINS 
-      ? process.env.ALLOWED_ORIGINS.split(',')
-      : [
+    // Get the regex pattern from environment variable
+    const allowedOriginsPattern = process.env.ALLOWED_ORIGINS;
+    
+    if (allowedOriginsPattern) {
+      try {
+        // Create RegExp from the environment variable
+        const originRegex = new RegExp(allowedOriginsPattern);
+        
+        if (originRegex.test(origin)) {
+          callback(null, true);
+        } else {
+          console.warn(`CORS blocked request from origin: ${origin} (does not match pattern: ${allowedOriginsPattern})`);
+          callback(new Error('Not allowed by CORS'));
+        }
+      } catch (error) {
+        console.error(`Invalid regex pattern in ALLOWED_ORIGINS: ${allowedOriginsPattern}`, error);
+        // Fall back to default origins if regex is invalid
+        const defaultOrigins = [
           'http://localhost:5173', 
           'http://localhost:3000',
           'https://prodbay-9i262gg61-clive-arias-projects.vercel.app',
           'https://prodbay.vercel.app'
         ];
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
+        
+        if (defaultOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          console.warn(`CORS blocked request from origin: ${origin} (fallback to default origins)`);
+          callback(new Error('Not allowed by CORS'));
+        }
+      }
     } else {
-      console.warn(`CORS blocked request from origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+      // Fallback to default origins if no environment variable is set
+      const defaultOrigins = [
+        'http://localhost:5173', 
+        'http://localhost:3000',
+        'https://prodbay-9i262gg61-clive-arias-projects.vercel.app',
+        'https://prodbay.vercel.app'
+      ];
+      
+      if (defaultOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked request from origin: ${origin} (no ALLOWED_ORIGINS pattern set)`);
+        callback(new Error('Not allowed by CORS'));
+      }
     }
   },
   credentials: true,
