@@ -12,13 +12,24 @@ class BriefProcessor {
    */
   static parseAssetsFromBrief(briefDescription) {
     const assetKeywords = {
-      'printing': ['print', 'banner', 'poster', 'flyer', 'brochure', 'signage'],
+      'printing': ['print', 'poster', 'flyer', 'brochure', 'signage'],
+      'graphics': ['graphic', 'creative'],
+      'banners': ['banner'],
       'staging': ['stage', 'platform', 'backdrop', 'display'],
       'audio': ['sound', 'speaker', 'microphone', 'audio', 'music'],
       'lighting': ['light', 'lighting', 'illumination', 'led'],
-      'catering': ['food', 'catering', 'meal', 'refreshment', 'beverage'],
-      'transport': ['transport', 'delivery', 'logistics', 'shipping'],
-      'design': ['design', 'graphic', 'branding', 'logo', 'creative']
+      'catering': ['catering'],
+      'food': ['food', 'meal'],
+      'beverages': ['beverage', 'refreshment'],
+      'design': ['design', 'logo'],
+      'branding': ['branding'],
+      'marketing': ['marketing'],
+      'transport': ['transport', 'shipping'],
+      'logistics': ['logistics'],
+      'delivery': ['delivery'],
+      'photography': ['photo', 'photography', 'picture'],
+      'video': ['video', 'film', 'recording'],
+      'security': ['security', 'guard']
     };
 
     const brief = briefDescription.toLowerCase();
