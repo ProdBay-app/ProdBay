@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { AutomationService } from '../../services/automationService';
 import { RailwayApiService } from '../../services/railwayApiService';
 import { SupplierApiService, type SuggestedSupplier } from '../../services/supplierApiService';
+import { AIAllocationService, type AIAssetSuggestion } from '../../services/aiAllocationService';
 import type { Project, Asset, Quote, Supplier } from '../../lib/supabase';
 import { 
   CheckCircle, 
@@ -14,7 +15,10 @@ import {
   Eye,
   Plus,
   Pencil,
-  Trash
+  Trash,
+  Brain,
+  Sparkles,
+  Target
 } from 'lucide-react';
 
 const ProducerDashboard: React.FC = () => {
@@ -34,7 +38,7 @@ const ProducerDashboard: React.FC = () => {
     financial_parameters: 0 as number | undefined,
     timeline_deadline: ''
   });
-  const [autoCreateAssets, setAutoCreateAssets] = useState(true);
+  const [allocationMethod, setAllocationMethod] = useState<'static' | 'ai'>('static');
 
   // Asset CRUD state
   const [showAssetModal, setShowAssetModal] = useState(false);
@@ -60,6 +64,15 @@ const ProducerDashboard: React.FC = () => {
   const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
   const [sendingRequests, setSendingRequests] = useState(false);
+
+  // AI Allocation state
+  const [showAIAllocationModal, setShowAIAllocationModal] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<{
+    assets: AIAssetSuggestion[];
+    reasoning: string;
+    confidence: number;
+  } | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -134,7 +147,7 @@ const ProducerDashboard: React.FC = () => {
       financial_parameters: undefined,
       timeline_deadline: ''
     });
-    setAutoCreateAssets(true);
+    setAllocationMethod('static');
     setShowProjectModal(true);
   };
 
@@ -149,7 +162,7 @@ const ProducerDashboard: React.FC = () => {
       financial_parameters: selectedProject.financial_parameters,
       timeline_deadline: selectedProject.timeline_deadline || ''
     });
-    setAutoCreateAssets(false);
+    setAllocationMethod('static');
     setShowProjectModal(true);
   };
 
@@ -197,15 +210,27 @@ const ProducerDashboard: React.FC = () => {
           .single();
         if (projectError || !project) throw projectError || new Error('Failed to create project');
         const createdProject = project as unknown as Project;
-        if (autoCreateAssets && projectForm.brief_description) {
-          // Use Railway API for brief processing
-          const briefResult = await RailwayApiService.processBrief(createdProject.id, projectForm.brief_description);
+        if (projectForm.brief_description) {
+          // Use Railway API for brief processing with selected allocation method
+          const briefResult = await RailwayApiService.processBrief(
+            createdProject.id, 
+            projectForm.brief_description,
+            {
+              allocationMethod: allocationMethod,
+              projectContext: {
+                financial_parameters: projectForm.financial_parameters,
+                timeline_deadline: projectForm.timeline_deadline,
+                physical_parameters: projectForm.physical_parameters
+              }
+            }
+          );
           if (!briefResult.success) {
             console.warn('Brief processing failed:', briefResult.error?.message);
             alert(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
           } else {
             console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
-            alert(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated from your brief.`);
+            const methodText = allocationMethod === 'ai' ? 'AI-powered' : 'static';
+            alert(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated using ${methodText} allocation.`);
           }
         }
         await loadProjects();
@@ -305,7 +330,7 @@ const ProducerDashboard: React.FC = () => {
       const result = await SupplierApiService.sendQuoteRequests(
         supplierSelectionAsset.id,
         selectedSupplierIds,
-        from
+        from ? { name: String(from.name), email: String(from.email) } : undefined
       );
 
       await loadProjectDetails(selectedProject!.id);
@@ -521,6 +546,70 @@ const ProducerDashboard: React.FC = () => {
     }
   };
 
+  // AI Allocation Functions
+  const openAIAllocation = () => {
+    if (!selectedProject) return;
+    setShowAIAllocationModal(true);
+    setAiSuggestions(null);
+  };
+
+  const performAIAnalysis = async () => {
+    if (!selectedProject) return;
+    
+    setLoadingAI(true);
+    try {
+      let result;
+      
+      result = await AIAllocationService.analyzeBriefForAssets(
+        selectedProject.brief_description,
+        {
+          financial_parameters: selectedProject.financial_parameters,
+          timeline_deadline: selectedProject.timeline_deadline,
+          physical_parameters: selectedProject.physical_parameters
+        }
+      );
+
+      if (result.success && result.data) {
+        setAiSuggestions({
+          assets: result.data.assets || [],
+          reasoning: result.data.reasoning || '',
+          confidence: result.data.confidence || 0
+        });
+      } else {
+        alert(`AI analysis failed: ${result.error?.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('AI analysis error:', error);
+      alert('AI analysis failed. Please try again.');
+    } finally {
+      setLoadingAI(false);
+    }
+  };
+
+  const applyAISuggestions = async () => {
+    if (!aiSuggestions || !selectedProject) return;
+    
+    try {
+      // Apply asset suggestions
+      if (aiSuggestions.assets.length > 0) {
+        const result = await AIAllocationService.createAssetsFromAI(selectedProject.id, aiSuggestions.assets);
+        if (!result.success) {
+          throw new Error(result.error?.message || 'Failed to create assets');
+        }
+      }
+
+
+      // Reload project details
+      await loadProjectDetails(selectedProject.id);
+      setShowAIAllocationModal(false);
+      setAiSuggestions(null);
+      alert('AI suggestions applied successfully!');
+    } catch (error) {
+      console.error('Error applying AI suggestions:', error);
+      alert('Failed to apply AI suggestions. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -642,13 +731,35 @@ const ProducerDashboard: React.FC = () => {
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold">Asset Management</h2>
-                  <button
-                    onClick={openCreateAsset}
-                    className="flex items-center space-x-2 px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>New Asset</span>
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={openCreateAsset}
+                      className="flex items-center space-x-2 px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>New Asset</span>
+                    </button>
+                    <div className="relative group">
+                      <button
+                        className="flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded text-sm hover:from-purple-700 hover:to-blue-700"
+                      >
+                        <Brain className="h-4 w-4" />
+                        <span>AI Allocation</span>
+                        <Sparkles className="h-3 w-3" />
+                      </button>
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                        <div className="py-1">
+                          <button
+                            onClick={openAIAllocation}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                          >
+                            <Target className="h-4 w-4" />
+                            <span>AI Asset Analysis</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-6">
                   {assets.map((asset) => {
@@ -858,14 +969,50 @@ const ProducerDashboard: React.FC = () => {
               </div>
 
               {!isEditingProject && (
-                <label className="inline-flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={autoCreateAssets}
-                    onChange={(e) => setAutoCreateAssets(e.target.checked)}
-                  />
-                  <span>Auto-create assets from brief</span>
-                </label>
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-gray-700">Asset Allocation Method:</p>
+                  
+                  <div className="space-y-2">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="allocationMethod"
+                        value="static"
+                        checked={allocationMethod === 'static'}
+                        onChange={(e) => setAllocationMethod(e.target.value as 'static' | 'ai')}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">Static Allocation</span>
+                        <p className="text-xs text-gray-500">Rule-based asset identification using keyword matching</p>
+                      </div>
+                    </label>
+                    
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="allocationMethod"
+                        value="ai"
+                        checked={allocationMethod === 'ai'}
+                        onChange={(e) => setAllocationMethod(e.target.value as 'static' | 'ai')}
+                        className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">AI-Powered Allocation</span>
+                        <p className="text-xs text-gray-500">AI analyzes your brief to identify assets with detailed specifications</p>
+                      </div>
+                    </label>
+                  </div>
+                  
+                  {allocationMethod === 'ai' && (
+                    <div className="mt-3 p-3 bg-purple-100 rounded-lg">
+                      <p className="text-sm text-purple-800">
+                        ✨ AI will analyze your brief to identify assets, create detailed specifications, 
+                        and suggest optimal supplier allocations with confidence scores.
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
 
               <div className="flex justify-end space-x-2 pt-4 border-t">
@@ -1170,6 +1317,135 @@ const ProducerDashboard: React.FC = () => {
                   </div>
                 </div>
               </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* AI Allocation Modal */}
+      {showAIAllocationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
+            <div className="mb-6">
+              <div className="flex items-center space-x-3 mb-2">
+                <Brain className="h-6 w-6 text-purple-600" />
+                <h3 className="text-xl font-semibold">
+                  AI Asset Analysis
+                </h3>
+                <Sparkles className="h-5 w-5 text-purple-500" />
+              </div>
+              <p className="text-gray-600 text-sm">
+                Analyze the project brief to identify and suggest optimal assets with detailed specifications.
+              </p>
+            </div>
+
+            {!aiSuggestions ? (
+              <div className="text-center py-8">
+                {loadingAI ? (
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                    <p className="text-gray-600">AI is analyzing your project...</p>
+                    <p className="text-sm text-gray-500">This may take a few moments</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+                      <h4 className="font-semibold text-gray-900 mb-2">Ready to analyze</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Click the button below to start AI analysis of your project.
+                      </p>
+                      <button
+                        onClick={performAIAnalysis}
+                        className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 mx-auto"
+                      >
+                        <Brain className="h-5 w-5" />
+                        <span>Start AI Analysis</span>
+                        <Sparkles className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* AI Results Summary */}
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">AI Analysis Complete</h4>
+                      <p className="text-sm text-gray-600">
+                        Confidence: {Math.round(aiSuggestions.confidence * 100)}%
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-green-700 font-medium">Ready</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Reasoning */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">AI Reasoning</h4>
+                  <p className="text-sm text-gray-700">{aiSuggestions.reasoning}</p>
+                </div>
+
+                {/* Asset Suggestions */}
+                {aiSuggestions.assets.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3">Suggested Assets ({aiSuggestions.assets.length})</h4>
+                    <div className="space-y-3">
+                      {aiSuggestions.assets.map((asset, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <h5 className="font-medium text-gray-900">{asset.asset_name}</h5>
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                asset.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                asset.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {asset.priority} priority
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                asset.estimated_cost_range === 'high' ? 'bg-red-100 text-red-800' :
+                                asset.estimated_cost_range === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {asset.estimated_cost_range} cost
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600">{asset.specifications}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAIAllocationModal(false);
+                      setAiSuggestions(null);
+                    }}
+                    className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={applyAISuggestions}
+                    className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700"
+                  >
+                    <Brain className="h-4 w-4" />
+                    <span>Apply AI Suggestions</span>
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

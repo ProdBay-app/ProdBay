@@ -94,9 +94,13 @@ class BriefProcessor {
    * Process a brief and create assets
    * @param {string} projectId - UUID of the project
    * @param {string} briefDescription - The project brief text
+   * @param {Object} options - Processing options
+   * @param {boolean} options.useAI - Whether to use AI-powered processing (legacy)
+   * @param {string} options.allocationMethod - Allocation method: 'static' or 'ai'
+   * @param {Object} options.projectContext - Additional project context for AI
    * @returns {Promise<Object>} Processing result with identified assets and created assets
    */
-  static async processBrief(projectId, briefDescription) {
+  static async processBrief(projectId, briefDescription, options = {}) {
     const startTime = Date.now();
     
     try {
@@ -109,11 +113,63 @@ class BriefProcessor {
         throw new Error('Project ID and brief description must be strings');
       }
 
-      // Parse assets from brief
-      const identifiedAssets = this.parseAssetsFromBrief(briefDescription);
-      
-      // Create assets in database
-      const createdAssets = await this.createAssetsForProject(projectId, briefDescription);
+      let identifiedAssets;
+      let createdAssets;
+      let aiData = null;
+
+      // Determine if we should use AI processing
+      const shouldUseAI = options.allocationMethod === 'ai' || 
+                         (options.allocationMethod === undefined && options.useAI);
+
+      if (shouldUseAI) {
+        // Use AI-powered processing
+        const AIAllocationService = require('./aiAllocationService');
+        const aiService = new AIAllocationService();
+        
+        const aiResult = await aiService.analyzeBriefForAssets(briefDescription, options.projectContext);
+        
+        if (aiResult.success) {
+          identifiedAssets = aiResult.assets.map(asset => asset.asset_name);
+          aiData = {
+            reasoning: aiResult.reasoning,
+            confidence: aiResult.confidence,
+            aiAssets: aiResult.assets
+          };
+          
+          // Create assets with AI-generated specifications
+          createdAssets = [];
+          for (const aiAsset of aiResult.assets) {
+            const { data: asset, error } = await supabase
+              .from('assets')
+              .insert({
+                project_id: projectId,
+                asset_name: aiAsset.asset_name,
+                specifications: aiAsset.specifications,
+                status: 'Pending'
+              })
+              .select()
+              .single();
+
+            if (error) {
+              console.error(`Failed to create AI asset ${aiAsset.asset_name}:`, error);
+              throw new Error(`Failed to create asset: ${error.message}`);
+            }
+
+            if (asset) {
+              createdAssets.push(asset);
+            }
+          }
+        } else {
+          // Fallback to traditional processing if AI fails
+          console.warn('AI processing failed, falling back to traditional method:', aiResult.error);
+          identifiedAssets = this.parseAssetsFromBrief(briefDescription);
+          createdAssets = await this.createAssetsForProject(projectId, briefDescription);
+        }
+      } else {
+        // Use traditional rule-based processing
+        identifiedAssets = this.parseAssetsFromBrief(briefDescription);
+        createdAssets = await this.createAssetsForProject(projectId, briefDescription);
+      }
       
       const processingTime = Date.now() - startTime;
 
@@ -121,7 +177,9 @@ class BriefProcessor {
         projectId,
         identifiedAssets,
         createdAssets,
-        processingTime
+        processingTime,
+        aiData,
+        allocationMethod: options.allocationMethod || (shouldUseAI ? 'ai' : 'static')
       };
     } catch (error) {
       console.error('Brief processing failed:', error);

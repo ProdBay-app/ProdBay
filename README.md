@@ -6,7 +6,7 @@ ProdBay is a comprehensive production management web application that connects c
 
 ### 🎯 Core Functionality
 - **Smart Brief Parsing**: Automatically identify required assets from project descriptions (Railway backend)
-- **Supplier Network Management**: Intelligent matching with relevant suppliers
+- **Supplier Network Management**: Rule-based matching with relevant suppliers
 - **Quote Management**: Streamlined quote collection and comparison
 - **Real-time Tracking**: Monitor project progress and status updates
 
@@ -140,7 +140,7 @@ Notes:
 ### Project Creation Flow
 1. Client submits project brief
 2. Frontend sends brief to Railway backend API
-3. Backend parses brief to identify required assets
+3. Backend parses brief to identify required assets (AI-powered or rule-based)
 4. Assets are created in Supabase database
 5. Relevant suppliers are identified based on service categories
 
