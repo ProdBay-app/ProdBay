@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const briefRoutes = require('./routes/brief');
+const supplierRoutes = require('./routes/suppliers');
 const { testConnection } = require('./config/database');
 
 const app = express();
@@ -53,6 +54,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api', briefRoutes);
+app.use('/api/suppliers', supplierRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -62,7 +64,10 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       'POST /api/process-brief': 'Process project brief and create assets',
-      'GET /api/health': 'Health check endpoint'
+      'GET /api/health': 'Health check endpoint',
+      'GET /api/suppliers/suggestions/:assetId': 'Get suggested suppliers for an asset',
+      'POST /api/suppliers/send-quote-requests': 'Send quote requests to selected suppliers',
+      'GET /api/suppliers/health': 'Supplier service health check'
     }
   });
 });

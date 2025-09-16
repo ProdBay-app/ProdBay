@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:suppliers": "node test-supplier-api.js"
   },
   "keywords": ["prodbay", "backend", "api"],
   "author": "ProdBay Team",
@@ -16,7 +17,8 @@
     "@supabase/supabase-js": "^2.38.0",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
