@@ -8,7 +8,7 @@ const router = express.Router();
  */
 router.post('/process-brief', async (req, res) => {
   try {
-    const { projectId, briefDescription, useAI, projectContext } = req.body;
+    const { projectId, briefDescription, useAI, allocationMethod, projectContext } = req.body;
 
     // Validate request body
     if (!projectId || !briefDescription) {
@@ -65,11 +65,50 @@ router.post('/process-brief', async (req, res) => {
       });
     }
 
+    // Determine allocation method with backward compatibility
+    let finalUseAI = false;
+    if (allocationMethod) {
+      // New enum-based approach
+      if (allocationMethod === 'ai') {
+        finalUseAI = true;
+      } else if (allocationMethod === 'static') {
+        finalUseAI = false;
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_REQUEST',
+            message: 'allocationMethod must be either "static" or "ai"'
+          }
+        });
+      }
+    } else {
+      // Backward compatibility with useAI parameter
+      finalUseAI = useAI || false;
+    }
+
     // Process the brief
     const result = await BriefProcessor.processBrief(projectId, briefDescription, {
-      useAI: useAI || false,
+      useAI: finalUseAI,
+      allocationMethod: allocationMethod || (finalUseAI ? 'ai' : 'static'),
       projectContext: projectContext || {}
     });
+
+    // Update project with allocation method choice
+    const finalAllocationMethod = allocationMethod || (finalUseAI ? 'ai' : 'static');
+    const { supabase } = require('../config/database');
+    const { error: updateError } = await supabase
+      .from('projects')
+      .update({ 
+        allocation_method: finalAllocationMethod,
+        use_ai_allocation: finalUseAI 
+      })
+      .eq('id', projectId);
+
+    if (updateError) {
+      console.warn('Failed to update project allocation method:', updateError);
+      // Don't fail the request, just log the warning
+    }
 
     // Return success response
     const message = result.aiData 

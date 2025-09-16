@@ -39,7 +39,7 @@ const ProducerDashboard: React.FC = () => {
     financial_parameters: 0 as number | undefined,
     timeline_deadline: ''
   });
-  const [autoCreateAssets, setAutoCreateAssets] = useState(true);
+  const [allocationMethod, setAllocationMethod] = useState<'static' | 'ai'>('static');
 
   // Asset CRUD state
   const [showAssetModal, setShowAssetModal] = useState(false);
@@ -150,7 +150,7 @@ const ProducerDashboard: React.FC = () => {
       financial_parameters: undefined,
       timeline_deadline: ''
     });
-    setAutoCreateAssets(true);
+    setAllocationMethod('static');
     setShowProjectModal(true);
   };
 
@@ -165,7 +165,7 @@ const ProducerDashboard: React.FC = () => {
       financial_parameters: selectedProject.financial_parameters,
       timeline_deadline: selectedProject.timeline_deadline || ''
     });
-    setAutoCreateAssets(false);
+    setAllocationMethod('static');
     setShowProjectModal(true);
   };
 
@@ -213,15 +213,27 @@ const ProducerDashboard: React.FC = () => {
           .single();
         if (projectError || !project) throw projectError || new Error('Failed to create project');
         const createdProject = project as unknown as Project;
-        if (autoCreateAssets && projectForm.brief_description) {
-          // Use Railway API for brief processing
-          const briefResult = await RailwayApiService.processBrief(createdProject.id, projectForm.brief_description);
+        if (projectForm.brief_description) {
+          // Use Railway API for brief processing with selected allocation method
+          const briefResult = await RailwayApiService.processBrief(
+            createdProject.id, 
+            projectForm.brief_description,
+            {
+              allocationMethod: allocationMethod,
+              projectContext: {
+                financial_parameters: projectForm.financial_parameters,
+                timeline_deadline: projectForm.timeline_deadline,
+                physical_parameters: projectForm.physical_parameters
+              }
+            }
+          );
           if (!briefResult.success) {
             console.warn('Brief processing failed:', briefResult.error?.message);
             alert(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
           } else {
             console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
-            alert(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated from your brief.`);
+            const methodText = allocationMethod === 'ai' ? 'AI-powered' : 'static';
+            alert(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated using ${methodText} allocation.`);
           }
         }
         await loadProjects();
@@ -1008,14 +1020,50 @@ const ProducerDashboard: React.FC = () => {
               </div>
 
               {!isEditingProject && (
-                <label className="inline-flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={autoCreateAssets}
-                    onChange={(e) => setAutoCreateAssets(e.target.checked)}
-                  />
-                  <span>Auto-create assets from brief</span>
-                </label>
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-gray-700">Asset Allocation Method:</p>
+                  
+                  <div className="space-y-2">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="allocationMethod"
+                        value="static"
+                        checked={allocationMethod === 'static'}
+                        onChange={(e) => setAllocationMethod(e.target.value as 'static' | 'ai')}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">Static Allocation</span>
+                        <p className="text-xs text-gray-500">Rule-based asset identification using keyword matching</p>
+                      </div>
+                    </label>
+                    
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="allocationMethod"
+                        value="ai"
+                        checked={allocationMethod === 'ai'}
+                        onChange={(e) => setAllocationMethod(e.target.value as 'static' | 'ai')}
+                        className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">AI-Powered Allocation</span>
+                        <p className="text-xs text-gray-500">AI analyzes your brief to identify assets with detailed specifications</p>
+                      </div>
+                    </label>
+                  </div>
+                  
+                  {allocationMethod === 'ai' && (
+                    <div className="mt-3 p-3 bg-purple-100 rounded-lg">
+                      <p className="text-sm text-purple-800">
+                        ✨ AI will analyze your brief to identify assets, create detailed specifications, 
+                        and suggest optimal supplier allocations with confidence scores.
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
 
               <div className="flex justify-end space-x-2 pt-4 border-t">

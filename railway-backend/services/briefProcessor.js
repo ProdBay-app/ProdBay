@@ -95,7 +95,8 @@ class BriefProcessor {
    * @param {string} projectId - UUID of the project
    * @param {string} briefDescription - The project brief text
    * @param {Object} options - Processing options
-   * @param {boolean} options.useAI - Whether to use AI-powered processing
+   * @param {boolean} options.useAI - Whether to use AI-powered processing (legacy)
+   * @param {string} options.allocationMethod - Allocation method: 'static' or 'ai'
    * @param {Object} options.projectContext - Additional project context for AI
    * @returns {Promise<Object>} Processing result with identified assets and created assets
    */
@@ -116,7 +117,11 @@ class BriefProcessor {
       let createdAssets;
       let aiData = null;
 
-      if (options.useAI) {
+      // Determine if we should use AI processing
+      const shouldUseAI = options.allocationMethod === 'ai' || 
+                         (options.allocationMethod === undefined && options.useAI);
+
+      if (shouldUseAI) {
         // Use AI-powered processing
         const AIAllocationService = require('./aiAllocationService');
         const aiService = new AIAllocationService();
@@ -173,7 +178,8 @@ class BriefProcessor {
         identifiedAssets,
         createdAssets,
         processingTime,
-        aiData
+        aiData,
+        allocationMethod: options.allocationMethod || (shouldUseAI ? 'ai' : 'static')
       };
     } catch (error) {
       console.error('Brief processing failed:', error);

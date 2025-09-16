@@ -14,7 +14,7 @@ const NewProject: React.FC = () => {
     financial_parameters: 0,
     timeline_deadline: ''
   });
-  const [useAIAllocation, setUseAIAllocation] = useState(false);
+  const [allocationMethod, setAllocationMethod] = useState<'static' | 'ai'>('static');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'creating-project' | 'processing-brief' | 'success' | 'error'>('idle');
 
@@ -49,7 +49,7 @@ const NewProject: React.FC = () => {
         String(project.id), 
         formData.brief_description,
         {
-          useAI: useAIAllocation,
+          allocationMethod: allocationMethod,
           projectContext: {
             financial_parameters: formData.financial_parameters,
             timeline_deadline: formData.timeline_deadline,
@@ -156,25 +156,50 @@ const NewProject: React.FC = () => {
             <p className="text-gray-600 mb-4">
               Enable AI to intelligently analyze your brief and suggest optimal assets with detailed specifications.
             </p>
-            <label className="inline-flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={useAIAllocation}
-                onChange={(e) => setUseAIAllocation(e.target.checked)}
-                className="w-5 h-5 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Use AI-powered asset allocation
-              </span>
-            </label>
-            {useAIAllocation && (
-              <div className="mt-3 p-3 bg-purple-100 rounded-lg">
-                <p className="text-sm text-purple-800">
-                  ✨ AI will analyze your brief to identify assets, create detailed specifications, 
-                  and suggest optimal supplier allocations with confidence scores.
-                </p>
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-gray-700">Asset Allocation Method:</p>
+              
+              <div className="space-y-2">
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="allocationMethod"
+                    value="static"
+                    checked={allocationMethod === 'static'}
+                    onChange={(e) => setAllocationMethod(e.target.value as 'static' | 'ai')}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Static Allocation</span>
+                    <p className="text-xs text-gray-500">Rule-based asset identification using keyword matching</p>
+                  </div>
+                </label>
+                
+                <label className="flex items-center space-x-3 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="allocationMethod"
+                    value="ai"
+                    checked={allocationMethod === 'ai'}
+                    onChange={(e) => setAllocationMethod(e.target.value as 'static' | 'ai')}
+                    className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">AI-Powered Allocation</span>
+                    <p className="text-xs text-gray-500">AI analyzes your brief to identify assets with detailed specifications</p>
+                  </div>
+                </label>
               </div>
-            )}
+              
+              {allocationMethod === 'ai' && (
+                <div className="mt-3 p-3 bg-purple-100 rounded-lg">
+                  <p className="text-sm text-purple-800">
+                    ✨ AI will analyze your brief to identify assets, create detailed specifications, 
+                    and suggest optimal supplier allocations with confidence scores.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -237,7 +262,7 @@ const NewProject: React.FC = () => {
               <Send className="h-4 w-4" />
               <span>
                 {submitStatus === 'creating-project' && 'Creating Project...'}
-                {submitStatus === 'processing-brief' && (useAIAllocation ? 'AI Processing Brief...' : 'Processing Brief...')}
+                {submitStatus === 'processing-brief' && (allocationMethod === 'ai' ? 'AI Processing Brief...' : 'Processing Brief...')}
                 {submitStatus === 'success' && 'Project Created!'}
                 {submitStatus === 'error' && 'Failed - Try Again'}
                 {submitStatus === 'idle' && 'Create Project'}
