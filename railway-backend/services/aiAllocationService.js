@@ -13,6 +13,41 @@ class AIAllocationService {
   }
 
   /**
+   * Clean and parse JSON response from OpenAI
+   * Handles markdown code blocks and other formatting issues
+   */
+  parseAIResponse(content) {
+    try {
+      // Remove markdown code blocks if present
+      let cleanedContent = content.trim();
+      
+      // Remove ```json and ``` markers
+      if (cleanedContent.startsWith('```json')) {
+        cleanedContent = cleanedContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedContent.startsWith('```')) {
+        cleanedContent = cleanedContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      // Remove any leading/trailing whitespace
+      cleanedContent = cleanedContent.trim();
+      
+      // Try to find JSON object in the content
+      const jsonStart = cleanedContent.indexOf('{');
+      const jsonEnd = cleanedContent.lastIndexOf('}');
+      
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanedContent = cleanedContent.substring(jsonStart, jsonEnd + 1);
+      }
+      
+      return JSON.parse(cleanedContent);
+    } catch (error) {
+      console.error('Failed to parse AI response:', error);
+      console.error('Raw content:', content);
+      throw new Error(`Failed to parse AI response: ${error.message}`);
+    }
+  }
+
+  /**
    * Analyze project brief and suggest assets using AI
    * @param {string} briefDescription - The project brief text
    * @param {Object} projectContext - Additional project context (budget, timeline, etc.)
@@ -29,7 +64,7 @@ class AIAllocationService {
         messages: [
           {
             role: "system",
-            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. Always respond with valid JSON."
+            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure."
           },
           {
             role: "user",
@@ -40,7 +75,10 @@ class AIAllocationService {
         max_tokens: 2000
       });
 
-      const aiResponse = JSON.parse(response.choices[0].message.content);
+      // Log the raw response for debugging
+      console.log('Raw AI response:', response.choices[0].message.content);
+
+      const aiResponse = this.parseAIResponse(response.choices[0].message.content);
       const processingTime = Date.now() - startTime;
 
       // Log the AI processing
@@ -91,7 +129,7 @@ class AIAllocationService {
         messages: [
           {
             role: "system",
-            content: "You are an expert supplier relationship manager. Match suppliers to assets based on capabilities, expertise, and optimal allocation. Always respond with valid JSON."
+            content: "You are an expert supplier relationship manager. Match suppliers to assets based on capabilities, expertise, and optimal allocation. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure."
           },
           {
             role: "user",
@@ -102,7 +140,10 @@ class AIAllocationService {
         max_tokens: 2500
       });
 
-      const aiResponse = JSON.parse(response.choices[0].message.content);
+      // Log the raw response for debugging
+      console.log('Raw AI response:', response.choices[0].message.content);
+
+      const aiResponse = this.parseAIResponse(response.choices[0].message.content);
       const processingTime = Date.now() - startTime;
 
       await this.logAIProcessing('supplier_matching', {
@@ -216,7 +257,7 @@ Additional Context:
 - Timeline: ${projectContext.timeline_deadline || 'Not specified'}
 - Physical Parameters: ${projectContext.physical_parameters || 'Not specified'}
 
-Please respond with a JSON object in this exact format:
+Respond with ONLY a JSON object in this exact format (no markdown, no code blocks):
 {
   "assets": [
     {
@@ -267,7 +308,7 @@ ${assetInfo}
 Available Suppliers:
 ${supplierInfo}
 
-Please respond with a JSON object in this exact format:
+Respond with ONLY a JSON object in this exact format (no markdown, no code blocks):
 {
   "allocations": [
     {
