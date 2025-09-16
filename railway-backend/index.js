@@ -103,8 +103,6 @@ app.get('/', (req, res) => {
       'POST /api/suppliers/send-quote-requests': 'Send quote requests to selected suppliers',
       'GET /api/suppliers/health': 'Supplier service health check',
       'POST /api/ai-allocate-assets': 'AI-powered asset analysis from brief',
-      'POST /api/ai-suggest-suppliers': 'AI-powered supplier suggestions',
-      'POST /api/ai-allocate-project': 'Complete AI allocation for project',
       'POST /api/ai-create-assets': 'Create assets based on AI analysis',
       'GET /api/ai-health': 'AI service health check'
     }

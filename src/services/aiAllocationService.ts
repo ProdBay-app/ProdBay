@@ -12,19 +12,11 @@ export interface AIAssetSuggestion {
   estimated_cost_range: 'low' | 'medium' | 'high';
 }
 
-export interface AISupplierAllocation {
-  asset_name: string;
-  recommended_supplier_id: string;
-  recommended_supplier_name: string;
-  confidence: number;
-  reasoning: string;
-}
 
 export interface AIAllocationResponse {
   success: boolean;
   data?: {
     assets?: AIAssetSuggestion[];
-    allocations?: AISupplierAllocation[];
     reasoning?: string;
     confidence?: number;
     processingTime?: number;
@@ -92,102 +84,7 @@ export class AIAllocationService {
     }
   }
 
-  /**
-   * Suggest suppliers for assets using AI
-   * @param assets - Array of asset objects
-   * @param projectId - Project ID for context
-   * @returns Promise with AI supplier suggestions
-   */
-  static async suggestSuppliersForAssets(
-    assets: any[], 
-    projectId: string
-  ): Promise<AIAllocationResponse> {
-    if (!RAILWAY_API_URL) {
-      throw new Error('Railway API URL not configured. Please set VITE_RAILWAY_API_URL environment variable.');
-    }
 
-    try {
-      const response = await fetch(`${RAILWAY_API_URL}/api/ai-suggest-suppliers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          assets,
-          projectId
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('AI supplier suggestion error:', error);
-      
-      return {
-        success: false,
-        error: {
-          code: 'API_ERROR',
-          message: error instanceof Error ? error.message : 'Unknown error occurred',
-          details: error instanceof Error ? error.stack : undefined
-        }
-      };
-    }
-  }
-
-  /**
-   * Perform complete AI allocation for a project
-   * @param projectId - Project ID
-   * @param briefDescription - Project brief
-   * @param projectContext - Additional context
-   * @returns Promise with complete AI allocation result
-   */
-  static async performCompleteAllocation(
-    projectId: string,
-    briefDescription: string,
-    projectContext: ProjectContext = {}
-  ): Promise<AIAllocationResponse> {
-    if (!RAILWAY_API_URL) {
-      throw new Error('Railway API URL not configured. Please set VITE_RAILWAY_API_URL environment variable.');
-    }
-
-    try {
-      const response = await fetch(`${RAILWAY_API_URL}/api/ai-allocate-project`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          projectId,
-          briefDescription,
-          projectContext
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('AI complete allocation error:', error);
-      
-      return {
-        success: false,
-        error: {
-          code: 'API_ERROR',
-          message: error instanceof Error ? error.message : 'Unknown error occurred',
-          details: error instanceof Error ? error.stack : undefined
-        }
-      };
-    }
-  }
 
   /**
    * Create assets in database based on AI analysis

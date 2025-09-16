@@ -97,82 +97,7 @@ async function testAssetAnalysis() {
   }
 }
 
-async function testSupplierSuggestion(assets) {
-  console.log('\n🎯 Testing AI Supplier Suggestions...');
-  try {
-    const response = await fetch(`${RAILWAY_API_URL}/api/ai-suggest-suppliers`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        assets: assets.slice(0, 3), // Test with first 3 assets
-        projectId: 'test-project-id'
-      })
-    });
 
-    const data = await response.json();
-    
-    if (data.success) {
-      console.log('✅ Supplier suggestions successful');
-      console.log('   Allocations:', data.data.allocations.length);
-      console.log('   Confidence:', Math.round(data.data.confidence * 100) + '%');
-      console.log('   Processing time:', data.data.processingTime + 'ms');
-      
-      // Display allocations
-      console.log('\n   Sample allocations:');
-      data.data.allocations.slice(0, 3).forEach((allocation, index) => {
-        console.log(`   ${index + 1}. ${allocation.asset_name} → ${allocation.recommended_supplier_name} (${Math.round(allocation.confidence * 100)}%)`);
-      });
-      
-      return data.data.allocations;
-    } else {
-      console.log('❌ Supplier suggestions failed:', data.error?.message);
-      if (data.error?.fallbackData) {
-        console.log('   Fallback data available:', data.error.fallbackData.length, 'allocations');
-      }
-      return null;
-    }
-  } catch (error) {
-    console.log('❌ Supplier suggestions request failed:', error.message);
-    return null;
-  }
-}
-
-async function testCompleteAllocation() {
-  console.log('\n🚀 Testing Complete AI Allocation...');
-  try {
-    const response = await fetch(`${RAILWAY_API_URL}/api/ai-allocate-project`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        projectId: 'test-project-id',
-        briefDescription: testBrief,
-        projectContext: testProjectContext
-      })
-    });
-
-    const data = await response.json();
-    
-    if (data.success) {
-      console.log('✅ Complete allocation successful');
-      console.log('   Assets:', data.data.assets.length);
-      console.log('   Allocations:', data.data.allocations.length);
-      console.log('   Confidence:', Math.round(data.data.confidence * 100) + '%');
-      console.log('   Processing time:', data.data.processingTime + 'ms');
-      
-      return true;
-    } else {
-      console.log('❌ Complete allocation failed:', data.error?.message);
-      return false;
-    }
-  } catch (error) {
-    console.log('❌ Complete allocation request failed:', error.message);
-    return false;
-  }
-}
 
 async function testAssetCreation(assets) {
   console.log('\n📝 Testing AI Asset Creation...');
@@ -214,8 +139,6 @@ async function runAllTests() {
   const results = {
     health: false,
     assetAnalysis: false,
-    supplierSuggestion: false,
-    completeAllocation: false,
     assetCreation: false
   };
 
@@ -231,16 +154,7 @@ async function runAllTests() {
   const assets = await testAssetAnalysis();
   results.assetAnalysis = assets !== null;
 
-  // Test 3: Supplier Suggestions (if assets available)
-  if (assets && assets.length > 0) {
-    const allocations = await testSupplierSuggestion(assets);
-    results.supplierSuggestion = allocations !== null;
-  }
-
-  // Test 4: Complete Allocation
-  results.completeAllocation = await testCompleteAllocation();
-
-  // Test 5: Asset Creation (if assets available)
+  // Test 3: Asset Creation (if assets available)
   if (assets && assets.length > 0) {
     results.assetCreation = await testAssetCreation(assets);
   }
@@ -250,8 +164,6 @@ async function runAllTests() {
   console.log('========================');
   console.log('Health Check:', results.health ? '✅ PASS' : '❌ FAIL');
   console.log('Asset Analysis:', results.assetAnalysis ? '✅ PASS' : '❌ FAIL');
-  console.log('Supplier Suggestions:', results.supplierSuggestion ? '✅ PASS' : '❌ FAIL');
-  console.log('Complete Allocation:', results.completeAllocation ? '✅ PASS' : '❌ FAIL');
   console.log('Asset Creation:', results.assetCreation ? '✅ PASS' : '❌ FAIL');
 
   const passedTests = Object.values(results).filter(Boolean).length;
@@ -277,7 +189,5 @@ module.exports = {
   runAllTests,
   testAIHealth,
   testAssetAnalysis,
-  testSupplierSuggestion,
-  testCompleteAllocation,
   testAssetCreation
 };

@@ -12,34 +12,23 @@ The AI-Powered Asset Allocation feature introduces intelligent automation to the
 - **Confidence Scoring**: Provides confidence levels for each AI suggestion
 - **Detailed Specifications**: Generates comprehensive asset specifications beyond basic keyword matching
 
-### 🎯 AI Supplier Matching
-- **Smart Allocation**: Matches assets to optimal suppliers based on expertise and capabilities
-- **Multi-Factor Analysis**: Considers supplier categories, past performance, and asset requirements
-- **Confidence Indicators**: Shows confidence scores for each supplier recommendation
-- **Reasoning Transparency**: Provides clear explanations for allocation decisions
-
-### 🚀 Complete AI Allocation
-- **End-to-End Automation**: Performs complete project analysis and allocation in one step
-- **Hybrid Approach**: Combines AI intelligence with fallback to traditional methods
-- **Comprehensive Results**: Delivers both asset suggestions and supplier allocations
 
 ## Architecture
 
 ### Backend (Railway)
-- **AI Service**: `services/aiAllocationService.js` - Core AI integration with OpenAI
-- **API Routes**: `routes/aiAllocation.js` - RESTful endpoints for AI operations
+- **AI Service**: `services/aiAllocationService.js` - Core AI integration with OpenAI for asset analysis
+- **API Routes**: `routes/aiAllocation.js` - RESTful endpoints for AI asset analysis operations
 - **Enhanced Brief Processor**: Updated to support AI mode with fallback
-- **Database Schema**: New tables for AI allocation tracking and logging
+- **Database Schema**: Tables for AI asset analysis tracking and logging
 
 ### Frontend (Vercel)
-- **AI Service**: `services/aiAllocationService.ts` - Frontend AI service integration
-- **Enhanced Components**: Updated NewProject and ProducerDashboard with AI controls
-- **User Interface**: Intuitive toggles and modals for AI feature access
+- **AI Service**: `services/aiAllocationService.ts` - Frontend AI service integration for asset analysis
+- **Enhanced Components**: Updated NewProject and ProducerDashboard with AI asset analysis controls
+- **User Interface**: Intuitive toggles and modals for AI asset analysis feature access
 
 ### Database (Supabase)
-- **AI Allocations Table**: Tracks AI allocation decisions and confidence scores
-- **Processing Logs**: Monitors AI processing performance and errors
-- **Enhanced Projects**: Added AI allocation preferences
+- **Processing Logs**: Monitors AI asset analysis processing performance and errors
+- **Enhanced Projects**: Added AI asset analysis preferences
 
 ## API Endpoints
 
@@ -58,34 +47,6 @@ Content-Type: application/json
 }
 ```
 
-### AI Supplier Suggestions
-```http
-POST /api/ai-suggest-suppliers
-Content-Type: application/json
-
-{
-  "assets": [
-    {
-      "asset_name": "Audio System",
-      "specifications": "Professional audio for 500 people",
-      "priority": "high"
-    }
-  ],
-  "projectId": "project-uuid"
-}
-```
-
-### Complete AI Allocation
-```http
-POST /api/ai-allocate-project
-Content-Type: application/json
-
-{
-  "projectId": "project-uuid",
-  "briefDescription": "Project brief text...",
-  "projectContext": { ... }
-}
-```
 
 ### AI Health Check
 ```http
@@ -105,13 +66,9 @@ GET /api/ai-health
 
 1. **Access Producer Dashboard**: Go to `/producer/dashboard`
 2. **Select Project**: Choose a project to manage
-3. **AI Allocation Options**: Click the "AI Allocation" dropdown button
-4. **Choose Analysis Type**:
-   - **AI Asset Analysis**: Analyze brief for new asset suggestions
-   - **AI Supplier Matching**: Match existing assets to optimal suppliers
-   - **Complete AI Allocation**: Full project analysis and allocation
-5. **Review Suggestions**: Examine AI recommendations with confidence scores
-6. **Apply Changes**: Accept or modify AI suggestions as needed
+3. **AI Asset Analysis**: Click the "AI Allocation" button and select "AI Asset Analysis"
+4. **Review Suggestions**: Examine AI asset recommendations with confidence scores
+5. **Apply Changes**: Accept or modify AI asset suggestions as needed
 
 ## Configuration
 
@@ -166,9 +123,7 @@ npm run test:ai
 
 1. **Health Check**: Verify AI service is operational
 2. **Asset Analysis**: Test brief analysis with sample project
-3. **Supplier Matching**: Test supplier allocation with existing assets
-4. **Complete Flow**: Test end-to-end AI allocation process
-5. **Error Handling**: Test fallback behavior when AI fails
+3. **Error Handling**: Test fallback behavior when AI fails
 
 ## Performance Considerations
 
@@ -204,9 +159,8 @@ npm run test:ai
 - **Error Analysis**: Identify common failure patterns for improvement
 
 ### Database Tables
-- `ai_processing_logs`: Comprehensive logging of all AI operations
-- `ai_allocations`: Track user decisions on AI suggestions
-- Enhanced `projects` table with AI usage preferences
+- `ai_processing_logs`: Comprehensive logging of all AI asset analysis operations
+- Enhanced `projects` table with AI asset analysis usage preferences
 
 ## Security Considerations
 
@@ -223,16 +177,15 @@ npm run test:ai
 ## Future Enhancements
 
 ### Planned Features
-- **Learning System**: Track user preferences to improve AI suggestions
+- **Learning System**: Track user preferences to improve AI asset analysis suggestions
 - **Custom Models**: Fine-tuned models for specific industry verticals
 - **Batch Processing**: Process multiple projects simultaneously
-- **Advanced Analytics**: Detailed reporting on AI allocation performance
+- **Advanced Analytics**: Detailed reporting on AI asset analysis performance
 
 ### Integration Opportunities
-- **Calendar Integration**: Consider event timing in allocation decisions
+- **Calendar Integration**: Consider event timing in asset analysis decisions
 - **Cost Optimization**: AI-driven cost analysis and budget optimization
-- **Supplier Performance**: Integrate historical supplier performance data
-- **Market Analysis**: Include market trends in allocation recommendations
+- **Market Analysis**: Include market trends in asset analysis recommendations
 
 ## Troubleshooting
 
@@ -247,8 +200,7 @@ npm run test:ai
 #### Low Confidence Scores
 1. Ensure brief descriptions are detailed and specific
 2. Check if project context is properly provided
-3. Verify supplier data is complete and up-to-date
-4. Consider manual review of low-confidence suggestions
+3. Consider manual review of low-confidence suggestions
 
 #### Performance Issues
 1. Monitor API response times
@@ -259,11 +211,11 @@ npm run test:ai
 ### Support
 - **Logs**: Check `ai_processing_logs` table for detailed error information
 - **Health Check**: Use `/api/ai-health` endpoint to verify service status
-- **Fallback**: System automatically falls back to traditional processing if AI fails
+- **Fallback**: System automatically falls back to traditional rule-based processing if AI fails
 
 ## Contributing
 
-When contributing to the AI allocation feature:
+When contributing to the AI asset analysis feature:
 
 1. **Test Coverage**: Ensure new features include comprehensive tests
 2. **Error Handling**: Implement proper error handling and fallback mechanisms
@@ -273,4 +225,4 @@ When contributing to the AI allocation feature:
 
 ---
 
-*This feature represents a significant enhancement to the ProdBay platform, providing intelligent automation while maintaining the flexibility and control that users expect.*
+*This feature represents a significant enhancement to the ProdBay platform, providing intelligent asset analysis while maintaining the flexibility and control that users expect.*

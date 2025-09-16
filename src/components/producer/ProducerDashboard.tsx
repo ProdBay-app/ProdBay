@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { AutomationService } from '../../services/automationService';
 import { RailwayApiService } from '../../services/railwayApiService';
 import { SupplierApiService, type SuggestedSupplier } from '../../services/supplierApiService';
-import { AIAllocationService, type AIAssetSuggestion, type AISupplierAllocation } from '../../services/aiAllocationService';
+import { AIAllocationService, type AIAssetSuggestion } from '../../services/aiAllocationService';
 import type { Project, Asset, Quote, Supplier } from '../../lib/supabase';
 import { 
   CheckCircle, 
@@ -18,7 +18,6 @@ import {
   Trash,
   Brain,
   Sparkles,
-  Zap,
   Target
 } from 'lucide-react';
 
@@ -70,12 +69,10 @@ const ProducerDashboard: React.FC = () => {
   const [showAIAllocationModal, setShowAIAllocationModal] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<{
     assets: AIAssetSuggestion[];
-    allocations: AISupplierAllocation[];
     reasoning: string;
     confidence: number;
   } | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
-  const [aiProcessingType, setAiProcessingType] = useState<'assets' | 'suppliers' | 'complete'>('assets');
 
   useEffect(() => {
     loadProjects();
@@ -550,9 +547,8 @@ const ProducerDashboard: React.FC = () => {
   };
 
   // AI Allocation Functions
-  const openAIAllocation = (type: 'assets' | 'suppliers' | 'complete') => {
+  const openAIAllocation = () => {
     if (!selectedProject) return;
-    setAiProcessingType(type);
     setShowAIAllocationModal(true);
     setAiSuggestions(null);
   };
@@ -564,39 +560,18 @@ const ProducerDashboard: React.FC = () => {
     try {
       let result;
       
-      switch (aiProcessingType) {
-        case 'assets':
-          result = await AIAllocationService.analyzeBriefForAssets(
-            selectedProject.brief_description,
-            {
-              financial_parameters: selectedProject.financial_parameters,
-              timeline_deadline: selectedProject.timeline_deadline,
-              physical_parameters: selectedProject.physical_parameters
-            }
-          );
-          break;
-          
-        case 'suppliers':
-          result = await AIAllocationService.suggestSuppliersForAssets(assets, selectedProject.id);
-          break;
-          
-        case 'complete':
-          result = await AIAllocationService.performCompleteAllocation(
-            selectedProject.id,
-            selectedProject.brief_description,
-            {
-              financial_parameters: selectedProject.financial_parameters,
-              timeline_deadline: selectedProject.timeline_deadline,
-              physical_parameters: selectedProject.physical_parameters
-            }
-          );
-          break;
-      }
+      result = await AIAllocationService.analyzeBriefForAssets(
+        selectedProject.brief_description,
+        {
+          financial_parameters: selectedProject.financial_parameters,
+          timeline_deadline: selectedProject.timeline_deadline,
+          physical_parameters: selectedProject.physical_parameters
+        }
+      );
 
       if (result.success && result.data) {
         setAiSuggestions({
           assets: result.data.assets || [],
-          allocations: result.data.allocations || [],
           reasoning: result.data.reasoning || '',
           confidence: result.data.confidence || 0
         });
@@ -623,18 +598,6 @@ const ProducerDashboard: React.FC = () => {
         }
       }
 
-      // Apply supplier allocations
-      if (aiSuggestions.allocations.length > 0) {
-        for (const allocation of aiSuggestions.allocations) {
-          const asset = assets.find(a => a.asset_name === allocation.asset_name);
-          if (asset) {
-            await supabase
-              .from('assets')
-              .update({ assigned_supplier_id: allocation.recommended_supplier_id })
-              .eq('id', asset.id);
-          }
-        }
-      }
 
       // Reload project details
       await loadProjectDetails(selectedProject.id);
@@ -787,25 +750,11 @@ const ProducerDashboard: React.FC = () => {
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                         <div className="py-1">
                           <button
-                            onClick={() => openAIAllocation('assets')}
+                            onClick={openAIAllocation}
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                           >
                             <Target className="h-4 w-4" />
                             <span>AI Asset Analysis</span>
-                          </button>
-                          <button
-                            onClick={() => openAIAllocation('suppliers')}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                          >
-                            <Zap className="h-4 w-4" />
-                            <span>AI Supplier Matching</span>
-                          </button>
-                          <button
-                            onClick={() => openAIAllocation('complete')}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                          >
-                            <Brain className="h-4 w-4" />
-                            <span>Complete AI Allocation</span>
                           </button>
                         </div>
                       </div>
@@ -1381,16 +1330,12 @@ const ProducerDashboard: React.FC = () => {
               <div className="flex items-center space-x-3 mb-2">
                 <Brain className="h-6 w-6 text-purple-600" />
                 <h3 className="text-xl font-semibold">
-                  {aiProcessingType === 'assets' && 'AI Asset Analysis'}
-                  {aiProcessingType === 'suppliers' && 'AI Supplier Matching'}
-                  {aiProcessingType === 'complete' && 'Complete AI Allocation'}
+                  AI Asset Analysis
                 </h3>
                 <Sparkles className="h-5 w-5 text-purple-500" />
               </div>
               <p className="text-gray-600 text-sm">
-                {aiProcessingType === 'assets' && 'Analyze the project brief to identify and suggest optimal assets with detailed specifications.'}
-                {aiProcessingType === 'suppliers' && 'Match existing assets to the most suitable suppliers based on expertise and capabilities.'}
-                {aiProcessingType === 'complete' && 'Perform complete AI-powered analysis and allocation for the entire project.'}
+                Analyze the project brief to identify and suggest optimal assets with detailed specifications.
               </p>
             </div>
 
@@ -1478,30 +1423,6 @@ const ProducerDashboard: React.FC = () => {
                   </div>
                 )}
 
-                {/* Supplier Allocations */}
-                {aiSuggestions.allocations.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Supplier Allocations ({aiSuggestions.allocations.length})</h4>
-                    <div className="space-y-3">
-                      {aiSuggestions.allocations.map((allocation, index) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <h5 className="font-medium text-gray-900">{allocation.asset_name}</h5>
-                            <div className="flex items-center space-x-2">
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {Math.round(allocation.confidence * 100)}% confidence
-                              </span>
-                            </div>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-2">
-                            <strong>Recommended:</strong> {allocation.recommended_supplier_name}
-                          </p>
-                          <p className="text-sm text-gray-600">{allocation.reasoning}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* Action Buttons */}
                 <div className="flex justify-end space-x-3 pt-4 border-t">
