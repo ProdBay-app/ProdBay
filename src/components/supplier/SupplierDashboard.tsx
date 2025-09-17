@@ -101,7 +101,7 @@ const SupplierDashboard: React.FC = () => {
                 </div>
                 {q.notes_capacity && (
                   <div className="mt-1 text-sm text-gray-700">
-                    <span className="font-medium">Notes:</span> {q.notes_capacity}
+                    <span className="font-medium">Notes:</span> <span className="whitespace-pre-wrap">{q.notes_capacity}</span>
                   </div>
                 )}
               </div>

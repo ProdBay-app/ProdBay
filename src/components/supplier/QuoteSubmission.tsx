@@ -161,7 +161,7 @@ const QuoteSubmission: React.FC = () => {
                 <p><span className="font-medium">Cost:</span> ${formData.cost.toFixed(2)}</p>
                 <p><span className="font-medium">Asset:</span> {asset.asset_name}</p>
                 {formData.notes_capacity && (
-                  <p><span className="font-medium">Notes:</span> {formData.notes_capacity}</p>
+                  <p><span className="font-medium">Notes:</span> <span className="whitespace-pre-wrap">{formData.notes_capacity}</span></p>
                 )}
               </div>
             </div>

@@ -822,7 +822,7 @@ const ProducerDashboard: React.FC = () => {
                                         ${quote.cost.toFixed(2)}
                                       </p>
                                       {quote.notes_capacity && (
-                                        <p className="text-sm text-gray-700 mt-1">
+                                        <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">
                                           {quote.notes_capacity}
                                         </p>
                                       )}
