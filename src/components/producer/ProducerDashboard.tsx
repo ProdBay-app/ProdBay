@@ -237,7 +237,17 @@ const ProducerDashboard: React.FC = () => {
           }
         }
         await loadProjects();
-        setSelectedProject(createdProject);
+        // Get the updated project with completion status from the refreshed projects list
+        const { data: updatedProjects } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', createdProject.id)
+          .single();
+        if (updatedProjects) {
+          setSelectedProject(updatedProjects as unknown as Project);
+        } else {
+          setSelectedProject(createdProject);
+        }
       }
       setShowProjectModal(false);
     } catch (err) {
