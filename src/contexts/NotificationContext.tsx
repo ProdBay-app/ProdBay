@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react';
 import { NotificationContextType, NotificationItem, NotificationConfig, NotificationOptions, ConfirmConfig } from '../types/notification';
 import { NotificationContainer } from '../components/notifications/NotificationContainer';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +11,7 @@ interface NotificationProviderProps {
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [confirmResolvers, setConfirmResolvers] = useState<Map<string, (value: boolean) => void>>(new Map());
+  const confirmResolvers = useRef<Map<string, (value: boolean) => void>>(new Map());
 
   const removeNotification = useCallback((id: string) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
@@ -74,8 +74,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     return new Promise((resolve) => {
       const id = uuidv4();
       
-      // Store the resolver
-      setConfirmResolvers(prev => new Map(prev).set(id, resolve));
+      // Store the resolver in the ref
+      confirmResolvers.current.set(id, resolve);
 
       showNotification({
         id,
@@ -87,14 +87,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           {
             label: config.cancelText || 'Cancel',
             action: () => {
-              const resolver = confirmResolvers.get(id);
+              const resolver = confirmResolvers.current.get(id);
               if (resolver) {
                 resolver(false);
-                setConfirmResolvers(prev => {
-                  const newMap = new Map(prev);
-                  newMap.delete(id);
-                  return newMap;
-                });
+                confirmResolvers.current.delete(id);
               }
               removeNotification(id);
             },
@@ -103,14 +99,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
           {
             label: config.confirmText || 'Confirm',
             action: () => {
-              const resolver = confirmResolvers.get(id);
+              const resolver = confirmResolvers.current.get(id);
               if (resolver) {
                 resolver(true);
-                setConfirmResolvers(prev => {
-                  const newMap = new Map(prev);
-                  newMap.delete(id);
-                  return newMap;
-                });
+                confirmResolvers.current.delete(id);
               }
               removeNotification(id);
             },
@@ -119,7 +111,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         ],
       });
     });
-  }, [showNotification, removeNotification, confirmResolvers]);
+  }, [showNotification, removeNotification]);
 
   const contextValue: NotificationContextType = {
     showNotification,
