@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { RailwayApiService } from '../../services/railwayApiService';
+import { useNotification } from '../../hooks/useNotification';
 import { FileText, Calendar, DollarSign, MapPin, Send, Brain, Sparkles } from 'lucide-react';
 
 const NewProject: React.FC = () => {
   const navigate = useNavigate();
+  const { showSuccess, showWarning, showError } = useNotification();
   const [formData, setFormData] = useState({
     project_name: '',
     client_name: '',
@@ -61,14 +63,14 @@ const NewProject: React.FC = () => {
       if (!briefResult.success) {
         console.warn('Brief processing failed:', briefResult.error?.message);
         // Show a warning but continue - project was created successfully
-        alert(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
+        showWarning(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
       } else {
         console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
         // Show success message with AI info if applicable
         const aiInfo = briefResult.data?.aiData 
           ? ` using AI (${Math.round(briefResult.data.aiData.confidence * 100)}% confidence)`
           : '';
-        alert(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated from your brief${aiInfo}.`);
+        showSuccess(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated from your brief${aiInfo}.`, { duration: 8000 });
       }
 
       setSubmitStatus('success');
@@ -78,7 +80,7 @@ const NewProject: React.FC = () => {
     } catch (error) {
       console.error('Error creating project:', error);
       setSubmitStatus('error');
-      alert('Failed to create project. Please try again.');
+      showError('Failed to create project. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

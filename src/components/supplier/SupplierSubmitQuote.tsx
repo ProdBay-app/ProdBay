@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { Asset, Supplier } from '../../lib/supabase';
+import { useNotification } from '../../hooks/useNotification';
 import { DollarSign, FileText, Send, Package } from 'lucide-react';
 
 const SupplierSubmitQuote: React.FC = () => {
+  const { showSuccess, showError } = useNotification();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [formData, setFormData] = useState({
     asset_id: '',
@@ -39,7 +41,7 @@ const SupplierSubmitQuote: React.FC = () => {
       supplierId = suppliers && suppliers.length > 0 ? suppliers[0].id : null;
 
       if (!supplierId) {
-        alert('No supplier found. Please ask admin to create a supplier entry.');
+        showError('No supplier found. Please ask admin to create a supplier entry.');
         return;
       }
 
@@ -54,11 +56,11 @@ const SupplierSubmitQuote: React.FC = () => {
         });
 
       if (error) throw error;
-      alert('Quote submitted successfully');
+      showSuccess('Quote submitted successfully');
       setFormData({ asset_id: '', cost: 0, notes_capacity: '' });
     } catch (err) {
       console.error('Failed to submit quote', err);
-      alert('Failed to submit quote');
+      showError('Failed to submit quote');
     } finally {
       setSubmitting(false);
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import type { Quote, Asset, Supplier } from '../../lib/supabase';
+import { useNotification } from '../../hooks/useNotification';
 import { 
   DollarSign, 
   FileText, 
@@ -15,6 +16,7 @@ import {
 const QuoteSubmission: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const { showSuccess, showError } = useNotification();
   const [quote, setQuote] = useState<Quote | null>(null);
   const [asset, setAsset] = useState<Asset | null>(null);
   const [supplier, setSupplier] = useState<Supplier | null>(null);
@@ -96,10 +98,10 @@ const QuoteSubmission: React.FC = () => {
       if (error) throw error;
 
       setSubmitted(true);
-      alert('Quote submitted successfully!');
+      showSuccess('Quote submitted successfully!');
     } catch (error) {
       console.error('Error submitting quote:', error);
-      alert('Failed to submit quote. Please try again.');
+      showError('Failed to submit quote. Please try again.');
     } finally {
       setSubmitting(false);
     }

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Layout from './components/Layout';
 import LoginPage from './components/LoginPage';
 import Home from './components/Home';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 // Lazy-loaded routes to avoid eager initialization side-effects (e.g., Supabase client)
 // Removed Client Portal
@@ -15,9 +16,10 @@ const SupplierSubmitQuote = lazy(() => import('./components/supplier/SupplierSub
 
 function App() {
   return (
-    <Router>
-      <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
-        <Routes>
+    <NotificationProvider>
+      <Router>
+        <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
+          <Routes>
         {/* Public landing page - outside of layout */}
         <Route path="/" element={<Home />} />
         
@@ -49,9 +51,10 @@ function App() {
         
         {/* Catch all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </Router>
+          </Routes>
+        </Suspense>
+      </Router>
+    </NotificationProvider>
   );
 }
 

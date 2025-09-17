@@ -4,6 +4,7 @@ import { AutomationService } from '../../services/automationService';
 import { RailwayApiService } from '../../services/railwayApiService';
 import { SupplierApiService, type SuggestedSupplier } from '../../services/supplierApiService';
 import { AIAllocationService, type AIAssetSuggestion } from '../../services/aiAllocationService';
+import { useNotification } from '../../hooks/useNotification';
 import type { Project, Asset, Quote, Supplier } from '../../lib/supabase';
 import { 
   CheckCircle, 
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react';
 
 const ProducerDashboard: React.FC = () => {
+  const { showSuccess, showError, showWarning, showConfirm } = useNotification();
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -229,11 +231,11 @@ const ProducerDashboard: React.FC = () => {
           );
           if (!briefResult.success) {
             console.warn('Brief processing failed:', briefResult.error?.message);
-            alert(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
+            showWarning(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
           } else {
             console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
             const methodText = allocationMethod === 'ai' ? 'AI-powered' : 'static';
-            alert(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated using ${methodText} allocation.`);
+            showSuccess(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated using ${methodText} allocation.`, { duration: 6000 });
           }
         }
         await loadProjects();
@@ -252,7 +254,7 @@ const ProducerDashboard: React.FC = () => {
       setShowProjectModal(false);
     } catch (err) {
       console.error('Failed to submit project form', err);
-      alert('Failed to save project');
+      showError('Failed to save project');
     } finally {
       setIsSubmittingProject(false);
     }
@@ -260,7 +262,13 @@ const ProducerDashboard: React.FC = () => {
 
   const handleDeleteProject = async () => {
     if (!selectedProject) return;
-    const confirmDelete = window.confirm('Delete this project and all related assets/quotes? This cannot be undone.');
+    const confirmDelete = await showConfirm({
+      title: 'Delete Project',
+      message: 'Delete this project and all related assets/quotes? This cannot be undone.',
+      variant: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
     if (!confirmDelete) return;
     try {
       // Delete quotes -> assets -> project (in case FK cascade not set)
@@ -291,7 +299,7 @@ const ProducerDashboard: React.FC = () => {
       setQuotes([]);
     } catch (err) {
       console.error('Failed to delete project', err);
-      alert('Failed to delete project');
+      showError('Failed to delete project');
     }
   };
 
@@ -309,7 +317,7 @@ const ProducerDashboard: React.FC = () => {
       setSuggestedSuppliers(response.suggestedSuppliers);
     } catch (error) {
       console.error('Failed to load suggested suppliers:', error);
-      alert('Failed to load supplier suggestions');
+      showError('Failed to load supplier suggestions');
     } finally {
       setLoadingSuppliers(false);
     }
@@ -349,15 +357,15 @@ const ProducerDashboard: React.FC = () => {
       await loadProjectDetails(selectedProject!.id);
       
       if (result.successful_requests > 0) {
-        alert(`Quote requests sent to ${result.successful_requests} supplier(s) for ${supplierSelectionAsset.asset_name}`);
+        showSuccess(`Quote requests sent to ${result.successful_requests} supplier(s) for ${supplierSelectionAsset.asset_name}`);
       }
       
       if (result.failed_requests > 0) {
-        alert(`Warning: ${result.failed_requests} request(s) failed to send`);
+        showWarning(`Warning: ${result.failed_requests} request(s) failed to send`);
       }
     } catch (error) {
       console.error('Error sending quote requests:', error);
-      alert('Failed to send quote requests');
+      showError('Failed to send quote requests');
     } finally {
       setSendingRequests(false);
       setShowSupplierModal(false);
@@ -373,10 +381,10 @@ const ProducerDashboard: React.FC = () => {
       await loadProjectDetails(selectedProject!.id);
       await AutomationService.updateProjectStatus(selectedProject!.id);
       await loadProjects(); // Refresh project status
-      alert('Quote accepted successfully');
+      showSuccess('Quote accepted successfully');
     } catch (error) {
       console.error('Error accepting quote:', error);
-      alert('Failed to accept quote');
+      showError('Failed to accept quote');
     }
   };
 
@@ -388,10 +396,10 @@ const ProducerDashboard: React.FC = () => {
         .eq('id', quoteId);
       
       await loadProjectDetails(selectedProject!.id);
-      alert('Quote rejected');
+      showSuccess('Quote rejected');
     } catch (error) {
       console.error('Error rejecting quote:', error);
-      alert('Failed to reject quote');
+      showError('Failed to reject quote');
     }
   };
 
@@ -514,14 +522,20 @@ const ProducerDashboard: React.FC = () => {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to save asset', err);
-      alert('Failed to save asset');
+      showError('Failed to save asset');
     } finally {
       setIsSubmittingAsset(false);
     }
   };
 
   const handleDeleteAsset = async (asset: Asset) => {
-    const confirmDelete = window.confirm('Delete this asset and any related quotes?');
+    const confirmDelete = await showConfirm({
+      title: 'Delete Asset',
+      message: 'Delete this asset and any related quotes?',
+      variant: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
     if (!confirmDelete) return;
     try {
       await supabase
@@ -538,7 +552,7 @@ const ProducerDashboard: React.FC = () => {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to delete asset', err);
-      alert('Failed to delete asset');
+      showError('Failed to delete asset');
     }
   };
 
@@ -547,11 +561,11 @@ const ProducerDashboard: React.FC = () => {
     try {
       await AutomationService.sendQuoteRequestsForAsset(tagSelectionAsset, selectedTags);
       await loadProjectDetails(selectedProject.id);
-      alert(`Quote requests sent for ${tagSelectionAsset.asset_name}`);
+      showSuccess(`Quote requests sent for ${tagSelectionAsset.asset_name}`);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error sending to suppliers:', error);
-      alert('Failed to send quote requests');
+      showError('Failed to send quote requests');
     } finally {
       setShowTagModal(false);
       setTagSelectionAsset(null);
@@ -589,11 +603,11 @@ const ProducerDashboard: React.FC = () => {
           confidence: result.data.confidence || 0
         });
       } else {
-        alert(`AI analysis failed: ${result.error?.message || 'Unknown error'}`);
+        showError(`AI analysis failed: ${result.error?.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('AI analysis error:', error);
-      alert('AI analysis failed. Please try again.');
+      showError('AI analysis failed. Please try again.');
     } finally {
       setLoadingAI(false);
     }
@@ -617,10 +631,10 @@ const ProducerDashboard: React.FC = () => {
       setShowAIAllocationModal(false);
       setAiSuggestions(null);
       setAiAllocationCompleted(true);
-      alert('AI suggestions applied successfully! AI allocation is now complete.');
+      showSuccess('AI suggestions applied successfully! AI allocation is now complete.', { duration: 6000 });
     } catch (error) {
       console.error('Error applying AI suggestions:', error);
-      alert('Failed to apply AI suggestions. Please try again.');
+      showError('Failed to apply AI suggestions. Please try again.');
     }
   };
 
