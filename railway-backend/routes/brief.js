@@ -94,13 +94,11 @@ router.post('/process-brief', async (req, res) => {
       projectContext: projectContext || {}
     });
 
-    // Update project with allocation method choice
-    const finalAllocationMethod = allocationMethod || (finalUseAI ? 'ai' : 'static');
+    // Update project with AI allocation status
     const { supabase } = require('../config/database');
     
     // Prepare update data
     const updateData = { 
-      allocation_method: finalAllocationMethod,
       use_ai_allocation: finalUseAI 
     };
     
