@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { Supplier } from '../../lib/supabase';
+import { useNotification } from '../../hooks/useNotification';
 import { Users, Mail, Plus, Tag, Edit, Trash2 } from 'lucide-react';
 
 const SupplierManagement: React.FC = () => {
+  const { showSuccess, showError, showConfirm } = useNotification();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -71,9 +73,10 @@ const SupplierManagement: React.FC = () => {
       });
 
       await loadSuppliers();
+      showSuccess(editingSupplier ? 'Supplier updated successfully' : 'Supplier added successfully');
     } catch (error) {
       console.error('Error saving supplier:', error);
-      alert('Failed to save supplier');
+      showError('Failed to save supplier');
     }
   };
 
@@ -88,7 +91,15 @@ const SupplierManagement: React.FC = () => {
   };
 
   const handleDelete = async (supplierId: string) => {
-    if (!confirm('Are you sure you want to delete this supplier?')) return;
+    const confirmed = await showConfirm({
+      title: 'Delete Supplier',
+      message: 'Are you sure you want to delete this supplier?',
+      variant: 'danger',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (!confirmed) return;
 
     try {
       const { error } = await supabase
@@ -98,9 +109,10 @@ const SupplierManagement: React.FC = () => {
 
       if (error) throw error;
       await loadSuppliers();
+      showSuccess('Supplier deleted successfully');
     } catch (error) {
       console.error('Error deleting supplier:', error);
-      alert('Failed to delete supplier');
+      showError('Failed to delete supplier');
     }
   };
 
