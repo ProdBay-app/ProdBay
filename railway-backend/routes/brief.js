@@ -97,12 +97,21 @@ router.post('/process-brief', async (req, res) => {
     // Update project with allocation method choice
     const finalAllocationMethod = allocationMethod || (finalUseAI ? 'ai' : 'static');
     const { supabase } = require('../config/database');
+    
+    // Prepare update data
+    const updateData = { 
+      allocation_method: finalAllocationMethod,
+      use_ai_allocation: finalUseAI 
+    };
+    
+    // If AI allocation was used and successful, set completion timestamp
+    if (finalUseAI && result.aiData && result.createdAssets.length > 0) {
+      updateData.ai_allocation_completed_at = new Date().toISOString();
+    }
+    
     const { error: updateError } = await supabase
       .from('projects')
-      .update({ 
-        allocation_method: finalAllocationMethod,
-        use_ai_allocation: finalUseAI 
-      })
+      .update(updateData)
       .eq('id', projectId);
 
     if (updateError) {
@@ -112,7 +121,7 @@ router.post('/process-brief', async (req, res) => {
 
     // Return success response
     const message = result.aiData 
-      ? `AI-powered brief processing completed. ${result.createdAssets.length} assets created with ${Math.round(result.aiData.confidence * 100)}% confidence.`
+      ? `AI-powered brief processing completed. ${result.createdAssets.length} assets created with ${Math.round(result.aiData.confidence * 100)}% confidence. AI allocation is now complete.`
       : `Brief processed successfully. ${result.createdAssets.length} assets created.`;
     
     res.status(200).json({
