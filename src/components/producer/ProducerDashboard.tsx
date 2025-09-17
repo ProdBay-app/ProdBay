@@ -723,7 +723,7 @@ const ProducerDashboard: React.FC = () => {
 
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2">Project Brief</h3>
-                  <p className="text-gray-700 text-sm">{selectedProject.brief_description}</p>
+                  <p className="text-gray-700 text-sm whitespace-pre-wrap">{selectedProject.brief_description}</p>
                 </div>
               </div>
 

@@ -213,7 +213,7 @@ const QuoteSubmission: React.FC = () => {
                 {asset.project?.brief_description && (
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Project Brief Context:</h4>
-                    <p className="text-gray-700 text-sm">{asset.project.brief_description}</p>
+                    <p className="text-gray-700 text-sm whitespace-pre-wrap">{asset.project.brief_description}</p>
                   </div>
                 )}
               </div>
