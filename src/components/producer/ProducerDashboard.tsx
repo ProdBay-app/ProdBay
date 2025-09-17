@@ -77,52 +77,15 @@ const ProducerDashboard: React.FC = () => {
 
   useEffect(() => {
     loadProjects();
-    
-    // Refresh data when the page becomes visible (user navigates back to this tab)
-    const handleVisibilityChange = () => {
-      if (!document.hidden && selectedProject) {
-        fetchLatestProjectData(selectedProject.id);
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [selectedProject]);
+  }, []);
 
   useEffect(() => {
     if (selectedProject) {
       loadProjectDetails(selectedProject.id);
-      // Always fetch the latest project data to ensure we have the most up-to-date completion status
-      fetchLatestProjectData(selectedProject.id);
+      // Check AI allocation completion status
+      setAiAllocationCompleted(!!selectedProject.ai_allocation_completed_at);
     }
   }, [selectedProject]);
-
-  const fetchLatestProjectData = async (projectId: string) => {
-    try {
-      const { data: latestProject, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching latest project data:', error);
-        return;
-      }
-      
-      if (latestProject) {
-        // Update the selected project with the latest data
-        setSelectedProject(latestProject as unknown as Project);
-        // Check AI allocation completion status from the latest data
-        setAiAllocationCompleted(!!latestProject.ai_allocation_completed_at);
-      }
-    } catch (error) {
-      console.error('Error fetching latest project data:', error);
-    }
-  };
 
   const loadProjects = async () => {
     try {
@@ -274,7 +237,7 @@ const ProducerDashboard: React.FC = () => {
           }
         }
         await loadProjects();
-""        // Get the updated project with completion status from the refreshed projects list
+        // Get the updated project with completion status from the refreshed projects list
         const { data: updatedProjects } = await supabase
           .from('projects')
           .select('*')
