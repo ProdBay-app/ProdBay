@@ -73,6 +73,7 @@ const ProducerDashboard: React.FC = () => {
     confidence: number;
   } | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [aiAllocationCompleted, setAiAllocationCompleted] = useState<boolean>(false);
 
   useEffect(() => {
     loadProjects();
@@ -81,6 +82,8 @@ const ProducerDashboard: React.FC = () => {
   useEffect(() => {
     if (selectedProject) {
       loadProjectDetails(selectedProject.id);
+      // Check AI allocation completion status
+      setAiAllocationCompleted(!!selectedProject.ai_allocation_completed_at);
     }
   }, [selectedProject]);
 
@@ -548,7 +551,7 @@ const ProducerDashboard: React.FC = () => {
 
   // AI Allocation Functions
   const openAIAllocation = () => {
-    if (!selectedProject) return;
+    if (!selectedProject || aiAllocationCompleted) return;
     setShowAIAllocationModal(true);
     setAiSuggestions(null);
   };
@@ -603,7 +606,8 @@ const ProducerDashboard: React.FC = () => {
       await loadProjectDetails(selectedProject.id);
       setShowAIAllocationModal(false);
       setAiSuggestions(null);
-      alert('AI suggestions applied successfully!');
+      setAiAllocationCompleted(true);
+      alert('AI suggestions applied successfully! AI allocation is now complete.');
     } catch (error) {
       console.error('Error applying AI suggestions:', error);
       alert('Failed to apply AI suggestions. Please try again.');
@@ -739,26 +743,33 @@ const ProducerDashboard: React.FC = () => {
                       <Plus className="h-4 w-4" />
                       <span>New Asset</span>
                     </button>
-                    <div className="relative group">
-                      <button
-                        className="flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded text-sm hover:from-purple-700 hover:to-blue-700"
-                      >
-                        <Brain className="h-4 w-4" />
-                        <span>AI Allocation</span>
-                        <Sparkles className="h-3 w-3" />
-                      </button>
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                        <div className="py-1">
-                          <button
-                            onClick={openAIAllocation}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                          >
-                            <Target className="h-4 w-4" />
-                            <span>AI Asset Analysis</span>
-                          </button>
+                    {aiAllocationCompleted ? (
+                      <div className="flex items-center space-x-2 px-3 py-1 bg-green-100 text-green-800 rounded text-sm">
+                        <CheckCircle className="h-4 w-4" />
+                        <span>AI Allocation Applied</span>
+                      </div>
+                    ) : (
+                      <div className="relative group">
+                        <button
+                          className="flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded text-sm hover:from-purple-700 hover:to-blue-700"
+                        >
+                          <Brain className="h-4 w-4" />
+                          <span>AI Allocation</span>
+                          <Sparkles className="h-3 w-3" />
+                        </button>
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                          <div className="py-1">
+                            <button
+                              onClick={openAIAllocation}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                            >
+                              <Target className="h-4 w-4" />
+                              <span>AI Asset Analysis</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-6">
@@ -1323,7 +1334,7 @@ const ProducerDashboard: React.FC = () => {
       )}
 
       {/* AI Allocation Modal */}
-      {showAIAllocationModal && (
+      {showAIAllocationModal && !aiAllocationCompleted && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="mb-6">

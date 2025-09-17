@@ -111,6 +111,35 @@ router.post('/ai-create-assets', async (req, res) => {
       });
     }
 
+    // Check if AI allocation has already been completed for this project
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('ai_allocation_completed_at')
+      .eq('id', projectId)
+      .single();
+
+    if (projectError) {
+      console.error('Error checking project AI allocation status:', projectError);
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Failed to check project AI allocation status'
+        }
+      });
+    }
+
+    if (project && project.ai_allocation_completed_at) {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: 'AI_ALLOCATION_ALREADY_COMPLETED',
+          message: 'AI allocation has already been completed for this project',
+          details: `Completed at: ${project.ai_allocation_completed_at}`
+        }
+      });
+    }
+
     const createdAssets = [];
 
     // Create each asset
@@ -141,14 +170,29 @@ router.post('/ai-create-assets', async (req, res) => {
       }
     }
 
+    // Update project with AI allocation completion timestamp
+    const completionTimestamp = new Date().toISOString();
+    const { error: updateError } = await supabase
+      .from('projects')
+      .update({ 
+        ai_allocation_completed_at: completionTimestamp 
+      })
+      .eq('id', projectId);
+
+    if (updateError) {
+      console.warn('Failed to update project AI allocation completion timestamp:', updateError);
+      // Don't fail the request, just log the warning - assets were created successfully
+    }
+
     res.status(200).json({
       success: true,
       data: {
         projectId,
         createdAssets,
-        count: createdAssets.length
+        count: createdAssets.length,
+        ai_allocation_completed_at: completionTimestamp
       },
-      message: `Successfully created ${createdAssets.length} assets using AI analysis.`
+      message: `Successfully created ${createdAssets.length} assets using AI analysis. AI allocation completed.`
     });
 
   } catch (error) {
