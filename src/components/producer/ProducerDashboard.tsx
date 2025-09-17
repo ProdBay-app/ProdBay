@@ -297,6 +297,7 @@ const ProducerDashboard: React.FC = () => {
       setSelectedProject(null);
       setAssets([]);
       setQuotes([]);
+      showSuccess('Project deleted successfully');
     } catch (err) {
       console.error('Failed to delete project', err);
       showError('Failed to delete project');
@@ -549,6 +550,7 @@ const ProducerDashboard: React.FC = () => {
       if (selectedProject) {
         await loadProjectDetails(selectedProject.id);
       }
+      showSuccess('Asset deleted successfully');
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to delete asset', err);
