@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { Supplier, ContactPerson } from '../../lib/supabase';
 import { useNotification } from '../../hooks/useNotification';
 import { Users, Mail, Plus, Tag, Edit, Trash2, User, Phone, Star } from 'lucide-react';
+import SupplierFilters, { type FilterState } from './supplier-filters/SupplierFilters';
+import { filterSuppliers, getUniqueCategories, getFilterStats, debounce } from '../../utils/supplierFiltering';
 
 const SupplierManagement: React.FC = () => {
   const { showSuccess, showError, showConfirm } = useNotification();
@@ -17,6 +19,15 @@ const SupplierManagement: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Filter state
+  const [filters, setFilters] = useState<FilterState>({
+    searchTerm: '',
+    selectedCategories: [],
+    selectedRoles: [],
+    hasContactPersons: null,
+    dateRange: { start: null, end: null }
+  });
+
   const availableCategories = [
     'Printing', 'Graphics', 'Banners', 'Staging', 'Audio', 'Lighting',
     'Catering', 'Food', 'Beverages', 'Design', 'Branding', 'Marketing',
@@ -26,6 +37,22 @@ const SupplierManagement: React.FC = () => {
   useEffect(() => {
     loadSuppliers();
   }, []);
+
+  // Filter suppliers based on current filter state
+  const filteredSuppliers = useMemo(() => {
+    return filterSuppliers(suppliers, filters);
+  }, [suppliers, filters]);
+
+  // Get filter statistics
+  const filterStats = useMemo(() => {
+    return getFilterStats(suppliers, filteredSuppliers, filters);
+  }, [suppliers, filteredSuppliers, filters]);
+
+  // Debounced search handler
+  const debouncedSetFilters = useMemo(
+    () => debounce((newFilters: FilterState) => setFilters(newFilters), 300),
+    []
+  );
 
   const loadSuppliers = async () => {
     try {
@@ -404,17 +431,43 @@ const SupplierManagement: React.FC = () => {
         </div>
       )}
 
+      {/* Filters */}
+      <SupplierFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        suppliers={suppliers}
+        availableCategories={availableCategories}
+      />
+
       {/* Suppliers List */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-2">
-            <Users className="h-6 w-6 text-teal-600" />
-            <h2 className="text-xl font-semibold">Active Suppliers ({suppliers.length})</h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Users className="h-6 w-6 text-teal-600" />
+              <h2 className="text-xl font-semibold">
+                Active Suppliers
+                {filterStats.isFiltered ? (
+                  <span className="text-gray-600 font-normal">
+                    {' '}({filterStats.filteredCount} of {filterStats.totalSuppliers})
+                  </span>
+                ) : (
+                  <span className="text-gray-600 font-normal">
+                    {' '}({filterStats.totalSuppliers})
+                  </span>
+                )}
+              </h2>
+            </div>
+            {filterStats.isFiltered && (
+              <div className="text-sm text-gray-500">
+                {filterStats.filteredCount === 0 ? 'No suppliers match your filters' : 'Filtered results'}
+              </div>
+            )}
           </div>
         </div>
 
         <div className="divide-y divide-gray-200">
-          {suppliers.map((supplier) => (
+          {filteredSuppliers.map((supplier) => (
             <div key={supplier.id} className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -499,17 +552,40 @@ const SupplierManagement: React.FC = () => {
           ))}
         </div>
 
-        {suppliers.length === 0 && (
+        {filteredSuppliers.length === 0 && (
           <div className="p-8 text-center">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No suppliers yet</h3>
-            <p className="text-gray-600 mb-4">Add your first supplier to start managing your network</p>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
-            >
-              Add First Supplier
-            </button>
+            {suppliers.length === 0 ? (
+              <>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No suppliers yet</h3>
+                <p className="text-gray-600 mb-4">Add your first supplier to start managing your network</p>
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                >
+                  Add First Supplier
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No suppliers match your filters</h3>
+                <p className="text-gray-600 mb-4">
+                  Try adjusting your search criteria or clearing some filters
+                </p>
+                <button
+                  onClick={() => setFilters({
+                    searchTerm: '',
+                    selectedCategories: [],
+                    selectedRoles: [],
+                    hasContactPersons: null,
+                    dateRange: { start: null, end: null }
+                  })}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                >
+                  Clear All Filters
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
