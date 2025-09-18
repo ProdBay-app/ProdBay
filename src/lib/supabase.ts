@@ -51,11 +51,20 @@ export interface Asset {
   assigned_supplier?: Supplier;
 }
 
+export interface ContactPerson {
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  is_primary: boolean;
+}
+
 export interface Supplier {
   id: string;
   supplier_name: string;
   contact_email: string;
   service_categories: string[];
+  contact_persons: ContactPerson[];
   created_at: string;
 }
 

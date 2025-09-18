@@ -4,8 +4,10 @@ import { AutomationService } from '../../services/automationService';
 import { RailwayApiService } from '../../services/railwayApiService';
 import { SupplierApiService, type SuggestedSupplier } from '../../services/supplierApiService';
 import { AIAllocationService, type AIAssetSuggestion } from '../../services/aiAllocationService';
+import { QuoteRequestService, type CustomizedEmail } from '../../services/quoteRequestService';
 import { useNotification } from '../../hooks/useNotification';
 import type { Project, Asset, Quote, Supplier } from '../../lib/supabase';
+import QuoteRequestPreviewModal from './QuoteRequestPreviewModal';
 import { 
   CheckCircle, 
   XCircle, 
@@ -66,6 +68,11 @@ const ProducerDashboard: React.FC = () => {
   const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
   const [sendingRequests, setSendingRequests] = useState(false);
+
+  // New quote request preview modal state
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
+  const [previewSupplierIds, setPreviewSupplierIds] = useState<string[]>([]);
 
   // AI Allocation state
   const [showAIAllocationModal, setShowAIAllocationModal] = useState(false);
@@ -335,6 +342,21 @@ const ProducerDashboard: React.FC = () => {
   const confirmSendQuoteRequests = async () => {
     if (!supplierSelectionAsset || selectedSupplierIds.length === 0) return;
     
+    // Open preview modal instead of sending directly
+    setPreviewAsset(supplierSelectionAsset);
+    setPreviewSupplierIds(selectedSupplierIds);
+    setShowPreviewModal(true);
+    
+    // Close supplier selection modal
+    setShowSupplierModal(false);
+    setSupplierSelectionAsset(null);
+    setSelectedSupplierIds([]);
+    setSuggestedSuppliers([]);
+  };
+
+  const handleSendCustomizedEmails = async (customizedEmails: CustomizedEmail[]) => {
+    if (!previewAsset || previewSupplierIds.length === 0) return;
+    
     setSendingRequests(true);
     try {
       // Get producer settings for email
@@ -349,30 +371,30 @@ const ProducerDashboard: React.FC = () => {
         email: settings.from_email
       } : undefined;
 
-      const result = await SupplierApiService.sendQuoteRequests(
-        supplierSelectionAsset.id,
-        selectedSupplierIds,
+      const result = await QuoteRequestService.sendQuoteRequests(
+        previewAsset.id,
+        previewSupplierIds,
+        customizedEmails,
         from ? { name: String(from.name), email: String(from.email) } : undefined
       );
 
       await loadProjectDetails(selectedProject!.id);
       
-      if (result.successful_requests > 0) {
-        showSuccess(`Quote requests sent to ${result.successful_requests} supplier(s) for ${supplierSelectionAsset.asset_name}`);
+      if (result.data.successful_requests > 0) {
+        showSuccess(`Quote requests sent to ${result.data.successful_requests} supplier(s) for ${previewAsset.asset_name}`);
       }
       
-      if (result.failed_requests > 0) {
-        showWarning(`Warning: ${result.failed_requests} request(s) failed to send`);
+      if (result.data.failed_requests > 0) {
+        showWarning(`Warning: ${result.data.failed_requests} request(s) failed to send`);
       }
     } catch (error) {
       console.error('Error sending quote requests:', error);
       showError('Failed to send quote requests');
+      throw error; // Re-throw to let the modal handle the error
     } finally {
       setSendingRequests(false);
-      setShowSupplierModal(false);
-      setSupplierSelectionAsset(null);
-      setSelectedSupplierIds([]);
-      setSuggestedSuppliers([]);
+      setPreviewAsset(null);
+      setPreviewSupplierIds([]);
     }
   };
 
@@ -1358,6 +1380,19 @@ const ProducerDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Quote Request Preview Modal */}
+      <QuoteRequestPreviewModal
+        isOpen={showPreviewModal}
+        onClose={() => {
+          setShowPreviewModal(false);
+          setPreviewAsset(null);
+          setPreviewSupplierIds([]);
+        }}
+        asset={previewAsset!}
+        supplierIds={previewSupplierIds}
+        onSend={handleSendCustomizedEmails}
+      />
 
       {/* AI Allocation Modal */}
       {showAIAllocationModal && !aiAllocationCompleted && (

@@ -115,13 +115,141 @@ class SupplierService {
   }
 
   /**
+   * Generate email previews for quote requests
+   * @param {string} assetId - UUID of the asset
+   * @param {string[]} supplierIds - Array of supplier IDs to contact
+   * @param {Object} from - Sender information {name, email}
+   * @returns {Promise<Object>} Email previews for each supplier
+   */
+  static async generateEmailPreviews(assetId, supplierIds, from = null) {
+    try {
+      // Validate inputs
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      
+      if (!uuidRegex.test(assetId)) {
+        throw new Error('Invalid asset ID format');
+      }
+
+      if (!Array.isArray(supplierIds) || supplierIds.length === 0) {
+        throw new Error('Supplier IDs array is required and cannot be empty');
+      }
+
+      // Validate all supplier IDs
+      for (const supplierId of supplierIds) {
+        if (!uuidRegex.test(supplierId)) {
+          throw new Error(`Invalid supplier ID format: ${supplierId}`);
+        }
+      }
+
+      // Fetch asset details
+      const { data: asset, error: assetError } = await supabase
+        .from('assets')
+        .select('*')
+        .eq('id', assetId)
+        .single();
+
+      if (assetError || !asset) {
+        throw new Error('Asset not found');
+      }
+
+      // Fetch supplier details
+      const { data: suppliers, error: suppliersError } = await supabase
+        .from('suppliers')
+        .select('*')
+        .in('id', supplierIds);
+
+      if (suppliersError) {
+        throw new Error(`Failed to fetch suppliers: ${suppliersError.message}`);
+      }
+
+      if (!suppliers || suppliers.length !== supplierIds.length) {
+        throw new Error('One or more suppliers not found');
+      }
+
+      // Generate email previews
+      const emailPreviews = suppliers.map(supplier => {
+        const primaryContact = this.getPrimaryContact(supplier);
+        const contactName = primaryContact?.name || supplier.supplier_name;
+        const contactEmail = primaryContact?.email || supplier.contact_email;
+        
+        const subject = `Quote Request: ${asset.asset_name}`;
+        const body = this.generateEmailBody(asset, contactName, from);
+
+        return {
+          id: supplier.id,
+          supplier_name: supplier.supplier_name,
+          contact_email: supplier.contact_email,
+          contact_persons: supplier.contact_persons || [],
+          preview_email: {
+            to: contactEmail,
+            subject,
+            body
+          }
+        };
+      });
+
+      return {
+        success: true,
+        asset,
+        suppliers: emailPreviews
+      };
+    } catch (error) {
+      console.error('Error in generateEmailPreviews:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get primary contact person from supplier
+   * @param {Object} supplier - Supplier object
+   * @returns {Object|null} Primary contact person or null
+   */
+  static getPrimaryContact(supplier) {
+    if (!supplier.contact_persons || supplier.contact_persons.length === 0) {
+      return null;
+    }
+    
+    return supplier.contact_persons.find(person => person.is_primary) || 
+           supplier.contact_persons[0];
+  }
+
+  /**
+   * Generate email body template
+   * @param {Object} asset - Asset details
+   * @param {string} contactName - Contact person name
+   * @param {Object} from - Sender information
+   * @returns {string} Email body
+   */
+  static generateEmailBody(asset, contactName, from = null) {
+    const fromName = from?.name || '[Your Name]';
+    const fromEmail = from?.email || '[Your Email]';
+    
+    return `Dear ${contactName},
+
+We would like to request a quote for the following asset:
+
+Asset: ${asset.asset_name}
+Specifications: ${asset.specifications || 'See project brief for details'}
+Timeline: ${asset.timeline || 'To be discussed'}
+
+Please provide your quote by visiting the link below and submitting your proposal.
+
+Thank you for your time and we look forward to working with you.
+
+Best regards,
+${fromName}
+${fromEmail}`;
+  }
+
+  /**
    * Send quote requests to selected suppliers
    * @param {string} assetId - UUID of the asset
    * @param {string[]} supplierIds - Array of supplier IDs to contact
    * @param {Object} from - Sender information {name, email}
+   * @param {Array} customizedEmails - Array of customized email content
    * @returns {Promise<Object>} Result of quote request sending
    */
-  static async sendQuoteRequests(assetId, supplierIds, from = null) {
+  static async sendQuoteRequests(assetId, supplierIds, from = null, customizedEmails = null) {
     try {
       // Validate inputs
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -196,11 +324,15 @@ class SupplierService {
           // Send email notification (if configured)
           if (from && from.name && from.email) {
             try {
+              // Find customized email content for this supplier
+              const customizedEmail = customizedEmails?.find(email => email.supplierId === supplier.id);
+              
               const emailResult = await this.sendQuoteRequestEmail(
                 supplier,
                 asset,
                 quote,
-                from
+                from,
+                customizedEmail
               );
               results.push({
                 supplier_id: supplier.id,
@@ -267,9 +399,10 @@ class SupplierService {
    * @param {Object} asset - Asset details
    * @param {Object} quote - Quote record
    * @param {Object} from - Sender information
+   * @param {Object} customizedEmail - Customized email content
    * @returns {Promise<Object>} Email send result
    */
-  static async sendQuoteRequestEmail(supplier, asset, quote, from) {
+  static async sendQuoteRequestEmail(supplier, asset, quote, from, customizedEmail = null) {
     try {
       const fnUrl = process.env.EMAIL_FUNCTION_URL;
       const fnKey = process.env.EMAIL_FUNCTION_KEY;
@@ -281,21 +414,29 @@ class SupplierService {
         };
       }
 
-      const subject = `Quote Request: ${asset.asset_name}`;
-      const body = `Dear ${supplier.supplier_name},
-
-We would like to request a quote for the following asset:
-
-Asset: ${asset.asset_name}
-Specifications: ${asset.specifications || 'See project brief for details'}
-
-Please provide your quote by visiting: ${process.env.FRONTEND_URL || 'http://localhost:5173'}/quote/${quote.quote_token}
-
-Thank you for your time.
-
-Best regards,
-${from.name}
-${from.email}`;
+      // Use customized email content if provided, otherwise generate default
+      let subject, body;
+      
+      if (customizedEmail) {
+        subject = customizedEmail.subject;
+        body = customizedEmail.body;
+        
+        // Add quote link to the body if not already present
+        const quoteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/quote/${quote.quote_token}`;
+        if (!body.includes(quoteLink)) {
+          body += `\n\nPlease provide your quote by visiting: ${quoteLink}`;
+        }
+      } else {
+        // Generate default email content
+        const primaryContact = this.getPrimaryContact(supplier);
+        const contactName = primaryContact?.name || supplier.supplier_name;
+        
+        subject = `Quote Request: ${asset.asset_name}`;
+        body = this.generateEmailBody(asset, contactName, from);
+        
+        // Add quote link
+        body += `\n\nPlease provide your quote by visiting: ${process.env.FRONTEND_URL || 'http://localhost:5173'}/quote/${quote.quote_token}`;
+      }
 
       const response = await fetch(fnUrl, {
         method: 'POST',
