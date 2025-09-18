@@ -6,7 +6,7 @@ const Layout: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const isClientPath = false; // client portal removed
+  const isClientPath = currentPath.startsWith('/client');
   const isProducerPath = currentPath.startsWith('/producer');
   const isAdminPath = currentPath.startsWith('/admin');
   const isSupplierPath = currentPath.startsWith('/supplier') || currentPath.startsWith('/quote');
@@ -20,6 +20,12 @@ const Layout: React.FC = () => {
   };
 
   const getNavLinks = () => {
+    if (isClientPath) {
+      return [
+        { to: '/client/dashboard', label: 'Dashboard', icon: BarChart3 },
+        { to: '/client/new-project', label: 'New Project', icon: FileText }
+      ];
+    }
     if (isProducerPath) {
       return [
         { to: '/producer/dashboard', label: 'Projects', icon: Building2 },
@@ -41,6 +47,7 @@ const Layout: React.FC = () => {
   };
 
   const getUserTypeLabel = () => {
+    if (isClientPath) return 'Client Portal';
     if (isProducerPath) return 'Producer Portal';
     if (isAdminPath) return 'Admin Portal';
     if (isSupplierPath) return 'Supplier Portal';

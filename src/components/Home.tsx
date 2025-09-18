@@ -81,8 +81,42 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* User Portals - Informational Only */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+        {/* User Portals */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+          {/* Client Portal */}
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="bg-blue-600 text-white p-6">
+              <Package className="h-12 w-12 mb-4" />
+              <h3 className="text-2xl font-bold">Client Portal</h3>
+              <p className="opacity-90 mt-2">Manage your projects</p>
+            </div>
+            <div className="p-6">
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-gray-700">Project dashboard</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-gray-700">Create new projects</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-gray-700">Track project progress</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-gray-700">View asset status</span>
+                </li>
+              </ul>
+              <Link
+                to="/client/dashboard"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-center block"
+              >
+                Access Client Dashboard
+              </Link>
+            </div>
+          </div>
           {/* Producer Portal */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="bg-teal-600 text-white p-6">
@@ -109,9 +143,12 @@ const Home: React.FC = () => {
                   <span className="text-gray-700">Quote review and acceptance</span>
                 </li>
               </ul>
-              <div className="bg-teal-50 rounded-lg p-4 text-center">
-                <p className="text-teal-700 text-sm font-medium">Access your producer dashboard after login</p>
-              </div>
+              <Link
+                to="/producer/dashboard"
+                className="w-full bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors text-center block"
+              >
+                Access Producer Dashboard
+              </Link>
             </div>
           </div>
 
@@ -141,9 +178,12 @@ const Home: React.FC = () => {
                   <span className="text-gray-700">Direct project access</span>
                 </li>
               </ul>
-              <div className="bg-orange-50 rounded-lg p-4 text-center">
-                <p className="text-orange-700 text-sm font-medium">Suppliers can access via email links or login</p>
-              </div>
+              <Link
+                to="/supplier/quotes"
+                className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors text-center block"
+              >
+                Access Supplier Dashboard
+              </Link>
             </div>
           </div>
         </div>
