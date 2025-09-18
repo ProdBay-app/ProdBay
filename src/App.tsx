@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import LoginPage from './components/LoginPage';
@@ -6,7 +6,8 @@ import Home from './components/Home';
 import { NotificationProvider } from './contexts/NotificationContext';
 
 // Lazy-loaded routes to avoid eager initialization side-effects (e.g., Supabase client)
-// Removed Client Portal
+const ClientDashboard = lazy(() => import('./components/client/ClientDashboard'));
+const NewProject = lazy(() => import('./components/client/NewProject'));
 const ProducerDashboard = lazy(() => import('./components/producer/ProducerDashboard'));
 const SupplierManagement = lazy(() => import('./components/producer/SupplierManagement'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
@@ -25,6 +26,13 @@ function App() {
         
         {/* Login page - outside of layout */}
         <Route path="/login" element={<LoginPage />} />
+        
+        {/* Client routes */}
+        <Route path="/client" element={<Layout />}>
+          <Route index element={<Navigate to="/client/dashboard" replace />} />
+          <Route path="dashboard" element={<ClientDashboard />} />
+          <Route path="new-project" element={<NewProject />} />
+        </Route>
         
         {/* Supplier routes */}
         <Route path="/supplier" element={<Layout />}>
