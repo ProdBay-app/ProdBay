@@ -99,7 +99,7 @@ export class QuoteComparisonService {
     }
 
     try {
-      const response = await fetch(`${RAILWAY_API_URL}/api/quotes/compare/${assetId}`, {
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/quotes/compare/${assetId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ export class QuoteComparisonService {
     }
 
     try {
-      const response = await fetch(`${RAILWAY_API_URL}/api/quotes/compare/${assetId}/summary`, {
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/quotes/compare/${assetId}/summary`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

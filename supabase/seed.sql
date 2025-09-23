@@ -1,4 +1,4 @@
--- ProdBay Complete Database Seed Data
+--  rodBay Complete Database Seed Data
 -- This script populates all tables with realistic test data for development and testing
 
 -- First, ensure we have suppliers (this should be run after seed-suppliers.sql)

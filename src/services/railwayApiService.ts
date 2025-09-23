@@ -57,7 +57,7 @@ export class RailwayApiService {
     }
 
     try {
-      const response = await fetch(`${RAILWAY_API_URL}/api/process-brief`, {
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/process-brief`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ export class RailwayApiService {
     }
 
     try {
-      const response = await fetch(`${RAILWAY_API_URL}/api/health`);
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/health`);
       const data = await response.json();
       
       return {
