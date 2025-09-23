@@ -76,6 +76,14 @@ export interface Quote {
   notes_capacity?: string;
   status: 'Submitted' | 'Accepted' | 'Rejected';
   quote_token: string;
+  cost_breakdown?: {
+    labor: number;
+    materials: number;
+    equipment: number;
+    other: number;
+  };
+  valid_until?: string;
+  response_time_hours?: number;
   created_at: string;
   updated_at: string;
   supplier?: Supplier;

@@ -8,6 +8,7 @@ import { QuoteRequestService, type CustomizedEmail } from '../../services/quoteR
 import { useNotification } from '../../hooks/useNotification';
 import type { Project, Asset, Quote, Supplier } from '../../lib/supabase';
 import QuoteRequestPreviewModal from './QuoteRequestPreviewModal';
+import QuoteComparisonModal from './QuoteComparisonModal';
 import { 
   CheckCircle, 
   XCircle, 
@@ -21,7 +22,8 @@ import {
   Trash,
   Brain,
   Sparkles,
-  Target
+  Target,
+  BarChart3
 } from 'lucide-react';
 
 const ProducerDashboard: React.FC = () => {
@@ -83,6 +85,10 @@ const ProducerDashboard: React.FC = () => {
   } | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiAllocationCompleted, setAiAllocationCompleted] = useState<boolean>(false);
+
+  // Quote Comparison state
+  const [showQuoteComparisonModal, setShowQuoteComparisonModal] = useState(false);
+  const [comparisonAssetId, setComparisonAssetId] = useState<string | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -597,6 +603,29 @@ const ProducerDashboard: React.FC = () => {
     }
   };
 
+  // Quote Comparison Functions
+  const hasMultipleQuotes = (assetId: string): boolean => {
+    const assetQuotes = getAssetQuotes(assetId);
+    return assetQuotes.length > 1;
+  };
+
+  const openQuoteComparison = (assetId: string) => {
+    setComparisonAssetId(assetId);
+    setShowQuoteComparisonModal(true);
+  };
+
+  const closeQuoteComparison = () => {
+    setShowQuoteComparisonModal(false);
+    setComparisonAssetId(null);
+  };
+
+  const handleQuoteUpdate = () => {
+    // Reload project details when quotes are updated
+    if (selectedProject) {
+      loadProjectDetails(selectedProject.id);
+    }
+  };
+
   // AI Allocation Functions
   const openAIAllocation = () => {
     if (!selectedProject || aiAllocationCompleted) return;
@@ -855,6 +884,15 @@ const ProducerDashboard: React.FC = () => {
                               >
                                 <Mail className="h-3 w-3" />
                                 <span>Select Suppliers</span>
+                              </button>
+                            )}
+                            {hasMultipleQuotes(asset.id) && (
+                              <button
+                                onClick={() => openQuoteComparison(asset.id)}
+                                className="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                              >
+                                <BarChart3 className="h-3 w-3" />
+                                <span>Compare Quotes</span>
                               </button>
                             )}
                           </div>
@@ -1521,6 +1559,16 @@ const ProducerDashboard: React.FC = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Quote Comparison Modal */}
+      {showQuoteComparisonModal && comparisonAssetId && (
+        <QuoteComparisonModal
+          isOpen={showQuoteComparisonModal}
+          onClose={closeQuoteComparison}
+          assetId={comparisonAssetId}
+          onQuoteUpdate={handleQuoteUpdate}
+        />
       )}
     </div>
   );

@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const briefRoutes = require('./routes/brief');
 const supplierRoutes = require('./routes/suppliers');
 const aiAllocationRoutes = require('./routes/aiAllocation');
+const quoteComparisonRoutes = require('./routes/quoteComparison');
 const { testConnection } = require('./config/database');
 
 const app = express();
@@ -89,6 +90,7 @@ app.use((req, res, next) => {
 app.use('/api', briefRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api', aiAllocationRoutes);
+app.use('/api/quotes', quoteComparisonRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -104,7 +106,9 @@ app.get('/', (req, res) => {
       'GET /api/suppliers/health': 'Supplier service health check',
       'POST /api/ai-allocate-assets': 'AI-powered asset analysis from brief',
       'POST /api/ai-create-assets': 'Create assets based on AI analysis',
-      'GET /api/ai-health': 'AI service health check'
+      'GET /api/ai-health': 'AI service health check',
+      'GET /api/quotes/compare/:assetId': 'Get quotes for comparison',
+      'GET /api/quotes/compare/:assetId/summary': 'Get quote summary for asset'
     }
   });
 });
