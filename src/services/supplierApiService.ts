@@ -31,7 +31,8 @@ export interface SendQuoteRequestsResponse {
 
 export class SupplierApiService {
   private static getBaseUrl(): string {
-    return import.meta.env.VITE_RAILWAY_API_URL || 'http://localhost:3000';
+    const baseUrl = import.meta.env.VITE_RAILWAY_API_URL || 'http://localhost:3000';
+    return baseUrl.replace(/\/$/, ''); // Remove trailing slash
   }
 
   /**

@@ -52,7 +52,7 @@ export class AIAllocationService {
     }
 
     try {
-      const response = await fetch(`${RAILWAY_API_URL}/api/ai-allocate-assets`, {
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/ai-allocate-assets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ export class AIAllocationService {
     }
 
     try {
-      const response = await fetch(`${RAILWAY_API_URL}/api/ai-create-assets`, {
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/ai-create-assets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -146,7 +146,7 @@ export class AIAllocationService {
     }
 
     try {
-      const response = await fetch(`${RAILWAY_API_URL}/api/ai-health`);
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/ai-health`);
       const data = await response.json();
       
       return {
