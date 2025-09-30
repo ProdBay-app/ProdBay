@@ -19,7 +19,7 @@ function App() {
   return (
     <NotificationProvider>
       <Router>
-        <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
+        <Suspense fallback={<div className="p-8">Loading...</div>}>
           <Routes>
         {/* Public landing page - outside of layout */}
         <Route path="/" element={<Home />} />
