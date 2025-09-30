@@ -8,6 +8,12 @@ interface SupplierQuote extends Quote {
   project?: Project;
 }
 
+interface QuoteWithNestedData extends Quote {
+  asset?: Asset & {
+    project?: Project;
+  };
+}
+
 const SupplierDashboard: React.FC = () => {
   const [quotes, setQuotes] = useState<SupplierQuote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +32,7 @@ const SupplierDashboard: React.FC = () => {
 
       if (error) throw error;
 
-      const withProject: SupplierQuote[] = (data || []).map((q: any) => ({
+      const withProject: SupplierQuote[] = (data || []).map((q: QuoteWithNestedData) => ({
         ...q,
         project: q.asset?.project,
       }));

@@ -26,7 +26,7 @@ export interface AIAllocationResponse {
     code: string;
     message: string;
     details?: string;
-    fallbackData?: any;
+    fallbackData?: AIAssetSuggestion[];
   };
 }
 
@@ -34,6 +34,13 @@ export interface ProjectContext {
   financial_parameters?: number;
   timeline_deadline?: string;
   physical_parameters?: string;
+}
+
+export interface AIHealthData {
+  healthy: boolean;
+  model?: string;
+  responseTime?: number;
+  error?: string;
 }
 
 export class AIAllocationService {
@@ -137,7 +144,7 @@ export class AIAllocationService {
    * Check if AI service is healthy
    * @returns Promise with health status
    */
-  static async checkAIHealth(): Promise<{ success: boolean; message?: string; data?: any }> {
+  static async checkAIHealth(): Promise<{ success: boolean; message?: string; data?: AIHealthData }> {
     if (!RAILWAY_API_URL) {
       return {
         success: false,

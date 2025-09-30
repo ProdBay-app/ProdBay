@@ -1,4 +1,5 @@
 import { RailwayApiService } from './railwayApiService';
+import type { Asset } from '../lib/supabase';
 
 export interface CustomizedEmail {
   supplierId: string;
@@ -9,7 +10,7 @@ export interface CustomizedEmail {
 export interface EmailPreviewResponse {
   success: boolean;
   data: {
-    asset: any;
+    asset: Asset;
     suppliers: Array<{
       id: string;
       supplier_name: string;
