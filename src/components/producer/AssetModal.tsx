@@ -1,5 +1,6 @@
 import React from 'react';
-import type { AssetFormData, Supplier } from '../../lib/supabase';
+import type { AssetFormData } from '../../services/producerService';
+import type { Supplier } from '../../lib/supabase';
 
 interface AssetModalProps {
   isOpen: boolean;
