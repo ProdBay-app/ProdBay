@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../../lib/supabase';
 import type { Supplier, ContactPerson } from '../../lib/supabase';
 import { useNotification } from '../../hooks/useNotification';
+import { SupplierService } from '../../services/supplierService';
 import { Users, Mail, Plus, Tag, Edit, Trash2, User, Phone, Star } from 'lucide-react';
 import SupplierFilters, { type FilterState } from './supplier-filters/SupplierFilters';
 import { filterSuppliers, getUniqueCategories, getFilterStats, debounce } from '../../utils/supplierFiltering';
@@ -56,15 +56,11 @@ const SupplierManagement: React.FC = () => {
 
   const loadSuppliers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .order('supplier_name');
-
-      if (error) throw error;
-      setSuppliers(data || []);
+      const data = await SupplierService.getAllSuppliers();
+      setSuppliers(data);
     } catch (error) {
       console.error('Error loading suppliers:', error);
+      showError('Failed to load suppliers');
     } finally {
       setLoading(false);
     }
@@ -76,20 +72,11 @@ const SupplierManagement: React.FC = () => {
     try {
       if (editingSupplier) {
         // Update existing supplier
-        const { error } = await supabase
-          .from('suppliers')
-          .update(formData)
-          .eq('id', editingSupplier.id);
-
-        if (error) throw error;
+        await SupplierService.updateSupplier(editingSupplier.id, formData);
         setEditingSupplier(null);
       } else {
         // Create new supplier
-        const { error } = await supabase
-          .from('suppliers')
-          .insert(formData);
-
-        if (error) throw error;
+        await SupplierService.createSupplier(formData);
         setShowAddForm(false);
       }
 
@@ -132,12 +119,7 @@ const SupplierManagement: React.FC = () => {
     if (!confirmed) return;
 
     try {
-      const { error } = await supabase
-        .from('suppliers')
-        .delete()
-        .eq('id', supplierId);
-
-      if (error) throw error;
+      await SupplierService.deleteSupplier(supplierId);
       await loadSuppliers();
       showSuccess('Supplier deleted successfully');
     } catch (error) {
