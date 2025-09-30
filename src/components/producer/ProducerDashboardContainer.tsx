@@ -85,7 +85,6 @@ export interface ProducerDashboardActions {
   handleSendCustomizedEmails: (customizedEmails: CustomizedEmail[]) => Promise<void>;
   
   // Tag actions
-  handleTagSelection: (asset: Asset) => void;
   handleTagToggle: (tag: string) => void;
   confirmSendWithTags: () => Promise<void>;
   
@@ -563,11 +562,6 @@ const ProducerDashboardContainer: React.FC = () => {
   }, [previewAsset, previewSupplierIds, selectedProject, loadProjectDetails, showSuccess, showWarning, showError]);
 
   // Tag actions
-  const handleTagSelection = useCallback((asset: Asset) => {
-    setTagSelectionAsset(asset);
-    setSelectedTags([]);
-    setShowTagModal(true);
-  }, []);
 
   const handleTagToggle = useCallback((tag: string) => {
     setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
