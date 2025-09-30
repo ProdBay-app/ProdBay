@@ -1,191 +1,54 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import type { Supplier, ContactPerson } from '../../lib/supabase';
-import { useNotification } from '../../hooks/useNotification';
-import { SupplierService } from '../../services/supplierService';
+import React from 'react';
 import { Users, Mail, Plus, Tag, Edit, Trash2, User, Phone, Star } from 'lucide-react';
-import SupplierFilters, { type FilterState } from './supplier-filters/SupplierFilters';
-import { filterSuppliers, getUniqueCategories, getFilterStats, debounce } from '../../utils/supplierFiltering';
+import SupplierFilters from './supplier-filters/SupplierFilters';
+import { useSupplierManagement } from '../../hooks/useSupplierManagement';
 
 const SupplierManagement: React.FC = () => {
-  const { showSuccess, showError, showConfirm } = useNotification();
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [formData, setFormData] = useState({
-    supplier_name: '',
-    contact_email: '',
-    service_categories: [] as string[],
-    contact_persons: [] as ContactPerson[]
-  });
-  const [loading, setLoading] = useState(true);
-
-  // Filter state
-  const [filters, setFilters] = useState<FilterState>({
-    searchTerm: '',
-    selectedCategories: [],
-    selectedRoles: [],
-    hasContactPersons: null,
-    dateRange: { start: null, end: null }
-  });
-
-  const availableCategories = [
-    'Printing', 'Graphics', 'Banners', 'Staging', 'Audio', 'Lighting',
-    'Catering', 'Food', 'Beverages', 'Design', 'Branding', 'Marketing',
-    'Transport', 'Logistics', 'Delivery', 'Photography', 'Video', 'Security'
-  ];
-
-  useEffect(() => {
-    loadSuppliers();
-  }, []);
-
-  // Filter suppliers based on current filter state
-  const filteredSuppliers = useMemo(() => {
-    return filterSuppliers(suppliers, filters);
-  }, [suppliers, filters]);
-
-  // Get filter statistics
-  const filterStats = useMemo(() => {
-    return getFilterStats(suppliers, filteredSuppliers, filters);
-  }, [suppliers, filteredSuppliers, filters]);
-
-  // Debounced search handler
-  const debouncedSetFilters = useMemo(
-    () => debounce((newFilters: FilterState) => setFilters(newFilters), 300),
-    []
-  );
-
-  const loadSuppliers = async () => {
-    try {
-      const data = await SupplierService.getAllSuppliers();
-      setSuppliers(data);
-    } catch (error) {
-      console.error('Error loading suppliers:', error);
-      showError('Failed to load suppliers');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    // Data state
+    suppliers,
+    loading,
     
-    try {
-      if (editingSupplier) {
-        // Update existing supplier
-        await SupplierService.updateSupplier(editingSupplier.id, formData);
-        setEditingSupplier(null);
-      } else {
-        // Create new supplier
-        await SupplierService.createSupplier(formData);
-        setShowAddForm(false);
-      }
+    // Form state
+    showAddForm,
+    editingSupplier,
+    formData,
+    
+    // Filter state
+    filters,
+    
+    // Computed state
+    filteredSuppliers,
+    filterStats,
+    debouncedSetFilters,
+    
+    // Constants
+    availableCategories,
+    
+    // Data operations
+    handleSubmit,
+    handleDelete,
+    
+    // Form management
+    handleEdit,
+    cancelEdit,
+    setShowAddForm,
+    updateFormData,
+    
+    // Category management
+    handleCategoryToggle,
+    
+    // Contact person management
+    addContactPerson,
+    removeContactPerson,
+    updateContactPerson,
+    setPrimaryContact,
+    
+    // Filter management
+    setFilters,
+    clearAllFilters
+  } = useSupplierManagement();
 
-      // Reset form
-      setFormData({
-        supplier_name: '',
-        contact_email: '',
-        service_categories: [],
-        contact_persons: []
-      });
-
-      await loadSuppliers();
-      showSuccess(editingSupplier ? 'Supplier updated successfully' : 'Supplier added successfully');
-    } catch (error) {
-      console.error('Error saving supplier:', error);
-      showError('Failed to save supplier');
-    }
-  };
-
-  const handleEdit = (supplier: Supplier) => {
-    setFormData({
-      supplier_name: supplier.supplier_name,
-      contact_email: supplier.contact_email,
-      service_categories: supplier.service_categories,
-      contact_persons: supplier.contact_persons || []
-    });
-    setEditingSupplier(supplier);
-    setShowAddForm(true);
-  };
-
-  const handleDelete = async (supplierId: string) => {
-    const confirmed = await showConfirm({
-      title: 'Delete Supplier',
-      message: 'Are you sure you want to delete this supplier?',
-      variant: 'danger',
-      confirmText: 'Delete',
-      cancelText: 'Cancel'
-    });
-
-    if (!confirmed) return;
-
-    try {
-      await SupplierService.deleteSupplier(supplierId);
-      await loadSuppliers();
-      showSuccess('Supplier deleted successfully');
-    } catch (error) {
-      console.error('Error deleting supplier:', error);
-      showError('Failed to delete supplier');
-    }
-  };
-
-  const handleCategoryToggle = (category: string) => {
-    setFormData(prev => ({
-      ...prev,
-      service_categories: prev.service_categories.includes(category)
-        ? prev.service_categories.filter(c => c !== category)
-        : [...prev.service_categories, category]
-    }));
-  };
-
-  const addContactPerson = () => {
-    setFormData(prev => ({
-      ...prev,
-      contact_persons: [...prev.contact_persons, {
-        name: '',
-        email: '',
-        role: '',
-        phone: '',
-        is_primary: prev.contact_persons.length === 0 // First contact person is primary by default
-      }]
-    }));
-  };
-
-  const removeContactPerson = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      contact_persons: prev.contact_persons.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateContactPerson = (index: number, field: keyof ContactPerson, value: string | boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      contact_persons: prev.contact_persons.map((person, i) => 
-        i === index ? { ...person, [field]: value } : person
-      )
-    }));
-  };
-
-  const setPrimaryContact = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      contact_persons: prev.contact_persons.map((person, i) => ({
-        ...person,
-        is_primary: i === index
-      }))
-    }));
-  };
-
-  const cancelEdit = () => {
-    setShowAddForm(false);
-    setEditingSupplier(null);
-    setFormData({
-      supplier_name: '',
-      contact_email: '',
-      service_categories: [],
-      contact_persons: []
-    });
-  };
 
   if (loading) {
     return (
@@ -236,7 +99,7 @@ const SupplierManagement: React.FC = () => {
                   type="text"
                   id="supplier_name"
                   value={formData.supplier_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, supplier_name: e.target.value }))}
+                  onChange={(e) => updateFormData('supplier_name', e.target.value)}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
@@ -250,7 +113,7 @@ const SupplierManagement: React.FC = () => {
                   type="email"
                   id="contact_email"
                   value={formData.contact_email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, contact_email: e.target.value }))}
+                  onChange={(e) => updateFormData('contact_email', e.target.value)}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
@@ -555,13 +418,7 @@ const SupplierManagement: React.FC = () => {
                   Try adjusting your search criteria or clearing some filters
                 </p>
                 <button
-                  onClick={() => setFilters({
-                    searchTerm: '',
-                    selectedCategories: [],
-                    selectedRoles: [],
-                    hasContactPersons: null,
-                    dateRange: { start: null, end: null }
-                  })}
+                  onClick={clearAllFilters}
                   className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
                 >
                   Clear All Filters
