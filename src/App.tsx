@@ -12,7 +12,7 @@ const ProducerDashboard = lazy(() => import('./components/producer/ProducerDashb
 const SupplierManagement = lazy(() => import('./components/producer/SupplierManagement'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 const QuoteSubmission = lazy(() => import('./components/supplier/QuoteSubmission'));
-const SupplierDashboard = lazy(() => import('./components/supplier/SupplierDashboard'));
+const SupplierDashboard = lazy(() => import('./components/supplier/SupplierDashboardContainer'));
 const SupplierSubmitQuote = lazy(() => import('./components/supplier/SupplierSubmitQuote'));
 
 function App() {
