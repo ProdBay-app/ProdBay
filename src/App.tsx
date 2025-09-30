@@ -6,9 +6,9 @@ import Home from './components/Home';
 import { NotificationProvider } from './contexts/NotificationContext';
 
 // Lazy-loaded routes to avoid eager initialization side-effects (e.g., Supabase client)
-const ClientDashboard = lazy(() => import('./components/client/ClientDashboard'));
+const ClientDashboard = lazy(() => import('./components/client/ClientDashboardContainer'));
 const NewProject = lazy(() => import('./components/client/NewProject'));
-const ProducerDashboard = lazy(() => import('./components/producer/ProducerDashboard'));
+const ProducerDashboard = lazy(() => import('./components/producer/ProducerDashboardContainer'));
 const SupplierManagement = lazy(() => import('./components/producer/SupplierManagement'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 const QuoteSubmission = lazy(() => import('./components/supplier/QuoteSubmission'));

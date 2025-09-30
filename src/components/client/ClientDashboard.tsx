@@ -1,27 +1,42 @@
 import React from 'react';
 import { BarChart3, Clock, DollarSign, Package, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
-import { useClientDashboard } from '../../hooks/useClientDashboard';
+import type { Project, Asset, Quote } from '../../lib/supabase';
 
-const ClientDashboard: React.FC = () => {
-  const {
-    // Data state
-    projects,
-    selectedProject,
-    assets,
-    loading,
-    
-    // Calculated values
-    totalCost,
-    progressPercentage,
-    
-    // Utility functions
-    getStatusIconProps,
-    getStatusColor,
-    getAcceptedQuoteForAsset,
-    
-    // Actions
-    selectProject
-  } = useClientDashboard();
+export interface ClientDashboardProps {
+  // Data state
+  projects: Project[];
+  selectedProject: Project | null;
+  assets: Asset[];
+  quotes: Quote[];
+  loading: boolean;
+  
+  // Calculated values
+  totalCost: number;
+  progressPercentage: number;
+  
+  // Utility functions
+  getStatusIconProps: (status: string) => { icon: string; className: string };
+  getStatusColor: (status: string) => string;
+  getAcceptedQuoteForAsset: (assetId: string) => Quote | undefined;
+  
+  // Actions
+  selectProject: (project: Project) => Promise<void>;
+  refreshProjects: () => Promise<void>;
+}
+
+const ClientDashboard: React.FC<ClientDashboardProps> = ({
+  projects,
+  selectedProject,
+  assets,
+  quotes,
+  loading,
+  totalCost,
+  progressPercentage,
+  getStatusIconProps,
+  getStatusColor,
+  getAcceptedQuoteForAsset,
+  selectProject
+}) => {
 
   // Helper function to render status icons
   const renderStatusIcon = (status: string) => {
@@ -31,13 +46,6 @@ const ClientDashboard: React.FC = () => {
     return <IconComponent className={className} />;
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

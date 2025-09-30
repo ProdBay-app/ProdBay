@@ -1,13 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { AutomationService } from '../../services/automationService';
-import { SupplierApiService, type SuggestedSupplier } from '../../services/supplierApiService';
-import { AIAllocationService, type AIAssetSuggestion } from '../../services/aiAllocationService';
-import { QuoteRequestService, type CustomizedEmail } from '../../services/quoteRequestService';
-import { ProducerService } from '../../services/producerService';
-import { useProjectManagement } from '../../hooks/useProjectManagement';
-import { useAssetManagement } from '../../hooks/useAssetManagement';
-import { useNotification } from '../../hooks/useNotification';
-import type { Asset } from '../../lib/supabase';
+import React from 'react';
+import type { Project, Asset, Quote, Supplier } from '../../lib/supabase';
+import type { ProjectFormData, AssetFormData } from '../../services/producerService';
+import type { SuggestedSupplier } from '../../services/supplierApiService';
+import type { AIAssetSuggestion } from '../../services/aiAllocationService';
+import type { CustomizedEmail } from '../../services/quoteRequestService';
 import QuoteRequestPreviewModal from './QuoteRequestPreviewModal';
 import QuoteComparisonModal from './QuoteComparisonModal';
 import DashboardHeader from './DashboardHeader';
@@ -21,317 +17,181 @@ import SupplierSelectionModal from './SupplierSelectionModal';
 import AIAllocationModal from './AIAllocationModal';
 import { Eye } from 'lucide-react';
 
-const ProducerDashboard: React.FC = () => {
-  const { showSuccess, showError, showWarning } = useNotification();
+export interface ProducerDashboardProps {
+  // Data
+  projects: Project[];
+  selectedProject: Project | null;
+  assets: Asset[];
+  quotes: Quote[];
+  suppliers: Supplier[];
+  loadingSuppliers: boolean;
+  loadingAI: boolean;
   
-  // Use project management hook
-  const {
-    projects,
-    currentProject: selectedProject,
-    isLoading: loading,
-    showProjectModal,
-    isEditingProject,
-    isSubmittingProject,
-    projectForm,
-    allocationMethod,
-    selectProject: setSelectedProject,
-    openCreateProject,
-    openEditProject,
-    closeProjectModal,
-    updateProjectForm,
-    setAllocationMethod,
-    submitProjectForm,
-    deleteProject: handleDeleteProject,
-  } = useProjectManagement();
+  // Modal states
+  showProjectModal: boolean;
+  showAssetModal: boolean;
+  showTagModal: boolean;
+  showSupplierModal: boolean;
+  showPreviewModal: boolean;
+  showAIAllocationModal: boolean;
+  showQuoteComparisonModal: boolean;
   
-  // Use asset management hook
-  const {
-    assets,
-    quotes,
-    suppliers,
-    showAssetModal,
-    isEditingAsset,
-    isSubmittingAsset,
-    assetForm,
-    loadProjectDetails,
-    openCreateAsset,
-    openEditAsset,
-    closeAssetModal,
-    updateAssetForm,
-    submitAssetForm,
-    deleteAsset: handleDeleteAsset,
-  } = useAssetManagement(selectedProject);
+  // Form states
+  isEditingProject: boolean;
+  isSubmittingProject: boolean;
+  isEditingAsset: boolean;
+  isSubmittingAsset: boolean;
+  projectForm: ProjectFormData;
+  assetForm: AssetFormData;
+  allocationMethod: 'static' | 'ai';
   
-  const [showTagModal, setShowTagModal] = useState(false);
-  const [tagSelectionAsset, setTagSelectionAsset] = useState<Asset | null>(null);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  
-  // New supplier selection modal state
-  const [showSupplierModal, setShowSupplierModal] = useState(false);
-  const [supplierSelectionAsset, setSupplierSelectionAsset] = useState<Asset | null>(null);
-  const [suggestedSuppliers, setSuggestedSuppliers] = useState<SuggestedSupplier[]>([]);
-  const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
-  const [loadingSuppliers, setLoadingSuppliers] = useState(false);
-
-  // New quote request preview modal state
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
-  const [previewSupplierIds, setPreviewSupplierIds] = useState<string[]>([]);
-
-  // AI Allocation state
-  const [showAIAllocationModal, setShowAIAllocationModal] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState<{
+  // AI and supplier states
+  aiSuggestions: {
     assets: AIAssetSuggestion[];
     reasoning: string;
     confidence: number;
-  } | null>(null);
-  const [loadingAI, setLoadingAI] = useState(false);
-  const [aiAllocationCompleted, setAiAllocationCompleted] = useState<boolean>(false);
+  } | null;
+  aiAllocationCompleted: boolean;
+  suggestedSuppliers: SuggestedSupplier[];
+  selectedSupplierIds: string[];
+  selectedTags: string[];
+  
+  // Selection states
+  supplierSelectionAsset: Asset | null;
+  previewAsset: Asset | null;
+  previewSupplierIds: string[];
+  comparisonAssetId: string | null;
+  
+  // Actions
+  selectProject: (project: Project | null) => void;
+  openCreateProject: () => void;
+  openEditProject: () => void;
+  closeProjectModal: () => void;
+  updateProjectForm: (field: keyof ProjectFormData, value: string | number | undefined) => void;
+  setAllocationMethod: (method: 'static' | 'ai') => void;
+  submitProjectForm: (e: React.FormEvent) => Promise<void>;
+  deleteProject: () => Promise<void>;
+  
+  openCreateAsset: () => Promise<void>;
+  openEditAsset: (asset: Asset) => Promise<void>;
+  closeAssetModal: () => void;
+  updateAssetForm: (field: keyof AssetFormData, value: string | undefined) => void;
+  submitAssetForm: (e: React.FormEvent) => Promise<void>;
+  deleteAsset: (asset: Asset) => Promise<void>;
+  
+  handleSendToSuppliers: (asset: Asset) => Promise<void>;
+  handleSupplierSelection: (supplierId: string) => void;
+  confirmSendQuoteRequests: () => Promise<void>;
+  handleSendCustomizedEmails: (customizedEmails: CustomizedEmail[]) => Promise<void>;
+  
+  handleTagToggle: (tag: string) => void;
+  confirmSendWithTags: () => Promise<void>;
+  
+  openAIAllocation: () => void;
+  performAIAnalysis: () => Promise<void>;
+  applyAISuggestions: () => Promise<void>;
+  
+  openQuoteComparison: (assetId: string) => void;
+  closeQuoteComparison: () => void;
+  handleQuoteUpdate: () => void;
+  
+  closeTagModal: () => void;
+  closeSupplierModal: () => void;
+  closePreviewModal: () => void;
+  closeAIAllocationModal: () => void;
+  
+  // Utils
+  getStatusColor: (status: string) => string;
+  getAssetQuotes: (assetId: string) => Quote[];
+  hasMultipleQuotes: (assetId: string) => boolean;
+  availableTags: string[];
+}
 
-  // Quote Comparison state
-  const [showQuoteComparisonModal, setShowQuoteComparisonModal] = useState(false);
-  const [comparisonAssetId, setComparisonAssetId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (selectedProject) {
-      // Check AI allocation completion status
-      setAiAllocationCompleted(!!selectedProject.ai_allocation_completed_at);
-    }
-  }, [selectedProject]);
-
-
-
-
-
-
-  const handleSendToSuppliers = async (asset: Asset) => {
-    setSupplierSelectionAsset(asset);
-    setSelectedSupplierIds([]);
-    setShowSupplierModal(true);
-    await loadSuggestedSuppliers(asset.id);
-  };
-
-  const loadSuggestedSuppliers = async (assetId: string) => {
-    setLoadingSuppliers(true);
-    try {
-      const response = await SupplierApiService.getSuggestedSuppliers(assetId);
-      setSuggestedSuppliers(response.suggestedSuppliers);
-    } catch (error) {
-      console.error('Failed to load suggested suppliers:', error);
-      showError('Failed to load supplier suggestions');
-    } finally {
-      setLoadingSuppliers(false);
-    }
-  };
-
-  const handleSupplierSelection = (supplierId: string) => {
-    setSelectedSupplierIds(prev => 
-      prev.includes(supplierId) 
-        ? prev.filter(id => id !== supplierId)
-        : [...prev, supplierId]
-    );
-  };
-
-  const confirmSendQuoteRequests = async () => {
-    if (!supplierSelectionAsset || selectedSupplierIds.length === 0) return;
-    
-    // Open preview modal instead of sending directly
-    setPreviewAsset(supplierSelectionAsset);
-    setPreviewSupplierIds(selectedSupplierIds);
-    setShowPreviewModal(true);
-    
-    // Close supplier selection modal
-    setShowSupplierModal(false);
-    setSupplierSelectionAsset(null);
-    setSelectedSupplierIds([]);
-    setSuggestedSuppliers([]);
-  };
-
-  const handleSendCustomizedEmails = async (customizedEmails: CustomizedEmail[]) => {
-    if (!previewAsset || previewSupplierIds.length === 0) return;
-    
-    try {
-      // Get producer settings for email
-      const settings = await ProducerService.loadProducerSettings();
-
-      const from = settings ? {
-        name: settings.from_name,
-        email: settings.from_email
-      } : undefined;
-
-      const result = await QuoteRequestService.sendQuoteRequests(
-        previewAsset.id,
-        previewSupplierIds,
-        customizedEmails,
-        from ? { name: String(from.name), email: String(from.email) } : undefined
-      );
-
-      await loadProjectDetails(selectedProject!.id);
-      
-      if (result.data.successful_requests > 0) {
-        showSuccess(`Quote requests sent to ${result.data.successful_requests} supplier(s) for ${previewAsset.asset_name}`);
-      }
-      
-      if (result.data.failed_requests > 0) {
-        showWarning(`Warning: ${result.data.failed_requests} request(s) failed to send`);
-      }
-    } catch (error) {
-      console.error('Error sending quote requests:', error);
-      showError('Failed to send quote requests');
-      throw error; // Re-throw to let the modal handle the error
-    } finally {
-      setPreviewAsset(null);
-      setPreviewSupplierIds([]);
-    }
-  };
-
-
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed':
-      case 'Delivered':
-      case 'Approved':
-      case 'Accepted':
-        return 'bg-green-100 text-green-800';
-      case 'In Progress':
-      case 'In Production':
-      case 'Quoting':
-      case 'Submitted':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Cancelled':
-      case 'Rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getAssetQuotes = (assetId: string) => {
-    return quotes.filter(quote => quote.asset_id === assetId);
-  };
-
-
-  const availableTags = ProducerService.getAvailableTags(suppliers);
-
-
-
-
-
-
-  const confirmSendWithTags = async () => {
-    if (!tagSelectionAsset || !selectedProject) return;
-    try {
-      await AutomationService.sendQuoteRequestsForAsset(tagSelectionAsset, selectedTags);
-      await loadProjectDetails(selectedProject.id);
-      showSuccess(`Quote requests sent for ${tagSelectionAsset.asset_name}`);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error sending to suppliers:', error);
-      showError('Failed to send quote requests');
-    } finally {
-      setShowTagModal(false);
-      setTagSelectionAsset(null);
-      setSelectedTags([]);
-    }
-  };
-
-  // Quote Comparison Functions
-  const hasMultipleQuotes = (assetId: string): boolean => {
-    const assetQuotes = getAssetQuotes(assetId);
-    return assetQuotes.length > 1;
-  };
-
-  const openQuoteComparison = (assetId: string) => {
-    setComparisonAssetId(assetId);
-    setShowQuoteComparisonModal(true);
-  };
-
-  const closeQuoteComparison = () => {
-    setShowQuoteComparisonModal(false);
-    setComparisonAssetId(null);
-  };
-
-  const handleQuoteUpdate = () => {
-    // Reload project details when quotes are updated
-    if (selectedProject) {
-      loadProjectDetails(selectedProject.id);
-    }
-  };
-
-  // AI Allocation Functions
-  const openAIAllocation = () => {
-    if (!selectedProject || aiAllocationCompleted) return;
-    setShowAIAllocationModal(true);
-    setAiSuggestions(null);
-  };
-
-  const performAIAnalysis = async () => {
-    if (!selectedProject) return;
-    
-    setLoadingAI(true);
-    try {
-      let result;
-      
-      result = await AIAllocationService.analyzeBriefForAssets(
-        selectedProject.brief_description,
-        {
-          financial_parameters: selectedProject.financial_parameters,
-          timeline_deadline: selectedProject.timeline_deadline,
-          physical_parameters: selectedProject.physical_parameters
-        }
-      );
-
-      if (result.success && result.data) {
-        setAiSuggestions({
-          assets: result.data.assets || [],
-          reasoning: result.data.reasoning || '',
-          confidence: result.data.confidence || 0
-        });
-      } else {
-        showError(`AI analysis failed: ${result.error?.message || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error('AI analysis error:', error);
-      showError('AI analysis failed. Please try again.');
-    } finally {
-      setLoadingAI(false);
-    }
-  };
-
-  const applyAISuggestions = async () => {
-    if (!aiSuggestions || !selectedProject) return;
-    
-    try {
-      // Apply asset suggestions
-      if (aiSuggestions.assets.length > 0) {
-        const result = await AIAllocationService.createAssetsFromAI(selectedProject.id, aiSuggestions.assets);
-        if (!result.success) {
-          throw new Error(result.error?.message || 'Failed to create assets');
-        }
-      }
-
-
-      // Reload project details
-      await loadProjectDetails(selectedProject.id);
-      setShowAIAllocationModal(false);
-      setAiSuggestions(null);
-      setAiAllocationCompleted(true);
-      showSuccess('AI suggestions applied successfully! AI allocation is now complete.', { duration: 6000 });
-    } catch (error) {
-      console.error('Error applying AI suggestions:', error);
-      showError('Failed to apply AI suggestions. Please try again.');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
-      </div>
-    );
-  }
-
+const ProducerDashboard: React.FC<ProducerDashboardProps> = ({
+  // Data
+  projects,
+  selectedProject,
+  assets,
+  quotes,
+  suppliers,
+  loadingSuppliers,
+  loadingAI,
+  
+  // Modal states
+  showProjectModal,
+  showAssetModal,
+  showTagModal,
+  showSupplierModal,
+  showPreviewModal,
+  showAIAllocationModal,
+  showQuoteComparisonModal,
+  
+  // Form states
+  isEditingProject,
+  isSubmittingProject,
+  isEditingAsset,
+  isSubmittingAsset,
+  projectForm,
+  assetForm,
+  allocationMethod,
+  
+  // AI and supplier states
+  aiSuggestions,
+  aiAllocationCompleted,
+  suggestedSuppliers,
+  selectedSupplierIds,
+  selectedTags,
+  
+  // Selection states
+  supplierSelectionAsset,
+  previewAsset,
+  previewSupplierIds,
+  comparisonAssetId,
+  
+  // Actions
+  selectProject,
+  openCreateProject,
+  openEditProject,
+  closeProjectModal,
+  updateProjectForm,
+  setAllocationMethod,
+  submitProjectForm,
+  deleteProject,
+  
+  openCreateAsset,
+  openEditAsset,
+  closeAssetModal,
+  updateAssetForm,
+  submitAssetForm,
+  deleteAsset,
+  
+  handleSendToSuppliers,
+  handleSupplierSelection,
+  confirmSendQuoteRequests,
+  handleSendCustomizedEmails,
+  
+  handleTagToggle,
+  confirmSendWithTags,
+  
+  openAIAllocation,
+  performAIAnalysis,
+  applyAISuggestions,
+  
+  openQuoteComparison,
+  closeQuoteComparison,
+  handleQuoteUpdate,
+  
+  closeTagModal,
+  closeSupplierModal,
+  closePreviewModal,
+  closeAIAllocationModal,
+  
+  // Utils
+  getStatusColor,
+  getAssetQuotes,
+  hasMultipleQuotes,
+  availableTags
+}) => {
   return (
     <div className="space-y-6">
       <DashboardHeader onCreateProject={openCreateProject} />
@@ -340,7 +200,7 @@ const ProducerDashboard: React.FC = () => {
         <ProjectList
           projects={projects}
           selectedProject={selectedProject}
-          onProjectSelect={setSelectedProject}
+          onProjectSelect={selectProject}
           getStatusColor={getStatusColor}
         />
 
@@ -351,7 +211,7 @@ const ProducerDashboard: React.FC = () => {
                 project={selectedProject}
                 assets={assets}
                 onEdit={openEditProject}
-                onDelete={handleDeleteProject}
+                onDelete={deleteProject}
                 getStatusColor={getStatusColor}
               />
 
@@ -361,7 +221,7 @@ const ProducerDashboard: React.FC = () => {
                 aiAllocationCompleted={aiAllocationCompleted}
                 onCreateAsset={openCreateAsset}
                 onEditAsset={openEditAsset}
-                onDeleteAsset={handleDeleteAsset}
+                onDeleteAsset={deleteAsset}
                 onSendToSuppliers={handleSendToSuppliers}
                 onCompareQuotes={openQuoteComparison}
                 onOpenAIAllocation={openAIAllocation}
@@ -400,15 +260,15 @@ const ProducerDashboard: React.FC = () => {
         suppliers={suppliers}
         onClose={closeAssetModal}
         onSubmit={submitAssetForm}
-        onFormChange={(field, value) => updateAssetForm(field as keyof typeof assetForm, value)}
+        onFormChange={(field, value) => updateAssetForm(field as keyof AssetFormData, value)}
       />
 
       <TagSelectionModal
         isOpen={showTagModal}
         availableTags={availableTags}
         selectedTags={selectedTags}
-        onClose={() => { setShowTagModal(false); setSelectedTags([]); setTagSelectionAsset(null); }}
-        onTagToggle={(tag) => setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])}
+        onClose={closeTagModal}
+        onTagToggle={handleTagToggle}
         onConfirm={confirmSendWithTags}
       />
 
@@ -418,12 +278,7 @@ const ProducerDashboard: React.FC = () => {
         suggestedSuppliers={suggestedSuppliers}
         selectedSupplierIds={selectedSupplierIds}
         loading={loadingSuppliers}
-        onClose={() => {
-                        setShowSupplierModal(false);
-                        setSupplierSelectionAsset(null);
-                        setSelectedSupplierIds([]);
-                        setSuggestedSuppliers([]);
-                      }}
+        onClose={closeSupplierModal}
         onSupplierToggle={handleSupplierSelection}
         onConfirm={confirmSendQuoteRequests}
       />
@@ -431,11 +286,7 @@ const ProducerDashboard: React.FC = () => {
       {/* Quote Request Preview Modal */}
       <QuoteRequestPreviewModal
         isOpen={showPreviewModal}
-        onClose={() => {
-          setShowPreviewModal(false);
-          setPreviewAsset(null);
-          setPreviewSupplierIds([]);
-        }}
+        onClose={closePreviewModal}
         asset={previewAsset!}
         supplierIds={previewSupplierIds}
         onSend={handleSendCustomizedEmails}
@@ -445,10 +296,7 @@ const ProducerDashboard: React.FC = () => {
         isOpen={showAIAllocationModal && !aiAllocationCompleted}
         aiSuggestions={aiSuggestions}
         loading={loadingAI}
-        onClose={() => {
-                      setShowAIAllocationModal(false);
-                      setAiSuggestions(null);
-                    }}
+        onClose={closeAIAllocationModal}
         onAnalyze={performAIAnalysis}
         onApply={applyAISuggestions}
       />

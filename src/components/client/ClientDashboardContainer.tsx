@@ -1,20 +1,15 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import type { Project, Asset, Quote, Supplier } from '../lib/supabase';
-
-/**
- * @deprecated This hook is deprecated. Use ClientDashboardContainer component instead.
- * The data fetching logic has been moved to ClientDashboardContainer for better separation of concerns.
- * For utility functions only, use useClientDashboardUtils hook.
- */
+import { supabase } from '../../lib/supabase';
+import { useNotification } from '../../hooks/useNotification';
+import ClientDashboard from './ClientDashboard';
+import type { Project, Asset, Quote } from '../../lib/supabase';
 
 export interface ClientDashboardData {
   projects: Project[];
   selectedProject: Project | null;
   assets: Asset[];
   quotes: Quote[];
-  loading: boolean;
 }
 
 export interface ClientDashboardCalculations {
@@ -28,14 +23,23 @@ export interface ClientDashboardUtils {
   getAcceptedQuoteForAsset: (assetId: string) => Quote | undefined;
 }
 
-export interface UseClientDashboardReturn extends ClientDashboardData, ClientDashboardCalculations, ClientDashboardUtils {
-  // Actions
+export interface ClientDashboardActions {
   selectProject: (project: Project) => Promise<void>;
   refreshProjects: () => Promise<void>;
 }
 
-export const useClientDashboard = (): UseClientDashboardReturn => {
+export interface ClientDashboardProps extends 
+  ClientDashboardData, 
+  ClientDashboardCalculations, 
+  ClientDashboardUtils, 
+  ClientDashboardActions {
+  loading: boolean;
+  error: string | null;
+}
+
+const ClientDashboardContainer: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const { showError } = useNotification();
   
   // State
   const [projects, setProjects] = useState<Project[]>([]);
@@ -43,6 +47,7 @@ export const useClientDashboard = (): UseClientDashboardReturn => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const selectedProjectId = searchParams.get('project');
 
@@ -66,6 +71,7 @@ export const useClientDashboard = (): UseClientDashboardReturn => {
   // Data fetching functions
   const loadProjects = async (): Promise<void> => {
     try {
+      setError(null);
       const { data, error } = await supabase
         .from('projects')
         .select('*')
@@ -75,6 +81,9 @@ export const useClientDashboard = (): UseClientDashboardReturn => {
       setProjects(data || []);
     } catch (error) {
       console.error('Error loading projects:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load projects';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -82,8 +91,9 @@ export const useClientDashboard = (): UseClientDashboardReturn => {
 
   const loadProjectDetails = async (projectId: string): Promise<void> => {
     try {
+      setError(null);
       // Load assets with assigned suppliers
-      const { data: assetsData } = await supabase
+      const { data: assetsData, error: assetsError } = await supabase
         .from('assets')
         .select(`
           *,
@@ -91,12 +101,13 @@ export const useClientDashboard = (): UseClientDashboardReturn => {
         `)
         .eq('project_id', projectId);
 
+      if (assetsError) throw assetsError;
       setAssets(assetsData || []);
 
       // Load quotes for all assets in this project
       if (assetsData && assetsData.length > 0) {
         const assetIds = assetsData.map(asset => asset.id);
-        const { data: quotesData } = await supabase
+        const { data: quotesData, error: quotesError } = await supabase
           .from('quotes')
           .select(`
             *,
@@ -105,12 +116,16 @@ export const useClientDashboard = (): UseClientDashboardReturn => {
           `)
           .in('asset_id', assetIds);
 
+        if (quotesError) throw quotesError;
         setQuotes(quotesData || []);
       } else {
         setQuotes([]);
       }
     } catch (error) {
       console.error('Error loading project details:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load project details';
+      setError(errorMessage);
+      showError(errorMessage);
     }
   };
 
@@ -122,6 +137,7 @@ export const useClientDashboard = (): UseClientDashboardReturn => {
 
   // Refresh projects data
   const refreshProjects = async (): Promise<void> => {
+    setLoading(true);
     await loadProjects();
   };
 
@@ -178,25 +194,50 @@ export const useClientDashboard = (): UseClientDashboardReturn => {
     return quotes.find(q => q.asset_id === assetId && q.status === 'Accepted');
   };
 
-  return {
-    // Data state
-    projects,
-    selectedProject,
-    assets,
-    quotes,
-    loading,
-    
-    // Calculated values
-    totalCost: calculateTotalCost(),
-    progressPercentage: getProgressPercentage(),
-    
-    // Utility functions
-    getStatusIconProps,
-    getStatusColor,
-    getAcceptedQuoteForAsset,
-    
-    // Actions
-    selectProject,
-    refreshProjects
-  };
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-red-600 text-lg font-semibold mb-2">Error Loading Dashboard</div>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={refreshProjects}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Pass all data and functions to the presentational component
+  return (
+    <ClientDashboard
+      projects={projects}
+      selectedProject={selectedProject}
+      assets={assets}
+      quotes={quotes}
+      loading={loading}
+      totalCost={calculateTotalCost()}
+      progressPercentage={getProgressPercentage()}
+      getStatusIconProps={getStatusIconProps}
+      getStatusColor={getStatusColor}
+      getAcceptedQuoteForAsset={getAcceptedQuoteForAsset}
+      selectProject={selectProject}
+      refreshProjects={refreshProjects}
+    />
+  );
 };
+
+export default ClientDashboardContainer;
