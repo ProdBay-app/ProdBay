@@ -6,20 +6,20 @@ import Home from './components/Home';
 import { NotificationProvider } from './contexts/NotificationContext';
 
 // Lazy-loaded routes to avoid eager initialization side-effects (e.g., Supabase client)
-const ClientDashboard = lazy(() => import('./components/client/ClientDashboard'));
+const ClientDashboard = lazy(() => import('./components/client/ClientDashboardContainer'));
 const NewProject = lazy(() => import('./components/client/NewProject'));
-const ProducerDashboard = lazy(() => import('./components/producer/ProducerDashboard'));
+const ProducerDashboard = lazy(() => import('./components/producer/ProducerDashboardContainer'));
 const SupplierManagement = lazy(() => import('./components/producer/SupplierManagement'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 const QuoteSubmission = lazy(() => import('./components/supplier/QuoteSubmission'));
-const SupplierDashboard = lazy(() => import('./components/supplier/SupplierDashboard'));
+const SupplierDashboard = lazy(() => import('./components/supplier/SupplierDashboardContainer'));
 const SupplierSubmitQuote = lazy(() => import('./components/supplier/SupplierSubmitQuote'));
 
 function App() {
   return (
     <NotificationProvider>
       <Router>
-        <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
+        <Suspense fallback={<div className="p-8">Loading...</div>}>
           <Routes>
         {/* Public landing page - outside of layout */}
         <Route path="/" element={<Home />} />

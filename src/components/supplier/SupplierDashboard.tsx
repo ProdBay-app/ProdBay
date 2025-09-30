@@ -1,63 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import React from 'react';
 import type { Quote, Asset, Project } from '../../lib/supabase';
-import { FileText, CheckCircle, XCircle, Clock, Package, Eye } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
 
-interface SupplierQuote extends Quote {
+export interface SupplierQuote extends Quote {
   asset?: Asset;
   project?: Project;
 }
 
-const SupplierDashboard: React.FC = () => {
-  const [quotes, setQuotes] = useState<SupplierQuote[]>([]);
-  const [loading, setLoading] = useState(true);
+export interface SupplierDashboardProps {
+  // Data
+  quotes: SupplierQuote[];
+  loading: boolean;
+  
+  // Utils
+  getStatusBadge: (status: string) => React.ReactElement;
+  
+  // Actions
+  loadQuotes: () => Promise<void>;
+  refreshQuotes: () => Promise<void>;
+}
 
-  useEffect(() => {
-    // In a real app, supplier identity would come from auth. For MVP, load all quotes.
-    loadQuotes();
-  }, []);
-
-  const loadQuotes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('quotes')
-        .select(`*, asset:assets(*, project:projects(*))`)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const withProject: SupplierQuote[] = (data || []).map((q: any) => ({
-        ...q,
-        project: q.asset?.project,
-      }));
-
-      setQuotes(withProject);
-    } catch (e) {
-      console.error('Failed to load supplier quotes', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Accepted':
-        return <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Accepted</span>;
-      case 'Rejected':
-        return <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Rejected</span>;
-      case 'Submitted':
-      default:
-        return <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Submitted</span>;
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
-      </div>
-    );
-  }
+const SupplierDashboard: React.FC<SupplierDashboardProps> = ({
+  quotes,
+  loading,
+  getStatusBadge,
+  loadQuotes,
+  refreshQuotes
+}) => {
 
   return (
     <div className="space-y-6">

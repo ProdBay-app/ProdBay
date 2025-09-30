@@ -1,5 +1,6 @@
 import type { Supplier } from '../lib/supabase';
 import type { FilterState } from '../components/producer/supplier-filters/SupplierFilters';
+import { getUniqueNestedValues, filterBySearchTerm, filterByDateRange, debounce } from './arrayUtils';
 
 /**
  * Filter suppliers based on the provided filter state
@@ -76,28 +77,16 @@ export const filterSuppliers = (suppliers: Supplier[], filters: FilterState): Su
  * Get unique service categories from all suppliers
  */
 export const getUniqueCategories = (suppliers: Supplier[]): string[] => {
-  const categorySet = new Set<string>();
-  suppliers.forEach(supplier => {
-    supplier.service_categories.forEach(category => {
-      categorySet.add(category);
-    });
-  });
-  return Array.from(categorySet).sort();
+  return getUniqueNestedValues(suppliers, supplier => supplier.service_categories);
 };
 
 /**
  * Get unique contact roles from all suppliers
  */
 export const getUniqueRoles = (suppliers: Supplier[]): string[] => {
-  const roleSet = new Set<string>();
-  suppliers.forEach(supplier => {
-    supplier.contact_persons?.forEach(person => {
-      if (person.role && person.role.trim()) {
-        roleSet.add(person.role.trim());
-      }
-    });
-  });
-  return Array.from(roleSet).sort();
+  return getUniqueNestedValues(suppliers, supplier => 
+    supplier.contact_persons?.map(person => person.role).filter(Boolean) || []
+  );
 };
 
 /**
@@ -123,16 +112,5 @@ export const getFilterStats = (suppliers: Supplier[], filteredSuppliers: Supplie
   };
 };
 
-/**
- * Debounce function for search input
- */
-export const debounce = <T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
+// Re-export debounce from arrayUtils for backward compatibility
+export { debounce };

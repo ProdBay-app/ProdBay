@@ -3,18 +3,22 @@
  * Handles communication with the Railway backend for brief processing
  */
 
+import type { Asset } from '../lib/supabase';
+
 const RAILWAY_API_URL = import.meta.env.VITE_RAILWAY_API_URL || '';
+
+export interface ProjectContext {
+  financial_parameters?: number;
+  timeline_deadline?: string;
+  physical_parameters?: string;
+}
 
 export interface ProcessBriefRequest {
   projectId: string;
   briefDescription: string;
   useAI?: boolean; // Legacy parameter for backward compatibility
   allocationMethod?: 'static' | 'ai'; // New enum-based parameter
-  projectContext?: {
-    financial_parameters?: number;
-    timeline_deadline?: string;
-    physical_parameters?: string;
-  };
+  projectContext?: ProjectContext;
 }
 
 export interface ProcessBriefResponse {
@@ -22,13 +26,13 @@ export interface ProcessBriefResponse {
   data?: {
     projectId: string;
     identifiedAssets: string[];
-    createdAssets: any[];
+    createdAssets: Asset[];
     processingTime: number;
     allocationMethod?: 'static' | 'ai';
     aiData?: {
       reasoning: string;
       confidence: number;
-      aiAssets: any[];
+      aiAssets: Asset[];
     };
   };
   message?: string;
@@ -50,7 +54,7 @@ export class RailwayApiService {
   static async processBrief(
     projectId: string, 
     briefDescription: string, 
-    options: { useAI?: boolean; allocationMethod?: 'static' | 'ai'; projectContext?: any } = {}
+    options: { useAI?: boolean; allocationMethod?: 'static' | 'ai'; projectContext?: ProjectContext } = {}
   ): Promise<ProcessBriefResponse> {
     if (!RAILWAY_API_URL) {
       throw new Error('Railway API URL not configured. Please set VITE_RAILWAY_API_URL environment variable.');
