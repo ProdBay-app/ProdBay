@@ -61,7 +61,7 @@ const AdminDashboard: React.FC = () => {
       // Get recent projects
       setRecentProjects(projects.slice(0, 5));
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      console.error('Error loading dashboard data:', error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }

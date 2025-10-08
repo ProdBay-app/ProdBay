@@ -45,7 +45,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
         showError(`Failed to load quote comparison: ${response.error?.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error loading quote comparison:', error);
+      console.error('Error loading quote comparison:', error instanceof Error ? error.message : String(error));
       showError('Failed to load quote comparison data');
     } finally {
       setLoading(false);
@@ -75,7 +75,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
       loadQuoteComparison(); // Reload data
       onQuoteUpdate(); // Update parent component
     } catch (error) {
-      console.error('Error accepting quote:', error);
+      console.error('Error accepting quote:', error instanceof Error ? error.message : String(error));
       showError('Failed to accept quote');
     }
   };
@@ -94,7 +94,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
       loadQuoteComparison(); // Reload data
       onQuoteUpdate(); // Update parent component
     } catch (error) {
-      console.error('Error rejecting quote:', error);
+      console.error('Error rejecting quote:', error instanceof Error ? error.message : String(error));
       showError('Failed to reject quote');
     }
   };

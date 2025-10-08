@@ -121,7 +121,7 @@ Best regards,
       setCustomizedEmails(initialCustomizedEmails);
       
     } catch (error) {
-      console.error('Error generating email previews:', error);
+      console.error('Error generating email previews:', error instanceof Error ? error.message : String(error));
       showError('Failed to generate email previews');
     } finally {
       setLoading(false);
@@ -150,7 +150,7 @@ Best regards,
       await onSend(customizedEmails);
       onClose();
     } catch (error) {
-      console.error('Error sending emails:', error);
+      console.error('Error sending emails:', error instanceof Error ? error.message : String(error));
       showError('Failed to send quote requests');
     } finally {
       setSending(false);

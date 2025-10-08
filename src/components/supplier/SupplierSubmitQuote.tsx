@@ -27,7 +27,7 @@ const SupplierSubmitQuote: React.FC = () => {
         .order('created_at', { ascending: false });
       setAssets(data || []);
     } catch (e) {
-      console.error('Failed to load assets', e);
+      console.error('Failed to load assets', e instanceof Error ? e.message : String(e));
     }
   };
 
@@ -61,7 +61,7 @@ const SupplierSubmitQuote: React.FC = () => {
       showSuccess('Quote submitted successfully');
       setFormData({ asset_id: '', cost: 0, notes_capacity: '' });
     } catch (err) {
-      console.error('Failed to submit quote', err);
+      console.error('Failed to submit quote', err instanceof Error ? err.message : String(err));
       showError('Failed to submit quote');
     } finally {
       setSubmitting(false);
