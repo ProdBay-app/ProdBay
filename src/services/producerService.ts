@@ -31,6 +31,7 @@ export class ProducerService {
    * Load all projects ordered by creation date (newest first)
    */
   static async loadProjects(): Promise<Project[]> {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('projects')
       .select('*')
@@ -44,6 +45,7 @@ export class ProducerService {
    * Load a specific project by ID
    */
   static async loadProject(projectId: string): Promise<Project | null> {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('projects')
       .select('*')
@@ -58,6 +60,7 @@ export class ProducerService {
    * Create a new project
    */
   static async createProject(projectData: ProjectFormData): Promise<Project> {
+    const supabase = await getSupabase();
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .insert({
@@ -83,6 +86,7 @@ export class ProducerService {
    * Update an existing project
    */
   static async updateProject(projectId: string, projectData: ProjectFormData): Promise<void> {
+    const supabase = await getSupabase();
     const { error } = await supabase
       .from('projects')
       .update({
@@ -103,6 +107,7 @@ export class ProducerService {
    */
   static async deleteProject(projectId: string): Promise<void> {
     // First, get all assets for this project
+    const supabase = await getSupabase();
     const { data: assetsToDelete, error: assetsFetchError } = await supabase
       .from('assets')
       .select('id')
@@ -141,6 +146,7 @@ export class ProducerService {
    * Load assets for a specific project with assigned suppliers
    */
   static async loadProjectAssets(projectId: string): Promise<Asset[]> {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('assets')
       .select(`
@@ -157,6 +163,7 @@ export class ProducerService {
    * Create a new asset
    */
   static async createAsset(projectId: string, assetData: AssetFormData): Promise<void> {
+    const supabase = await getSupabase();
     const { error } = await supabase
       .from('assets')
       .insert({
@@ -175,6 +182,7 @@ export class ProducerService {
    * Update an existing asset
    */
   static async updateAsset(assetId: string, assetData: AssetFormData): Promise<void> {
+    const supabase = await getSupabase();
     const { error } = await supabase
       .from('assets')
       .update({
@@ -200,6 +208,7 @@ export class ProducerService {
       .eq('asset_id', assetId);
 
     // Delete the asset
+    const supabase = await getSupabase();
     const { error } = await supabase
       .from('assets')
       .delete()
@@ -216,6 +225,7 @@ export class ProducerService {
   static async loadQuotesForAssets(assetIds: string[]): Promise<Quote[]> {
     if (assetIds.length === 0) return [];
 
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('quotes')
       .select(`
@@ -233,6 +243,7 @@ export class ProducerService {
    * Reject a quote
    */
   static async rejectQuote(quoteId: string): Promise<void> {
+    const supabase = await getSupabase();
     const { error } = await supabase
       .from('quotes')
       .update({ status: 'Rejected' })
@@ -247,6 +258,7 @@ export class ProducerService {
    * Load all suppliers ordered by name
    */
   static async loadSuppliers(): Promise<Supplier[]> {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('suppliers')
       .select('*')
@@ -262,6 +274,7 @@ export class ProducerService {
    * Load producer settings for email configuration
    */
   static async loadProducerSettings(): Promise<ProducerSettings | null> {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('producer_settings')
       .select('*')

@@ -40,6 +40,7 @@ const QuoteSubmission: React.FC = () => {
 
   const loadQuoteData = async () => {
     try {
+      const supabase = await getSupabase();
       const { data: quoteData, error: quoteError } = await supabase
         .from('quotes')
         .select(`
@@ -86,6 +87,7 @@ const QuoteSubmission: React.FC = () => {
     setSubmitting(true);
 
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase
         .from('quotes')
         .update({

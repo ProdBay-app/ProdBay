@@ -20,6 +20,7 @@ const SupplierSubmitQuote: React.FC = () => {
 
   const loadAssets = async () => {
     try {
+      const supabase = await getSupabase();
       const { data } = await supabase
         .from('assets')
         .select('*')
@@ -45,6 +46,7 @@ const SupplierSubmitQuote: React.FC = () => {
         return;
       }
 
+      const supabase = await getSupabase();
       const { error } = await supabase
         .from('quotes')
         .insert({

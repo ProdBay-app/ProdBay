@@ -12,6 +12,7 @@ export class AutomationService {
 
   // Find relevant suppliers based on asset requirements
   static async findRelevantSuppliers(assetName: string, requiredTags: string[] = []): Promise<Supplier[]> {
+    const supabase = await getSupabase();
     const { data: suppliers, error } = await supabase
       .from('suppliers')
       .select('*');
@@ -44,6 +45,7 @@ export class AutomationService {
     
     for (const supplier of relevantSuppliers) {
       // Create quote record with unique token
+      const supabase = await getSupabase();
       const { data: quote, error } = await supabase
         .from('quotes')
         .insert({
@@ -87,6 +89,7 @@ export class AutomationService {
     }
 
     // Update asset status to Quoting
+    const supabase = await getSupabase();
     await supabase
       .from('assets')
       .update({ status: 'Quoting' } as any)
@@ -95,6 +98,7 @@ export class AutomationService {
 
   // Process quote acceptance
   static async acceptQuote(quoteId: string): Promise<void> {
+    const supabase = await getSupabase();
     const { data: quote } = await supabase
       .from('quotes')
       .select('*, asset:assets(*)')
@@ -128,6 +132,7 @@ export class AutomationService {
 
   // Update project status based on asset statuses
   static async updateProjectStatus(projectId: string): Promise<void> {
+    const supabase = await getSupabase();
     const { data: assets } = await supabase
       .from('assets')
       .select('status')

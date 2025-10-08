@@ -35,6 +35,7 @@ const NewProject: React.FC = () => {
 
     try {
       // Create project
+      const supabase = await getSupabase();
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert(formData)

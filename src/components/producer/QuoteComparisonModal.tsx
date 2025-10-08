@@ -54,6 +54,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
 
   const handleAcceptQuote = async (quoteId: string) => {
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase
         .from('quotes')
         .update({ status: 'Accepted' })
@@ -81,6 +82,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
 
   const handleRejectQuote = async (quoteId: string) => {
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase
         .from('quotes')
         .update({ status: 'Rejected' })

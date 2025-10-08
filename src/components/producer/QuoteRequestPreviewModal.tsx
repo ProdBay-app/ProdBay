@@ -64,6 +64,7 @@ const QuoteRequestPreviewModal: React.FC<QuoteRequestPreviewModalProps> = ({
     setLoading(true);
     try {
       // Fetch supplier details
+      const supabase = await getSupabase();
       const { data: suppliersData, error } = await supabase
         .from('suppliers')
         .select('*')

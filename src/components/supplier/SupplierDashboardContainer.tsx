@@ -53,6 +53,7 @@ const SupplierDashboardContainer: React.FC = () => {
   const loadQuotes = useCallback(async () => {
     try {
       setError(null);
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('quotes')
         .select(`*, asset:assets(*, project:projects(*))`)
