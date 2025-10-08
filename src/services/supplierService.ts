@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { Supplier, ContactPerson } from '@/lib/supabase';
 
 export interface CreateSupplierData {

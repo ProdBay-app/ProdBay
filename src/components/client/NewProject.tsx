@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import { RailwayApiService } from '@/services/railwayApiService';
 import { useNotification } from '@/hooks/useNotification';
 import { FileText, Calendar, DollarSign, MapPin, Send, Brain, Sparkles } from 'lucide-react';

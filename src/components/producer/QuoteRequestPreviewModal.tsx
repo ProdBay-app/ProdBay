@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { Asset, Supplier, ContactPerson } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import { 

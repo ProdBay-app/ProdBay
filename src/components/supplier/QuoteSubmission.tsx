@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { Quote, Asset, Supplier } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import { 

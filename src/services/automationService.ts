@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { Project, Asset, Supplier } from '@/lib/supabase';
 
 export class AutomationService {

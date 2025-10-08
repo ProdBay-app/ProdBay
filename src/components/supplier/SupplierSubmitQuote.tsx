@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { Asset, Supplier } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import { DollarSign, FileText, Send, Package } from 'lucide-react';
@@ -37,7 +37,7 @@ const SupplierSubmitQuote: React.FC = () => {
     try {
       // In a real app, supplier_id is from auth. For MVP, pick first supplier or a placeholder.
       let supplierId: string | null = null;
-      const { data: suppliers } = await supabase.from('suppliers').select('id').limit(1);
+      const { data: suppliers } = await (await getSupabase()).from('suppliers').select('id').limit(1);
       supplierId = suppliers && suppliers.length > 0 ? suppliers[0].id : null;
 
       if (!supplierId) {

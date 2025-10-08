@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { Project, Asset, Quote, Supplier } from '@/lib/supabase';
 
 export interface ProjectFormData {

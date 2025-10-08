@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 import type { Project, Asset, Supplier, Quote } from '@/lib/supabase';
 import { 
   BarChart3, 
@@ -32,6 +32,7 @@ const AdminDashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
+      const supabase = await getSupabase();
       // Load all data for statistics
       const [projectsRes, assetsRes, suppliersRes, quotesRes] = await Promise.all([
         supabase.from('projects').select('*'),
