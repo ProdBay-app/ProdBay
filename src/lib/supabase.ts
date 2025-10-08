@@ -1,23 +1,19 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Lazy-loaded Supabase client instance
+// Supabase client instance
 let supabaseInstance: SupabaseClient | null = null;
 
 /**
- * Get Supabase client instance with lazy loading
- * This reduces initial bundle size by ~34KB (gzipped)
- * The client is loaded only when first accessed
+ * Get Supabase client instance
+ * This provides immediate access to the Supabase client
  */
 export const getSupabase = async (): Promise<SupabaseClient> => {
   if (supabaseInstance) {
     return supabaseInstance;
   }
-
-  // Lazy load the Supabase library
-  const { createClient } = await import('@supabase/supabase-js');
 
   // Guard against missing environment variables
   if (!supabaseUrl || !supabaseAnonKey) {
@@ -42,20 +38,41 @@ export const getSupabase = async (): Promise<SupabaseClient> => {
 };
 
 /**
- * Legacy synchronous export for backward compatibility
- * @deprecated Use getSupabase() instead for better performance
- * This eagerly loads Supabase, negating the lazy-loading benefits
+ * Synchronous Supabase client for immediate use
  */
-export const supabase = {
-  from: () => {
-    throw new Error('Use getSupabase() instead of supabase for lazy loading');
-  },
-  auth: {
-    signIn: () => {
-      throw new Error('Use getSupabase() instead of supabase for lazy loading');
-    },
-  },
-} as any;
+export const getSyncSupabase = (): SupabaseClient => {
+  if (supabaseInstance) {
+    return supabaseInstance;
+  }
+
+  // Guard against missing environment variables
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // eslint-disable-next-line no-console
+    console.error(
+      '[Supabase] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. ' +
+      'Set them in your .env.local or .env.production before building.'
+    );
+    // Return fallback client for development
+    supabaseInstance = createClient('http://localhost', 'invalid');
+  } else {
+    try {
+      supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[Supabase] Failed to initialize client:', error);
+      supabaseInstance = createClient('http://localhost', 'invalid');
+    }
+  }
+
+  return supabaseInstance;
+};
+
+/**
+ * Synchronous Supabase client export
+ * This provides immediate access to the Supabase client for components that need it
+ */
+export const supabase = getSyncSupabase();
+
 
 // Database types
 export interface Project {
