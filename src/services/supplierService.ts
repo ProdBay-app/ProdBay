@@ -1,5 +1,5 @@
-import { supabase } from '../lib/supabase';
-import type { Supplier, ContactPerson } from '../lib/supabase';
+import { getSupabase } from '@/lib/supabase';
+import type { Supplier, ContactPerson } from '@/lib/supabase';
 
 export interface CreateSupplierData {
   supplier_name: string;
@@ -17,6 +17,7 @@ export class SupplierService {
    * Fetch all suppliers ordered by supplier name
    */
   static async getAllSuppliers(): Promise<Supplier[]> {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('suppliers')
       .select('*')
@@ -33,6 +34,7 @@ export class SupplierService {
    * Create a new supplier
    */
   static async createSupplier(supplierData: CreateSupplierData): Promise<void> {
+    const supabase = await getSupabase();
     const { error } = await supabase
       .from('suppliers')
       .insert(supplierData);
@@ -46,6 +48,7 @@ export class SupplierService {
    * Update an existing supplier
    */
   static async updateSupplier(supplierId: string, supplierData: Omit<CreateSupplierData, 'id'>): Promise<void> {
+    const supabase = await getSupabase();
     const { error } = await supabase
       .from('suppliers')
       .update(supplierData)
@@ -60,6 +63,7 @@ export class SupplierService {
    * Delete a supplier by ID
    */
   static async deleteSupplier(supplierId: string): Promise<void> {
+    const supabase = await getSupabase();
     const { error } = await supabase
       .from('suppliers')
       .delete()
@@ -74,6 +78,7 @@ export class SupplierService {
    * Get a single supplier by ID
    */
   static async getSupplierById(supplierId: string): Promise<Supplier | null> {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('suppliers')
       .select('*')
@@ -95,6 +100,7 @@ export class SupplierService {
    * Get suppliers by service categories
    */
   static async getSuppliersByCategories(categories: string[]): Promise<Supplier[]> {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('suppliers')
       .select('*')
@@ -112,6 +118,7 @@ export class SupplierService {
    * Search suppliers by name or email
    */
   static async searchSuppliers(searchTerm: string): Promise<Supplier[]> {
+    const supabase = await getSupabase();
     const { data, error } = await supabase
       .from('suppliers')
       .select('*')

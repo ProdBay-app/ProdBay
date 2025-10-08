@@ -1,6 +1,6 @@
 import React from 'react';
 import { Brain, Sparkles } from 'lucide-react';
-import type { ProjectFormData } from '../../services/producerService';
+import type { ProjectFormData } from '@/services/producerService';
 
 interface ProjectModalProps {
   isOpen: boolean;

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
-import { RailwayApiService } from '../../services/railwayApiService';
-import { useNotification } from '../../hooks/useNotification';
+import { getSupabase } from '@/lib/supabase';
+import { RailwayApiService } from '@/services/railwayApiService';
+import { useNotification } from '@/hooks/useNotification';
 import { FileText, Calendar, DollarSign, MapPin, Send, Brain, Sparkles } from 'lucide-react';
 
 const NewProject: React.FC = () => {
@@ -35,6 +35,7 @@ const NewProject: React.FC = () => {
 
     try {
       // Create project
+      const supabase = await getSupabase();
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert(formData)

@@ -4,7 +4,7 @@ import CategoryFilter from './CategoryFilter';
 import RoleFilter from './RoleFilter';
 import AdditionalFilters from './AdditionalFilters';
 import ActiveFilters from './ActiveFilters';
-import type { Supplier } from '../../../lib/supabase';
+import type { Supplier } from '@/lib/supabase';
 
 export interface FilterState {
   searchTerm: string;

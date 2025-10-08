@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, User, Check } from 'lucide-react';
-import type { ContactPerson } from '../../../lib/supabase';
+import type { ContactPerson } from '@/lib/supabase';
 
 interface RoleFilterProps {
   selectedRoles: string[];

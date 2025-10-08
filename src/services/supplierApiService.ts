@@ -1,4 +1,4 @@
-import type { Asset, Supplier } from '../lib/supabase';
+import type { Asset, Supplier } from '@/lib/supabase';
 
 export interface SuggestedSupplier extends Supplier {
   already_contacted: boolean;

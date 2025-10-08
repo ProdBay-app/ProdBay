@@ -1,9 +1,9 @@
 import React from 'react';
-import type { Project, Asset, Quote, Supplier } from '../../lib/supabase';
-import type { ProjectFormData, AssetFormData } from '../../services/producerService';
-import type { SuggestedSupplier } from '../../services/supplierApiService';
-import type { AIAssetSuggestion } from '../../services/aiAllocationService';
-import type { CustomizedEmail } from '../../services/quoteRequestService';
+import type { Project, Asset, Quote, Supplier } from '@/lib/supabase';
+import type { ProjectFormData, AssetFormData } from '@/services/producerService';
+import type { SuggestedSupplier } from '@/services/supplierApiService';
+import type { AIAssetSuggestion } from '@/services/aiAllocationService';
+import type { CustomizedEmail } from '@/services/quoteRequestService';
 import QuoteRequestPreviewModal from './QuoteRequestPreviewModal';
 import QuoteComparisonModal from './QuoteComparisonModal';
 import DashboardHeader from './DashboardHeader';

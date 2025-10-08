@@ -1,6 +1,6 @@
 import React from 'react';
 import { Mail, BarChart3 } from 'lucide-react';
-import type { Asset, Quote } from '../../lib/supabase';
+import type { Asset, Quote } from '@/lib/supabase';
 
 interface AssetCardProps {
   asset: Asset;

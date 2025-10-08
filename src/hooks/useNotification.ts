@@ -1,3 +1,3 @@
-import { useNotification as useNotificationContext } from '../contexts/NotificationContext';
+import { useNotification as useNotificationContext } from '@/contexts/NotificationContext';
 
 export { useNotificationContext as useNotification };

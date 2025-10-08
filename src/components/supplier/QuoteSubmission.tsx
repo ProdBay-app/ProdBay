@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
-import type { Quote, Asset, Supplier } from '../../lib/supabase';
-import { useNotification } from '../../hooks/useNotification';
+import { getSupabase } from '@/lib/supabase';
+import type { Quote, Asset, Supplier } from '@/lib/supabase';
+import { useNotification } from '@/hooks/useNotification';
 import { 
   DollarSign, 
   FileText, 
@@ -40,6 +40,7 @@ const QuoteSubmission: React.FC = () => {
 
   const loadQuoteData = async () => {
     try {
+      const supabase = await getSupabase();
       const { data: quoteData, error: quoteError } = await supabase
         .from('quotes')
         .select(`
@@ -86,6 +87,7 @@ const QuoteSubmission: React.FC = () => {
     setSubmitting(true);
 
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase
         .from('quotes')
         .update({

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ProducerService, type AssetFormData } from '../services/producerService';
+import { ProducerService, type AssetFormData } from '@/services/producerService';
 import { useNotification } from './useNotification';
-import type { Asset, Quote, Supplier, Project } from '../lib/supabase';
+import type { Asset, Quote, Supplier, Project } from '@/lib/supabase';
 
 export interface UseAssetManagementReturn {
   // State

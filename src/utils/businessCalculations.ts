@@ -1,4 +1,4 @@
-import type { Quote, Asset } from '../lib/supabase';
+import type { Quote, Asset } from '@/lib/supabase';
 
 /**
  * Centralized business calculation utilities

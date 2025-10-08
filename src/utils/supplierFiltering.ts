@@ -1,5 +1,5 @@
-import type { Supplier } from '../lib/supabase';
-import type { FilterState } from '../components/producer/supplier-filters/SupplierFilters';
+import type { Supplier } from '@/lib/supabase';
+import type { FilterState } from '@/components/producer/supplier-filters/SupplierFilters';
 import { getUniqueNestedValues, filterBySearchTerm, filterByDateRange, debounce } from './arrayUtils';
 
 /**

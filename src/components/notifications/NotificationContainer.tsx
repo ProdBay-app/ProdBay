@@ -1,6 +1,6 @@
 import React from 'react';
 import { NotificationItem } from './NotificationItem';
-import { NotificationItem as NotificationItemType } from '../../types/notification';
+import { NotificationItem as NotificationItemType } from '@/types/notification';
 
 interface NotificationContainerProps {
   notifications: NotificationItemType[];

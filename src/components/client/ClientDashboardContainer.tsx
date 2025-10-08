@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
-import { useNotification } from '../../hooks/useNotification';
+import { getSupabase } from '@/lib/supabase';
+import { useNotification } from '@/hooks/useNotification';
 import ClientDashboard from './ClientDashboard';
-import type { Project, Asset, Quote } from '../../lib/supabase';
+import type { Project, Asset, Quote } from '@/lib/supabase';
 
 export interface ClientDashboardData {
   projects: Project[];
@@ -72,6 +72,7 @@ const ClientDashboardContainer: React.FC = () => {
   const loadProjects = async (): Promise<void> => {
     try {
       setError(null);
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('projects')
         .select('*')
@@ -93,6 +94,7 @@ const ClientDashboardContainer: React.FC = () => {
     try {
       setError(null);
       // Load assets with assigned suppliers
+      const supabase = await getSupabase();
       const { data: assetsData, error: assetsError } = await supabase
         .from('assets')
         .select(`

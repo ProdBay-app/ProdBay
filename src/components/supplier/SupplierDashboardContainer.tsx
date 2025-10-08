@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../lib/supabase';
-import { useNotification } from '../../hooks/useNotification';
+import { getSupabase } from '@/lib/supabase';
+import { useNotification } from '@/hooks/useNotification';
 import SupplierDashboard from './SupplierDashboard';
-import type { Quote, Asset, Project } from '../../lib/supabase';
+import type { Quote, Asset, Project } from '@/lib/supabase';
 
 export interface SupplierQuote extends Quote {
   asset?: Asset;
@@ -53,6 +53,7 @@ const SupplierDashboardContainer: React.FC = () => {
   const loadQuotes = useCallback(async () => {
     try {
       setError(null);
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('quotes')
         .select(`*, asset:assets(*, project:projects(*))`)

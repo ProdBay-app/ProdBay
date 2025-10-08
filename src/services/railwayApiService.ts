@@ -3,7 +3,7 @@
  * Handles communication with the Railway backend for brief processing
  */
 
-import type { Asset } from '../lib/supabase';
+import type { Asset } from '@/lib/supabase';
 
 const RAILWAY_API_URL = import.meta.env.VITE_RAILWAY_API_URL || '';
 

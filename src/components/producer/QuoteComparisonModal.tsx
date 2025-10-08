@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, DollarSign, Clock, Calendar, User, Mail, ChevronDown, ChevronUp, CheckCircle, XCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { QuoteComparisonService, type QuoteComparisonResponse, type Quote, type Asset, type ComparisonMetrics } from '../../services/quoteComparisonService';
-import { useNotification } from '../../hooks/useNotification';
-import { supabase } from '../../lib/supabase';
+import { X, DollarSign, Clock, Calendar, ChevronDown, ChevronUp, CheckCircle, XCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { QuoteComparisonService, type Quote, type Asset, type ComparisonMetrics } from '@/services/quoteComparisonService';
+import { useNotification } from '@/hooks/useNotification';
+import { getSupabase } from '@/lib/supabase';
 
 interface QuoteComparisonModalProps {
   isOpen: boolean;
@@ -45,7 +45,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
         showError(`Failed to load quote comparison: ${response.error?.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error loading quote comparison:', error);
+      console.error('Error loading quote comparison:', error instanceof Error ? error.message : String(error));
       showError('Failed to load quote comparison data');
     } finally {
       setLoading(false);
@@ -54,6 +54,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
 
   const handleAcceptQuote = async (quoteId: string) => {
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase
         .from('quotes')
         .update({ status: 'Accepted' })
@@ -74,13 +75,14 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
       loadQuoteComparison(); // Reload data
       onQuoteUpdate(); // Update parent component
     } catch (error) {
-      console.error('Error accepting quote:', error);
+      console.error('Error accepting quote:', error instanceof Error ? error.message : String(error));
       showError('Failed to accept quote');
     }
   };
 
   const handleRejectQuote = async (quoteId: string) => {
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase
         .from('quotes')
         .update({ status: 'Rejected' })
@@ -92,7 +94,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
       loadQuoteComparison(); // Reload data
       onQuoteUpdate(); // Update parent component
     } catch (error) {
-      console.error('Error rejecting quote:', error);
+      console.error('Error rejecting quote:', error instanceof Error ? error.message : String(error));
       showError('Failed to reject quote');
     }
   };
@@ -140,11 +142,11 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
     if (!comparisonMetrics) return null;
     
     if (quote.cost === comparisonMetrics.lowest_cost) {
-      return <TrendingDown className="h-4 w-4 text-green-600" title="Lowest cost" />;
+      return <TrendingDown className="h-4 w-4 text-green-600" />;
     } else if (quote.cost === comparisonMetrics.highest_cost) {
-      return <TrendingUp className="h-4 w-4 text-red-600" title="Highest cost" />;
+      return <TrendingUp className="h-4 w-4 text-red-600" />;
     } else {
-      return <Minus className="h-4 w-4 text-gray-400" title="Average cost" />;
+      return <Minus className="h-4 w-4 text-gray-400" />;
     }
   };
 

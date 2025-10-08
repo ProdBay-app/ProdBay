@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
-import type { Asset, Supplier } from '../../lib/supabase';
-import { useNotification } from '../../hooks/useNotification';
+import { getSupabase } from '@/lib/supabase';
+import type { Asset, Supplier } from '@/lib/supabase';
+import { useNotification } from '@/hooks/useNotification';
 import { DollarSign, FileText, Send, Package } from 'lucide-react';
 
 const SupplierSubmitQuote: React.FC = () => {
@@ -20,13 +20,14 @@ const SupplierSubmitQuote: React.FC = () => {
 
   const loadAssets = async () => {
     try {
+      const supabase = await getSupabase();
       const { data } = await supabase
         .from('assets')
         .select('*')
         .order('created_at', { ascending: false });
       setAssets(data || []);
     } catch (e) {
-      console.error('Failed to load assets', e);
+      console.error('Failed to load assets', e instanceof Error ? e.message : String(e));
     }
   };
 
@@ -37,7 +38,7 @@ const SupplierSubmitQuote: React.FC = () => {
     try {
       // In a real app, supplier_id is from auth. For MVP, pick first supplier or a placeholder.
       let supplierId: string | null = null;
-      const { data: suppliers } = await supabase.from('suppliers').select('id').limit(1);
+      const { data: suppliers } = await (await getSupabase()).from('suppliers').select('id').limit(1);
       supplierId = suppliers && suppliers.length > 0 ? suppliers[0].id : null;
 
       if (!supplierId) {
@@ -45,6 +46,7 @@ const SupplierSubmitQuote: React.FC = () => {
         return;
       }
 
+      const supabase = await getSupabase();
       const { error } = await supabase
         .from('quotes')
         .insert({
@@ -59,7 +61,7 @@ const SupplierSubmitQuote: React.FC = () => {
       showSuccess('Quote submitted successfully');
       setFormData({ asset_id: '', cost: 0, notes_capacity: '' });
     } catch (err) {
-      console.error('Failed to submit quote', err);
+      console.error('Failed to submit quote', err instanceof Error ? err.message : String(err));
       showError('Failed to submit quote');
     } finally {
       setSubmitting(false);

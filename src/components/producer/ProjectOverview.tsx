@@ -1,6 +1,6 @@
 import React from 'react';
 import { Package, DollarSign, Clock, Pencil, Trash } from 'lucide-react';
-import type { Project, Asset } from '../../lib/supabase';
+import type { Project, Asset } from '@/lib/supabase';
 
 interface ProjectOverviewProps {
   project: Project;

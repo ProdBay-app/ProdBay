@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ProducerService, type ProjectFormData } from '../services/producerService';
-import { RailwayApiService } from '../services/railwayApiService';
+import { ProducerService, type ProjectFormData } from '@/services/producerService';
+import { RailwayApiService } from '@/services/railwayApiService';
 import { useNotification } from './useNotification';
-import type { Project } from '../lib/supabase';
+import type { Project } from '@/lib/supabase';
 
 export interface UseProjectManagementReturn {
   // State

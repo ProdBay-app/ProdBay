@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info, MessageSquare } from 'lucide-react';
-import { NotificationItem as NotificationItemType } from '../../types/notification';
+import { NotificationItem as NotificationItemType } from '@/types/notification';
 
 interface NotificationItemProps {
   notification: NotificationItemType;

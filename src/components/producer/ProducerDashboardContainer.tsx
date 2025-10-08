@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AutomationService } from '../../services/automationService';
-import { SupplierApiService, type SuggestedSupplier } from '../../services/supplierApiService';
-import { AIAllocationService, type AIAssetSuggestion } from '../../services/aiAllocationService';
-import { QuoteRequestService, type CustomizedEmail } from '../../services/quoteRequestService';
-import { ProducerService, type ProjectFormData, type AssetFormData } from '../../services/producerService';
-import { RailwayApiService } from '../../services/railwayApiService';
-import { useNotification } from '../../hooks/useNotification';
+import { AutomationService } from '@/services/automationService';
+import { SupplierApiService, type SuggestedSupplier } from '@/services/supplierApiService';
+import { AIAllocationService, type AIAssetSuggestion } from '@/services/aiAllocationService';
+import { QuoteRequestService, type CustomizedEmail } from '@/services/quoteRequestService';
+import { ProducerService, type ProjectFormData, type AssetFormData } from '@/services/producerService';
+import { RailwayApiService } from '@/services/railwayApiService';
+import { useNotification } from '@/hooks/useNotification';
 import ProducerDashboard from './ProducerDashboard';
-import type { Project, Asset, Quote, Supplier } from '../../lib/supabase';
+import type { Project, Asset, Quote, Supplier } from '@/lib/supabase';
 
 export interface ProducerDashboardData {
   // Project data

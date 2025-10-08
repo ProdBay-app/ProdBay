@@ -1,5 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'url';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
 const allowedHostsEnv = process.env.ALLOWED_HOSTS || process.env.VITE_ALLOWED_HOSTS || '';
@@ -8,9 +10,19 @@ const allowedHosts = allowedHostsEnv
   : [];
 
 export default defineConfig({
-  plugins: [react()],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
+  plugins: [
+    react(),
+    visualizer({
+      filename: './dist/stats.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
   },
   preview: {
     // Allow Railway preview host(s) to connect. Set ALLOWED_HOSTS in Railway → Variables.

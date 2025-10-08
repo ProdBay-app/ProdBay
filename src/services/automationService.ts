@@ -1,5 +1,6 @@
-import { supabase } from '../lib/supabase';
-import type { Project, Asset, Supplier } from '../lib/supabase';
+import { getSupabase } from '@/lib/supabase';
+import type { Project, Asset, Supplier } from '@/lib/supabase';
+import type { QuoteInsert, AssetUpdate, QuoteUpdate } from '@/types/database';
 
 export class AutomationService {
   // Note: Brief processing functions have been migrated to Railway backend
@@ -12,6 +13,7 @@ export class AutomationService {
 
   // Find relevant suppliers based on asset requirements
   static async findRelevantSuppliers(assetName: string, requiredTags: string[] = []): Promise<Supplier[]> {
+    const supabase = await getSupabase();
     const { data: suppliers, error } = await supabase
       .from('suppliers')
       .select('*');
@@ -44,13 +46,17 @@ export class AutomationService {
     
     for (const supplier of relevantSuppliers) {
       // Create quote record with unique token
+      const supabase = await getSupabase();
+      const quoteInsert: QuoteInsert = {
+        supplier_id: supplier.id,
+        asset_id: asset.id,
+        status: 'Submitted',
+        cost: 0,
+        notes_capacity: ''
+      };
       const { data: quote, error } = await supabase
         .from('quotes')
-        .insert({
-          supplier_id: supplier.id,
-          asset_id: asset.id,
-          status: 'Submitted'
-        } as any)
+        .insert(quoteInsert)
         .select()
         .single();
 
@@ -87,14 +93,17 @@ export class AutomationService {
     }
 
     // Update asset status to Quoting
+    const supabase = await getSupabase();
+    const assetUpdate: AssetUpdate = { status: 'Quoting' };
     await supabase
       .from('assets')
-      .update({ status: 'Quoting' } as any)
+      .update(assetUpdate)
       .eq('id', asset.id);
   }
 
   // Process quote acceptance
   static async acceptQuote(quoteId: string): Promise<void> {
+    const supabase = await getSupabase();
     const { data: quote } = await supabase
       .from('quotes')
       .select('*, asset:assets(*)')
@@ -103,31 +112,35 @@ export class AutomationService {
 
     if (quote) {
       // Update quote status
+      const acceptedUpdate: QuoteUpdate = { status: 'Accepted' };
       await supabase
         .from('quotes')
-        .update({ status: 'Accepted' } as any)
+        .update(acceptedUpdate)
         .eq('id', quoteId);
 
       // Reject other quotes for the same asset
+      const rejectedUpdate: QuoteUpdate = { status: 'Rejected' };
       await supabase
         .from('quotes')
-        .update({ status: 'Rejected' } as any)
+        .update(rejectedUpdate)
         .eq('asset_id', quote.asset_id)
         .neq('id', quoteId);
 
       // Update asset with assigned supplier
+      const assetApprovalUpdate: AssetUpdate = { 
+        assigned_supplier_id: quote.supplier_id,
+        status: 'Approved'
+      };
       await supabase
         .from('assets')
-        .update({ 
-          assigned_supplier_id: quote.supplier_id,
-          status: 'Approved'
-        } as any)
+        .update(assetApprovalUpdate)
         .eq('id', quote.asset_id);
     }
   }
 
   // Update project status based on asset statuses
   static async updateProjectStatus(projectId: string): Promise<void> {
+    const supabase = await getSupabase();
     const { data: assets } = await supabase
       .from('assets')
       .select('status')

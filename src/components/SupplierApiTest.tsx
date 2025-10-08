@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SupplierApiService } from '../services/supplierApiService';
+import { SupplierApiService } from '@/services/supplierApiService';
 
 /**
  * Test component for the new Supplier API integration

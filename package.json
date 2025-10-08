@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:analyze": "vite build && open dist/stats.html",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node scripts/serve.cjs",
@@ -33,13 +34,14 @@
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
+    "express": "^4.19.2",
     "globals": "^15.9.0",
     "postcss": "^8.4.35",
+    "rollup-plugin-visualizer": "^6.0.4",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
-    "vite": "^5.4.2",
-    "express": "^4.19.2"
+    "vite": "^5.4.2"
   },
   "engines": {
     "node": ">=18"
