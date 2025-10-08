@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
-import type { Asset, Supplier } from '../../lib/supabase';
-import { useNotification } from '../../hooks/useNotification';
+import { supabase } from '@/lib/supabase';
+import type { Asset, Supplier } from '@/lib/supabase';
+import { useNotification } from '@/hooks/useNotification';
 import { DollarSign, FileText, Send, Package } from 'lucide-react';
 
 const SupplierSubmitQuote: React.FC = () => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Users, Mail, Plus, Tag, Edit, Trash2, User, Phone, Star } from 'lucide-react';
 import SupplierFilters from './supplier-filters/SupplierFilters';
-import { useSupplierManagement } from '../../hooks/useSupplierManagement';
+import { useSupplierManagement } from '@/hooks/useSupplierManagement';
 
 const SupplierManagement: React.FC = () => {
   const {

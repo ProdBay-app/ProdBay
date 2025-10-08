@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { Supplier, ContactPerson } from '../lib/supabase';
+import type { Supplier, ContactPerson } from '@/lib/supabase';
 import { useNotification } from './useNotification';
-import { SupplierService } from '../services/supplierService';
-import { filterSuppliers, getFilterStats, debounce } from '../utils/supplierFiltering';
-import type { FilterState } from '../components/producer/supplier-filters/SupplierFilters';
+import { SupplierService } from '@/services/supplierService';
+import { filterSuppliers, getFilterStats, debounce } from '@/utils/supplierFiltering';
+import type { FilterState } from '@/components/producer/supplier-filters/SupplierFilters';
 
 export interface SupplierFormData {
   supplier_name: string;

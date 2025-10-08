@@ -1,11 +1,11 @@
-import type { Quote } from '../lib/supabase';
+import type { Quote } from '@/lib/supabase';
 import { 
   getStatusIconProps, 
   getStatusColor, 
   calculateTotalCost, 
   getProgressPercentage, 
   getAcceptedQuoteForAsset 
-} from '../utils';
+} from '@/utils';
 
 /**
  * Utility functions for client dashboard components

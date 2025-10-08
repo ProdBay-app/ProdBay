@@ -1,5 +1,5 @@
 import { RailwayApiService } from './railwayApiService';
-import type { Asset } from '../lib/supabase';
+import type { Asset } from '@/lib/supabase';
 
 export interface CustomizedEmail {
   supplierId: string;

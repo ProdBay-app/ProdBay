@@ -1,6 +1,6 @@
 import React from 'react';
 import { Brain, Sparkles, Target } from 'lucide-react';
-import type { AIAssetSuggestion } from '../../services/aiAllocationService';
+import type { AIAssetSuggestion } from '@/services/aiAllocationService';
 
 interface AIAllocationModalProps {
   isOpen: boolean;

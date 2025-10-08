@@ -1,19 +1,19 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
-import LoginPage from './components/LoginPage';
-import Home from './components/Home';
-import { NotificationProvider } from './contexts/NotificationContext';
+import Layout from '@/components/Layout';
+import LoginPage from '@/components/LoginPage';
+import Home from '@/components/Home';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 
 // Lazy-loaded routes to avoid eager initialization side-effects (e.g., Supabase client)
-const ClientDashboard = lazy(() => import('./components/client/ClientDashboardContainer'));
-const NewProject = lazy(() => import('./components/client/NewProject'));
-const ProducerDashboard = lazy(() => import('./components/producer/ProducerDashboardContainer'));
-const SupplierManagement = lazy(() => import('./components/producer/SupplierManagement'));
-const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
-const QuoteSubmission = lazy(() => import('./components/supplier/QuoteSubmission'));
-const SupplierDashboard = lazy(() => import('./components/supplier/SupplierDashboardContainer'));
-const SupplierSubmitQuote = lazy(() => import('./components/supplier/SupplierSubmitQuote'));
+const ClientDashboard = lazy(() => import('@/components/client/ClientDashboardContainer'));
+const NewProject = lazy(() => import('@/components/client/NewProject'));
+const ProducerDashboard = lazy(() => import('@/components/producer/ProducerDashboardContainer'));
+const SupplierManagement = lazy(() => import('@/components/producer/SupplierManagement'));
+const AdminDashboard = lazy(() => import('@/components/admin/AdminDashboard'));
+const QuoteSubmission = lazy(() => import('@/components/supplier/QuoteSubmission'));
+const SupplierDashboard = lazy(() => import('@/components/supplier/SupplierDashboardContainer'));
+const SupplierSubmitQuote = lazy(() => import('@/components/supplier/SupplierSubmitQuote'));
 
 function App() {
   return (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, CheckCircle, Brain, Sparkles, Target } from 'lucide-react';
-import type { Asset, Quote } from '../../lib/supabase';
+import type { Asset, Quote } from '@/lib/supabase';
 import AssetCard from './AssetCard';
 
 interface AssetManagementProps {

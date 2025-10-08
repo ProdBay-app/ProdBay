@@ -1,5 +1,5 @@
-import { supabase } from '../lib/supabase';
-import type { Project, Asset, Supplier } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
+import type { Project, Asset, Supplier } from '@/lib/supabase';
 
 export class AutomationService {
   // Note: Brief processing functions have been migrated to Railway backend

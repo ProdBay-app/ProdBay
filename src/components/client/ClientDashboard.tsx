@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart3, Clock, DollarSign, Package, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
-import type { Project, Asset, Quote } from '../../lib/supabase';
+import type { Project, Asset, Quote } from '@/lib/supabase';
 
 export interface ClientDashboardProps {
   // Data state

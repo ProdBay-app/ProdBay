@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, DollarSign, Clock, Calendar, User, Mail, ChevronDown, ChevronUp, CheckCircle, XCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { QuoteComparisonService, type QuoteComparisonResponse, type Quote, type Asset, type ComparisonMetrics } from '../../services/quoteComparisonService';
-import { useNotification } from '../../hooks/useNotification';
-import { supabase } from '../../lib/supabase';
+import { QuoteComparisonService, type QuoteComparisonResponse, type Quote, type Asset, type ComparisonMetrics } from '@/services/quoteComparisonService';
+import { useNotification } from '@/hooks/useNotification';
+import { supabase } from '@/lib/supabase';
 
 interface QuoteComparisonModalProps {
   isOpen: boolean;

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react';
-import { NotificationContextType, NotificationItem, NotificationConfig, NotificationOptions, ConfirmConfig } from '../types/notification';
-import { NotificationContainer } from '../components/notifications/NotificationContainer';
+import { NotificationContextType, NotificationItem, NotificationConfig, NotificationOptions, ConfirmConfig } from '@/types/notification';
+import { NotificationContainer } from '@/components/notifications/NotificationContainer';
 import { v4 as uuidv4 } from 'uuid';
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);

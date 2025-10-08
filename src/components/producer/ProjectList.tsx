@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Project } from '../../lib/supabase';
+import type { Project } from '@/lib/supabase';
 
 interface ProjectListProps {
   projects: Project[];

@@ -1,5 +1,5 @@
-import { supabase } from '../lib/supabase';
-import type { Supplier, ContactPerson } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
+import type { Supplier, ContactPerson } from '@/lib/supabase';
 
 export interface CreateSupplierData {
   supplier_name: string;

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Quote, Asset, Project } from '../../lib/supabase';
+import type { Quote, Asset, Project } from '@/lib/supabase';
 import { FileText, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
 
 export interface SupplierQuote extends Quote {

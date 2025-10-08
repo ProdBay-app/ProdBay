@@ -1,6 +1,6 @@
 import React from 'react';
 import { Package } from 'lucide-react';
-import type { Asset, SuggestedSupplier } from '../../lib/supabase';
+import type { Asset, SuggestedSupplier } from '@/lib/supabase';
 
 interface SupplierSelectionModalProps {
   isOpen: boolean;
