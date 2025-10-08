@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, DollarSign, Clock, Calendar, User, Mail, ChevronDown, ChevronUp, CheckCircle, XCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { QuoteComparisonService, type QuoteComparisonResponse, type Quote, type Asset, type ComparisonMetrics } from '@/services/quoteComparisonService';
+import { X, DollarSign, Clock, Calendar, ChevronDown, ChevronUp, CheckCircle, XCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { QuoteComparisonService, type Quote, type Asset, type ComparisonMetrics } from '@/services/quoteComparisonService';
 import { useNotification } from '@/hooks/useNotification';
 import { getSupabase } from '@/lib/supabase';
 
@@ -142,11 +142,11 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
     if (!comparisonMetrics) return null;
     
     if (quote.cost === comparisonMetrics.lowest_cost) {
-      return <TrendingDown className="h-4 w-4 text-green-600" title="Lowest cost" />;
+      return <TrendingDown className="h-4 w-4 text-green-600" />;
     } else if (quote.cost === comparisonMetrics.highest_cost) {
-      return <TrendingUp className="h-4 w-4 text-red-600" title="Highest cost" />;
+      return <TrendingUp className="h-4 w-4 text-red-600" />;
     } else {
-      return <Minus className="h-4 w-4 text-gray-400" title="Average cost" />;
+      return <Minus className="h-4 w-4 text-gray-400" />;
     }
   };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSupabase } from '@/lib/supabase';
-import type { Project, Asset, Supplier, Quote } from '@/lib/supabase';
+import type { Project } from '@/lib/supabase';
 import { 
   BarChart3, 
   Users, 
