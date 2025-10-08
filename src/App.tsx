@@ -1,11 +1,14 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from '@/components/Layout';
-import LoginPage from '@/components/LoginPage';
-import Home from '@/components/Home';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import LoadingFallback from '@/components/LoadingFallback';
 
-// Lazy-loaded routes to avoid eager initialization side-effects (e.g., Supabase client)
+// Lazy-loaded routes and layouts to reduce initial bundle size
+const Layout = lazy(() => import('@/components/Layout'));
+const Home = lazy(() => import('@/components/Home'));
+const LoginPage = lazy(() => import('@/components/LoginPage'));
+
+// Lazy-loaded dashboard routes to avoid eager initialization side-effects (e.g., Supabase client)
 const ClientDashboard = lazy(() => import('@/components/client/ClientDashboardContainer'));
 const NewProject = lazy(() => import('@/components/client/NewProject'));
 const ProducerDashboard = lazy(() => import('@/components/producer/ProducerDashboardContainer'));
@@ -19,7 +22,7 @@ function App() {
   return (
     <NotificationProvider>
       <Router>
-        <Suspense fallback={<div className="p-8">Loading...</div>}>
+        <Suspense fallback={<LoadingFallback />}>
           <Routes>
         {/* Public landing page - outside of layout */}
         <Route path="/" element={<Home />} />
