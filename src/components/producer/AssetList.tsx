@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, AlertCircle } from 'lucide-react';
+import { Package, AlertCircle, Plus } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetCard from './AssetCard';
+import AddAssetModal from './AddAssetModal';
 import type { Asset, AssetStatus } from '@/types/database';
 
 interface AssetListProps {
@@ -20,12 +21,14 @@ interface AssetListProps {
  * - Empty state when no assets exist
  */
 const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
-  const { showError } = useNotification();
+  const { showError, showSuccess } = useNotification();
 
   // State management
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Define the status order for Kanban columns (workflow order)
   const statusOrder: AssetStatus[] = [
@@ -74,6 +77,34 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
 
     fetchAssets();
   }, [projectId, showError]);
+
+  // Handle adding a new asset
+  const handleAddAsset = async (assetData: { asset_name: string; specifications: string }) => {
+    setIsSubmitting(true);
+    try {
+      // Create asset with default values
+      const newAsset = await ProducerService.createAsset(projectId, {
+        asset_name: assetData.asset_name,
+        specifications: assetData.specifications,
+        status: 'Pending',
+        timeline: '',
+        assigned_supplier_id: undefined
+      });
+
+      // Update local state to include new asset
+      setAssets(prev => [...prev, newAsset]);
+
+      // Close modal and show success
+      setIsAddModalOpen(false);
+      showSuccess(`Asset "${assetData.asset_name}" created successfully!`);
+    } catch (err) {
+      console.error('Error creating asset:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create asset';
+      showError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Group assets by status
   const groupedAssets = useMemo(() => {
@@ -160,6 +191,15 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
             {assets.length}
           </span>
         </div>
+        
+        {/* Add Asset Button */}
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium"
+        >
+          <Plus className="w-5 h-5" />
+          Add Asset
+        </button>
       </div>
 
       {/* Kanban Board - Horizontal Scrolling Container */}
@@ -199,6 +239,14 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
           ← Scroll horizontally to view all status columns →
         </div>
       )}
+
+      {/* Add Asset Modal */}
+      <AddAssetModal
+        isOpen={isAddModalOpen}
+        isSubmitting={isSubmitting}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddAsset}
+      />
     </section>
   );
 };

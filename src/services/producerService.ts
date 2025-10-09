@@ -178,10 +178,11 @@ export class ProducerService {
 
   /**
    * Create a new asset
+   * Returns the newly created asset for immediate UI updates
    */
-  static async createAsset(projectId: string, assetData: AssetFormData): Promise<void> {
+  static async createAsset(projectId: string, assetData: AssetFormData): Promise<Asset> {
     const supabase = await getSupabase();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('assets')
       .insert({
         project_id: projectId,
@@ -190,9 +191,14 @@ export class ProducerService {
         timeline: assetData.timeline || null,
         status: assetData.status,
         assigned_supplier_id: assetData.assigned_supplier_id || null
-      });
+      })
+      .select()
+      .single();
 
     if (error) throw error;
+    if (!data) throw new Error('Failed to create asset');
+    
+    return data as unknown as Asset;
   }
 
   /**

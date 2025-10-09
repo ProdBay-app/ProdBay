@@ -272,7 +272,7 @@ const ProjectDetailPage: React.FC = () => {
 
           {/* RIGHT COLUMN - Brief */}
           <div className="lg:col-span-1">
-            <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
+            <section className="bg-white bg-opacity-100 rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8 z-10">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Brief</h2>
               
               {/* Brief Description */}
