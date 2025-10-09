@@ -5,7 +5,7 @@
 
 export type ProjectStatus = 'New' | 'In Progress' | 'Quoting' | 'Completed' | 'Cancelled';
 export type AssetStatus = 'Pending' | 'Quoting' | 'Approved' | 'In Production' | 'Delivered';
-export type QuoteStatus = 'Submitted' | 'Accepted' | 'Rejected';
+export type QuoteStatus = 'Pending' | 'Submitted' | 'Accepted' | 'Rejected';
 
 export interface Project {
   id: string;

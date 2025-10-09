@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, FileText, Calendar, Building2, Clock, Package } from 'lucide-react';
+import { X, FileText, Calendar, Clock, Package } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import StatusSelect from '@/components/shared/StatusSelect';
+import QuotesList from './QuotesList';
 import type { Asset } from '@/lib/supabase';
 import type { AssetStatus } from '@/types/database';
 
@@ -204,99 +205,12 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 </div>
               </section>
 
-              {/* Supplier Section */}
+              {/* Quotes Section */}
               <section>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-purple-600" />
-                  Assigned Supplier
-                </h3>
-                
-                {asset.assigned_supplier ? (
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-5 border border-purple-200">
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-semibold text-purple-900 mb-1">
-                          Company Name
-                        </label>
-                        <p className="text-purple-800 font-medium text-lg">
-                          {asset.assigned_supplier.supplier_name}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-semibold text-purple-900 mb-1">
-                          Contact Email
-                        </label>
-                        <p className="text-purple-800">
-                          <a 
-                            href={`mailto:${asset.assigned_supplier.contact_email}`}
-                            className="hover:underline"
-                          >
-                            {asset.assigned_supplier.contact_email}
-                          </a>
-                        </p>
-                      </div>
-
-                      {asset.assigned_supplier.service_categories && 
-                       asset.assigned_supplier.service_categories.length > 0 && (
-                        <div>
-                          <label className="block text-sm font-semibold text-purple-900 mb-2">
-                            Service Categories
-                          </label>
-                          <div className="flex flex-wrap gap-2">
-                            {asset.assigned_supplier.service_categories.map((category, idx) => (
-                              <span
-                                key={idx}
-                                className="px-3 py-1 bg-white text-purple-700 text-xs font-medium rounded-full border border-purple-200"
-                              >
-                                {category}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {asset.assigned_supplier.contact_persons && 
-                       asset.assigned_supplier.contact_persons.length > 0 && (
-                        <div>
-                          <label className="block text-sm font-semibold text-purple-900 mb-2">
-                            Contact Persons
-                          </label>
-                          <div className="space-y-2">
-                            {asset.assigned_supplier.contact_persons.map((person, idx) => (
-                              <div 
-                                key={idx}
-                                className="bg-white rounded-lg p-3 border border-purple-200"
-                              >
-                                <p className="font-medium text-purple-900">
-                                  {person.name}
-                                  {person.is_primary && (
-                                    <span className="ml-2 px-2 py-0.5 bg-purple-200 text-purple-800 text-xs rounded-full">
-                                      Primary
-                                    </span>
-                                  )}
-                                </p>
-                                <p className="text-sm text-purple-700">{person.role}</p>
-                                <p className="text-sm text-purple-600">
-                                  {person.email}
-                                  {person.phone && ` • ${person.phone}`}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 rounded-lg p-5 border-2 border-dashed border-gray-300 text-center">
-                    <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 font-medium">No supplier assigned yet</p>
-                    <p className="text-gray-500 text-sm mt-1">
-                      A supplier will be assigned during the quoting process
-                    </p>
-                  </div>
-                )}
+                <QuotesList 
+                  assetId={asset.id} 
+                  assetName={asset.asset_name}
+                />
               </section>
 
               {/* Metadata Section */}

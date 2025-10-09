@@ -299,6 +299,50 @@ export class ProducerService {
     return (data || []) as unknown as Supplier[];
   }
 
+  /**
+   * Get all quotes for a specific asset with populated supplier data
+   */
+  static async getQuotesForAsset(assetId: string): Promise<Quote[]> {
+    const supabase = await getSupabase();
+    const { data, error } = await supabase
+      .from('quotes')
+      .select(`
+        *,
+        supplier:suppliers(*)
+      `)
+      .eq('asset_id', assetId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []) as unknown as Quote[];
+  }
+
+  /**
+   * Request a quote from a supplier for an asset
+   * Creates a new quote record with 'Pending' status
+   */
+  static async requestQuote(assetId: string, supplierId: string): Promise<Quote> {
+    const supabase = await getSupabase();
+    const { data, error } = await supabase
+      .from('quotes')
+      .insert({
+        asset_id: assetId,
+        supplier_id: supplierId,
+        cost: 0,
+        notes_capacity: '',
+        status: 'Pending'
+      })
+      .select(`
+        *,
+        supplier:suppliers(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Failed to create quote request');
+    return data as unknown as Quote;
+  }
+
   // ===== SETTINGS OPERATIONS =====
 
   /**

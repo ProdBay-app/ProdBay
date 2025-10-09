@@ -125,7 +125,7 @@ export interface Quote {
   asset_id: string;
   cost: number;
   notes_capacity?: string;
-  status: 'Submitted' | 'Accepted' | 'Rejected';
+  status: 'Pending' | 'Submitted' | 'Accepted' | 'Rejected';
   quote_token: string;
   cost_breakdown?: {
     labor: number;
