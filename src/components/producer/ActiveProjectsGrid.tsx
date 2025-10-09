@@ -5,6 +5,7 @@ import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import ProjectCard from './ProjectCard';
 import ProjectSummaryStats, { type ProjectStats } from './ProjectSummaryStats';
+import DashboardFilterControls, { type ProjectSortOption } from './DashboardFilterControls';
 import type { Project } from '@/lib/supabase';
 
 export interface ActiveProjectsGridProps {
@@ -44,6 +45,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<ProjectSortOption>('mostRecent');
 
   // Filter projects by status
   const allActiveProjects = projects.filter(p => 
@@ -54,9 +56,41 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     ['Completed', 'Cancelled'].includes(p.project_status)
   );
 
+  // Sort active projects based on selected option (only when in dashboard mode)
+  const sortedActiveProjects = useMemo(() => {
+    // If not in dashboard mode (no limit), return unsorted array
+    if (!projectLimit) return allActiveProjects;
+    
+    // Create a copy to avoid mutating the original array
+    const sorted = [...allActiveProjects];
+    
+    switch (sortBy) {
+      case 'mostRecent':
+        // Sort by created_at descending (newest first)
+        sorted.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        break;
+      
+      case 'nearingDeadline':
+        // Sort by timeline_deadline ascending (closest deadline first)
+        // Projects without deadlines appear at the end
+        sorted.sort((a, b) => {
+          if (!a.timeline_deadline) return 1;  // a goes to end
+          if (!b.timeline_deadline) return -1; // b goes to end
+          
+          return new Date(a.timeline_deadline).getTime() - 
+                 new Date(b.timeline_deadline).getTime();
+        });
+        break;
+    }
+    
+    return sorted;
+  }, [allActiveProjects, sortBy, projectLimit]);
+
   // Apply limits if specified (for dashboard view)
   const activeProjects = projectLimit 
-    ? allActiveProjects.slice(0, projectLimit)
+    ? sortedActiveProjects.slice(0, projectLimit)
     : allActiveProjects;
   
   const archivedProjects = projectLimit 
@@ -64,7 +98,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     : allArchivedProjects;
 
   // Track if there are more projects than displayed
-  const hasMoreActive = projectLimit && allActiveProjects.length > projectLimit;
+  const hasMoreActive = projectLimit && sortedActiveProjects.length > projectLimit;
   const hasMoreArchived = projectLimit && allArchivedProjects.length > 3;
 
   // Calculate project statistics (always use full dataset)
@@ -197,6 +231,14 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         
         {/* Project Summary Statistics - only show if showStats is true */}
         {showStats && <ProjectSummaryStats stats={projectStats} loading={loading} />}
+        
+        {/* Dashboard Filter Controls - only show on dashboard */}
+        {projectLimit && (
+          <DashboardFilterControls 
+            sortBy={sortBy} 
+            onSortChange={setSortBy}
+          />
+        )}
         
         {/* Active Projects Section */}
         <section className="mb-12">
