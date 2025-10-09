@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AutomationService } from '@/services/automationService';
 import { SupplierApiService, type SuggestedSupplier } from '@/services/supplierApiService';
 import { AIAllocationService, type AIAssetSuggestion } from '@/services/aiAllocationService';
@@ -121,6 +122,7 @@ export interface ProducerDashboardProps extends
 
 const ProducerDashboardContainer: React.FC = () => {
   const { showSuccess, showError, showWarning, showConfirm } = useNotification();
+  const location = useLocation();
   
   // Core data state
   const [projects, setProjects] = useState<Project[]>([]);
@@ -194,6 +196,37 @@ const ProducerDashboardContainer: React.FC = () => {
       setAiAllocationCompleted(!!selectedProject.ai_allocation_completed_at);
     }
   }, [selectedProject]);
+
+  // Handle navigation state from projects grid
+  useEffect(() => {
+    const state = location.state as { 
+      selectedProjectId?: string; 
+      openCreateProjectModal?: boolean 
+    } | null;
+    
+    if (state?.selectedProjectId && projects.length > 0) {
+      // Find and select the project by ID
+      const projectToSelect = projects.find(p => p.id === state.selectedProjectId);
+      if (projectToSelect) {
+        setSelectedProject(projectToSelect);
+      }
+    }
+    
+    if (state?.openCreateProjectModal && !showProjectModal) {
+      // Open the create project modal
+      setIsEditingProject(false);
+      setProjectForm({
+        project_name: '',
+        client_name: '',
+        brief_description: '',
+        physical_parameters: '',
+        financial_parameters: undefined,
+        timeline_deadline: ''
+      });
+      setAllocationMethod('static');
+      setShowProjectModal(true);
+    }
+  }, [location.state, projects, showProjectModal]);
 
   // Data fetching functions
   const loadProjects = useCallback(async () => {

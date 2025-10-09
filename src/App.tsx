@@ -12,6 +12,7 @@ const LoginPage = lazy(() => import('@/components/LoginPage'));
 const ClientDashboard = lazy(() => import('@/components/client/ClientDashboardContainer'));
 const NewProject = lazy(() => import('@/components/client/NewProject'));
 const ProducerDashboard = lazy(() => import('@/components/producer/ProducerDashboardContainer'));
+const ActiveProjectsGrid = lazy(() => import('@/components/producer/ActiveProjectsGrid'));
 const SupplierManagement = lazy(() => import('@/components/producer/SupplierManagement'));
 const AdminDashboard = lazy(() => import('@/components/admin/AdminDashboard'));
 const QuoteSubmission = lazy(() => import('@/components/supplier/QuoteSubmission'));
@@ -48,6 +49,7 @@ function App() {
         <Route path="/producer" element={<Layout />}>
           <Route index element={<Navigate to="/producer/dashboard" replace />} />
           <Route path="dashboard" element={<ProducerDashboard />} />
+          <Route path="projects" element={<ActiveProjectsGrid />} />
           <Route path="suppliers" element={<SupplierManagement />} />
         </Route>
         
