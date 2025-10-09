@@ -1,14 +1,29 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, FolderOpen, Archive } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Plus, FolderOpen, Archive, ArrowRight } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import ProjectCard from './ProjectCard';
 import ProjectSummaryStats, { type ProjectStats } from './ProjectSummaryStats';
 import type { Project } from '@/lib/supabase';
 
+export interface ActiveProjectsGridProps {
+  /** 
+   * Optional limit on number of active projects to display.
+   * When provided, only the first N active projects are shown.
+   * Archived projects are limited to 3 when projectLimit is provided.
+   */
+  projectLimit?: number;
+  
+  /** 
+   * Whether to show the project summary statistics section.
+   * Default: true
+   */
+  showStats?: boolean;
+}
+
 /**
- * ActiveProjectsGrid - Container component for the producer projects page
+ * ActiveProjectsGrid - Reusable component for displaying projects in a grid layout
  * 
  * Responsibilities:
  * - Fetches all projects from Supabase
@@ -16,8 +31,12 @@ import type { Project } from '@/lib/supabase';
  * - Renders projects in a responsive grid layout
  * - Handles navigation to project details
  * - Manages loading and error states
+ * - Supports limited view (dashboard) and full view (all projects)
  */
-const ActiveProjectsGrid: React.FC = () => {
+const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({ 
+  projectLimit,
+  showStats = true 
+}) => {
   const navigate = useNavigate();
   const { showError } = useNotification();
   
@@ -27,31 +46,44 @@ const ActiveProjectsGrid: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Filter projects by status
-  const activeProjects = projects.filter(p => 
+  const allActiveProjects = projects.filter(p => 
     ['New', 'In Progress', 'Quoting'].includes(p.project_status)
   );
   
-  const archivedProjects = projects.filter(p => 
+  const allArchivedProjects = projects.filter(p => 
     ['Completed', 'Cancelled'].includes(p.project_status)
   );
 
-  // Calculate project statistics
-  const projectStats: ProjectStats = useMemo(() => {
-    // Total active projects
-    const totalActive = activeProjects.length;
+  // Apply limits if specified (for dashboard view)
+  const activeProjects = projectLimit 
+    ? allActiveProjects.slice(0, projectLimit)
+    : allActiveProjects;
+  
+  const archivedProjects = projectLimit 
+    ? allArchivedProjects.slice(0, 3) // Always limit to 3 on dashboard
+    : allArchivedProjects;
 
-    // Projects awaiting quotes
-    const awaitingQuote = activeProjects.filter(p => 
+  // Track if there are more projects than displayed
+  const hasMoreActive = projectLimit && allActiveProjects.length > projectLimit;
+  const hasMoreArchived = projectLimit && allArchivedProjects.length > 3;
+
+  // Calculate project statistics (always use full dataset)
+  const projectStats: ProjectStats = useMemo(() => {
+    // Total active projects (from full dataset)
+    const totalActive = allActiveProjects.length;
+
+    // Projects awaiting quotes (from full dataset)
+    const awaitingQuote = allActiveProjects.filter(p => 
       p.project_status === 'Quoting'
     ).length;
 
-    // Projects nearing deadline (within 7 days)
+    // Projects nearing deadline (within 7 days, from full dataset)
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparison
 
-    const nearingDeadline = activeProjects.filter(p => {
+    const nearingDeadline = allActiveProjects.filter(p => {
       if (!p.timeline_deadline) return false;
       
       const deadline = new Date(p.timeline_deadline);
@@ -66,7 +98,7 @@ const ActiveProjectsGrid: React.FC = () => {
       awaitingQuote,
       nearingDeadline
     };
-  }, [activeProjects]);
+  }, [allActiveProjects]);
 
   // Load projects from Supabase
   const loadProjects = useCallback(async () => {
@@ -139,9 +171,14 @@ const ActiveProjectsGrid: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {projectLimit ? 'Dashboard' : 'Projects'}
+              </h1>
               <p className="text-gray-600 mt-1">
-                Manage and track all your production projects
+                {projectLimit 
+                  ? 'Your active projects at a glance'
+                  : 'Manage and track all your production projects'
+                }
               </p>
             </div>
             <button
@@ -158,8 +195,8 @@ const ActiveProjectsGrid: React.FC = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Project Summary Statistics */}
-        <ProjectSummaryStats stats={projectStats} loading={loading} />
+        {/* Project Summary Statistics - only show if showStats is true */}
+        {showStats && <ProjectSummaryStats stats={projectStats} loading={loading} />}
         
         {/* Active Projects Section */}
         <section className="mb-12">
@@ -185,15 +222,30 @@ const ActiveProjectsGrid: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeProjects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  onClick={handleProjectClick}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {activeProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onClick={handleProjectClick}
+                  />
+                ))}
+              </div>
+              
+              {/* View All link when projects are limited */}
+              {hasMoreActive && (
+                <div className="mt-6 text-center">
+                  <Link
+                    to="/producer/projects"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-teal-600 hover:text-teal-700 font-medium transition-colors"
+                  >
+                    View All {allActiveProjects.length} Active Projects
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              )}
+            </>
           )}
         </section>
 
@@ -208,15 +260,30 @@ const ActiveProjectsGrid: React.FC = () => {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {archivedProjects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  onClick={handleProjectClick}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {archivedProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onClick={handleProjectClick}
+                  />
+                ))}
+              </div>
+              
+              {/* View All link when archived projects are limited */}
+              {hasMoreArchived && (
+                <div className="mt-6 text-center">
+                  <Link
+                    to="/producer/projects"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-700 font-medium transition-colors"
+                  >
+                    View All {allArchivedProjects.length} Archived Projects
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              )}
+            </>
           </section>
         )}
       </div>

@@ -11,8 +11,10 @@ const LoginPage = lazy(() => import('@/components/LoginPage'));
 // Lazy-loaded dashboard routes to avoid eager initialization side-effects (e.g., Supabase client)
 const ClientDashboard = lazy(() => import('@/components/client/ClientDashboardContainer'));
 const NewProject = lazy(() => import('@/components/client/NewProject'));
-const ProducerDashboard = lazy(() => import('@/components/producer/ProducerDashboardContainer'));
+// ProducerDashboard - DEPRECATED: Replaced by ActiveProjectsGrid with projectLimit prop
+// const ProducerDashboard = lazy(() => import('@/components/producer/ProducerDashboardContainer'));
 const ActiveProjectsGrid = lazy(() => import('@/components/producer/ActiveProjectsGrid'));
+const AllProjectsPage = lazy(() => import('@/components/producer/AllProjectsPage'));
 const SupplierManagement = lazy(() => import('@/components/producer/SupplierManagement'));
 const AdminDashboard = lazy(() => import('@/components/admin/AdminDashboard'));
 const QuoteSubmission = lazy(() => import('@/components/supplier/QuoteSubmission'));
@@ -48,8 +50,8 @@ function App() {
         {/* Producer routes */}
         <Route path="/producer" element={<Layout />}>
           <Route index element={<Navigate to="/producer/dashboard" replace />} />
-          <Route path="dashboard" element={<ProducerDashboard />} />
-          <Route path="projects" element={<ActiveProjectsGrid />} />
+          <Route path="dashboard" element={<ActiveProjectsGrid projectLimit={6} showStats={true} />} />
+          <Route path="projects" element={<AllProjectsPage />} />
           <Route path="suppliers" element={<SupplierManagement />} />
         </Route>
         
