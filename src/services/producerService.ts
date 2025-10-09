@@ -57,6 +57,14 @@ export class ProducerService {
   }
 
   /**
+   * Get a specific project by ID (semantic alias for loadProject)
+   * Used primarily by the Project Detail Page for clarity and consistency
+   */
+  static async getProjectById(projectId: string): Promise<Project | null> {
+    return this.loadProject(projectId);
+  }
+
+  /**
    * Create a new project
    */
   static async createProject(projectData: ProjectFormData): Promise<Project> {

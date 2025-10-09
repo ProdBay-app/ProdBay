@@ -229,11 +229,10 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     loadProjects();
   }, [loadProjects]);
 
-  // Handle project card click - navigate to producer dashboard with selected project
+  // Handle project card click - navigate to project detail page
   const handleProjectClick = useCallback((project: Project) => {
-    // Navigate to the producer dashboard with the selected project
-    // We'll pass the project ID as state so the dashboard can auto-select it
-    navigate('/producer', { state: { selectedProjectId: project.id } });
+    // Navigate to the dedicated project detail page
+    navigate(`/producer/projects/${project.id}`);
   }, [navigate]);
 
   // Handle create new project
