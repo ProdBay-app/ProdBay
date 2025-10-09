@@ -150,7 +150,7 @@ const ProjectDetailPage: React.FC = () => {
 
   // Main content
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       {/* Header with breadcrumbs */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -272,7 +272,7 @@ const ProjectDetailPage: React.FC = () => {
 
           {/* RIGHT COLUMN - Brief */}
           <div className="lg:col-span-1">
-            <section className="bg-white bg-opacity-100 rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8 z-10">
+            <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Brief</h2>
               
               {/* Brief Description */}
@@ -294,7 +294,7 @@ const ProjectDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
