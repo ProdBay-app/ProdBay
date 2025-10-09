@@ -503,7 +503,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
    * 1. Creates project in Supabase
    * 2. If brief is provided, sends to Railway API for processing
    * 3. Railway API creates assets based on allocation method (static or AI)
-   * 4. Refreshes project list and closes modal
+   * 4. Redirects user to the new project's dedicated page
    * 
    * @param e - Form submit event
    */
@@ -537,30 +537,19 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
             showWarning(
               `Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`
             );
-          } else {
-            // Success! Show how many assets were created
-            const assetCount = briefResult.data?.createdAssets?.length || 0;
-            const methodText = allocationMethod === 'ai' ? 'AI-powered' : 'static';
-            showSuccess(
-              `Project created successfully! ${assetCount} asset${assetCount !== 1 ? 's' : ''} ${assetCount > 0 ? 'were' : 'was'} automatically generated using ${methodText} allocation.`,
-              { duration: 6000 }
-            );
           }
+          // Note: Success notifications removed - redirect provides better feedback
         } catch (briefError) {
           // Brief processing failed but project was created
           console.error('Brief processing error:', briefError);
           showWarning('Project created successfully, but brief processing failed. You can manually create assets later.');
         }
-      } else {
-        // No brief provided - just confirm project creation
-        showSuccess('Project created successfully! You can now add assets manually.');
       }
       
-      // Step 3: Refresh the projects list to show the new project
-      await loadProjects();
-      
-      // Step 4: Close the modal
-      closeProjectModal();
+      // Step 3: Redirect to the new project's dedicated page
+      // This provides immediate, actionable feedback and completes the creation-to-management flow
+      navigate(`/producer/projects/${createdProject.id}`);
+      // Note: Modal closes automatically as component unmounts during navigation
       
     } catch (err) {
       // Failed to create project in Supabase
@@ -569,7 +558,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     } finally {
       setIsSubmittingProject(false);
     }
-  }, [projectForm, allocationMethod, loadProjects, closeProjectModal, showSuccess, showWarning, showError]);
+  }, [projectForm, allocationMethod, navigate, showWarning, showError]);
 
   // Loading state
   if (loading) {
