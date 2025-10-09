@@ -8,6 +8,7 @@ import ProjectSummaryStats, { type ProjectStats } from './ProjectSummaryStats';
 import DashboardFilterControls, { type ProjectSortOption } from './DashboardFilterControls';
 import SearchBar from '@/components/shared/SearchBar';
 import StatusFilter from '@/components/shared/StatusFilter';
+import SortControl from '@/components/shared/SortControl';
 import type { Project } from '@/lib/supabase';
 
 export interface ActiveProjectsGridProps {
@@ -102,11 +103,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     );
   }, [statusFilteredArchivedProjects, searchQuery]);
 
-  // Sort active projects based on selected option (only when in dashboard mode)
+  // Sort active projects based on selected option (applies to all views)
   const sortedActiveProjects = useMemo(() => {
-    // If not in dashboard mode (no limit), return search-filtered array unsorted
-    if (!projectLimit) return searchFilteredActiveProjects;
-    
     // Create a copy to avoid mutating the original array
     const sorted = [...searchFilteredActiveProjects];
     
@@ -132,20 +130,49 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     }
     
     return sorted;
-  }, [searchFilteredActiveProjects, sortBy, projectLimit]);
+  }, [searchFilteredActiveProjects, sortBy]);
+
+  // Sort archived projects based on selected option (applies to all views)
+  const sortedArchivedProjects = useMemo(() => {
+    // Create a copy to avoid mutating the original array
+    const sorted = [...searchFilteredArchivedProjects];
+    
+    switch (sortBy) {
+      case 'mostRecent':
+        // Sort by created_at descending (newest first)
+        sorted.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        break;
+      
+      case 'nearingDeadline':
+        // Sort by timeline_deadline ascending (closest deadline first)
+        // Projects without deadlines appear at the end
+        sorted.sort((a, b) => {
+          if (!a.timeline_deadline) return 1;  // a goes to end
+          if (!b.timeline_deadline) return -1; // b goes to end
+          
+          return new Date(a.timeline_deadline).getTime() - 
+                 new Date(b.timeline_deadline).getTime();
+        });
+        break;
+    }
+    
+    return sorted;
+  }, [searchFilteredArchivedProjects, sortBy]);
 
   // Apply limits if specified (for dashboard view)
   const activeProjects = projectLimit 
     ? sortedActiveProjects.slice(0, projectLimit)
-    : searchFilteredActiveProjects;
+    : sortedActiveProjects;
   
   const archivedProjects = projectLimit 
-    ? allArchivedProjects.slice(0, 3) // Always limit to 3 on dashboard
-    : searchFilteredArchivedProjects;
+    ? sortedArchivedProjects.slice(0, 3) // Always limit to 3 on dashboard
+    : sortedArchivedProjects;
 
   // Track if there are more projects than displayed
   const hasMoreActive = projectLimit && sortedActiveProjects.length > projectLimit;
-  const hasMoreArchived = projectLimit && allArchivedProjects.length > 3;
+  const hasMoreArchived = projectLimit && sortedArchivedProjects.length > 3;
 
   // Calculate project statistics (always use full dataset)
   const projectStats: ProjectStats = useMemo(() => {
@@ -270,7 +297,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
             </button>
           </div>
           
-          {/* Search and Filter Controls - only show on All Projects page */}
+          {/* Search, Filter, and Sort Controls - only show on All Projects page */}
           {!projectLimit && (
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Search Bar - takes up more space */}
@@ -282,12 +309,20 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                 />
               </div>
               
-              {/* Status Filter - fixed width */}
-              <div className="sm:w-64">
-                <StatusFilter 
-                  value={selectedStatus}
-                  onChange={setSelectedStatus}
-                />
+              {/* Status Filter and Sort Control - side by side on desktop */}
+              <div className="flex flex-col sm:flex-row gap-4 sm:w-auto">
+                <div className="sm:w-48">
+                  <StatusFilter 
+                    value={selectedStatus}
+                    onChange={setSelectedStatus}
+                  />
+                </div>
+                <div className="sm:w-48">
+                  <SortControl 
+                    value={sortBy}
+                    onChange={setSortBy}
+                  />
+                </div>
               </div>
             </div>
           )}
