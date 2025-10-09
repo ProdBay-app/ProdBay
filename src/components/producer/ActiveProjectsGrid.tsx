@@ -7,6 +7,7 @@ import ProjectCard from './ProjectCard';
 import ProjectSummaryStats, { type ProjectStats } from './ProjectSummaryStats';
 import DashboardFilterControls, { type ProjectSortOption } from './DashboardFilterControls';
 import SearchBar from '@/components/shared/SearchBar';
+import StatusFilter from '@/components/shared/StatusFilter';
 import type { Project } from '@/lib/supabase';
 
 export interface ActiveProjectsGridProps {
@@ -48,8 +49,9 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<ProjectSortOption>('mostRecent');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  // Filter projects by status
+  // Filter projects by status group (active vs archived)
   const allActiveProjects = projects.filter(p => 
     ['New', 'In Progress', 'Quoting'].includes(p.project_status)
   );
@@ -58,30 +60,47 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     ['Completed', 'Cancelled'].includes(p.project_status)
   );
 
-  // Apply search filter (case-insensitive, multi-field)
-  const searchFilteredActiveProjects = useMemo(() => {
-    if (!searchQuery.trim()) return allActiveProjects;
-    
-    const query = searchQuery.toLowerCase().trim();
+  // Apply status filter (specific status or 'all')
+  const statusFilteredActiveProjects = useMemo(() => {
+    if (selectedStatus === 'all') return allActiveProjects;
     
     return allActiveProjects.filter(project => 
-      project.project_name.toLowerCase().includes(query) ||
-      project.client_name.toLowerCase().includes(query) ||
-      project.brief_description.toLowerCase().includes(query)
+      project.project_status === selectedStatus
     );
-  }, [allActiveProjects, searchQuery]);
+  }, [allActiveProjects, selectedStatus]);
 
-  const searchFilteredArchivedProjects = useMemo(() => {
-    if (!searchQuery.trim()) return allArchivedProjects;
+  const statusFilteredArchivedProjects = useMemo(() => {
+    if (selectedStatus === 'all') return allArchivedProjects;
+    
+    return allArchivedProjects.filter(project => 
+      project.project_status === selectedStatus
+    );
+  }, [allArchivedProjects, selectedStatus]);
+
+  // Apply search filter (case-insensitive, multi-field)
+  const searchFilteredActiveProjects = useMemo(() => {
+    if (!searchQuery.trim()) return statusFilteredActiveProjects;
     
     const query = searchQuery.toLowerCase().trim();
     
-    return allArchivedProjects.filter(project => 
+    return statusFilteredActiveProjects.filter(project => 
       project.project_name.toLowerCase().includes(query) ||
       project.client_name.toLowerCase().includes(query) ||
       project.brief_description.toLowerCase().includes(query)
     );
-  }, [allArchivedProjects, searchQuery]);
+  }, [statusFilteredActiveProjects, searchQuery]);
+
+  const searchFilteredArchivedProjects = useMemo(() => {
+    if (!searchQuery.trim()) return statusFilteredArchivedProjects;
+    
+    const query = searchQuery.toLowerCase().trim();
+    
+    return statusFilteredArchivedProjects.filter(project => 
+      project.project_name.toLowerCase().includes(query) ||
+      project.client_name.toLowerCase().includes(query) ||
+      project.brief_description.toLowerCase().includes(query)
+    );
+  }, [statusFilteredArchivedProjects, searchQuery]);
 
   // Sort active projects based on selected option (only when in dashboard mode)
   const sortedActiveProjects = useMemo(() => {
@@ -251,13 +270,26 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
             </button>
           </div>
           
-          {/* Search Bar - only show on All Projects page */}
+          {/* Search and Filter Controls - only show on All Projects page */}
           {!projectLimit && (
-            <SearchBar 
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search by project name, client, or keywords..."
-            />
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Search Bar - takes up more space */}
+              <div className="flex-1">
+                <SearchBar 
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search by project name, client, or keywords..."
+                />
+              </div>
+              
+              {/* Status Filter - fixed width */}
+              <div className="sm:w-64">
+                <StatusFilter 
+                  value={selectedStatus}
+                  onChange={setSelectedStatus}
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -289,19 +321,28 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
           {activeProjects.length === 0 ? (
             <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
               <FolderOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              {searchQuery ? (
+              {searchQuery || selectedStatus !== 'all' ? (
                 <>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     No active projects found
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    No active projects match "<span className="font-medium">{searchQuery}</span>"
+                    {searchQuery && selectedStatus !== 'all' ? (
+                      <>No active projects match "<span className="font-medium">{searchQuery}</span>" with status "<span className="font-medium">{selectedStatus}</span>"</>
+                    ) : searchQuery ? (
+                      <>No active projects match "<span className="font-medium">{searchQuery}</span>"</>
+                    ) : (
+                      <>No active projects with status "<span className="font-medium">{selectedStatus}</span>"</>
+                    )}
                   </p>
                   <button
-                    onClick={() => setSearchQuery('')}
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedStatus('all');
+                    }}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                   >
-                    Clear Search
+                    Clear Filters
                   </button>
                 </>
               ) : (
@@ -347,7 +388,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         </section>
 
         {/* Archived Projects Section */}
-        {(archivedProjects.length > 0 || (!projectLimit && searchQuery)) && (
+        {(archivedProjects.length > 0 || (!projectLimit && (searchQuery || selectedStatus !== 'all'))) && (
           <section>
             <div className="flex items-center gap-2 mb-6">
               <Archive className="w-6 h-6 text-gray-600" />
@@ -357,14 +398,20 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
               </span>
             </div>
 
-            {archivedProjects.length === 0 && searchQuery ? (
+            {archivedProjects.length === 0 && (searchQuery || selectedStatus !== 'all') ? (
               <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
                 <Archive className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   No archived projects found
                 </h3>
                 <p className="text-gray-600">
-                  No archived projects match "<span className="font-medium">{searchQuery}</span>"
+                  {searchQuery && selectedStatus !== 'all' ? (
+                    <>No archived projects match "<span className="font-medium">{searchQuery}</span>" with status "<span className="font-medium">{selectedStatus}</span>"</>
+                  ) : searchQuery ? (
+                    <>No archived projects match "<span className="font-medium">{searchQuery}</span>"</>
+                  ) : (
+                    <>No archived projects with status "<span className="font-medium">{selectedStatus}</span>"</>
+                  )}
                 </p>
               </div>
             ) : (
