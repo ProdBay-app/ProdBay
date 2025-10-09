@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FolderOpen, Archive } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import ProjectCard from './ProjectCard';
+import ProjectSummaryStats, { type ProjectStats } from './ProjectSummaryStats';
 import type { Project } from '@/lib/supabase';
 
 /**
@@ -33,6 +34,39 @@ const ActiveProjectsGrid: React.FC = () => {
   const archivedProjects = projects.filter(p => 
     ['Completed', 'Cancelled'].includes(p.project_status)
   );
+
+  // Calculate project statistics
+  const projectStats: ProjectStats = useMemo(() => {
+    // Total active projects
+    const totalActive = activeProjects.length;
+
+    // Projects awaiting quotes
+    const awaitingQuote = activeProjects.filter(p => 
+      p.project_status === 'Quoting'
+    ).length;
+
+    // Projects nearing deadline (within 7 days)
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparison
+
+    const nearingDeadline = activeProjects.filter(p => {
+      if (!p.timeline_deadline) return false;
+      
+      const deadline = new Date(p.timeline_deadline);
+      deadline.setHours(0, 0, 0, 0); // Reset to start of day
+      
+      // Check if deadline is between today and 7 days from now
+      return deadline >= today && deadline <= sevenDaysFromNow;
+    }).length;
+
+    return {
+      totalActive,
+      awaitingQuote,
+      nearingDeadline
+    };
+  }, [activeProjects]);
 
   // Load projects from Supabase
   const loadProjects = useCallback(async () => {
@@ -123,6 +157,9 @@ const ActiveProjectsGrid: React.FC = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Project Summary Statistics */}
+        <ProjectSummaryStats stats={projectStats} loading={loading} />
         
         {/* Active Projects Section */}
         <section className="mb-12">
