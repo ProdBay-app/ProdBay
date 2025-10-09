@@ -11,22 +11,19 @@ import {
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetList from './AssetList';
+import EditableBrief from './EditableBrief';
 import type { Project } from '@/lib/supabase';
 
 /**
- * ProjectDetailPage - Foundational page for displaying detailed project information
+ * ProjectDetailPage - Comprehensive page for displaying and managing project information
  * 
- * This is the base implementation that establishes:
+ * Features:
  * - Route structure (/producer/projects/:projectId)
- * - Two-column responsive layout
+ * - Dynamic two-column responsive layout with expand/collapse
  * - Data fetching for a single project
- * - Overview and Brief placeholders
- * 
- * Future enhancements will build upon this foundation to add:
- * - Asset management
- * - Quote comparison
- * - Project editing
- * - Status workflows
+ * - Editable project brief with auto-save
+ * - Asset management (Kanban board)
+ * - Quote management integration
  */
 const ProjectDetailPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -37,6 +34,7 @@ const ProjectDetailPage: React.FC = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isBriefExpanded, setIsBriefExpanded] = useState(false);
 
   // Fetch project data
   useEffect(() => {
@@ -203,10 +201,11 @@ const ProjectDetailPage: React.FC = () => {
 
       {/* Two-column layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Dynamic grid: 66/33 split (collapsed) or 50/50 split (expanded) */}
+        <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
           
           {/* LEFT COLUMN - Main content (Overview & Assets) */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className={`space-y-6 ${isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
             
             {/* Overview Section */}
             <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -233,7 +232,7 @@ const ProjectDetailPage: React.FC = () => {
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Budget</p>
                     <p className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(project.financial_parameters)}
+                      {formatCurrency(project.financial_parameters ?? 0)}
                     </p>
                   </div>
                 </div>
@@ -246,7 +245,7 @@ const ProjectDetailPage: React.FC = () => {
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 mb-1">Deadline</p>
                     <p className="text-lg font-semibold text-gray-900">
-                      {formatDate(project.timeline_deadline)}
+                      {formatDate(project.timeline_deadline ?? null)}
                     </p>
                   </div>
                 </div>
@@ -272,25 +271,21 @@ const ProjectDetailPage: React.FC = () => {
 
           {/* RIGHT COLUMN - Brief */}
           <div className="lg:col-span-1">
-            <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Brief</h2>
-              
-              {/* Brief Description */}
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Description</h3>
-                <p className="text-gray-900 leading-relaxed whitespace-pre-wrap">
-                  {project.brief_description || 'No description provided'}
-                </p>
-              </div>
-
-              {/* Physical Parameters */}
-              <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Physical Parameters</h3>
-                <p className="text-gray-900 leading-relaxed whitespace-pre-wrap">
-                  {project.physical_parameters || 'No physical parameters specified'}
-                </p>
-              </div>
-            </section>
+            <EditableBrief
+              projectId={project.id}
+              briefDescription={project.brief_description}
+              physicalParameters={project.physical_parameters ?? ''}
+              isExpanded={isBriefExpanded}
+              onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+              onBriefUpdate={(briefDesc, physicalParams) => {
+                // Optimistically update local project state
+                setProject(prev => prev ? {
+                  ...prev,
+                  brief_description: briefDesc,
+                  physical_parameters: physicalParams
+                } : null);
+              }}
+            />
           </div>
         </div>
       </div>

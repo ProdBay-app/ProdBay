@@ -111,6 +111,27 @@ export class ProducerService {
   }
 
   /**
+   * Update only the brief fields of a project
+   * Used for in-place editing of brief description and physical parameters
+   */
+  static async updateProjectBrief(
+    projectId: string,
+    briefDescription: string,
+    physicalParameters: string
+  ): Promise<void> {
+    const supabase = await getSupabase();
+    const { error } = await supabase
+      .from('projects')
+      .update({
+        brief_description: briefDescription,
+        physical_parameters: physicalParameters
+      })
+      .eq('id', projectId);
+
+    if (error) throw error;
+  }
+
+  /**
    * Delete a project and all related data (quotes, assets)
    */
   static async deleteProject(projectId: string): Promise<void> {
