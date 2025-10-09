@@ -68,6 +68,11 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     timeline_deadline: ''
   });
   const [allocationMethod, setAllocationMethod] = useState<'static' | 'ai'>('static');
+  
+  // State management - PDF upload
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadedFilename, setUploadedFilename] = useState<string | null>(null);
 
   // Filter projects by status group (active vs archived)
   const allActiveProjects = projects.filter(p => 
@@ -307,6 +312,10 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     setShowProjectModal(false);
     setIsEditingProject(false);
     setIsSubmittingProject(false);
+    // Reset PDF upload state
+    setIsUploadingPdf(false);
+    setUploadError(null);
+    setUploadedFilename(null);
     // Optional: Reset form to prevent showing old data if modal reopens
     setProjectForm({
       project_name: '',
@@ -333,6 +342,65 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         : value
     }));
   }, []);
+
+  /**
+   * Handles PDF brief upload and text extraction.
+   * 
+   * Flow:
+   * 1. Uploads PDF to Railway backend
+   * 2. Backend extracts text using pdf-parse
+   * 3. Updates brief_description field with extracted text
+   * 4. Shows success/error notifications
+   * 
+   * @param file - The PDF file to upload
+   */
+  const handlePdfUpload = useCallback(async (file: File) => {
+    setIsUploadingPdf(true);
+    setUploadError(null);
+    
+    try {
+      // Create FormData for multipart/form-data upload
+      const formData = new FormData();
+      formData.append('pdf', file);
+      
+      // Get Railway backend URL from environment
+      const railwayUrl = import.meta.env.VITE_RAILWAY_API_URL || 'http://localhost:3000';
+      
+      // Send PDF to Railway backend
+      const response = await fetch(`${railwayUrl}/api/extract-text-from-pdf`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Failed to extract text from PDF');
+      }
+      
+      // Extract the text from the response
+      const extractedText = result.data?.text;
+      
+      if (!extractedText) {
+        throw new Error('No text was extracted from the PDF');
+      }
+      
+      // Update the brief description field with extracted text
+      updateProjectForm('brief_description', extractedText);
+      
+      // Update success state
+      setUploadedFilename(file.name);
+      showSuccess(`Text extracted from ${file.name}!`);
+      
+    } catch (error) {
+      console.error('PDF upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process PDF';
+      setUploadError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsUploadingPdf(false);
+    }
+  }, [updateProjectForm, showSuccess, showError]);
 
   /**
    * Handles project form submission (create new project).
@@ -658,6 +726,10 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         onSubmit={submitProjectForm}
         onFormChange={updateProjectForm}
         onAllocationMethodChange={setAllocationMethod}
+        onPdfUpload={handlePdfUpload}
+        isUploadingPdf={isUploadingPdf}
+        uploadError={uploadError}
+        uploadedFilename={uploadedFilename}
       />
     </div>
   );
