@@ -6,6 +6,7 @@ interface AssetCardProps {
   asset: Asset;
   onEdit: (asset: Asset) => void;
   onDelete: (asset: Asset) => void;
+  onClick: (asset: Asset) => void;
 }
 
 /**
@@ -16,8 +17,9 @@ interface AssetCardProps {
  * - Displays key asset metadata at a glance
  * - Status badge for quick state identification
  * - Compact card format suitable for Kanban columns
+ * - Entire card is clickable to open detail modal (except action buttons)
  */
-const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete }) => {
+const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, onClick }) => {
   // Format the timeline date for display
   const formattedTimeline = asset.timeline
     ? new Date(asset.timeline).toLocaleDateString('en-US', {
@@ -46,7 +48,10 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] p-4 text-white relative group">
+    <div 
+      className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] p-4 text-white relative group cursor-pointer"
+      onClick={() => onClick(asset)}
+    >
       {/* Action Buttons - Visible on hover */}
       <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
         {/* Edit Button */}

@@ -4,6 +4,7 @@ import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetCard from './AssetCard';
 import AssetFormModal from './AssetFormModal';
+import AssetDetailModal from './AssetDetailModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import type { Asset } from '@/lib/supabase';
 import type { AssetStatus } from '@/types/database';
@@ -36,6 +37,8 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
   const [deletingAsset, setDeletingAsset] = useState<Asset | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Define the status order for Kanban columns (workflow order)
   const statusOrder: AssetStatus[] = [
@@ -181,6 +184,12 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
     }
   };
 
+  // Handle opening the detail view modal
+  const handleViewAsset = (asset: Asset) => {
+    setViewingAsset(asset);
+    setIsDetailModalOpen(true);
+  };
+
   // Group assets by status
   const groupedAssets = useMemo(() => {
     const groups: Record<AssetStatus, Asset[]> = {
@@ -302,6 +311,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
                     <AssetCard 
                       key={asset.id} 
                       asset={asset} 
+                      onClick={handleViewAsset}
                       onEdit={handleOpenEditModal}
                       onDelete={handleOpenDeleteModal}
                     />
@@ -356,6 +366,16 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
         }}
         isConfirming={isDeleting}
         variant="danger"
+      />
+
+      {/* Asset Detail Modal */}
+      <AssetDetailModal
+        isOpen={isDetailModalOpen}
+        asset={viewingAsset}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setViewingAsset(null);
+        }}
       />
     </section>
   );
