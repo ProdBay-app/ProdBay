@@ -7,6 +7,7 @@ const supplierRoutes = require('./routes/suppliers');
 const aiAllocationRoutes = require('./routes/aiAllocation');
 const quoteComparisonRoutes = require('./routes/quoteComparison');
 const pdfExtractionRoutes = require('./routes/pdfExtraction');
+const projectSummaryRoutes = require('./routes/projectSummary');
 const { testConnection } = require('./config/database');
 
 const app = express();
@@ -70,7 +71,7 @@ const corsOptions = {
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
@@ -93,6 +94,7 @@ app.use('/api/suppliers', supplierRoutes);
 app.use('/api', aiAllocationRoutes);
 app.use('/api/quotes', quoteComparisonRoutes);
 app.use('/api', pdfExtractionRoutes);
+app.use('/api/project-summary', projectSummaryRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -112,7 +114,14 @@ app.get('/', (req, res) => {
       'GET /api/ai-health': 'AI service health check',
       'GET /api/quotes/compare/:assetId': 'Get quotes for comparison',
       'GET /api/quotes/compare/:assetId/summary': 'Get quote summary for asset',
-      'POST /api/extract-text-from-pdf': 'Extract text from uploaded PDF file'
+      'POST /api/extract-text-from-pdf': 'Extract text from uploaded PDF file',
+      'GET /api/project-summary/:projectId': 'Get comprehensive project tracking summary',
+      'GET /api/project-summary/:projectId/milestones': 'Get project milestones',
+      'POST /api/project-summary/:projectId/milestones': 'Create a new milestone',
+      'PATCH /api/project-summary/milestones/:milestoneId': 'Update a milestone',
+      'GET /api/project-summary/:projectId/actions': 'Get action items for a project',
+      'POST /api/project-summary/actions': 'Create a new action item',
+      'PATCH /api/project-summary/actions/:actionId/complete': 'Complete an action item'
     }
   });
 });

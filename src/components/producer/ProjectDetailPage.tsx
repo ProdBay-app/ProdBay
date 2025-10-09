@@ -6,13 +6,20 @@ import {
   User, 
   DollarSign, 
   Clock,
-  AlertCircle 
+  AlertCircle,
+  CheckSquare,
+  Users as UsersIcon
 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
+import { ProjectSummaryService } from '@/services/projectSummaryService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetList from './AssetList';
 import EditableBrief from './EditableBrief';
+import BudgetTrackingBar from './widgets/BudgetTrackingBar';
+import TimelineWidget from './widgets/TimelineWidget';
+import ActionCounter from './widgets/ActionCounter';
 import type { Project } from '@/lib/supabase';
+import type { ProjectTrackingSummary } from '@/types/database';
 
 /**
  * ProjectDetailPage - Comprehensive page for displaying and managing project information
@@ -32,7 +39,9 @@ const ProjectDetailPage: React.FC = () => {
 
   // State management
   const [project, setProject] = useState<Project | null>(null);
+  const [trackingSummary, setTrackingSummary] = useState<ProjectTrackingSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingTracking, setLoadingTracking] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBriefExpanded, setIsBriefExpanded] = useState(false);
 
@@ -68,6 +77,31 @@ const ProjectDetailPage: React.FC = () => {
 
     fetchProject();
   }, [projectId, showError]);
+
+  // Fetch tracking summary data
+  useEffect(() => {
+    const fetchTrackingSummary = async () => {
+      if (!projectId) {
+        setLoadingTracking(false);
+        return;
+      }
+
+      try {
+        setLoadingTracking(true);
+        const summary = await ProjectSummaryService.getProjectTrackingSummary(projectId);
+        setTrackingSummary(summary);
+      } catch (err) {
+        console.error('Error fetching tracking summary:', err);
+        // Don't show error to user - tracking widgets are non-critical
+        // Just fail silently and show empty state
+        setTrackingSummary(null);
+      } finally {
+        setLoadingTracking(false);
+      }
+    };
+
+    fetchTrackingSummary();
+  }, [projectId]);
 
   // Format currency
   const formatCurrency = (amount: number): string => {
@@ -201,6 +235,53 @@ const ProjectDetailPage: React.FC = () => {
 
       {/* Two-column layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Project Health Section - Tracking Widgets */}
+        {!loadingTracking && trackingSummary && (
+          <div className="mb-8 space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Project Health</h2>
+              <p className="text-gray-600 mb-6">Real-time tracking of budget, timeline, and pending actions</p>
+            </div>
+            
+            {/* Budget Tracking Bar - Full Width */}
+            <BudgetTrackingBar
+              total={trackingSummary.budget.total}
+              spent={trackingSummary.budget.spent}
+              remaining={trackingSummary.budget.remaining}
+              percentageUsed={trackingSummary.budget.percentageUsed}
+            />
+            
+            {/* Timeline Widget - Full Width */}
+            <TimelineWidget
+              deadline={trackingSummary.timeline.deadline}
+              daysRemaining={trackingSummary.timeline.daysRemaining}
+              milestones={trackingSummary.timeline.milestones}
+            />
+            
+            {/* Action Counters - Side by Side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ActionCounter
+                label="Your Actions"
+                count={trackingSummary.actions.producerActions}
+                icon={CheckSquare}
+                iconColor="text-blue-600"
+                bgColor="bg-blue-100"
+                description="Tasks requiring your attention"
+              />
+              
+              <ActionCounter
+                label="Their Actions"
+                count={trackingSummary.actions.supplierActions}
+                icon={UsersIcon}
+                iconColor="text-purple-600"
+                bgColor="bg-purple-100"
+                description="Pending supplier responses"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Dynamic grid: 66/33 split (collapsed) or 50/50 split (expanded) */}
         <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
           
