@@ -4,7 +4,9 @@ import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetCard from './AssetCard';
 import AssetFormModal from './AssetFormModal';
-import type { Asset, AssetStatus } from '@/types/database';
+import ConfirmationModal from '@/components/shared/ConfirmationModal';
+import type { Asset } from '@/lib/supabase';
+import type { AssetStatus } from '@/types/database';
 
 interface AssetListProps {
   projectId: string;
@@ -31,6 +33,9 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deletingAsset, setDeletingAsset] = useState<Asset | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Define the status order for Kanban columns (workflow order)
   const statusOrder: AssetStatus[] = [
@@ -125,7 +130,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
         asset_name: assetData.asset_name,
         specifications: assetData.specifications,
         status: editingAsset.status,
-        timeline: editingAsset.timeline || '',
+        timeline: editingAsset.timeline ?? '',
         assigned_supplier_id: editingAsset.assigned_supplier_id
       });
 
@@ -142,6 +147,37 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
       showError(errorMessage);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Handle opening the delete confirmation modal
+  const handleOpenDeleteModal = (asset: Asset) => {
+    setDeletingAsset(asset);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Handle confirming deletion
+  const handleConfirmDelete = async () => {
+    if (!deletingAsset) return;
+
+    setIsDeleting(true);
+    try {
+      // Delete asset from database (cascade deletes related quotes)
+      await ProducerService.deleteAsset(deletingAsset.id);
+
+      // Remove from local state
+      setAssets(prev => prev.filter(a => a.id !== deletingAsset.id));
+
+      // Close modal and show success
+      setIsDeleteModalOpen(false);
+      setDeletingAsset(null);
+      showSuccess(`Asset "${deletingAsset.asset_name}" deleted successfully!`);
+    } catch (err) {
+      console.error('Error deleting asset:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete asset';
+      showError(errorMessage);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -267,6 +303,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
                       key={asset.id} 
                       asset={asset} 
                       onEdit={handleOpenEditModal}
+                      onDelete={handleOpenDeleteModal}
                     />
                   ))}
                 </div>
@@ -303,6 +340,22 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
           setEditingAsset(null);
         }}
         onSubmit={handleUpdateAsset}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        title="Delete Asset"
+        message={`Are you sure you want to delete "${deletingAsset?.asset_name}"? This action cannot be undone and will also remove any related quotes.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingAsset(null);
+        }}
+        isConfirming={isDeleting}
+        variant="danger"
       />
     </section>
   );

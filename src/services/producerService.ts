@@ -228,16 +228,18 @@ export class ProducerService {
 
   /**
    * Delete an asset and all related quotes
+   * Cascade deletion: quotes are deleted first, then the asset
    */
   static async deleteAsset(assetId: string): Promise<void> {
-    // Delete quotes first
+    const supabase = await getSupabase();
+    
+    // Delete quotes first (cascade)
     await supabase
       .from('quotes')
       .delete()
       .eq('asset_id', assetId);
 
     // Delete the asset
-    const supabase = await getSupabase();
     const { error } = await supabase
       .from('assets')
       .delete()
