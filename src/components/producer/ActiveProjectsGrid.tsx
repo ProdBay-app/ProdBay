@@ -6,6 +6,7 @@ import { useNotification } from '@/hooks/useNotification';
 import ProjectCard from './ProjectCard';
 import ProjectSummaryStats, { type ProjectStats } from './ProjectSummaryStats';
 import DashboardFilterControls, { type ProjectSortOption } from './DashboardFilterControls';
+import SearchBar from '@/components/shared/SearchBar';
 import type { Project } from '@/lib/supabase';
 
 export interface ActiveProjectsGridProps {
@@ -46,6 +47,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<ProjectSortOption>('mostRecent');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Filter projects by status
   const allActiveProjects = projects.filter(p => 
@@ -56,13 +58,38 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     ['Completed', 'Cancelled'].includes(p.project_status)
   );
 
+  // Apply search filter (case-insensitive, multi-field)
+  const searchFilteredActiveProjects = useMemo(() => {
+    if (!searchQuery.trim()) return allActiveProjects;
+    
+    const query = searchQuery.toLowerCase().trim();
+    
+    return allActiveProjects.filter(project => 
+      project.project_name.toLowerCase().includes(query) ||
+      project.client_name.toLowerCase().includes(query) ||
+      project.brief_description.toLowerCase().includes(query)
+    );
+  }, [allActiveProjects, searchQuery]);
+
+  const searchFilteredArchivedProjects = useMemo(() => {
+    if (!searchQuery.trim()) return allArchivedProjects;
+    
+    const query = searchQuery.toLowerCase().trim();
+    
+    return allArchivedProjects.filter(project => 
+      project.project_name.toLowerCase().includes(query) ||
+      project.client_name.toLowerCase().includes(query) ||
+      project.brief_description.toLowerCase().includes(query)
+    );
+  }, [allArchivedProjects, searchQuery]);
+
   // Sort active projects based on selected option (only when in dashboard mode)
   const sortedActiveProjects = useMemo(() => {
-    // If not in dashboard mode (no limit), return unsorted array
-    if (!projectLimit) return allActiveProjects;
+    // If not in dashboard mode (no limit), return search-filtered array unsorted
+    if (!projectLimit) return searchFilteredActiveProjects;
     
     // Create a copy to avoid mutating the original array
-    const sorted = [...allActiveProjects];
+    const sorted = [...searchFilteredActiveProjects];
     
     switch (sortBy) {
       case 'mostRecent':
@@ -86,16 +113,16 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     }
     
     return sorted;
-  }, [allActiveProjects, sortBy, projectLimit]);
+  }, [searchFilteredActiveProjects, sortBy, projectLimit]);
 
   // Apply limits if specified (for dashboard view)
   const activeProjects = projectLimit 
     ? sortedActiveProjects.slice(0, projectLimit)
-    : allActiveProjects;
+    : searchFilteredActiveProjects;
   
   const archivedProjects = projectLimit 
     ? allArchivedProjects.slice(0, 3) // Always limit to 3 on dashboard
-    : allArchivedProjects;
+    : searchFilteredArchivedProjects;
 
   // Track if there are more projects than displayed
   const hasMoreActive = projectLimit && sortedActiveProjects.length > projectLimit;
@@ -203,7 +230,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       {/* Header Section */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 {projectLimit ? 'Dashboard' : 'Projects'}
@@ -223,6 +250,15 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
               New Project
             </button>
           </div>
+          
+          {/* Search Bar - only show on All Projects page */}
+          {!projectLimit && (
+            <SearchBar 
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search by project name, client, or keywords..."
+            />
+          )}
         </div>
       </div>
 
@@ -253,15 +289,34 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
           {activeProjects.length === 0 ? (
             <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
               <FolderOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No active projects</h3>
-              <p className="text-gray-600 mb-4">Get started by creating your first project</p>
-              <button
-                onClick={handleCreateProject}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                Create Project
-              </button>
+              {searchQuery ? (
+                <>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    No active projects found
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    No active projects match "<span className="font-medium">{searchQuery}</span>"
+                  </p>
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Clear Search
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No active projects</h3>
+                  <p className="text-gray-600 mb-4">Get started by creating your first project</p>
+                  <button
+                    onClick={handleCreateProject}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Create Project
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <>
@@ -292,7 +347,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         </section>
 
         {/* Archived Projects Section */}
-        {archivedProjects.length > 0 && (
+        {(archivedProjects.length > 0 || (!projectLimit && searchQuery)) && (
           <section>
             <div className="flex items-center gap-2 mb-6">
               <Archive className="w-6 h-6 text-gray-600" />
@@ -302,30 +357,42 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
               </span>
             </div>
 
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {archivedProjects.map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    onClick={handleProjectClick}
-                  />
-                ))}
+            {archivedProjects.length === 0 && searchQuery ? (
+              <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
+                <Archive className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No archived projects found
+                </h3>
+                <p className="text-gray-600">
+                  No archived projects match "<span className="font-medium">{searchQuery}</span>"
+                </p>
               </div>
-              
-              {/* View All link when archived projects are limited */}
-              {hasMoreArchived && (
-                <div className="mt-6 text-center">
-                  <Link
-                    to="/producer/projects"
-                    className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-700 font-medium transition-colors"
-                  >
-                    View All {allArchivedProjects.length} Archived Projects
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {archivedProjects.map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      project={project}
+                      onClick={handleProjectClick}
+                    />
+                  ))}
                 </div>
-              )}
-            </>
+                
+                {/* View All link when archived projects are limited */}
+                {hasMoreArchived && (
+                  <div className="mt-6 text-center">
+                    <Link
+                      to="/producer/projects"
+                      className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-700 font-medium transition-colors"
+                    >
+                      View All {allArchivedProjects.length} Archived Projects
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
           </section>
         )}
       </div>
