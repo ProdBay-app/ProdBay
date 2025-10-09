@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Plus, FolderOpen, Archive, ArrowRight } from 'lucide-react';
-import { ProducerService } from '@/services/producerService';
+import { ProducerService, type ProjectFormData } from '@/services/producerService';
+import { RailwayApiService } from '@/services/railwayApiService';
 import { useNotification } from '@/hooks/useNotification';
 import ProjectCard from './ProjectCard';
 import ProjectSummaryStats, { type ProjectStats } from './ProjectSummaryStats';
@@ -9,6 +10,7 @@ import DashboardFilterControls, { type ProjectSortOption } from './DashboardFilt
 import SearchBar from '@/components/shared/SearchBar';
 import StatusFilter from '@/components/shared/StatusFilter';
 import SortControl from '@/components/shared/SortControl';
+import ProjectModal from './ProjectModal';
 import type { Project } from '@/lib/supabase';
 
 export interface ActiveProjectsGridProps {
@@ -42,15 +44,30 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   showStats = true 
 }) => {
   const navigate = useNavigate();
-  const { showError } = useNotification();
+  const location = useLocation();
+  const { showError, showSuccess, showWarning } = useNotification();
   
-  // State management
+  // State management - Projects list
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<ProjectSortOption>('mostRecent');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  
+  // State management - Project creation modal
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [isSubmittingProject, setIsSubmittingProject] = useState(false);
+  const [projectForm, setProjectForm] = useState<ProjectFormData>({
+    project_name: '',
+    client_name: '',
+    brief_description: '',
+    physical_parameters: '',
+    financial_parameters: undefined,
+    timeline_deadline: ''
+  });
+  const [allocationMethod, setAllocationMethod] = useState<'static' | 'ai'>('static');
 
   // Filter projects by status group (active vs archived)
   const allActiveProjects = projects.filter(p => 
@@ -229,16 +246,168 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     loadProjects();
   }, [loadProjects]);
 
+  // Handle navigation state - open modal if requested via navigation
+  useEffect(() => {
+    const state = location.state as { openCreateProjectModal?: boolean } | null;
+    
+    // Only trigger if the flag is present and modal is not already open
+    if (state?.openCreateProjectModal && !showProjectModal) {
+      // Initialize the form for creating a new project
+      setIsEditingProject(false);
+      setProjectForm({
+        project_name: '',
+        client_name: '',
+        brief_description: '',
+        physical_parameters: '',
+        financial_parameters: undefined,
+        timeline_deadline: ''
+      });
+      setAllocationMethod('static');
+      setShowProjectModal(true);
+      
+      // Clear the navigation state to prevent re-opening modal on subsequent renders
+      // We use replace to avoid adding to browser history
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, showProjectModal, navigate]);
+
   // Handle project card click - navigate to project detail page
   const handleProjectClick = useCallback((project: Project) => {
     // Navigate to the dedicated project detail page
     navigate(`/producer/projects/${project.id}`);
   }, [navigate]);
 
-  // Handle create new project
-  const handleCreateProject = useCallback(() => {
-    navigate('/producer', { state: { openCreateProjectModal: true } });
-  }, [navigate]);
+  // ========================================
+  // PROJECT MODAL HANDLERS
+  // ========================================
+
+  /**
+   * Opens the project creation modal with a clean form state.
+   * This is called when user clicks "New Project" button.
+   */
+  const openCreateProject = useCallback(() => {
+    setIsEditingProject(false);
+    setProjectForm({
+      project_name: '',
+      client_name: '',
+      brief_description: '',
+      physical_parameters: '',
+      financial_parameters: undefined,
+      timeline_deadline: ''
+    });
+    setAllocationMethod('static');
+    setShowProjectModal(true);
+  }, []);
+
+  /**
+   * Closes the project modal and resets all related state.
+   * Cleans up form data and submission states to prevent stale data.
+   */
+  const closeProjectModal = useCallback(() => {
+    setShowProjectModal(false);
+    setIsEditingProject(false);
+    setIsSubmittingProject(false);
+    // Optional: Reset form to prevent showing old data if modal reopens
+    setProjectForm({
+      project_name: '',
+      client_name: '',
+      brief_description: '',
+      physical_parameters: '',
+      financial_parameters: undefined,
+      timeline_deadline: ''
+    });
+  }, []);
+
+  /**
+   * Updates a single field in the project form.
+   * Handles special case for financial_parameters which needs number conversion.
+   * 
+   * @param field - The field name to update
+   * @param value - The new value (string, number, or undefined)
+   */
+  const updateProjectForm = useCallback((field: keyof ProjectFormData, value: string | number | undefined) => {
+    setProjectForm(prev => ({
+      ...prev,
+      [field]: field === 'financial_parameters' 
+        ? (value === '' ? undefined : Number(value))
+        : value
+    }));
+  }, []);
+
+  /**
+   * Handles project form submission (create new project).
+   * 
+   * Flow:
+   * 1. Creates project in Supabase
+   * 2. If brief is provided, sends to Railway API for processing
+   * 3. Railway API creates assets based on allocation method (static or AI)
+   * 4. Refreshes project list and closes modal
+   * 
+   * @param e - Form submit event
+   */
+  const submitProjectForm = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingProject(true);
+    
+    try {
+      // Step 1: Create the project in Supabase
+      const createdProject = await ProducerService.createProject(projectForm);
+      
+      // Step 2: Process the brief if provided (optional but recommended)
+      if (projectForm.brief_description.trim()) {
+        try {
+          const briefResult = await RailwayApiService.processBrief(
+            createdProject.id,
+            projectForm.brief_description,
+            {
+              allocationMethod: allocationMethod,
+              projectContext: {
+                financial_parameters: projectForm.financial_parameters,
+                timeline_deadline: projectForm.timeline_deadline,
+                physical_parameters: projectForm.physical_parameters
+              }
+            }
+          );
+          
+          // Check if brief processing succeeded
+          if (!briefResult.success) {
+            console.warn('Brief processing failed:', briefResult.error?.message);
+            showWarning(
+              `Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`
+            );
+          } else {
+            // Success! Show how many assets were created
+            const assetCount = briefResult.data?.createdAssets?.length || 0;
+            const methodText = allocationMethod === 'ai' ? 'AI-powered' : 'static';
+            showSuccess(
+              `Project created successfully! ${assetCount} asset${assetCount !== 1 ? 's' : ''} ${assetCount > 0 ? 'were' : 'was'} automatically generated using ${methodText} allocation.`,
+              { duration: 6000 }
+            );
+          }
+        } catch (briefError) {
+          // Brief processing failed but project was created
+          console.error('Brief processing error:', briefError);
+          showWarning('Project created successfully, but brief processing failed. You can manually create assets later.');
+        }
+      } else {
+        // No brief provided - just confirm project creation
+        showSuccess('Project created successfully! You can now add assets manually.');
+      }
+      
+      // Step 3: Refresh the projects list to show the new project
+      await loadProjects();
+      
+      // Step 4: Close the modal
+      closeProjectModal();
+      
+    } catch (err) {
+      // Failed to create project in Supabase
+      console.error('Failed to create project:', err);
+      showError('Failed to create project. Please try again.');
+    } finally {
+      setIsSubmittingProject(false);
+    }
+  }, [projectForm, allocationMethod, loadProjects, closeProjectModal, showSuccess, showWarning, showError]);
 
   // Loading state
   if (loading) {
@@ -288,7 +457,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
               </p>
             </div>
             <button
-              onClick={handleCreateProject}
+              onClick={openCreateProject}
               className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
             >
               <Plus className="w-5 h-5" />
@@ -384,7 +553,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No active projects</h3>
                   <p className="text-gray-600 mb-4">Get started by creating your first project</p>
                   <button
-                    onClick={handleCreateProject}
+                    onClick={openCreateProject}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
                   >
                     <Plus className="w-5 h-5" />
@@ -477,6 +646,19 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
           </section>
         )}
       </div>
+
+      {/* Project Creation Modal */}
+      <ProjectModal
+        isOpen={showProjectModal}
+        isEditing={isEditingProject}
+        isSubmitting={isSubmittingProject}
+        projectForm={projectForm}
+        allocationMethod={allocationMethod}
+        onClose={closeProjectModal}
+        onSubmit={submitProjectForm}
+        onFormChange={updateProjectForm}
+        onAllocationMethodChange={setAllocationMethod}
+      />
     </div>
   );
 };
