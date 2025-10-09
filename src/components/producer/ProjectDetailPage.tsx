@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
+import AssetList from './AssetList';
 import type { Project } from '@/lib/supabase';
 
 /**
@@ -265,15 +266,8 @@ const ProjectDetailPage: React.FC = () => {
               </div>
             </section>
 
-            {/* Assets Placeholder */}
-            <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Assets</h2>
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <p className="text-gray-600">
-                  Asset management coming soon...
-                </p>
-              </div>
-            </section>
+            {/* Assets Section - Kanban Board */}
+            <AssetList projectId={project.id} />
           </div>
 
           {/* RIGHT COLUMN - Brief */}

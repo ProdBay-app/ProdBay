@@ -161,10 +161,19 @@ export class ProducerService {
         *,
         assigned_supplier:suppliers(*)
       `)
-      .eq('project_id', projectId);
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true });
 
     if (error) throw error;
     return (data || []) as unknown as Asset[];
+  }
+
+  /**
+   * Get assets for a specific project (semantic alias for loadProjectAssets)
+   * Used primarily by the Project Detail Page for clarity and consistency
+   */
+  static async getAssetsByProjectId(projectId: string): Promise<Asset[]> {
+    return this.loadProjectAssets(projectId);
   }
 
   /**

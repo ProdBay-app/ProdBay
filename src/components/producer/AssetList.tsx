@@ -1,0 +1,207 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { Package, AlertCircle } from 'lucide-react';
+import { ProducerService } from '@/services/producerService';
+import { useNotification } from '@/hooks/useNotification';
+import AssetCard from './AssetCard';
+import type { Asset, AssetStatus } from '@/types/database';
+
+interface AssetListProps {
+  projectId: string;
+}
+
+/**
+ * AssetList - Container component for displaying assets in a Kanban board layout
+ * 
+ * Features:
+ * - Fetches assets for a specific project
+ * - Groups assets by status into Kanban columns
+ * - Horizontal scrolling layout with vertical status columns
+ * - Loading and error state handling
+ * - Empty state when no assets exist
+ */
+const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
+  const { showError } = useNotification();
+
+  // State management
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Define the status order for Kanban columns (workflow order)
+  const statusOrder: AssetStatus[] = [
+    'Pending',
+    'Quoting',
+    'Approved',
+    'In Production',
+    'Delivered'
+  ];
+
+  // Get display color for each status column header
+  const getStatusHeaderColor = (status: AssetStatus): string => {
+    switch (status) {
+      case 'Pending':
+        return 'text-slate-700 bg-slate-50 border-slate-200';
+      case 'Quoting':
+        return 'text-amber-700 bg-amber-50 border-amber-200';
+      case 'Approved':
+        return 'text-green-700 bg-green-50 border-green-200';
+      case 'In Production':
+        return 'text-blue-700 bg-blue-50 border-blue-200';
+      case 'Delivered':
+        return 'text-purple-700 bg-purple-50 border-purple-200';
+      default:
+        return 'text-gray-700 bg-gray-50 border-gray-200';
+    }
+  };
+
+  // Fetch assets from the backend
+  useEffect(() => {
+    const fetchAssets = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const assetData = await ProducerService.getAssetsByProjectId(projectId);
+        setAssets(assetData);
+      } catch (err) {
+        console.error('Error fetching assets:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load assets';
+        setError(errorMessage);
+        showError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAssets();
+  }, [projectId, showError]);
+
+  // Group assets by status
+  const groupedAssets = useMemo(() => {
+    const groups: Record<AssetStatus, Asset[]> = {
+      'Pending': [],
+      'Quoting': [],
+      'Approved': [],
+      'In Production': [],
+      'Delivered': []
+    };
+
+    assets.forEach(asset => {
+      if (groups[asset.status]) {
+        groups[asset.status].push(asset);
+      }
+    });
+
+    return groups;
+  }, [assets]);
+
+  // Filter out empty status groups for display
+  const activeStatuses = useMemo(() => {
+    return statusOrder.filter(status => groupedAssets[status].length > 0);
+  }, [groupedAssets]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Assets</h2>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading assets...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Assets</h2>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="bg-red-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <p className="text-red-600 font-semibold mb-2">Error loading assets</p>
+            <p className="text-gray-600 text-sm">{error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Empty state - no assets
+  if (assets.length === 0) {
+    return (
+      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Assets</h2>
+        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No assets yet</h3>
+          <p className="text-gray-600">
+            Assets will appear here once they are created for this project.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  // Main Kanban board display
+  return (
+    <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      {/* Section Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Package className="w-6 h-6 text-purple-600" />
+          <h2 className="text-2xl font-bold text-gray-900">Assets</h2>
+          <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">
+            {assets.length}
+          </span>
+        </div>
+      </div>
+
+      {/* Kanban Board - Horizontal Scrolling Container */}
+      <div className="overflow-x-auto -mx-6 px-6 pb-4">
+        <div className="flex gap-6 min-w-max">
+          {/* Render each status column */}
+          {activeStatuses.map((status) => {
+            const assetsInStatus = groupedAssets[status];
+            
+            return (
+              <div
+                key={status}
+                className="flex-shrink-0 w-80"
+              >
+                {/* Column Header */}
+                <div className={`rounded-lg border px-4 py-3 mb-4 ${getStatusHeaderColor(status)}`}>
+                  <h3 className="font-semibold text-sm">
+                    {status} ({assetsInStatus.length})
+                  </h3>
+                </div>
+
+                {/* Column Content - Vertical Stack of Asset Cards */}
+                <div className="space-y-3">
+                  {assetsInStatus.map((asset) => (
+                    <AssetCard key={asset.id} asset={asset} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Scroll hint for users (only show if there are multiple columns) */}
+      {activeStatuses.length > 1 && (
+        <div className="mt-4 text-center text-sm text-gray-500">
+          ← Scroll horizontally to view all status columns →
+        </div>
+      )}
+    </section>
+  );
+};
+
+export default AssetList;
+
