@@ -1,26 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { X, Package } from 'lucide-react';
+import { X, Package, Edit } from 'lucide-react';
+import type { Asset } from '@/lib/supabase';
 
-interface AddAssetModalProps {
+interface AssetFormModalProps {
   isOpen: boolean;
   isSubmitting: boolean;
+  mode: 'create' | 'edit';
+  assetToEdit?: Asset | null;
   onClose: () => void;
   onSubmit: (assetData: { asset_name: string; specifications: string }) => void;
 }
 
 /**
- * AddAssetModal - Simplified modal for creating new assets
+ * AssetFormModal - Reusable modal for creating and editing assets
  * 
  * Features:
+ * - Dual mode: create new assets or edit existing ones
  * - Focused form with only essential fields (name + specifications)
- * - Clean, minimal design for quick asset creation
+ * - Clean, minimal design for quick operations
  * - Built-in form validation
  * - Manages its own form state
+ * - Pre-populates form when editing
  * - Resets form when closed
  */
-const AddAssetModal: React.FC<AddAssetModalProps> = ({
+const AssetFormModal: React.FC<AssetFormModalProps> = ({
   isOpen,
   isSubmitting,
+  mode,
+  assetToEdit,
   onClose,
   onSubmit
 }) => {
@@ -30,15 +37,24 @@ const AddAssetModal: React.FC<AddAssetModalProps> = ({
     specifications: ''
   });
 
-  // Reset form when modal closes
+  // Pre-populate form when editing or reset when creating
   useEffect(() => {
-    if (!isOpen) {
-      setFormData({
-        asset_name: '',
-        specifications: ''
-      });
+    if (isOpen) {
+      if (mode === 'edit' && assetToEdit) {
+        // Pre-populate with asset data
+        setFormData({
+          asset_name: assetToEdit.asset_name,
+          specifications: assetToEdit.specifications || ''
+        });
+      } else {
+        // Reset for create mode
+        setFormData({
+          asset_name: '',
+          specifications: ''
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, mode, assetToEdit]);
 
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -82,11 +98,21 @@ const AddAssetModal: React.FC<AddAssetModalProps> = ({
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-2 rounded-lg">
-              <Package className="w-6 h-6 text-white" />
+              {mode === 'edit' ? (
+                <Edit className="w-6 h-6 text-white" />
+              ) : (
+                <Package className="w-6 h-6 text-white" />
+              )}
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">Add New Asset</h3>
-              <p className="text-purple-100 text-sm">Create a new asset for this project</p>
+              <h3 className="text-xl font-bold text-white">
+                {mode === 'edit' ? 'Edit Asset' : 'Add New Asset'}
+              </h3>
+              <p className="text-purple-100 text-sm">
+                {mode === 'edit' 
+                  ? 'Update asset name and specifications' 
+                  : 'Create a new asset for this project'}
+              </p>
             </div>
           </div>
           <button
@@ -144,13 +170,24 @@ const AddAssetModal: React.FC<AddAssetModalProps> = ({
             </p>
           </div>
 
-          {/* Info Box */}
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-            <p className="text-sm text-purple-800">
-              <span className="font-semibold">Note:</span> New assets are created with a "Pending" status. 
-              You can update the status, timeline, and assign suppliers later.
-            </p>
-          </div>
+          {/* Info Box - Conditional based on mode */}
+          {mode === 'create' && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <p className="text-sm text-purple-800">
+                <span className="font-semibold">Note:</span> New assets are created with a "Pending" status. 
+                You can update the status, timeline, and assign suppliers later.
+              </p>
+            </div>
+          )}
+
+          {mode === 'edit' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <span className="font-semibold">Note:</span> This will update the asset's name and specifications. 
+                Status, timeline, and supplier assignments will remain unchanged.
+              </p>
+            </div>
+          )}
 
           {/* Form Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
@@ -170,12 +207,21 @@ const AddAssetModal: React.FC<AddAssetModalProps> = ({
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                  Creating...
+                  {mode === 'edit' ? 'Saving...' : 'Creating...'}
                 </>
               ) : (
                 <>
-                  <Package className="w-4 h-4" />
-                  Create Asset
+                  {mode === 'edit' ? (
+                    <>
+                      <Edit className="w-4 h-4" />
+                      Save Changes
+                    </>
+                  ) : (
+                    <>
+                      <Package className="w-4 h-4" />
+                      Create Asset
+                    </>
+                  )}
                 </>
               )}
             </button>
@@ -186,5 +232,6 @@ const AddAssetModal: React.FC<AddAssetModalProps> = ({
   );
 };
 
-export default AddAssetModal;
+export default AssetFormModal;
+
 

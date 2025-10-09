@@ -203,10 +203,11 @@ export class ProducerService {
 
   /**
    * Update an existing asset
+   * Returns the updated asset for immediate UI updates
    */
-  static async updateAsset(assetId: string, assetData: AssetFormData): Promise<void> {
+  static async updateAsset(assetId: string, assetData: AssetFormData): Promise<Asset> {
     const supabase = await getSupabase();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('assets')
       .update({
         asset_name: assetData.asset_name,
@@ -215,9 +216,14 @@ export class ProducerService {
         status: assetData.status,
         assigned_supplier_id: assetData.assigned_supplier_id || null
       })
-      .eq('id', assetId);
+      .eq('id', assetId)
+      .select()
+      .single();
 
     if (error) throw error;
+    if (!data) throw new Error('Failed to update asset');
+    
+    return data as unknown as Asset;
   }
 
   /**

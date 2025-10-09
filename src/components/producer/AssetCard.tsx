@@ -1,9 +1,10 @@
 import React from 'react';
-import { Calendar, FileText, Building2 } from 'lucide-react';
+import { Calendar, FileText, Building2, Edit } from 'lucide-react';
 import type { Asset } from '@/lib/supabase';
 
 interface AssetCardProps {
   asset: Asset;
+  onEdit: (asset: Asset) => void;
 }
 
 /**
@@ -15,7 +16,7 @@ interface AssetCardProps {
  * - Status badge for quick state identification
  * - Compact card format suitable for Kanban columns
  */
-const AssetCard: React.FC<AssetCardProps> = ({ asset }) => {
+const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit }) => {
   // Format the timeline date for display
   const formattedTimeline = asset.timeline
     ? new Date(asset.timeline).toLocaleDateString('en-US', {
@@ -44,9 +45,21 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] p-4 text-white">
+    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] p-4 text-white relative group">
+      {/* Edit Button - Visible on hover */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit(asset);
+        }}
+        className="absolute top-2 right-2 p-2 bg-white/20 hover:bg-white/30 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 backdrop-blur-sm"
+        aria-label="Edit asset"
+      >
+        <Edit className="w-4 h-4 text-white" />
+      </button>
+
       {/* Asset Name */}
-      <h3 className="text-lg font-bold mb-3 line-clamp-2 min-h-[3rem]">
+      <h3 className="text-lg font-bold mb-3 line-clamp-2 min-h-[3rem] pr-10">
         {asset.asset_name}
       </h3>
 

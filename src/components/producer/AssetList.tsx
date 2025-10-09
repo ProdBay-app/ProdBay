@@ -3,7 +3,7 @@ import { Package, AlertCircle, Plus } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetCard from './AssetCard';
-import AddAssetModal from './AddAssetModal';
+import AssetFormModal from './AssetFormModal';
 import type { Asset, AssetStatus } from '@/types/database';
 
 interface AssetListProps {
@@ -29,6 +29,8 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
   const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Define the status order for Kanban columns (workflow order)
   const statusOrder: AssetStatus[] = [
@@ -100,6 +102,43 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
     } catch (err) {
       console.error('Error creating asset:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to create asset';
+      showError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle opening the edit modal
+  const handleOpenEditModal = (asset: Asset) => {
+    setEditingAsset(asset);
+    setIsEditModalOpen(true);
+  };
+
+  // Handle updating an existing asset
+  const handleUpdateAsset = async (assetData: { asset_name: string; specifications: string }) => {
+    if (!editingAsset) return;
+
+    setIsSubmitting(true);
+    try {
+      // Update asset while preserving other fields
+      const updatedAsset = await ProducerService.updateAsset(editingAsset.id, {
+        asset_name: assetData.asset_name,
+        specifications: assetData.specifications,
+        status: editingAsset.status,
+        timeline: editingAsset.timeline || '',
+        assigned_supplier_id: editingAsset.assigned_supplier_id
+      });
+
+      // Update local state by replacing the old asset with the updated one
+      setAssets(prev => prev.map(a => a.id === updatedAsset.id ? updatedAsset : a));
+
+      // Close modal and show success
+      setIsEditModalOpen(false);
+      setEditingAsset(null);
+      showSuccess(`Asset "${assetData.asset_name}" updated successfully!`);
+    } catch (err) {
+      console.error('Error updating asset:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update asset';
       showError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -224,7 +263,11 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
                 {/* Column Content - Vertical Stack of Asset Cards */}
                 <div className="space-y-3">
                   {assetsInStatus.map((asset) => (
-                    <AssetCard key={asset.id} asset={asset} />
+                    <AssetCard 
+                      key={asset.id} 
+                      asset={asset} 
+                      onEdit={handleOpenEditModal}
+                    />
                   ))}
                 </div>
               </div>
@@ -241,11 +284,25 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
       )}
 
       {/* Add Asset Modal */}
-      <AddAssetModal
+      <AssetFormModal
         isOpen={isAddModalOpen}
         isSubmitting={isSubmitting}
+        mode="create"
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleAddAsset}
+      />
+
+      {/* Edit Asset Modal */}
+      <AssetFormModal
+        isOpen={isEditModalOpen}
+        isSubmitting={isSubmitting}
+        mode="edit"
+        assetToEdit={editingAsset}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingAsset(null);
+        }}
+        onSubmit={handleUpdateAsset}
       />
     </section>
   );
