@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom';
-import { Building2, Users, Package, FileText, BarChart3 } from 'lucide-react';
+import { Building2, Users, Package, FileText, BarChart3, FolderOpen } from 'lucide-react';
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -28,7 +28,8 @@ const Layout: React.FC = () => {
     }
     if (isProducerPath) {
       return [
-        { to: '/producer/dashboard', label: 'Projects', icon: Building2 },
+        { to: '/producer/dashboard', label: 'Dashboard', icon: BarChart3 },
+        { to: '/producer/projects', label: 'Projects', icon: FolderOpen },
         { to: '/producer/suppliers', label: 'Suppliers', icon: Users }
       ];
     }

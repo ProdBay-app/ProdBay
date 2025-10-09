@@ -6,6 +6,7 @@ const briefRoutes = require('./routes/brief');
 const supplierRoutes = require('./routes/suppliers');
 const aiAllocationRoutes = require('./routes/aiAllocation');
 const quoteComparisonRoutes = require('./routes/quoteComparison');
+const pdfExtractionRoutes = require('./routes/pdfExtraction');
 const { testConnection } = require('./config/database');
 
 const app = express();
@@ -91,6 +92,7 @@ app.use('/api', briefRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api', aiAllocationRoutes);
 app.use('/api/quotes', quoteComparisonRoutes);
+app.use('/api', pdfExtractionRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -106,9 +108,11 @@ app.get('/', (req, res) => {
       'GET /api/suppliers/health': 'Supplier service health check',
       'POST /api/ai-allocate-assets': 'AI-powered asset analysis from brief',
       'POST /api/ai-create-assets': 'Create assets based on AI analysis',
+      'POST /api/ai/extract-highlights': 'AI-powered extraction of key project information from brief',
       'GET /api/ai-health': 'AI service health check',
       'GET /api/quotes/compare/:assetId': 'Get quotes for comparison',
-      'GET /api/quotes/compare/:assetId/summary': 'Get quote summary for asset'
+      'GET /api/quotes/compare/:assetId/summary': 'Get quote summary for asset',
+      'POST /api/extract-text-from-pdf': 'Extract text from uploaded PDF file'
     }
   });
 });

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Brain, Sparkles } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
+import { Upload, FileText, Loader2, CheckCircle, XCircle, Sparkles } from 'lucide-react';
 import type { ProjectFormData } from '@/services/producerService';
 
 interface ProjectModalProps {
@@ -12,6 +13,14 @@ interface ProjectModalProps {
   onSubmit: (e: React.FormEvent) => void;
   onFormChange: (field: keyof ProjectFormData, value: string | number | undefined) => void;
   onAllocationMethodChange: (method: 'static' | 'ai') => void;
+  // PDF upload props
+  onPdfUpload?: (file: File) => void;
+  isUploadingPdf?: boolean;
+  uploadError?: string | null;
+  uploadedFilename?: string | null;
+  // AI brief analysis props
+  onAnalyzeBrief?: () => void;
+  isAnalyzingBrief?: boolean;
 }
 
 const ProjectModal: React.FC<ProjectModalProps> = ({
@@ -23,7 +32,13 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   onClose,
   onSubmit,
   onFormChange,
-  onAllocationMethodChange
+  onAllocationMethodChange,
+  onPdfUpload,
+  isUploadingPdf = false,
+  uploadError = null,
+  uploadedFilename = null,
+  onAnalyzeBrief,
+  isAnalyzingBrief = false
 }) => {
   if (!isOpen) return null;
 
@@ -33,6 +48,21 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
       name === 'financial_parameters' ? (value === '' ? undefined : parseFloat(value)) : value
     );
   };
+
+  // Configure dropzone for PDF uploads
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: {
+      'application/pdf': ['.pdf']
+    },
+    maxFiles: 1,
+    maxSize: 10 * 1024 * 1024, // 10MB
+    onDrop: (acceptedFiles: File[]) => {
+      if (acceptedFiles.length > 0 && onPdfUpload) {
+        onPdfUpload(acceptedFiles[0]);
+      }
+    },
+    disabled: isUploadingPdf || !onPdfUpload
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
@@ -49,7 +79,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                Project Name *
+                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-600 animate-spin" />}
+              </label>
               <input
                 name="project_name"
                 value={projectForm.project_name}
@@ -60,7 +93,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                Client Name *
+                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-600 animate-spin" />}
+              </label>
               <input
                 name="client_name"
                 value={projectForm.client_name}
@@ -73,20 +109,105 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
           </div>
 
           <div>
-            <label className="block text.sm font-medium text-gray-700 mb-1">Project Brief *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Project Brief *</label>
+            
+            {/* PDF Upload Dropzone */}
+            {onPdfUpload && (
+              <div className="mb-3">
+                <div
+                  {...getRootProps()}
+                  className={`
+                    border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
+                    ${isDragActive ? 'border-teal-500 bg-teal-50' : 'border-gray-300 hover:border-teal-400 hover:bg-gray-50'}
+                    ${isUploadingPdf ? 'opacity-50 cursor-wait' : ''}
+                  `}
+                >
+                  <input {...getInputProps()} />
+                  
+                  {isUploadingPdf ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="w-8 h-8 text-teal-600 animate-spin" />
+                      <p className="text-sm text-gray-600">Extracting text from PDF...</p>
+                    </div>
+                  ) : uploadedFilename ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <CheckCircle className="w-8 h-8 text-green-600" />
+                      <p className="text-sm text-gray-700">
+                        <FileText className="w-4 h-4 inline mr-1" />
+                        {uploadedFilename}
+                      </p>
+                      <p className="text-xs text-gray-500">Text extracted successfully. Drop another PDF to replace.</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="w-8 h-8 text-gray-400" />
+                      <p className="text-sm text-gray-600">
+                        {isDragActive ? (
+                          <span className="text-teal-600 font-medium">Drop PDF here...</span>
+                        ) : (
+                          <>
+                            <span className="text-teal-600 font-medium">Drop a PDF brief here</span> or click to browse
+                          </>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500">PDF files up to 10MB</p>
+                    </div>
+                  )}
+                </div>
+                
+                {uploadError && (
+                  <div className="mt-2 flex items-center gap-2 text-red-600 text-sm">
+                    <XCircle className="w-4 h-4" />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <textarea
               name="brief_description"
               value={projectForm.brief_description}
               onChange={handleInputChange}
               required
               rows={4}
+              placeholder="Enter project brief manually or upload a PDF above..."
               className="w-full px-3 py-2 border border-gray-300 rounded"
             />
+            
+            {/* AI Analyze Brief Button */}
+            {onAnalyzeBrief && !isEditing && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={onAnalyzeBrief}
+                  disabled={isAnalyzingBrief || !projectForm.brief_description || projectForm.brief_description.trim().length === 0}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isAnalyzingBrief ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Analyzing Brief...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Analyze Brief with AI
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-gray-500 mt-1">
+                  AI will extract project name, client name, budget, deadline, and other details
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Physical Parameters</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                Physical Parameters
+                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-600 animate-spin" />}
+              </label>
               <input
                 name="physical_parameters"
                 value={projectForm.physical_parameters}
@@ -96,7 +217,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                Budget
+                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-600 animate-spin" />}
+              </label>
               <input
                 name="financial_parameters"
                 value={projectForm.financial_parameters ?? ''}
@@ -108,7 +232,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                Deadline
+                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-600 animate-spin" />}
+              </label>
               <input
                 name="timeline_deadline"
                 value={projectForm.timeline_deadline}

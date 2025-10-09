@@ -57,6 +57,14 @@ export class ProducerService {
   }
 
   /**
+   * Get a specific project by ID (semantic alias for loadProject)
+   * Used primarily by the Project Detail Page for clarity and consistency
+   */
+  static async getProjectById(projectId: string): Promise<Project | null> {
+    return this.loadProject(projectId);
+  }
+
+  /**
    * Create a new project
    */
   static async createProject(projectData: ProjectFormData): Promise<Project> {
@@ -96,6 +104,27 @@ export class ProducerService {
         physical_parameters: projectData.physical_parameters,
         financial_parameters: projectData.financial_parameters ?? null,
         timeline_deadline: projectData.timeline_deadline || null
+      })
+      .eq('id', projectId);
+
+    if (error) throw error;
+  }
+
+  /**
+   * Update only the brief fields of a project
+   * Used for in-place editing of brief description and physical parameters
+   */
+  static async updateProjectBrief(
+    projectId: string,
+    briefDescription: string,
+    physicalParameters: string
+  ): Promise<void> {
+    const supabase = await getSupabase();
+    const { error } = await supabase
+      .from('projects')
+      .update({
+        brief_description: briefDescription,
+        physical_parameters: physicalParameters
       })
       .eq('id', projectId);
 
@@ -153,18 +182,50 @@ export class ProducerService {
         *,
         assigned_supplier:suppliers(*)
       `)
-      .eq('project_id', projectId);
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true });
 
     if (error) throw error;
     return (data || []) as unknown as Asset[];
   }
 
   /**
-   * Create a new asset
+   * Get assets for a specific project (semantic alias for loadProjectAssets)
+   * Used primarily by the Project Detail Page for clarity and consistency
    */
-  static async createAsset(projectId: string, assetData: AssetFormData): Promise<void> {
+  static async getAssetsByProjectId(projectId: string): Promise<Asset[]> {
+    return this.loadProjectAssets(projectId);
+  }
+
+  /**
+   * Get a specific asset by ID with project details
+   * Used for detailed asset views and quote request flows
+   */
+  static async getAssetById(assetId: string): Promise<Asset> {
     const supabase = await getSupabase();
-    const { error } = await supabase
+    const { data, error } = await supabase
+      .from('assets')
+      .select(`
+        *,
+        project:projects(*),
+        assigned_supplier:suppliers(*)
+      `)
+      .eq('id', assetId)
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Asset not found');
+    
+    return data as unknown as Asset;
+  }
+
+  /**
+   * Create a new asset
+   * Returns the newly created asset for immediate UI updates
+   */
+  static async createAsset(projectId: string, assetData: AssetFormData): Promise<Asset> {
+    const supabase = await getSupabase();
+    const { data, error } = await supabase
       .from('assets')
       .insert({
         project_id: projectId,
@@ -173,17 +234,23 @@ export class ProducerService {
         timeline: assetData.timeline || null,
         status: assetData.status,
         assigned_supplier_id: assetData.assigned_supplier_id || null
-      });
+      })
+      .select()
+      .single();
 
     if (error) throw error;
+    if (!data) throw new Error('Failed to create asset');
+    
+    return data as unknown as Asset;
   }
 
   /**
    * Update an existing asset
+   * Returns the updated asset for immediate UI updates
    */
-  static async updateAsset(assetId: string, assetData: AssetFormData): Promise<void> {
+  static async updateAsset(assetId: string, assetData: AssetFormData): Promise<Asset> {
     const supabase = await getSupabase();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('assets')
       .update({
         asset_name: assetData.asset_name,
@@ -192,23 +259,30 @@ export class ProducerService {
         status: assetData.status,
         assigned_supplier_id: assetData.assigned_supplier_id || null
       })
-      .eq('id', assetId);
+      .eq('id', assetId)
+      .select()
+      .single();
 
     if (error) throw error;
+    if (!data) throw new Error('Failed to update asset');
+    
+    return data as unknown as Asset;
   }
 
   /**
    * Delete an asset and all related quotes
+   * Cascade deletion: quotes are deleted first, then the asset
    */
   static async deleteAsset(assetId: string): Promise<void> {
-    // Delete quotes first
+    const supabase = await getSupabase();
+    
+    // Delete quotes first (cascade)
     await supabase
       .from('quotes')
       .delete()
       .eq('asset_id', assetId);
 
     // Delete the asset
-    const supabase = await getSupabase();
     const { error } = await supabase
       .from('assets')
       .delete()
@@ -266,6 +340,50 @@ export class ProducerService {
 
     if (error) throw error;
     return (data || []) as unknown as Supplier[];
+  }
+
+  /**
+   * Get all quotes for a specific asset with populated supplier data
+   */
+  static async getQuotesForAsset(assetId: string): Promise<Quote[]> {
+    const supabase = await getSupabase();
+    const { data, error } = await supabase
+      .from('quotes')
+      .select(`
+        *,
+        supplier:suppliers(*)
+      `)
+      .eq('asset_id', assetId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []) as unknown as Quote[];
+  }
+
+  /**
+   * Request a quote from a supplier for an asset
+   * Creates a new quote record with 'Pending' status
+   */
+  static async requestQuote(assetId: string, supplierId: string): Promise<Quote> {
+    const supabase = await getSupabase();
+    const { data, error } = await supabase
+      .from('quotes')
+      .insert({
+        asset_id: assetId,
+        supplier_id: supplierId,
+        cost: 0,
+        notes_capacity: '',
+        status: 'Pending'
+      })
+      .select(`
+        *,
+        supplier:suppliers(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Failed to create quote request');
+    return data as unknown as Quote;
   }
 
   // ===== SETTINGS OPERATIONS =====
