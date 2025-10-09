@@ -1,4 +1,4 @@
-/**
+/** 
  * AI Allocation Service
  * Handles communication with Railway backend for AI-powered allocation features
  */

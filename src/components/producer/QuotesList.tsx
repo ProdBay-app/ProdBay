@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Building2, Mail, DollarSign, Plus, Clock, AlertCircle, Loader2 } from 'lucide-react';
+import { FileText, Building2, Mail, DollarSign, Plus, Clock, AlertCircle, Loader2, BarChart3 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import EnhancedRequestQuoteFlow from './EnhancedRequestQuoteFlow';
+import QuoteComparisonModal from './QuoteComparisonModal';
 import type { Quote, Asset } from '@/lib/supabase';
 
 interface QuotesListProps {
@@ -29,6 +30,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [asset, setAsset] = useState<Asset | null>(null);
 
   // Fetch quotes and asset on component mount
@@ -68,6 +70,17 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
     // Add new quotes to the list (optimistic update)
     setQuotes(prev => [...newQuotes, ...prev]);
   };
+
+  // Handle quote updates from comparison modal (accepts/rejects)
+  const handleQuoteUpdate = () => {
+    // Refresh quotes list after accept/reject actions
+    fetchQuotes();
+  };
+
+  // Check if we have multiple submitted quotes (for comparison button)
+  const hasMultipleSubmittedQuotes = quotes.filter(
+    q => q.status === 'Submitted' && q.cost > 0
+  ).length > 1;
 
   // Get status badge styling
   const getStatusBadge = (quote: Quote) => {
@@ -168,14 +181,28 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
           )}
         </div>
 
-        {/* Request Quote Button */}
-        <button
-          onClick={() => setIsRequestModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Request Quote
-        </button>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Compare Quotes Button - Only show when multiple submitted quotes exist */}
+          {hasMultipleSubmittedQuotes && (
+            <button
+              onClick={() => setIsComparisonModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium text-sm"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Compare Quotes
+            </button>
+          )}
+
+          {/* Request Quote Button */}
+          <button
+            onClick={() => setIsRequestModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Request Quote
+          </button>
+        </div>
       </div>
 
       {/* Quotes List */}
@@ -285,6 +312,14 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
         existingQuotes={quotes}
         onClose={() => setIsRequestModalOpen(false)}
         onQuotesRequested={handleQuotesRequested}
+      />
+
+      {/* Quote Comparison Modal */}
+      <QuoteComparisonModal
+        isOpen={isComparisonModalOpen}
+        assetId={assetId}
+        onClose={() => setIsComparisonModalOpen(false)}
+        onQuoteUpdate={handleQuoteUpdate}
       />
     </>
   );
