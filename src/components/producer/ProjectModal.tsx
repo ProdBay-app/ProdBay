@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Upload, FileText, Loader2, CheckCircle, XCircle, Sparkles } from 'lucide-react';
 import type { ProjectFormData } from '@/services/producerService';
 
 interface ProjectModalProps {
@@ -18,6 +18,9 @@ interface ProjectModalProps {
   isUploadingPdf?: boolean;
   uploadError?: string | null;
   uploadedFilename?: string | null;
+  // AI brief analysis props
+  onAnalyzeBrief?: () => void;
+  isAnalyzingBrief?: boolean;
 }
 
 const ProjectModal: React.FC<ProjectModalProps> = ({
@@ -33,7 +36,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   onPdfUpload,
   isUploadingPdf = false,
   uploadError = null,
-  uploadedFilename = null
+  uploadedFilename = null,
+  onAnalyzeBrief,
+  isAnalyzingBrief = false
 }) => {
   if (!isOpen) return null;
 
@@ -74,7 +79,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                Project Name *
+                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-600 animate-spin" />}
+              </label>
               <input
                 name="project_name"
                 value={projectForm.project_name}
@@ -85,7 +93,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                Client Name *
+                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-600 animate-spin" />}
+              </label>
               <input
                 name="client_name"
                 value={projectForm.client_name}
@@ -162,11 +173,41 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               placeholder="Enter project brief manually or upload a PDF above..."
               className="w-full px-3 py-2 border border-gray-300 rounded"
             />
+            
+            {/* AI Analyze Brief Button */}
+            {onAnalyzeBrief && !isEditing && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={onAnalyzeBrief}
+                  disabled={isAnalyzingBrief || !projectForm.brief_description || projectForm.brief_description.trim().length === 0}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isAnalyzingBrief ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Analyzing Brief...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Analyze Brief with AI
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-gray-500 mt-1">
+                  AI will extract project name, client name, budget, deadline, and other details
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Physical Parameters</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                Physical Parameters
+                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-600 animate-spin" />}
+              </label>
               <input
                 name="physical_parameters"
                 value={projectForm.physical_parameters}
@@ -176,7 +217,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                Budget
+                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-600 animate-spin" />}
+              </label>
               <input
                 name="financial_parameters"
                 value={projectForm.financial_parameters ?? ''}
@@ -188,7 +232,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
+                Deadline
+                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-600 animate-spin" />}
+              </label>
               <input
                 name="timeline_deadline"
                 value={projectForm.timeline_deadline}

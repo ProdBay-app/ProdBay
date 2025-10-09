@@ -73,6 +73,9 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadedFilename, setUploadedFilename] = useState<string | null>(null);
+  
+  // State management - AI brief analysis
+  const [isAnalyzingBrief, setIsAnalyzingBrief] = useState(false);
 
   // Filter projects by status group (active vs archived)
   const allActiveProjects = projects.filter(p => 
@@ -403,6 +406,97 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   }, [updateProjectForm, showSuccess, showError]);
 
   /**
+   * Handles AI-powered brief analysis to extract project highlights.
+   * 
+   * Flow:
+   * 1. Sends brief text to Railway AI endpoint
+   * 2. AI analyzes and extracts: project name, client name, budget, deadline, physical parameters
+   * 3. Auto-populates form fields with extracted data
+   * 4. Shows success/error notifications
+   */
+  const handleAnalyzeBrief = useCallback(async () => {
+    // Validate that there's a brief to analyze
+    if (!projectForm.brief_description || projectForm.brief_description.trim().length === 0) {
+      showWarning('Please enter a project brief first');
+      return;
+    }
+
+    setIsAnalyzingBrief(true);
+    
+    try {
+      // Get Railway backend URL from environment
+      const railwayUrl = import.meta.env.VITE_RAILWAY_API_URL || 'http://localhost:3000';
+      
+      // Send brief to AI endpoint
+      const response = await fetch(`${railwayUrl}/api/ai/extract-highlights`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          briefText: projectForm.brief_description
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Failed to analyze brief');
+      }
+      
+      // Extract the highlights from the response
+      const highlights = result.data;
+      
+      if (!highlights) {
+        throw new Error('No highlights were extracted from the brief');
+      }
+      
+      // Count how many fields we're populating
+      let populatedCount = 0;
+      
+      // Update form fields with extracted data (only if not null)
+      if (highlights.projectName) {
+        updateProjectForm('project_name', highlights.projectName);
+        populatedCount++;
+      }
+      
+      if (highlights.clientName) {
+        updateProjectForm('client_name', highlights.clientName);
+        populatedCount++;
+      }
+      
+      if (highlights.budget !== null && highlights.budget !== undefined) {
+        updateProjectForm('financial_parameters', highlights.budget);
+        populatedCount++;
+      }
+      
+      if (highlights.deadline) {
+        updateProjectForm('timeline_deadline', highlights.deadline);
+        populatedCount++;
+      }
+      
+      if (highlights.physicalParameters) {
+        updateProjectForm('physical_parameters', highlights.physicalParameters);
+        populatedCount++;
+      }
+      
+      // Show success message
+      if (populatedCount > 0) {
+        showSuccess(`AI analysis complete! ${populatedCount} field${populatedCount !== 1 ? 's' : ''} auto-populated.`);
+      } else {
+        showWarning('AI analysis complete, but no specific information could be extracted. Please fill in the fields manually.');
+      }
+      
+    } catch (error) {
+      console.error('AI brief analysis error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze brief';
+      showError(errorMessage);
+    } finally {
+      setIsAnalyzingBrief(false);
+    }
+  }, [projectForm.brief_description, updateProjectForm, showSuccess, showWarning, showError]);
+
+  /**
    * Handles project form submission (create new project).
    * 
    * Flow:
@@ -730,6 +824,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         isUploadingPdf={isUploadingPdf}
         uploadError={uploadError}
         uploadedFilename={uploadedFilename}
+        onAnalyzeBrief={handleAnalyzeBrief}
+        isAnalyzingBrief={isAnalyzingBrief}
       />
     </div>
   );

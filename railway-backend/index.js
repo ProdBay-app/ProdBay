@@ -108,6 +108,7 @@ app.get('/', (req, res) => {
       'GET /api/suppliers/health': 'Supplier service health check',
       'POST /api/ai-allocate-assets': 'AI-powered asset analysis from brief',
       'POST /api/ai-create-assets': 'Create assets based on AI analysis',
+      'POST /api/ai/extract-highlights': 'AI-powered extraction of key project information from brief',
       'GET /api/ai-health': 'AI service health check',
       'GET /api/quotes/compare/:assetId': 'Get quotes for comparison',
       'GET /api/quotes/compare/:assetId/summary': 'Get quote summary for asset',

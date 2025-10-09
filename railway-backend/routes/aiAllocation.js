@@ -1,10 +1,12 @@
 const express = require('express');
 const AIAllocationService = require('../services/aiAllocationService');
+const BriefHighlightService = require('../services/briefHighlightService');
 const { supabase } = require('../config/database');
 const router = express.Router();
 
-// Initialize AI service
+// Initialize AI services
 const aiService = new AIAllocationService();
+const highlightService = new BriefHighlightService();
 
 /**
  * POST /api/ai-allocate-assets
@@ -238,6 +240,78 @@ router.get('/ai-health', async (req, res) => {
       error: {
         code: 'HEALTH_CHECK_FAILED',
         message: 'AI health check failed',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }
+    });
+  }
+});
+
+/**
+ * POST /api/ai/extract-highlights
+ * Extract key project information from a brief using AI
+ */
+router.post('/ai/extract-highlights', async (req, res) => {
+  try {
+    const { briefText } = req.body;
+
+    // Validate request
+    if (!briefText || typeof briefText !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_REQUEST',
+          message: 'briefText is required and must be a string'
+        }
+      });
+    }
+
+    if (briefText.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_REQUEST',
+          message: 'briefText cannot be empty'
+        }
+      });
+    }
+
+    if (briefText.length > 10000) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_REQUEST',
+          message: 'briefText is too long (maximum 10,000 characters)'
+        }
+      });
+    }
+
+    // Extract highlights using AI
+    const result = await highlightService.extractHighlights(briefText);
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        processingTime: result.processingTime,
+        message: 'Brief highlights extracted successfully'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'AI_EXTRACTION_FAILED',
+          message: result.error.message
+        }
+      });
+    }
+
+  } catch (error) {
+    console.error('AI highlight extraction endpoint error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred during highlight extraction',
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
       }
     });
