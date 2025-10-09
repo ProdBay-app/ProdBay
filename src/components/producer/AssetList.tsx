@@ -190,6 +190,17 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
     setIsDetailModalOpen(true);
   };
 
+  // Handle asset updates from the detail modal
+  const handleAssetUpdate = (updatedAsset: Asset) => {
+    // Update the master assets array
+    setAssets(prev => prev.map(a => a.id === updatedAsset.id ? updatedAsset : a));
+    
+    // Also update viewingAsset if it's the same asset
+    if (viewingAsset?.id === updatedAsset.id) {
+      setViewingAsset(updatedAsset);
+    }
+  };
+
   // Group assets by status
   const groupedAssets = useMemo(() => {
     const groups: Record<AssetStatus, Asset[]> = {
@@ -376,6 +387,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
           setIsDetailModalOpen(false);
           setViewingAsset(null);
         }}
+        onAssetUpdate={handleAssetUpdate}
       />
     </section>
   );

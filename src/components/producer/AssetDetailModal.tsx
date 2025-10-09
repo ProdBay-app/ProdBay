@@ -1,26 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, FileText, Calendar, Building2, Clock, Package } from 'lucide-react';
+import { ProducerService } from '@/services/producerService';
+import { useNotification } from '@/hooks/useNotification';
+import StatusSelect from '@/components/shared/StatusSelect';
 import type { Asset } from '@/lib/supabase';
+import type { AssetStatus } from '@/types/database';
 
 interface AssetDetailModalProps {
   isOpen: boolean;
   asset: Asset | null;
   onClose: () => void;
+  onAssetUpdate: (updatedAsset: Asset) => void;
 }
 
 /**
- * AssetDetailModal - A comprehensive read-only modal for viewing asset details
+ * AssetDetailModal - A comprehensive interactive modal for viewing and managing asset details
  * 
  * Features:
  * - Large, focused modal for deep dive into asset information
  * - Displays all asset fields in an organized, readable format
+ * - Interactive status dropdown for changing asset workflow state
  * - Color-coded status badges matching the card design
  * - Responsive layout (full-screen on mobile, large centered on desktop)
  * - Foundation for future interactive features (quotes, activity, etc.)
  */
-const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onClose }) => {
+const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onClose, onAssetUpdate }) => {
+  const { showSuccess, showError } = useNotification();
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
   // Don't render if modal is closed or no asset is selected
   if (!isOpen || !asset) return null;
+
+  // Handle status change
+  const handleStatusChange = async (newStatus: AssetStatus) => {
+    if (!asset || newStatus === asset.status) return;
+
+    setIsUpdatingStatus(true);
+    try {
+      // Call the service to update the asset
+      const updatedAsset = await ProducerService.updateAsset(asset.id, {
+        asset_name: asset.asset_name,
+        specifications: asset.specifications || '',
+        timeline: asset.timeline || '',
+        status: newStatus,
+        assigned_supplier_id: asset.assigned_supplier_id
+      });
+
+      // Notify parent component of the update
+      onAssetUpdate(updatedAsset);
+
+      // Show success notification
+      showSuccess(`Status updated to "${newStatus}"`);
+    } catch (err) {
+      console.error('Error updating status:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update status';
+      showError(errorMessage);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   // Format dates for display
   const formattedTimeline = asset.timeline
@@ -147,14 +185,21 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     </div>
                   </div>
 
-                  {/* Status */}
+                  {/* Status - Interactive Dropdown */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Current Status
+                      Status
+                      {isUpdatingStatus && (
+                        <span className="ml-2 text-xs text-purple-600 font-normal">
+                          Updating...
+                        </span>
+                      )}
                     </label>
-                    <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                      <p className="text-gray-800 font-medium">{asset.status}</p>
-                    </div>
+                    <StatusSelect
+                      value={asset.status}
+                      onChange={handleStatusChange}
+                      disabled={isUpdatingStatus}
+                    />
                   </div>
                 </div>
               </section>
