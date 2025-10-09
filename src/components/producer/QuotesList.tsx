@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Building2, Mail, DollarSign, Plus, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
-import RequestQuoteModal from './RequestQuoteModal';
-import type { Quote } from '@/lib/supabase';
+import EnhancedRequestQuoteFlow from './EnhancedRequestQuoteFlow';
+import type { Quote, Asset } from '@/lib/supabase';
 
 interface QuotesListProps {
   assetId: string;
@@ -29,10 +29,12 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [asset, setAsset] = useState<Asset | null>(null);
 
-  // Fetch quotes on component mount
+  // Fetch quotes and asset on component mount
   useEffect(() => {
     fetchQuotes();
+    fetchAsset();
   }, [assetId]);
 
   const fetchQuotes = async () => {
@@ -51,10 +53,20 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
     }
   };
 
-  // Handle new quote request
-  const handleQuoteRequested = (newQuote: Quote) => {
-    // Add new quote to the list (optimistic update)
-    setQuotes(prev => [newQuote, ...prev]);
+  const fetchAsset = async () => {
+    try {
+      const assetData = await ProducerService.getAssetById(assetId);
+      setAsset(assetData);
+    } catch (err) {
+      console.error('Error fetching asset:', err);
+      // Non-critical, just won't have full asset details
+    }
+  };
+
+  // Handle new quote requests (now supports multiple quotes)
+  const handleQuotesRequested = (newQuotes: Quote[]) => {
+    // Add new quotes to the list (optimistic update)
+    setQuotes(prev => [...newQuotes, ...prev]);
   };
 
   // Get status badge styling
@@ -264,14 +276,15 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
         </div>
       )}
 
-      {/* Request Quote Modal */}
-      <RequestQuoteModal
+      {/* Enhanced Request Quote Flow */}
+      <EnhancedRequestQuoteFlow
         isOpen={isRequestModalOpen}
         assetId={assetId}
         assetName={assetName}
+        asset={asset}
         existingQuotes={quotes}
         onClose={() => setIsRequestModalOpen(false)}
-        onQuoteRequested={handleQuoteRequested}
+        onQuotesRequested={handleQuotesRequested}
       />
     </>
   );

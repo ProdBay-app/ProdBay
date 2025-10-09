@@ -198,6 +198,28 @@ export class ProducerService {
   }
 
   /**
+   * Get a specific asset by ID with project details
+   * Used for detailed asset views and quote request flows
+   */
+  static async getAssetById(assetId: string): Promise<Asset> {
+    const supabase = await getSupabase();
+    const { data, error } = await supabase
+      .from('assets')
+      .select(`
+        *,
+        project:projects(*),
+        assigned_supplier:suppliers(*)
+      `)
+      .eq('id', assetId)
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Asset not found');
+    
+    return data as unknown as Asset;
+  }
+
+  /**
    * Create a new asset
    * Returns the newly created asset for immediate UI updates
    */
