@@ -21,8 +21,9 @@ import ActionCounter from './widgets/ActionCounter';
 import ClientProjectsModal from './ClientProjectsModal';
 import BudgetAssetsModal from './BudgetAssetsModal';
 import MilestoneFormModal from './MilestoneFormModal';
+import AssetDetailModal from './AssetDetailModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
-import type { Project } from '@/lib/supabase';
+import type { Project, Asset } from '@/lib/supabase';
 import type { ProjectTrackingSummary, ProjectMilestone } from '@/types/database';
 import type { MilestoneFormData } from './MilestoneFormModal';
 
@@ -60,6 +61,12 @@ const ProjectDetailPage: React.FC = () => {
   const [deletingMilestone, setDeletingMilestone] = useState<ProjectMilestone | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Interactive brief state
+  const [hoveredAssetId, setHoveredAssetId] = useState<string | null>(null);
+  const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
+  const [isAssetDetailModalOpen, setIsAssetDetailModalOpen] = useState(false);
+  const [assets, setAssets] = useState<Asset[]>([]);
 
   // Fetch project data
   useEffect(() => {
@@ -119,6 +126,24 @@ const ProjectDetailPage: React.FC = () => {
     fetchTrackingSummary();
   }, [projectId]);
 
+  // Fetch assets for interactive brief
+  useEffect(() => {
+    const fetchAssets = async () => {
+      if (!projectId) return;
+
+      try {
+        const assetsData = await ProducerService.getAssetsByProjectId(projectId);
+        setAssets(assetsData);
+      } catch (err) {
+        console.error('Error fetching assets for brief:', err);
+        // Silently fail - brief will just not have interactive highlights
+        setAssets([]);
+      }
+    };
+
+    fetchAssets();
+  }, [projectId]);
+
   // Format currency
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-US', {
@@ -157,6 +182,37 @@ const ProjectDetailPage: React.FC = () => {
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
+
+  // ========================================
+  // INTERACTIVE BRIEF FUNCTIONS
+  // ========================================
+
+  /**
+   * Handle clicking on highlighted asset text in brief
+   * Opens the asset detail modal with the clicked asset
+   */
+  const handleAssetClick = (asset: Asset) => {
+    setViewingAsset(asset);
+    setIsAssetDetailModalOpen(true);
+  };
+
+  /**
+   * Handle asset updates from the detail modal
+   * Refreshes the asset in the local assets array
+   */
+  const handleAssetUpdate = (updatedAsset: Asset) => {
+    setAssets(prevAssets =>
+      prevAssets.map(a => (a.id === updatedAsset.id ? updatedAsset : a))
+    );
+    // Also update viewingAsset if it's the same asset
+    if (viewingAsset?.id === updatedAsset.id) {
+      setViewingAsset(updatedAsset);
+    }
+  };
+
+  // ========================================
+  // END INTERACTIVE BRIEF
+  // ========================================
 
   // ========================================
   // MILESTONE MANAGEMENT FUNCTIONS
@@ -492,7 +548,11 @@ const ProjectDetailPage: React.FC = () => {
           <div className={`space-y-6 ${isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
             
             {/* Assets Section - Kanban Board */}
-            <AssetList projectId={project.id} />
+            <AssetList 
+              projectId={project.id}
+              hoveredAssetId={hoveredAssetId}
+              onAssetHover={setHoveredAssetId}
+            />
           </div>
 
           {/* RIGHT COLUMN - Brief */}
@@ -511,6 +571,10 @@ const ProjectDetailPage: React.FC = () => {
                   physical_parameters: physicalParams
                 } : null);
               }}
+              assets={assets}
+              hoveredAssetId={hoveredAssetId}
+              onAssetHover={setHoveredAssetId}
+              onAssetClick={handleAssetClick}
             />
           </div>
         </div>
@@ -550,6 +614,17 @@ const ProjectDetailPage: React.FC = () => {
         title="Delete Milestone"
         message={`Are you sure you want to permanently delete the milestone "${deletingMilestone?.milestone_name}"? This action cannot be undone.`}
         variant="danger"
+      />
+
+      {/* Asset Detail Modal (for clicking highlighted brief text) */}
+      <AssetDetailModal
+        isOpen={isAssetDetailModalOpen}
+        asset={viewingAsset}
+        onClose={() => {
+          setIsAssetDetailModalOpen(false);
+          setViewingAsset(null);
+        }}
+        onAssetUpdate={handleAssetUpdate}
       />
     </>
   );
