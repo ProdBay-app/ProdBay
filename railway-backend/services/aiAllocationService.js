@@ -128,6 +128,8 @@ Additional Context:
 - Timeline: ${projectContext.timeline_deadline || 'Not specified'}
 - Physical Parameters: ${projectContext.physical_parameters || 'Not specified'}
 
+CRITICAL REQUIREMENT: For each asset you identify, you MUST extract the exact text snippet from the brief that indicates this asset is needed. This will be used to create interactive links in the UI.
+
 Respond with ONLY a JSON object in this exact format (no markdown, no code blocks):
 {
   "assets": [
@@ -135,12 +137,19 @@ Respond with ONLY a JSON object in this exact format (no markdown, no code block
       "asset_name": "Asset Name",
       "specifications": "Detailed specifications and requirements",
       "priority": "high|medium|low",
-      "estimated_cost_range": "low|medium|high"
+      "estimated_cost_range": "low|medium|high",
+      "source_text": "The exact sentence or phrase from the brief that mentions this asset requirement"
     }
   ],
   "reasoning": "Explanation of why these assets were identified",
   "confidence": 0.85
 }
+
+IMPORTANT GUIDELINES:
+- The source_text field should contain the precise text from the brief (verbatim) that led you to identify this asset
+- Extract complete sentences or meaningful phrases, not single words
+- If an asset is implied by multiple brief sections, choose the most specific/relevant excerpt
+- The source_text will be highlighted in the UI when users interact with the asset
 
 Focus on identifying:
 - Production equipment (audio, lighting, staging)

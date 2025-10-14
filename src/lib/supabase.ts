@@ -97,6 +97,7 @@ export interface Asset {
   timeline?: string;
   status: 'Pending' | 'Quoting' | 'Approved' | 'In Production' | 'Delivered';
   assigned_supplier_id?: string;
+  source_text?: string;
   created_at: string;
   updated_at: string;
   assigned_supplier?: Supplier;

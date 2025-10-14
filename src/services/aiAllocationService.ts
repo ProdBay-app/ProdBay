@@ -10,6 +10,7 @@ export interface AIAssetSuggestion {
   specifications: string;
   priority: 'high' | 'medium' | 'low';
   estimated_cost_range: 'low' | 'medium' | 'high';
+  source_text?: string;
 }
 
 
