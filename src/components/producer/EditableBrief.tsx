@@ -49,6 +49,10 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
 
   // Mode state: 'view' (default) or 'edit'
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+  
+  // Debug logging
+  console.log('[EditableBrief] Current mode:', mode);
+  console.log('[EditableBrief] Assets received:', assets);
 
   // Editing state
   const [editedBriefDescription, setEditedBriefDescription] = useState(briefDescription);
@@ -131,17 +135,49 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   };
 
   /**
+   * Normalize text for robust matching
+   * Handles whitespace differences, line breaks, and case sensitivity
+   * 
+   * Transformations applied in sequence:
+   * 1. Replace Windows line breaks (\r\n) with space
+   * 2. Replace Unix line breaks (\n) with space
+   * 3. Replace multiple consecutive spaces with single space
+   * 4. Convert to lowercase for case-insensitive matching
+   * 5. Trim leading/trailing whitespace
+   * 
+   * @param str - The text to normalize
+   * @returns Normalized text (lowercase, single spaces, trimmed)
+   */
+  const normalizeText = (str: string): string => {
+    return str
+      .replace(/\r\n/g, ' ')           // Replace Windows line breaks with space
+      .replace(/\n/g, ' ')             // Replace Unix line breaks with space
+      .replace(/\s+/g, ' ')            // Replace multiple spaces with single space
+      .toLowerCase()                   // Convert to lowercase for case-insensitive matching
+      .trim();                         // Remove leading/trailing whitespace
+  };
+
+  /**
    * Render interactive content with asset highlighting
    * Safely parses text and wraps asset source_text in interactive <mark> elements
+   * Uses normalized text matching for resilience against whitespace/case differences
    * 
    * @param text - The text to parse (briefDescription or physicalParameters)
    * @returns Array of React nodes (text strings and <mark> elements)
    */
   const renderInteractiveContent = (text: string): React.ReactNode[] => {
+    console.log('[EditableBrief] renderInteractiveContent called with text length:', text.length);
+    console.log('[EditableBrief] Assets available for highlighting:', assets);
+    
     // If no assets provided or no interactive features enabled, return plain text
     if (!assets || !onAssetClick || !onAssetHover) {
+      console.log('[EditableBrief] No assets or handlers, returning plain text');
       return [text];
     }
+
+    // Normalize the brief text for robust matching
+    const normalizedBriefText = normalizeText(text);
+    console.log('[EditableBrief] Normalized brief text (first 100 chars):', normalizedBriefText.substring(0, 100));
 
     // Build array of highlights (positions where source_text appears)
     const highlights: Array<{ start: number; end: number; asset: Asset }> = [];
@@ -149,23 +185,68 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
     assets.forEach(asset => {
       // Only process assets that have source_text
       if (asset.source_text && asset.source_text.trim()) {
-        // Find all occurrences of source_text in the text
-        const sourceText = asset.source_text;
-        let index = text.indexOf(sourceText);
-
-        // We'll only highlight the first occurrence to avoid complexity
-        if (index !== -1) {
+        const originalSourceText = asset.source_text;
+        const normalizedSourceText = normalizeText(originalSourceText);
+        
+        console.log('[EditableBrief] Asset:', asset.asset_name);
+        console.log('[EditableBrief] Original source_text:', originalSourceText);
+        console.log('[EditableBrief] Normalized source_text:', normalizedSourceText);
+        
+        // STRATEGY: Multi-pass matching for maximum resilience
+        // Pass 1: Try exact match (fastest, works if no differences)
+        let matchIndex = text.indexOf(originalSourceText);
+        let matchLength = originalSourceText.length;
+        let matchMethod = 'exact';
+        
+        // Pass 2: Try case-insensitive match (handles capitalization differences)
+        if (matchIndex === -1) {
+          matchIndex = text.toLowerCase().indexOf(originalSourceText.toLowerCase());
+          matchMethod = 'case-insensitive';
+        }
+        
+        // Pass 3: Try normalized match (handles whitespace + case differences)
+        if (matchIndex === -1) {
+          // Check if it exists in normalized form
+          const normalizedIndex = normalizedBriefText.indexOf(normalizedSourceText);
+          
+          if (normalizedIndex !== -1) {
+            // Found in normalized text! Now find it in original using fuzzy search
+            // Strategy: Search for the first few words case-insensitively
+            const firstWords = originalSourceText.split(/\s+/).slice(0, 3).join(' ');
+            matchIndex = text.toLowerCase().indexOf(firstWords.toLowerCase());
+            matchMethod = 'fuzzy';
+            
+            if (matchIndex === -1) {
+              // Last resort: Try just the first word
+              const firstWord = originalSourceText.split(/\s+/)[0];
+              if (firstWord && firstWord.length > 3) {
+                matchIndex = text.toLowerCase().indexOf(firstWord.toLowerCase());
+                matchMethod = 'first-word';
+              }
+            }
+          }
+        }
+        
+        // Log the result
+        if (matchIndex !== -1) {
+          console.log(`[EditableBrief] ✅ Match found using ${matchMethod} method at index:`, matchIndex);
           highlights.push({
-            start: index,
-            end: index + sourceText.length,
+            start: matchIndex,
+            end: matchIndex + matchLength,
             asset
           });
+        } else {
+          console.log('[EditableBrief] ⚠️ No match found after all attempts');
         }
       }
     });
 
+    console.log('[EditableBrief] Total highlights found:', highlights.length);
+    console.log('[EditableBrief] Highlight details:', highlights);
+
     // If no highlights found, return plain text
     if (highlights.length === 0) {
+      console.log('[EditableBrief] No highlights found, returning plain text');
       return [text];
     }
 

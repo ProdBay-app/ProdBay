@@ -67,8 +67,14 @@ const AssetCard: React.FC<AssetCardProps> = ({
         isHighlighted ? 'ring-4 ring-teal-400 ring-offset-2 scale-[1.05] shadow-xl' : ''
       }`}
       onClick={() => onClick(asset)}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      onMouseEnter={() => {
+        console.log('[AssetCard] Mouse enter on asset:', asset.asset_name, asset.id);
+        onMouseEnter?.();
+      }}
+      onMouseLeave={() => {
+        console.log('[AssetCard] Mouse leave on asset:', asset.asset_name, asset.id);
+        onMouseLeave?.();
+      }}
     >
       {/* Action Buttons - Visible on hover */}
       <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">

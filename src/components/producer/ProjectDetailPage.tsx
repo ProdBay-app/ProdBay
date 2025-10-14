@@ -133,6 +133,8 @@ const ProjectDetailPage: React.FC = () => {
 
       try {
         const assetsData = await ProducerService.getAssetsByProjectId(projectId);
+        console.log('[ProjectDetailPage] Fetched assets for interactive brief:', assetsData);
+        console.log('[ProjectDetailPage] Assets with source_text:', assetsData.filter(a => a.source_text));
         setAssets(assetsData);
       } catch (err) {
         console.error('Error fetching assets for brief:', err);
