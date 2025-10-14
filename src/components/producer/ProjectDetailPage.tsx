@@ -19,6 +19,7 @@ import BudgetTrackingBar from './widgets/BudgetTrackingBar';
 import TimelineWidget from './widgets/TimelineWidget';
 import ActionCounter from './widgets/ActionCounter';
 import ClientProjectsModal from './ClientProjectsModal';
+import BudgetAssetsModal from './BudgetAssetsModal';
 import type { Project } from '@/lib/supabase';
 import type { ProjectTrackingSummary } from '@/types/database';
 
@@ -46,6 +47,7 @@ const ProjectDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isBriefExpanded, setIsBriefExpanded] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
   // Fetch project data
   useEffect(() => {
@@ -316,6 +318,7 @@ const ProjectDetailPage: React.FC = () => {
               spent={trackingSummary.budget.spent}
               remaining={trackingSummary.budget.remaining}
               percentageUsed={trackingSummary.budget.percentageUsed}
+              onClick={() => setIsBudgetModalOpen(true)}
             />
             
             {/* Timeline Widget - Full Width */}
@@ -385,6 +388,13 @@ const ProjectDetailPage: React.FC = () => {
         onClose={() => setIsClientModalOpen(false)}
         clientName={project.client_name}
         currentProjectId={project.id}
+      />
+
+      {/* Budget Assets Modal */}
+      <BudgetAssetsModal
+        isOpen={isBudgetModalOpen}
+        onClose={() => setIsBudgetModalOpen(false)}
+        projectId={project.id}
       />
     </>
   );

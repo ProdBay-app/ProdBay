@@ -24,6 +24,30 @@ export interface ProducerSettings {
   from_email: string;
 }
 
+/**
+ * AssetWithAcceptedQuote Interface
+ * Represents an asset that has an accepted quote, combining data from:
+ * - Asset (name, specs, status, etc.)
+ * - Quote (cost, cost breakdown, dates)
+ * - Supplier (who provided the accepted quote)
+ */
+export interface AssetWithAcceptedQuote extends Asset {
+  acceptedQuote: {
+    id: string;
+    cost: number;
+    cost_breakdown?: {
+      labor: number;
+      materials: number;
+      equipment: number;
+      other: number;
+    };
+    notes_capacity?: string;
+    created_at: string;
+    updated_at: string;
+    supplier: Supplier;
+  };
+}
+
 export class ProducerService {
   // ===== PROJECT OPERATIONS =====
 
@@ -212,6 +236,71 @@ export class ProducerService {
    */
   static async getAssetsByProjectId(projectId: string): Promise<Asset[]> {
     return this.loadProjectAssets(projectId);
+  }
+
+  /**
+   * Get all assets with accepted quotes for a specific project
+   * Returns only assets that have at least one accepted quote
+   * Includes the accepted quote details and supplier information
+   * Used for budget breakdown modal and spending analysis
+   * 
+   * @param projectId - UUID of the project
+   * @returns Promise with array of assets that have accepted quotes
+   */
+  static async getAssetsWithAcceptedQuotes(projectId: string): Promise<AssetWithAcceptedQuote[]> {
+    const supabase = await getSupabase();
+    
+    // Query assets with INNER JOIN to quotes (filtered by status = 'Accepted')
+    // This ensures we only get assets that have an accepted quote
+    const { data, error } = await supabase
+      .from('assets')
+      .select(`
+        *,
+        quotes!inner(
+          id,
+          cost,
+          cost_breakdown,
+          notes_capacity,
+          created_at,
+          updated_at,
+          supplier:suppliers(*)
+        )
+      `)
+      .eq('project_id', projectId)
+      .eq('quotes.status', 'Accepted')
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    // Transform the data structure to match our interface
+    // Supabase returns quotes as an array, but we know each asset only has one accepted quote
+    const assetsWithAcceptedQuotes: AssetWithAcceptedQuote[] = (data || []).map((item: any) => {
+      // Extract the first (and only) accepted quote
+      const acceptedQuote = item.quotes?.[0];
+      
+      if (!acceptedQuote) {
+        throw new Error(`Asset ${item.id} returned without an accepted quote`);
+      }
+
+      // Remove the quotes array from the asset object
+      const { quotes, ...assetData } = item;
+
+      // Return the transformed object matching AssetWithAcceptedQuote interface
+      return {
+        ...assetData,
+        acceptedQuote: {
+          id: acceptedQuote.id,
+          cost: acceptedQuote.cost,
+          cost_breakdown: acceptedQuote.cost_breakdown,
+          notes_capacity: acceptedQuote.notes_capacity,
+          created_at: acceptedQuote.created_at,
+          updated_at: acceptedQuote.updated_at,
+          supplier: acceptedQuote.supplier
+        }
+      } as AssetWithAcceptedQuote;
+    });
+
+    return assetsWithAcceptedQuotes;
   }
 
   /**

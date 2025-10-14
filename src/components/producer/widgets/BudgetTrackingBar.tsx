@@ -6,6 +6,7 @@ interface BudgetTrackingBarProps {
   spent: number;
   remaining: number;
   percentageUsed: number;
+  onClick?: () => void;
 }
 
 /**
@@ -15,13 +16,26 @@ interface BudgetTrackingBarProps {
  * - Green: < 70% used (healthy)
  * - Yellow: 70-90% used (warning)
  * - Red: > 90% used (critical)
+ * 
+ * Optionally clickable to show detailed budget breakdown modal
  */
 const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
   total,
   spent,
   remaining,
-  percentageUsed
+  percentageUsed,
+  onClick
 }) => {
+  
+  const isClickable = !!onClick;
+
+  // Handle keyboard interaction for accessibility
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick();
+    }
+  };
   
   // Format currency for display
   const formatCurrency = (amount: number): string => {
@@ -74,7 +88,15 @@ const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
   const statusMessage = getStatusMessage();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div 
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all ${
+        isClickable ? 'cursor-pointer hover:shadow-lg hover:border-green-300' : ''
+      }`}
+      onClick={onClick}
+      role={isClickable ? 'button' : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      onKeyDown={handleKeyDown}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
@@ -143,6 +165,15 @@ const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
               Review expenses and consider client consultation.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Click prompt (if clickable) */}
+      {isClickable && (
+        <div className="mt-4 pt-3 border-t border-gray-100">
+          <p className="text-xs text-gray-500 font-medium text-center">
+            Click to view spending breakdown →
+          </p>
         </div>
       )}
     </div>
