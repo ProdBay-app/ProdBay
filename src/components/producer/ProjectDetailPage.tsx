@@ -236,6 +236,64 @@ const ProjectDetailPage: React.FC = () => {
       {/* Two-column layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
+        {/* Overview Section */}
+        <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Overview</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Client Name */}
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <User className="w-5 h-5 text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">Client</p>
+                <p className="text-lg font-semibold text-gray-900">{project.client_name}</p>
+              </div>
+            </div>
+
+            {/* Budget */}
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <DollarSign className="w-5 h-5 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">Budget</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {formatCurrency(project.financial_parameters ?? 0)}
+                </p>
+              </div>
+            </div>
+
+            {/* Deadline */}
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Calendar className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">Deadline</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {formatDate(project.timeline_deadline ?? null)}
+                </p>
+              </div>
+            </div>
+
+            {/* Created Date */}
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Clock className="w-5 h-5 text-gray-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">Created</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {formatDate(project.created_at)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Project Health Section - Tracking Widgets */}
         {!loadingTracking && trackingSummary && (
           <div className="mb-8 space-y-6">
@@ -285,67 +343,9 @@ const ProjectDetailPage: React.FC = () => {
         {/* Dynamic grid: 66/33 split (collapsed) or 50/50 split (expanded) */}
         <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
           
-          {/* LEFT COLUMN - Main content (Overview & Assets) */}
+          {/* LEFT COLUMN - Main content (Assets) */}
           <div className={`space-y-6 ${isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
             
-            {/* Overview Section */}
-            <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Overview</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* Client Name */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <User className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Client</p>
-                    <p className="text-lg font-semibold text-gray-900">{project.client_name}</p>
-                  </div>
-                </div>
-
-                {/* Budget */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <DollarSign className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Budget</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(project.financial_parameters ?? 0)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Deadline */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Calendar className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Deadline</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatDate(project.timeline_deadline ?? null)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Created Date */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Clock className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Created</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatDate(project.created_at)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
             {/* Assets Section - Kanban Board */}
             <AssetList projectId={project.id} />
           </div>
