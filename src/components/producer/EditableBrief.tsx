@@ -158,25 +158,43 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
    * @returns Normalized text (lowercase, standardized punctuation, single spaces, trimmed)
    */
   const normalizeText = (str: string): string => {
-    return str
-      // Normalize quotes - Convert all quote types to standard double quote
-      .replace(/['']/g, "'")           // Normalize curly single quotes to straight
-      .replace(/[""]/g, '"')           // Normalize curly double quotes to straight
-      .replace(/'/g, '"')              // Convert all single quotes to double quotes for consistency
-      // Normalize dashes
-      .replace(/—/g, '-')              // Em dash to hyphen
-      .replace(/–/g, '-')              // En dash to hyphen
-      // Normalize markdown formatting (stripped when saved to DB)
-      .replace(/\*\*/g, '')            // Remove bold markers
-      .replace(/\*/g, '')              // Remove italic markers  
-      .replace(/^#+\s+/gm, '')         // Remove markdown heading markers
-      .replace(/^[•\-\*]\s+/gm, '')    // Remove bullet point markers
-      // Normalize whitespace
-      .replace(/\r\n/g, ' ')           // Replace Windows line breaks with space
-      .replace(/\n/g, ' ')             // Replace Unix line breaks with space
-      .replace(/\s+/g, ' ')            // Replace multiple spaces with single space
-      .toLowerCase()                   // Convert to lowercase for case-insensitive matching
-      .trim();                         // Remove leading/trailing whitespace
+    let result = str;
+    
+    // Debug: Log original
+    if (result.includes('**')) {
+      console.log('[normalizeText] Input contains **: ', result);
+    }
+    
+    // Normalize quotes - Convert all quote types to standard double quote
+    result = result.replace(/['']/g, "'");           // Normalize curly single quotes to straight
+    result = result.replace(/[""]/g, '"');           // Normalize curly double quotes to straight
+    result = result.replace(/'/g, '"');              // Convert all single quotes to double quotes for consistency
+    
+    // Normalize dashes
+    result = result.replace(/—/g, '-');              // Em dash to hyphen
+    result = result.replace(/–/g, '-');              // En dash to hyphen
+    
+    // Normalize markdown formatting (stripped when saved to DB)
+    // Use explicit character codes to avoid escaping issues
+    result = result.replace(/\*\*(.+?)\*\*/g, '$1'); // Remove bold markers (capture group)
+    
+    // Debug: Log after bold removal
+    if (str.includes('**')) {
+      console.log('[normalizeText] After ** removal: ', result);
+    }
+    
+    result = result.replace(/\*/g, '');              // Remove remaining single asterisks (italic)
+    result = result.replace(/^#+\s+/gm, '');         // Remove markdown heading markers
+    result = result.replace(/^[•\-\*]\s+/gm, '');    // Remove bullet point markers
+    
+    // Normalize whitespace
+    result = result.replace(/\r\n/g, ' ');           // Replace Windows line breaks with space
+    result = result.replace(/\n/g, ' ');             // Replace Unix line breaks with space
+    result = result.replace(/\s+/g, ' ');            // Replace multiple spaces with single space
+    result = result.toLowerCase();                   // Convert to lowercase for case-insensitive matching
+    result = result.trim();                          // Remove leading/trailing whitespace
+    
+    return result;
   };
 
   /**
