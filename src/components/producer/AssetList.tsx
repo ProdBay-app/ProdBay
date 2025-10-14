@@ -11,6 +11,10 @@ import type { AssetStatus } from '@/types/database';
 
 interface AssetListProps {
   projectId: string;
+  
+  // NEW: Props for bi-directional hover linking with brief
+  hoveredAssetId?: string | null;
+  onAssetHover?: (assetId: string | null) => void;
 }
 
 /**
@@ -22,8 +26,9 @@ interface AssetListProps {
  * - Horizontal scrolling layout with vertical status columns
  * - Loading and error state handling
  * - Empty state when no assets exist
+ * - Bi-directional hover linking with project brief (highlights assets when brief text hovered)
  */
-const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
+const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAssetHover }) => {
   const { showError, showSuccess } = useNotification();
 
   // State management
@@ -325,6 +330,9 @@ const AssetList: React.FC<AssetListProps> = ({ projectId }) => {
                       onClick={handleViewAsset}
                       onEdit={handleOpenEditModal}
                       onDelete={handleOpenDeleteModal}
+                      isHighlighted={hoveredAssetId === asset.id}
+                      onMouseEnter={() => onAssetHover && onAssetHover(asset.id)}
+                      onMouseLeave={() => onAssetHover && onAssetHover(null)}
                     />
                   ))}
                 </div>

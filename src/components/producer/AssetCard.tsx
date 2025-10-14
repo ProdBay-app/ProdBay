@@ -7,6 +7,11 @@ interface AssetCardProps {
   onEdit: (asset: Asset) => void;
   onDelete: (asset: Asset) => void;
   onClick: (asset: Asset) => void;
+  
+  // NEW: Props for bi-directional hover linking with brief
+  isHighlighted?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 /**
@@ -18,8 +23,17 @@ interface AssetCardProps {
  * - Status badge for quick state identification
  * - Compact card format suitable for Kanban columns
  * - Entire card is clickable to open detail modal (except action buttons)
+ * - Bi-directional hover highlighting with project brief (highlights when source text hovered)
  */
-const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, onClick }) => {
+const AssetCard: React.FC<AssetCardProps> = ({ 
+  asset, 
+  onEdit, 
+  onDelete, 
+  onClick,
+  isHighlighted,
+  onMouseEnter,
+  onMouseLeave
+}) => {
   // Format the timeline date for display
   const formattedTimeline = asset.timeline
     ? new Date(asset.timeline).toLocaleDateString('en-US', {
@@ -49,8 +63,12 @@ const AssetCard: React.FC<AssetCardProps> = ({ asset, onEdit, onDelete, onClick 
 
   return (
     <div 
-      className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] p-4 text-white relative group cursor-pointer"
+      className={`bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] p-4 text-white relative group cursor-pointer ${
+        isHighlighted ? 'ring-4 ring-teal-400 ring-offset-2 scale-[1.05] shadow-xl' : ''
+      }`}
       onClick={() => onClick(asset)}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       {/* Action Buttons - Visible on hover */}
       <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
