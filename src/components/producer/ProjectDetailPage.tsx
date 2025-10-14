@@ -18,6 +18,7 @@ import EditableBrief from './EditableBrief';
 import BudgetTrackingBar from './widgets/BudgetTrackingBar';
 import TimelineWidget from './widgets/TimelineWidget';
 import ActionCounter from './widgets/ActionCounter';
+import ClientProjectsModal from './ClientProjectsModal';
 import type { Project } from '@/lib/supabase';
 import type { ProjectTrackingSummary } from '@/types/database';
 
@@ -44,6 +45,7 @@ const ProjectDetailPage: React.FC = () => {
   const [loadingTracking, setLoadingTracking] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBriefExpanded, setIsBriefExpanded] = useState(false);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
 
   // Fetch project data
   useEffect(() => {
@@ -249,7 +251,13 @@ const ProjectDetailPage: React.FC = () => {
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-600 mb-1">Client</p>
-                <p className="text-lg font-semibold text-gray-900">{project.client_name}</p>
+                <button
+                  onClick={() => setIsClientModalOpen(true)}
+                  className="text-lg font-semibold text-teal-600 hover:text-teal-700 hover:underline transition-colors text-left"
+                  title={`View all projects for ${project.client_name}`}
+                >
+                  {project.client_name}
+                </button>
               </div>
             </div>
 
@@ -370,6 +378,14 @@ const ProjectDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Client Projects Modal */}
+      <ClientProjectsModal
+        isOpen={isClientModalOpen}
+        onClose={() => setIsClientModalOpen(false)}
+        clientName={project.client_name}
+        currentProjectId={project.id}
+      />
     </>
   );
 };

@@ -65,6 +65,23 @@ export class ProducerService {
   }
 
   /**
+   * Get all projects for a specific client by client name
+   * Returns projects ordered by creation date (newest first)
+   * Used for the "View Client Projects" modal
+   */
+  static async getProjectsByClientName(clientName: string): Promise<Project[]> {
+    const supabase = await getSupabase();
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('client_name', clientName)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []) as unknown as Project[];
+  }
+
+  /**
    * Create a new project
    */
   static async createProject(projectData: ProjectFormData): Promise<Project> {
