@@ -1,11 +1,14 @@
 import React from 'react';
-import { Calendar, CheckCircle2, Circle, Clock, AlertTriangle } from 'lucide-react';
+import { Calendar, CheckCircle2, Circle, Clock, AlertTriangle, Plus, Edit, Trash2 } from 'lucide-react';
 import type { ProjectMilestone } from '@/types/database';
 
 interface TimelineWidgetProps {
   deadline: string | null;
   daysRemaining: number | null;
   milestones: ProjectMilestone[];
+  onAddMilestone?: () => void;
+  onEditMilestone?: (milestone: ProjectMilestone) => void;
+  onDeleteMilestone?: (milestone: ProjectMilestone) => void;
 }
 
 /**
@@ -15,11 +18,15 @@ interface TimelineWidgetProps {
  * - Completed milestones (green checkmark)
  * - Pending milestones (gray circle)
  * - Final deadline with days remaining indicator
+ * - Interactive CRUD controls for managing milestones (optional)
  */
 const TimelineWidget: React.FC<TimelineWidgetProps> = ({
   deadline,
   daysRemaining,
-  milestones
+  milestones,
+  onAddMilestone,
+  onEditMilestone,
+  onDeleteMilestone
 }) => {
   
   // Format date for display
@@ -88,16 +95,31 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
           </div>
         </div>
         
-        {/* Deadline badge */}
-        {deadline && (
-          <div className={`flex items-center gap-2 ${deadlineStatus.color}`}>
-            {deadlineStatus.icon}
-            <div className="text-right">
-              <p className="text-xs font-medium">{deadlineStatus.message}</p>
-              <p className="text-xs opacity-75">{formatDate(deadline)}</p>
+        {/* Right side: Add button and deadline badge */}
+        <div className="flex items-center gap-4">
+          {/* Add Milestone Button */}
+          {onAddMilestone && (
+            <button
+              type="button"
+              onClick={onAddMilestone}
+              className="flex items-center gap-2 px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Milestone</span>
+            </button>
+          )}
+          
+          {/* Deadline badge */}
+          {deadline && (
+            <div className={`flex items-center gap-2 ${deadlineStatus.color}`}>
+              {deadlineStatus.icon}
+              <div className="text-right">
+                <p className="text-xs font-medium">{deadlineStatus.message}</p>
+                <p className="text-xs opacity-75">{formatDate(deadline)}</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Timeline */}
@@ -114,7 +136,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
               const isPending = milestone.status === 'pending';
               
               return (
-                <div key={milestone.id} className="relative flex items-start gap-4 pl-10">
+                <div key={milestone.id} className="relative flex items-start gap-4 pl-10 group">
                   {/* Milestone icon */}
                   <div className="absolute left-0 z-10">
                     {isCompleted && (
@@ -133,6 +155,41 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
                       </div>
                     )}
                   </div>
+                  
+                  {/* Action Buttons - Visible on hover */}
+                  {(onEditMilestone || onDeleteMilestone) && (
+                    <div className="absolute top-0 right-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20">
+                      {/* Edit Button */}
+                      {onEditMilestone && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditMilestone(milestone);
+                          }}
+                          className="p-1.5 bg-white border border-gray-300 hover:bg-blue-50 hover:border-blue-500 rounded-lg transition-colors shadow-sm"
+                          aria-label="Edit milestone"
+                        >
+                          <Edit className="w-4 h-4 text-gray-700 hover:text-blue-600" />
+                        </button>
+                      )}
+                      
+                      {/* Delete Button */}
+                      {onDeleteMilestone && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteMilestone(milestone);
+                          }}
+                          className="p-1.5 bg-white border border-gray-300 hover:bg-red-50 hover:border-red-500 rounded-lg transition-colors shadow-sm"
+                          aria-label="Delete milestone"
+                        >
+                          <Trash2 className="w-4 h-4 text-gray-700 hover:text-red-600" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                   
                   {/* Milestone content */}
                   <div className="flex-1 pb-2">

@@ -20,8 +20,11 @@ import TimelineWidget from './widgets/TimelineWidget';
 import ActionCounter from './widgets/ActionCounter';
 import ClientProjectsModal from './ClientProjectsModal';
 import BudgetAssetsModal from './BudgetAssetsModal';
+import MilestoneFormModal from './MilestoneFormModal';
+import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import type { Project } from '@/lib/supabase';
-import type { ProjectTrackingSummary } from '@/types/database';
+import type { ProjectTrackingSummary, ProjectMilestone } from '@/types/database';
+import type { MilestoneFormData } from './MilestoneFormModal';
 
 /**
  * ProjectDetailPage - Comprehensive page for displaying and managing project information
@@ -37,7 +40,7 @@ import type { ProjectTrackingSummary } from '@/types/database';
 const ProjectDetailPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { showError } = useNotification();
+  const { showError, showSuccess } = useNotification();
 
   // State management
   const [project, setProject] = useState<Project | null>(null);
@@ -48,6 +51,15 @@ const ProjectDetailPage: React.FC = () => {
   const [isBriefExpanded, setIsBriefExpanded] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+
+  // Milestone management state
+  const [isMilestoneFormOpen, setIsMilestoneFormOpen] = useState(false);
+  const [milestoneFormMode, setMilestoneFormMode] = useState<'create' | 'edit'>('create');
+  const [editingMilestone, setEditingMilestone] = useState<ProjectMilestone | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingMilestone, setDeletingMilestone] = useState<ProjectMilestone | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch project data
   useEffect(() => {
@@ -145,6 +157,125 @@ const ProjectDetailPage: React.FC = () => {
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
+
+  // ========================================
+  // MILESTONE MANAGEMENT FUNCTIONS
+  // ========================================
+
+  /**
+   * Refresh tracking summary data after milestone operations
+   * Re-fetches the entire tracking summary to ensure all widgets update
+   */
+  const refreshTrackingSummary = async () => {
+    if (!projectId) return;
+    
+    try {
+      const summary = await ProjectSummaryService.getProjectTrackingSummary(projectId);
+      setTrackingSummary(summary);
+    } catch (err) {
+      console.error('Error refreshing tracking summary:', err);
+      // Don't show error to user - it's a background refresh
+    }
+  };
+
+  /**
+   * Open milestone form modal in create mode
+   */
+  const handleAddMilestoneClick = () => {
+    setMilestoneFormMode('create');
+    setEditingMilestone(null);
+    setIsMilestoneFormOpen(true);
+  };
+
+  /**
+   * Open milestone form modal in edit mode with pre-populated data
+   */
+  const handleEditMilestoneClick = (milestone: ProjectMilestone) => {
+    setMilestoneFormMode('edit');
+    setEditingMilestone(milestone);
+    setIsMilestoneFormOpen(true);
+  };
+
+  /**
+   * Open delete confirmation modal
+   */
+  const handleDeleteMilestoneClick = (milestone: ProjectMilestone) => {
+    setDeletingMilestone(milestone);
+    setIsDeleteModalOpen(true);
+  };
+
+  /**
+   * Handle milestone form submission (create or update)
+   */
+  const handleMilestoneFormSubmit = async (formData: MilestoneFormData) => {
+    if (!projectId) return;
+
+    setIsSubmitting(true);
+    try {
+      if (milestoneFormMode === 'edit' && editingMilestone) {
+        // Update existing milestone
+        await ProjectSummaryService.updateMilestone(editingMilestone.id, {
+          name: formData.milestone_name,
+          date: formData.milestone_date,
+          description: formData.description,
+          status: formData.status
+        });
+        showSuccess(`Milestone "${formData.milestone_name}" updated successfully!`);
+      } else {
+        // Create new milestone
+        await ProjectSummaryService.createMilestone(projectId, {
+          name: formData.milestone_name,
+          date: formData.milestone_date,
+          description: formData.description
+        });
+        showSuccess(`Milestone "${formData.milestone_name}" created successfully!`);
+      }
+
+      // Refresh the timeline to show updated data
+      await refreshTrackingSummary();
+
+      // Close modal on success
+      setIsMilestoneFormOpen(false);
+      setEditingMilestone(null);
+    } catch (err) {
+      console.error('Error saving milestone:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save milestone';
+      showError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /**
+   * Handle delete confirmation
+   */
+  const handleConfirmDelete = async () => {
+    if (!deletingMilestone) return;
+
+    setIsDeleting(true);
+    try {
+      // Delete milestone from database
+      await ProjectSummaryService.deleteMilestone(deletingMilestone.id);
+
+      // Refresh the timeline to remove deleted milestone
+      await refreshTrackingSummary();
+
+      // Close modal and show success
+      setIsDeleteModalOpen(false);
+      showSuccess(`Milestone "${deletingMilestone.milestone_name}" deleted successfully!`);
+    } catch (err) {
+      console.error('Error deleting milestone:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete milestone';
+      showError(errorMessage);
+    } finally {
+      setIsDeleting(false);
+      setDeletingMilestone(null);
+    }
+  };
+
+  // ========================================
+  // END MILESTONE MANAGEMENT
+  // ========================================
 
   // Loading state
   if (loading) {
@@ -326,6 +457,9 @@ const ProjectDetailPage: React.FC = () => {
               deadline={trackingSummary.timeline.deadline}
               daysRemaining={trackingSummary.timeline.daysRemaining}
               milestones={trackingSummary.timeline.milestones}
+              onAddMilestone={handleAddMilestoneClick}
+              onEditMilestone={handleEditMilestoneClick}
+              onDeleteMilestone={handleDeleteMilestoneClick}
             />
             
             {/* Action Counters - Side by Side */}
@@ -395,6 +529,27 @@ const ProjectDetailPage: React.FC = () => {
         isOpen={isBudgetModalOpen}
         onClose={() => setIsBudgetModalOpen(false)}
         projectId={project.id}
+      />
+
+      {/* Milestone Create/Edit Modal */}
+      <MilestoneFormModal
+        isOpen={isMilestoneFormOpen}
+        onClose={() => setIsMilestoneFormOpen(false)}
+        onSubmit={handleMilestoneFormSubmit}
+        isSubmitting={isSubmitting}
+        mode={milestoneFormMode}
+        milestoneToEdit={editingMilestone}
+      />
+
+      {/* Delete Milestone Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        isConfirming={isDeleting}
+        title="Delete Milestone"
+        message={`Are you sure you want to permanently delete the milestone "${deletingMilestone?.milestone_name}"? This action cannot be undone.`}
+        variant="danger"
       />
     </>
   );

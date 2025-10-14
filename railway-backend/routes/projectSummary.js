@@ -202,6 +202,44 @@ router.patch('/milestones/:milestoneId', async (req, res) => {
 });
 
 /**
+ * DELETE /api/project-summary/milestones/:milestoneId
+ * Delete a milestone
+ */
+router.delete('/milestones/:milestoneId', async (req, res) => {
+  try {
+    const { milestoneId } = req.params;
+
+    if (!milestoneId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_PARAMETER',
+          message: 'Milestone ID is required'
+        }
+      });
+    }
+
+    await ProjectSummaryService.deleteMilestone(milestoneId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Milestone deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete milestone endpoint error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to delete milestone',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }
+    });
+  }
+});
+
+/**
  * GET /api/project-summary/:projectId/actions
  * Get all action items for a project (with optional filters)
  */

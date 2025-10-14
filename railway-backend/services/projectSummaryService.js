@@ -283,6 +283,31 @@ class ProjectSummaryService {
   }
 
   /**
+   * Delete a milestone
+   * 
+   * @param {string} milestoneId - UUID of the milestone to delete
+   * @returns {Promise<void>}
+   */
+  static async deleteMilestone(milestoneId) {
+    try {
+      const { error } = await supabase
+        .from('project_milestones')
+        .delete()
+        .eq('id', milestoneId);
+
+      if (error) {
+        console.error('Error deleting milestone:', error);
+        throw new Error(`Failed to delete milestone: ${error.message}`);
+      }
+
+      // Deletion successful - no data to return
+    } catch (error) {
+      console.error('Error in deleteMilestone:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create a new action item
    * 
    * @param {Object} actionData - Action item data

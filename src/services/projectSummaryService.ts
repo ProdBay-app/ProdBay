@@ -217,6 +217,43 @@ export class ProjectSummaryService {
   }
 
   /**
+   * Delete a milestone
+   * 
+   * @param milestoneId - UUID of the milestone to delete
+   * @returns Promise that resolves when deletion is complete
+   */
+  static async deleteMilestone(milestoneId: string): Promise<void> {
+    if (!RAILWAY_API_URL) {
+      throw new Error('Railway API URL not configured');
+    }
+
+    if (!milestoneId) {
+      throw new Error('Milestone ID is required');
+    }
+
+    try {
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/project-summary/milestones/${milestoneId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data: ApiResponse<null> = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Failed to delete milestone');
+      }
+    } catch (error) {
+      console.error('Error deleting milestone:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('An unexpected error occurred while deleting milestone');
+    }
+  }
+
+  /**
    * Get action items for a project (with optional filters)
    * 
    * @param projectId - UUID of the project
