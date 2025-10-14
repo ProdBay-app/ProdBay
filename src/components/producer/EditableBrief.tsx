@@ -49,10 +49,6 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
 
   // Mode state: 'view' (default) or 'edit'
   const [mode, setMode] = useState<'view' | 'edit'>('view');
-  
-  // Debug logging
-  console.log('[EditableBrief] Current mode:', mode);
-  console.log('[EditableBrief] Assets received:', assets);
 
   // Editing state
   const [editedBriefDescription, setEditedBriefDescription] = useState(briefDescription);
@@ -160,11 +156,6 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   const normalizeText = (str: string): string => {
     let result = str;
     
-    // Debug: Log original
-    if (result.includes('**')) {
-      console.log('[normalizeText] Input contains **: ', result);
-    }
-    
     // Normalize quotes - Convert all quote types to standard double quote
     result = result.replace(/['']/g, "'");           // Normalize curly single quotes to straight
     result = result.replace(/[""]/g, '"');           // Normalize curly double quotes to straight
@@ -177,12 +168,6 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
     // Normalize markdown formatting (stripped when saved to DB)
     // Use explicit character codes to avoid escaping issues
     result = result.replace(/\*\*(.+?)\*\*/g, '$1'); // Remove bold markers (capture group)
-    
-    // Debug: Log after bold removal
-    if (str.includes('**')) {
-      console.log('[normalizeText] After ** removal: ', result);
-    }
-    
     result = result.replace(/\*/g, '');              // Remove remaining single asterisks (italic)
     result = result.replace(/^#+\s+/gm, '');         // Remove markdown heading markers
     result = result.replace(/^[•\-\*]\s+/gm, '');    // Remove bullet point markers
@@ -206,18 +191,13 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
    * @returns Array of React nodes (text strings and <mark> elements)
    */
   const renderInteractiveContent = (text: string): React.ReactNode[] => {
-    console.log('[EditableBrief] renderInteractiveContent called with text length:', text.length);
-    console.log('[EditableBrief] Assets available for highlighting:', assets);
-    
     // If no assets provided or no interactive features enabled, return plain text
     if (!assets || !onAssetClick || !onAssetHover) {
-      console.log('[EditableBrief] No assets or handlers, returning plain text');
       return [text];
     }
 
     // Normalize the brief text for robust matching
     const normalizedBriefText = normalizeText(text);
-    console.log('[EditableBrief] Normalized brief text (first 100 chars):', normalizedBriefText.substring(0, 100));
 
     // Build array of highlights (positions where source_text appears)
     const highlights: Array<{ start: number; end: number; asset: Asset }> = [];
@@ -228,20 +208,14 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
         const originalSourceText = asset.source_text;
         const normalizedSourceText = normalizeText(originalSourceText);
         
-        console.log('[EditableBrief] Asset:', asset.asset_name);
-        console.log('[EditableBrief] Original source_text:', originalSourceText);
-        console.log('[EditableBrief] Normalized source_text:', normalizedSourceText);
-        
         // STRATEGY: Multi-pass matching for maximum resilience
         // Pass 1: Try exact match (fastest, works if no differences)
         let matchIndex = text.indexOf(originalSourceText);
-        let matchLength = originalSourceText.length;
-        let matchMethod = 'exact';
+        const matchLength = originalSourceText.length;
         
         // Pass 2: Try case-insensitive match (handles capitalization differences)
         if (matchIndex === -1) {
           matchIndex = text.toLowerCase().indexOf(originalSourceText.toLowerCase());
-          matchMethod = 'case-insensitive';
         }
         
         // Pass 3: Try normalized match (handles whitespace + case differences)
@@ -254,39 +228,30 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
             // Strategy: Search for the first few words case-insensitively
             const firstWords = originalSourceText.split(/\s+/).slice(0, 3).join(' ');
             matchIndex = text.toLowerCase().indexOf(firstWords.toLowerCase());
-            matchMethod = 'fuzzy';
             
             if (matchIndex === -1) {
               // Last resort: Try just the first word
               const firstWord = originalSourceText.split(/\s+/)[0];
               if (firstWord && firstWord.length > 3) {
                 matchIndex = text.toLowerCase().indexOf(firstWord.toLowerCase());
-                matchMethod = 'first-word';
               }
             }
           }
         }
         
-        // Log the result
+        // Add highlight if match found
         if (matchIndex !== -1) {
-          console.log(`[EditableBrief] ✅ Match found using ${matchMethod} method at index:`, matchIndex);
           highlights.push({
             start: matchIndex,
             end: matchIndex + matchLength,
             asset
           });
-        } else {
-          console.log('[EditableBrief] ⚠️ No match found after all attempts');
         }
       }
     });
 
-    console.log('[EditableBrief] Total highlights found:', highlights.length);
-    console.log('[EditableBrief] Highlight details:', highlights);
-
     // If no highlights found, return plain text
     if (highlights.length === 0) {
-      console.log('[EditableBrief] No highlights found, returning plain text');
       return [text];
     }
 
