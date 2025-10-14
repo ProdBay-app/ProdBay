@@ -136,20 +136,42 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
 
   /**
    * Normalize text for robust matching
-   * Handles whitespace differences, line breaks, and case sensitivity
+   * Handles whitespace, line breaks, case sensitivity, AND punctuation differences
    * 
    * Transformations applied in sequence:
-   * 1. Replace Windows line breaks (\r\n) with space
-   * 2. Replace Unix line breaks (\n) with space
-   * 3. Replace multiple consecutive spaces with single space
-   * 4. Convert to lowercase for case-insensitive matching
-   * 5. Trim leading/trailing whitespace
+   * 1. Normalize quotes - Convert all quote types to standard double quote
+   * 2. Normalize dashes - Convert em dash, en dash, hyphen to standard hyphen
+   * 3. Normalize asterisks - Remove markdown bold/italic markers
+   * 4. Normalize hashes - Remove markdown heading markers
+   * 5. Replace Windows line breaks (\r\n) with space
+   * 6. Replace Unix line breaks (\n) with space
+   * 7. Replace multiple consecutive spaces with single space
+   * 8. Convert to lowercase for case-insensitive matching
+   * 9. Trim leading/trailing whitespace
+   * 
+   * This handles cases where:
+   * - AI uses 'single quotes' but brief has "double quotes"
+   * - Brief has markdown formatting (**, ##, etc.) that gets stripped when saved
+   * - Different dash types (em dash —, en dash –, hyphen -)
    * 
    * @param str - The text to normalize
-   * @returns Normalized text (lowercase, single spaces, trimmed)
+   * @returns Normalized text (lowercase, standardized punctuation, single spaces, trimmed)
    */
   const normalizeText = (str: string): string => {
     return str
+      // Normalize quotes - Convert all quote types to standard double quote
+      .replace(/['']/g, "'")           // Normalize curly single quotes to straight
+      .replace(/[""]/g, '"')           // Normalize curly double quotes to straight
+      .replace(/'/g, '"')              // Convert all single quotes to double quotes for consistency
+      // Normalize dashes
+      .replace(/—/g, '-')              // Em dash to hyphen
+      .replace(/–/g, '-')              // En dash to hyphen
+      // Normalize markdown formatting (stripped when saved to DB)
+      .replace(/\*\*/g, '')            // Remove bold markers
+      .replace(/\*/g, '')              // Remove italic markers  
+      .replace(/^#+\s+/gm, '')         // Remove markdown heading markers
+      .replace(/^[•\-\*]\s+/gm, '')    // Remove bullet point markers
+      // Normalize whitespace
       .replace(/\r\n/g, ' ')           // Replace Windows line breaks with space
       .replace(/\n/g, ' ')             // Replace Unix line breaks with space
       .replace(/\s+/g, ' ')            // Replace multiple spaces with single space
