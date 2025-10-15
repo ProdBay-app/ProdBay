@@ -5,6 +5,7 @@ import { useNotification } from '@/hooks/useNotification';
 import AssetCard from './AssetCard';
 import AssetFormModal from './AssetFormModal';
 import AssetDetailModal from './AssetDetailModal';
+import AssetDetailModalTest from './AssetDetailModalTest';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { getAvailableTagNames, getTagColor } from '@/utils/assetTags';
 import type { Asset } from '@/lib/supabase';
@@ -674,15 +675,14 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
         variant="danger"
       />
 
-      {/* Asset Detail Modal */}
-      <AssetDetailModal
+      {/* Asset Detail Modal - Using test version for debugging */}
+      <AssetDetailModalTest
         isOpen={isDetailModalOpen}
         asset={viewingAsset}
         onClose={() => {
           setIsDetailModalOpen(false);
           setViewingAsset(null);
         }}
-        onAssetUpdate={handleAssetUpdate}
       />
     </section>
   );
