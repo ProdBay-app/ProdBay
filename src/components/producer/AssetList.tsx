@@ -5,7 +5,6 @@ import { useNotification } from '@/hooks/useNotification';
 import AssetCard from './AssetCard';
 import AssetFormModal from './AssetFormModal';
 import AssetDetailModal from './AssetDetailModal';
-import AssetDetailModalTest from './AssetDetailModalTest';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { getAvailableTagNames, getTagColor } from '@/utils/assetTags';
 import type { Asset } from '@/lib/supabase';
@@ -220,8 +219,6 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
 
   // Handle opening the detail view modal
   const handleViewAsset = (asset: Asset) => {
-    console.log('AssetList: Opening asset detail modal for:', asset.asset_name);
-    alert(`Opening modal for asset: ${asset.asset_name}`);
     setViewingAsset(asset);
     setIsDetailModalOpen(true);
   };
@@ -676,14 +673,15 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
         variant="danger"
       />
 
-      {/* Asset Detail Modal - Using test version for debugging */}
-      <AssetDetailModalTest
+      {/* Asset Detail Modal */}
+      <AssetDetailModal
         isOpen={isDetailModalOpen}
         asset={viewingAsset}
         onClose={() => {
           setIsDetailModalOpen(false);
           setViewingAsset(null);
         }}
+        onAssetUpdate={handleAssetUpdate}
       />
     </section>
   );

@@ -42,12 +42,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   });
 
   // Don't render if modal is closed or no asset is selected
-  if (!isOpen || !asset) {
-    console.log('AssetDetailModal: Not rendering - isOpen:', isOpen, 'asset:', asset);
-    return null;
-  }
-
-  console.log('AssetDetailModal: Rendering modal for asset:', asset.asset_name);
+  if (!isOpen || !asset) return null;
 
   // Initialize editing data when asset changes
   useEffect(() => {
@@ -170,28 +165,24 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   };
 
   return (
-    <>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
         aria-hidden="true"
-        style={{ zIndex: 9998 }}
+        style={{ zIndex: 99998 }}
       />
 
       {/* Modal Container */}
-      <div className="fixed inset-0 z-50 overflow-y-auto" style={{ zIndex: 9999 }}>
+      <div className="fixed inset-0 overflow-y-auto" style={{ zIndex: 99999 }}>
         <div className="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
           {/* Modal Content */}
           <div
             className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
-            style={{ zIndex: 10000 }}
+            style={{ zIndex: 100000 }}
           >
-            {/* Test Element - Remove after debugging */}
-            <div className="bg-red-500 text-white p-4 text-center font-bold">
-              DEBUG: Modal is rendering! Asset: {asset.asset_name}
-            </div>
 
             {/* Header - Purple gradient matching brand */}
             <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
@@ -494,7 +485,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
         onClose={() => setIsSubdivisionModalOpen(false)}
         onAssetsCreated={handleAssetsCreated}
       />
-    </>
+    </div>
   );
 };
 
