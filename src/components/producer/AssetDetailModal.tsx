@@ -176,16 +176,23 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
         className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
         onClick={onClose}
         aria-hidden="true"
+        style={{ zIndex: 9998 }}
       />
 
       {/* Modal Container */}
-      <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="fixed inset-0 z-50 overflow-y-auto" style={{ zIndex: 9999 }}>
         <div className="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
           {/* Modal Content */}
           <div
             className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
+            style={{ zIndex: 10000 }}
           >
+            {/* Test Element - Remove after debugging */}
+            <div className="bg-red-500 text-white p-4 text-center font-bold">
+              DEBUG: Modal is rendering! Asset: {asset.asset_name}
+            </div>
+
             {/* Header - Purple gradient matching brand */}
             <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
               <div className="flex items-start justify-between">
