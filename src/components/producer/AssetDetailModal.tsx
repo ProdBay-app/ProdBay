@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, FileText, Calendar, Clock, Package, Hash, Tag, Copy, Edit2, Save } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
@@ -42,10 +42,15 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   });
 
   // Don't render if modal is closed or no asset is selected
-  if (!isOpen || !asset) return null;
+  if (!isOpen || !asset) {
+    console.log('AssetDetailModal: Not rendering - isOpen:', isOpen, 'asset:', asset);
+    return null;
+  }
+
+  console.log('AssetDetailModal: Rendering modal for asset:', asset.asset_name);
 
   // Initialize editing data when asset changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (asset) {
       setEditingData({
         asset_name: asset.asset_name,

@@ -219,6 +219,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
 
   // Handle opening the detail view modal
   const handleViewAsset = (asset: Asset) => {
+    console.log('AssetList: Opening asset detail modal for:', asset.asset_name);
     setViewingAsset(asset);
     setIsDetailModalOpen(true);
   };
