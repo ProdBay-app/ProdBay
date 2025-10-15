@@ -34,27 +34,16 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubdivisionModalOpen, setIsSubdivisionModalOpen] = useState(false);
-  const [editingData, setEditingData] = useState({
-    asset_name: '',
-    specifications: '',
-    quantity: undefined as number | undefined,
-    tags: [] as string[]
-  });
-
   // Don't render if modal is closed or no asset is selected
   if (!isOpen || !asset) return null;
 
-  // Initialize editing data when asset changes
-  useEffect(() => {
-    if (asset) {
-      setEditingData({
-        asset_name: asset.asset_name,
-        specifications: asset.specifications || '',
-        quantity: asset.quantity,
-        tags: asset.tags || []
-      });
-    }
-  }, [asset]);
+  // Initialize editing data directly from asset
+  const [editingData, setEditingData] = useState({
+    asset_name: asset.asset_name,
+    specifications: asset.specifications || '',
+    quantity: asset.quantity,
+    tags: asset.tags || []
+  });
 
   // Handle status change
   const handleStatusChange = async (newStatus: AssetStatus) => {
