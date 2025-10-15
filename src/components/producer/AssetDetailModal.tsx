@@ -390,13 +390,13 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 />
               </section> */}
 
-              {/* Quotes Section - Temporarily disabled for debugging */}
-              {/* <section>
-                <QuotesList 
-                  assetId={asset.id} 
-                  assetName={asset.asset_name}
-                />
-              </section> */}
+        {/* Quotes Section */}
+        <section>
+          <QuotesList 
+            assetId={asset.id} 
+            assetName={asset.asset_name}
+          />
+        </section>
 
               {/* Metadata Section */}
               <section>
