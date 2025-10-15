@@ -1,5 +1,5 @@
-import React from 'react';
-import { Package } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Package, Search, Filter, CheckSquare, Square, X } from 'lucide-react';
 import type { Asset, SuggestedSupplier } from '@/lib/supabase';
 
 interface SupplierSelectionModalProps {
@@ -23,16 +23,183 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
   onSupplierToggle,
   onConfirm
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Get all unique service categories from suppliers
+  const allCategories = useMemo(() => {
+    const categories = new Set<string>();
+    suggestedSuppliers.forEach(supplier => {
+      if (supplier.service_categories) {
+        supplier.service_categories.forEach(category => categories.add(category));
+      }
+    });
+    return Array.from(categories).sort();
+  }, [suggestedSuppliers]);
+
+  // Filter suppliers based on search and category filters
+  const filteredSuppliers = useMemo(() => {
+    let filtered = suggestedSuppliers;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(supplier =>
+        supplier.supplier_name.toLowerCase().includes(term) ||
+        supplier.contact_email.toLowerCase().includes(term) ||
+        (supplier.service_categories && supplier.service_categories.some(cat => 
+          cat.toLowerCase().includes(term)
+        ))
+      );
+    }
+
+    // Apply category filter
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(supplier =>
+        supplier.service_categories && 
+        supplier.service_categories.some(cat => selectedCategories.includes(cat))
+      );
+    }
+
+    return filtered;
+  }, [suggestedSuppliers, searchTerm, selectedCategories]);
+
+  // Smart select all - only selects visible suppliers after filtering
+  const handleSelectAll = () => {
+    const visibleSupplierIds = filteredSuppliers.map(s => s.id);
+    const allVisibleSelected = visibleSupplierIds.every(id => selectedSupplierIds.includes(id));
+    
+    if (allVisibleSelected) {
+      // Deselect all visible suppliers
+      visibleSupplierIds.forEach(id => {
+        if (selectedSupplierIds.includes(id)) {
+          onSupplierToggle(id);
+        }
+      });
+    } else {
+      // Select all visible suppliers
+      visibleSupplierIds.forEach(id => {
+        if (!selectedSupplierIds.includes(id)) {
+          onSupplierToggle(id);
+        }
+      });
+    }
+  };
+
+  // Check if all visible suppliers are selected
+  const allVisibleSelected = filteredSuppliers.length > 0 && 
+    filteredSuppliers.every(s => selectedSupplierIds.includes(s.id));
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategories([]);
+  };
+
+  // Toggle category filter
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev =>
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 max-h-[80vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
         <div className="mb-4">
           <h3 className="text-xl font-semibold">Select Suppliers for Quote Requests</h3>
           <p className="text-gray-600 text-sm">
             Choose which suppliers should receive quote requests for "{asset?.asset_name}".
           </p>
+        </div>
+
+        {/* Search and Filter Controls */}
+        <div className="mb-4 space-y-3">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search suppliers by name, email, or service category..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Toggle and Category Filters */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <Filter className="w-4 h-4" />
+              Filters
+              {(selectedCategories.length > 0) && (
+                <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
+                  {selectedCategories.length}
+                </span>
+              )}
+            </button>
+
+            {/* Smart Select All */}
+            <button
+              onClick={handleSelectAll}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+            >
+              {allVisibleSelected ? (
+                <CheckSquare className="w-4 h-4" />
+              ) : (
+                <Square className="w-4 h-4" />
+              )}
+              {allVisibleSelected ? 'Deselect All' : 'Select All'} ({filteredSuppliers.length})
+            </button>
+          </div>
+
+          {/* Category Filters */}
+          {showFilters && (
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-medium text-gray-700">Service Categories</h4>
+                {selectedCategories.length > 0 && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-purple-600 hover:text-purple-700"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {allCategories.map(category => (
+                  <button
+                    key={category}
+                    onClick={() => toggleCategory(category)}
+                    className={`px-2 py-1 text-xs rounded-full border transition-colors ${
+                      selectedCategories.includes(category)
+                        ? 'bg-purple-100 text-purple-700 border-purple-300'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -43,15 +210,48 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
         ) : (
           <>
             <div className="mb-4">
+              {/* Results Summary */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm text-gray-600">
+                  {filteredSuppliers.length === suggestedSuppliers.length ? (
+                    <span>{suggestedSuppliers.length} supplier{suggestedSuppliers.length !== 1 ? 's' : ''} available</span>
+                  ) : (
+                    <span>
+                      {filteredSuppliers.length} of {suggestedSuppliers.length} supplier{filteredSuppliers.length !== 1 ? 's' : ''} shown
+                    </span>
+                  )}
+                </div>
+                {selectedSupplierIds.length > 0 && (
+                  <div className="text-sm text-purple-600 font-medium">
+                    {selectedSupplierIds.length} selected
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-3 max-h-96 overflow-y-auto">
-                {suggestedSuppliers.length === 0 ? (
+                {filteredSuppliers.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Package className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                    <p>No relevant suppliers found for this asset.</p>
-                    <p className="text-sm">Try adding more suppliers or check the asset specifications.</p>
+                    {suggestedSuppliers.length === 0 ? (
+                      <>
+                        <p>No relevant suppliers found for this asset.</p>
+                        <p className="text-sm">Try adding more suppliers or check the asset specifications.</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>No suppliers match your current filters.</p>
+                        <p className="text-sm">Try adjusting your search or filter criteria.</p>
+                        <button
+                          onClick={clearFilters}
+                          className="mt-2 px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                        >
+                          Clear Filters
+                        </button>
+                      </>
+                    )}
                   </div>
                 ) : (
-                  suggestedSuppliers.map((supplier) => {
+                  filteredSuppliers.map((supplier) => {
                     const isSelected = selectedSupplierIds.includes(supplier.id);
                     const isAlreadyContacted = supplier.already_contacted;
                     
