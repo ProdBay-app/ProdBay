@@ -370,15 +370,15 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 </div>
               )}
 
-              {/* Timeline Management Section - Temporarily disabled for debugging */}
-              {/* <section>
+              {/* Timeline Management Section */}
+              <section>
                 <AssetTimelineManager 
                   asset={asset}
                   onTimelineUpdate={() => {
                     // Refresh asset data if needed
                   }}
                 />
-              </section> */}
+              </section>
 
               {/* Supplier Status Tracking Section - Temporarily disabled for debugging */}
               {/* <section>
