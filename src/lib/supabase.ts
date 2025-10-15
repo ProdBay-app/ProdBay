@@ -98,6 +98,8 @@ export interface Asset {
   status: 'Pending' | 'Quoting' | 'Approved' | 'In Production' | 'Delivered';
   assigned_supplier_id?: string;
   source_text?: string;
+  quantity?: number;
+  tags?: string[];
   created_at: string;
   updated_at: string;
   assigned_supplier?: Supplier;
