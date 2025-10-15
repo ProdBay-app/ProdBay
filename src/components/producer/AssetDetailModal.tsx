@@ -380,15 +380,15 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 />
               </section>
 
-              {/* Supplier Status Tracking Section - Temporarily disabled for debugging */}
-              {/* <section>
+              {/* Supplier Status Tracking Section */}
+              <section>
                 <SupplierStatusTracker 
                   asset={asset}
                   onStatusUpdate={() => {
                     // Refresh data if needed
                   }}
                 />
-              </section> */}
+              </section>
 
         {/* Quotes Section */}
         <section>
