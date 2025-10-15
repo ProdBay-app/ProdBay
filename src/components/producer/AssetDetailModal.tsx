@@ -43,6 +43,9 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     tags: asset?.tags || []
   });
 
+  // Debug logging
+  console.log('AssetDetailModal render:', { isOpen, asset: asset?.id, isSubdivisionModalOpen });
+
   // Don't render if modal is closed or no asset is selected
   if (!isOpen || !asset) return null;
 
@@ -194,7 +197,10 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setIsSubdivisionModalOpen(true)}
+                    onClick={() => {
+                      console.log('Subdivide button clicked, setting isSubdivisionModalOpen to true');
+                      setIsSubdivisionModalOpen(true);
+                    }}
                     className="flex items-center gap-2 px-3 py-1.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm font-medium"
                     title="Subdivide this asset"
                   >

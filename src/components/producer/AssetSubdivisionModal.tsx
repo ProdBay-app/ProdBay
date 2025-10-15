@@ -46,6 +46,9 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
   ]);
   const [isCreating, setIsCreating] = useState(false);
 
+  // Debug logging
+  console.log('AssetSubdivisionModal render:', { isOpen, originalAsset: originalAsset?.id });
+
   // Don't render if modal is closed or no asset is selected
   if (!isOpen || !originalAsset) return null;
 
