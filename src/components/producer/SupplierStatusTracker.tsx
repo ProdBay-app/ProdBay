@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Building2, Mail, Clock, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
@@ -35,12 +35,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Load suppliers and their status
-  useEffect(() => {
-    loadSupplierStatus();
-  }, [asset.id]);
-
-  const loadSupplierStatus = async () => {
+  const loadSupplierStatus = useCallback(async () => {
     setLoading(true);
     try {
       // Get all quotes for this asset
@@ -78,7 +73,12 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [asset.id, showError]);
+
+  // Load suppliers and their status
+  useEffect(() => {
+    loadSupplierStatus();
+  }, [loadSupplierStatus]);
 
   // Refresh supplier status
   const handleRefresh = async () => {

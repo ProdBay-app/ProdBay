@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, Plus, Edit2, Trash2, Check, X, Clock } from 'lucide-react';
 import { useNotification } from '@/hooks/useNotification';
 import type { Asset } from '@/lib/supabase';
@@ -48,12 +48,7 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
     description: ''
   });
 
-  // Load timeline events
-  useEffect(() => {
-    loadTimelineEvents();
-  }, [asset.id]);
-
-  const loadTimelineEvents = async () => {
+  const loadTimelineEvents = useCallback(async () => {
     setLoading(true);
     try {
       // For now, we'll simulate timeline events since we don't have a dedicated table
@@ -92,7 +87,12 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [asset.id, showError]);
+
+  // Load timeline events
+  useEffect(() => {
+    loadTimelineEvents();
+  }, [loadTimelineEvents]);
 
   // Add new timeline event
   const handleAddEvent = async () => {
