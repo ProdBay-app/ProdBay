@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Package, Edit } from 'lucide-react';
+import { X, Package, Edit, Tag, Hash } from 'lucide-react';
 import type { Asset } from '@/lib/supabase';
+import { PREDEFINED_ASSET_TAGS, getTagColor } from '@/utils/assetTags';
 
 interface AssetFormModalProps {
   isOpen: boolean;
@@ -8,7 +9,12 @@ interface AssetFormModalProps {
   mode: 'create' | 'edit';
   assetToEdit?: Asset | null;
   onClose: () => void;
-  onSubmit: (assetData: { asset_name: string; specifications: string }) => void;
+  onSubmit: (assetData: { 
+    asset_name: string; 
+    specifications: string;
+    quantity?: number;
+    tags?: string[];
+  }) => void;
 }
 
 /**
@@ -34,8 +40,14 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
   // Form state
   const [formData, setFormData] = useState({
     asset_name: '',
-    specifications: ''
+    specifications: '',
+    quantity: undefined as number | undefined,
+    tags: [] as string[]
   });
+
+  // Tag selection state
+  const [showTagSelector, setShowTagSelector] = useState(false);
+  const [tagSearchTerm, setTagSearchTerm] = useState('');
 
   // Pre-populate form when editing or reset when creating
   useEffect(() => {
@@ -44,13 +56,17 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
         // Pre-populate with asset data
         setFormData({
           asset_name: assetToEdit.asset_name,
-          specifications: assetToEdit.specifications || ''
+          specifications: assetToEdit.specifications || '',
+          quantity: assetToEdit.quantity || undefined,
+          tags: assetToEdit.tags || []
         });
       } else {
         // Reset for create mode
         setFormData({
           asset_name: '',
-          specifications: ''
+          specifications: '',
+          quantity: undefined,
+          tags: []
         });
       }
     }
@@ -58,12 +74,36 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
 
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'number' ? (value ? parseInt(value, 10) : undefined) : value
     }));
   };
+
+  // Handle tag selection
+  const handleTagToggle = (tagName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.includes(tagName)
+        ? prev.tags.filter(t => t !== tagName)
+        : [...prev.tags, tagName]
+    }));
+  };
+
+  // Handle tag removal
+  const handleTagRemove = (tagName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(t => t !== tagName)
+    }));
+  };
+
+  // Filter available tags based on search
+  const filteredTags = PREDEFINED_ASSET_TAGS.filter(tag =>
+    tag.name.toLowerCase().includes(tagSearchTerm.toLowerCase()) ||
+    tag.description.toLowerCase().includes(tagSearchTerm.toLowerCase())
+  );
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -84,6 +124,21 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
       onClose();
     }
   };
+
+  // Close tag selector when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showTagSelector) {
+        const target = event.target as Element;
+        if (!target.closest('.tag-selector-container')) {
+          setShowTagSelector(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTagSelector]);
 
   // Don't render if not open
   if (!isOpen) return null;
@@ -167,6 +222,130 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
             />
             <p className="mt-1 text-xs text-gray-500">
               Add detailed specifications to help guide production
+            </p>
+          </div>
+
+          {/* Quantity */}
+          <div>
+            <label htmlFor="quantity" className="block text-sm font-semibold text-gray-700 mb-2">
+              Quantity <span className="text-gray-400 font-normal">(Optional)</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Hash className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="quantity"
+                name="quantity"
+                type="number"
+                min="1"
+                value={formData.quantity || ''}
+                onChange={handleInputChange}
+                disabled={isSubmitting}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500"
+                placeholder="Enter quantity (e.g., 100)"
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Specify the quantity or amount needed for this asset
+            </p>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Tags <span className="text-gray-400 font-normal">(Optional)</span>
+            </label>
+            
+            {/* Selected Tags Display */}
+            {formData.tags.length > 0 && (
+              <div className="mb-3">
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map(tagName => (
+                    <span
+                      key={tagName}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-white"
+                      style={{ backgroundColor: getTagColor(tagName) }}
+                    >
+                      {tagName}
+                      <button
+                        type="button"
+                        onClick={() => handleTagRemove(tagName)}
+                        className="ml-1 hover:bg-white/20 rounded-full p-0.5"
+                        disabled={isSubmitting}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tag Selector */}
+            <div className="relative tag-selector-container">
+              <button
+                type="button"
+                onClick={() => setShowTagSelector(!showTagSelector)}
+                disabled={isSubmitting}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500 text-left flex items-center gap-2"
+              >
+                <Tag className="w-5 h-5 text-gray-400" />
+                <span className="text-gray-500">
+                  {formData.tags.length > 0 ? `${formData.tags.length} tag(s) selected` : 'Select tags...'}
+                </span>
+              </button>
+
+              {/* Tag Dropdown */}
+              {showTagSelector && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                  {/* Search */}
+                  <div className="p-3 border-b border-gray-200">
+                    <input
+                      type="text"
+                      placeholder="Search tags..."
+                      value={tagSearchTerm}
+                      onChange={(e) => setTagSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Tag List */}
+                  <div className="max-h-48 overflow-y-auto">
+                    {filteredTags.length === 0 ? (
+                      <div className="p-3 text-sm text-gray-500 text-center">
+                        No tags found
+                      </div>
+                    ) : (
+                      filteredTags.map(tag => (
+                        <button
+                          key={tag.name}
+                          type="button"
+                          onClick={() => handleTagToggle(tag.name)}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
+                            formData.tags.includes(tag.name) ? 'bg-purple-50' : ''
+                          }`}
+                        >
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: tag.color }}
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium">{tag.name}</div>
+                            <div className="text-xs text-gray-500">{tag.description}</div>
+                          </div>
+                          {formData.tags.includes(tag.name) && (
+                            <div className="text-purple-600">✓</div>
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Categorize your asset with predefined tags for better organization
             </p>
           </div>
 

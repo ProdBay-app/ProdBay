@@ -32,6 +32,8 @@ export interface Asset {
   timeline: string | null;
   status: AssetStatus;
   assigned_supplier_id: string | null;
+  quantity: number | null;
+  tags: string[];
   created_at: string;
   updated_at: string;
 }

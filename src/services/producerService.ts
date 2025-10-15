@@ -17,6 +17,8 @@ export interface AssetFormData {
   timeline: string;
   status: Asset['status'];
   assigned_supplier_id?: string;
+  quantity?: number;
+  tags?: string[];
 }
 
 export interface ProducerSettings {
@@ -339,7 +341,9 @@ export class ProducerService {
         specifications: assetData.specifications || null,
         timeline: assetData.timeline || null,
         status: assetData.status,
-        assigned_supplier_id: assetData.assigned_supplier_id || null
+        assigned_supplier_id: assetData.assigned_supplier_id || null,
+        quantity: assetData.quantity || null,
+        tags: assetData.tags || []
       })
       .select()
       .single();
@@ -363,7 +367,9 @@ export class ProducerService {
         specifications: assetData.specifications || null,
         timeline: assetData.timeline || null,
         status: assetData.status,
-        assigned_supplier_id: assetData.assigned_supplier_id || null
+        assigned_supplier_id: assetData.assigned_supplier_id || null,
+        quantity: assetData.quantity || null,
+        tags: assetData.tags || []
       })
       .eq('id', assetId)
       .select()

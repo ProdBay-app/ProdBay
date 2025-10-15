@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, AlertCircle, Plus } from 'lucide-react';
+import { Package, AlertCircle, Plus, Search, Filter, ArrowUpDown, X } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetCard from './AssetCard';
 import AssetFormModal from './AssetFormModal';
 import AssetDetailModal from './AssetDetailModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
+import { getAvailableTagNames, getTagColor } from '@/utils/assetTags';
 import type { Asset } from '@/lib/supabase';
 import type { AssetStatus } from '@/types/database';
 
@@ -44,6 +45,14 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   const [isDeleting, setIsDeleting] = useState(false);
   const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  // Search, filter, and sort state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatuses, setSelectedStatuses] = useState<AssetStatus[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'name' | 'status' | 'date' | 'quantity'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showFilters, setShowFilters] = useState(false);
 
   // Define the status order for Kanban columns (workflow order)
   const statusOrder: AssetStatus[] = [
@@ -94,7 +103,12 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   }, [projectId, showError]);
 
   // Handle adding a new asset
-  const handleAddAsset = async (assetData: { asset_name: string; specifications: string }) => {
+  const handleAddAsset = async (assetData: { 
+    asset_name: string; 
+    specifications: string;
+    quantity?: number;
+    tags?: string[];
+  }) => {
     setIsSubmitting(true);
     try {
       // Create asset with default values
@@ -103,7 +117,9 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
         specifications: assetData.specifications,
         status: 'Pending',
         timeline: '',
-        assigned_supplier_id: undefined
+        assigned_supplier_id: undefined,
+        quantity: assetData.quantity,
+        tags: assetData.tags || []
       });
 
       // Update local state to include new asset
@@ -128,7 +144,12 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   };
 
   // Handle updating an existing asset
-  const handleUpdateAsset = async (assetData: { asset_name: string; specifications: string }) => {
+  const handleUpdateAsset = async (assetData: { 
+    asset_name: string; 
+    specifications: string;
+    quantity?: number;
+    tags?: string[];
+  }) => {
     if (!editingAsset) return;
 
     setIsSubmitting(true);
@@ -139,7 +160,9 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
         specifications: assetData.specifications,
         status: editingAsset.status,
         timeline: editingAsset.timeline ?? '',
-        assigned_supplier_id: editingAsset.assigned_supplier_id
+        assigned_supplier_id: editingAsset.assigned_supplier_id,
+        quantity: assetData.quantity,
+        tags: assetData.tags || []
       });
 
       // Update local state by replacing the old asset with the updated one
@@ -206,7 +229,62 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
     }
   };
 
-  // Group assets by status
+  // Filter and sort assets
+  const filteredAndSortedAssets = useMemo(() => {
+    let filtered = assets;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(asset =>
+        asset.asset_name.toLowerCase().includes(term) ||
+        asset.specifications?.toLowerCase().includes(term) ||
+        asset.tags?.some(tag => tag.toLowerCase().includes(term))
+      );
+    }
+
+    // Apply status filter
+    if (selectedStatuses.length > 0) {
+      filtered = filtered.filter(asset => selectedStatuses.includes(asset.status));
+    }
+
+    // Apply tag filter
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(asset =>
+        asset.tags && asset.tags.some(tag => selectedTags.includes(tag))
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'name':
+          comparison = a.asset_name.localeCompare(b.asset_name);
+          break;
+        case 'status':
+          comparison = a.status.localeCompare(b.status);
+          break;
+        case 'date':
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        case 'quantity':
+          const aQty = a.quantity || 0;
+          const bQty = b.quantity || 0;
+          comparison = aQty - bQty;
+          break;
+        default:
+          comparison = 0;
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [assets, searchTerm, selectedStatuses, selectedTags, sortBy, sortOrder]);
+
+  // Group filtered assets by status
   const groupedAssets = useMemo(() => {
     const groups: Record<AssetStatus, Asset[]> = {
       'Pending': [],
@@ -216,14 +294,14 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
       'Delivered': []
     };
 
-    assets.forEach(asset => {
+    filteredAndSortedAssets.forEach(asset => {
       if (groups[asset.status]) {
         groups[asset.status].push(asset);
       }
     });
 
     return groups;
-  }, [assets]);
+  }, [filteredAndSortedAssets]);
 
   // Filter out empty status groups for display
   const activeStatuses = useMemo(() => {
@@ -279,6 +357,32 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
     );
   }
 
+  // Empty state - no assets match filters
+  if (filteredAndSortedAssets.length === 0 && assets.length > 0) {
+    return (
+      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Assets</h2>
+        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+          <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No assets match your filters</h3>
+          <p className="text-gray-600 mb-4">
+            Try adjusting your search terms or filters to see more results.
+          </p>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedStatuses([]);
+              setSelectedTags([]);
+            }}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Clear all filters
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   // Main Kanban board display
   return (
     <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -288,19 +392,164 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
           <Package className="w-6 h-6 text-purple-600" />
           <h2 className="text-2xl font-bold text-gray-900">Assets</h2>
           <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">
-            {assets.length}
+            {filteredAndSortedAssets.length}
+            {filteredAndSortedAssets.length !== assets.length && ` of ${assets.length}`}
           </span>
         </div>
         
-        {/* Add Asset Button */}
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium"
-        >
-          <Plus className="w-5 h-5" />
-          Add Asset
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Filter Toggle Button */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+              showFilters || selectedStatuses.length > 0 || selectedTags.length > 0 || searchTerm
+                ? 'bg-purple-50 border-purple-200 text-purple-700'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Filter className="w-4 h-4" />
+            Filters
+            {(selectedStatuses.length > 0 || selectedTags.length > 0 || searchTerm) && (
+              <span className="ml-1 px-1.5 py-0.5 bg-purple-600 text-white text-xs rounded-full">
+                {selectedStatuses.length + selectedTags.length + (searchTerm ? 1 : 0)}
+              </span>
+            )}
+          </button>
+
+          {/* Add Asset Button */}
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium"
+          >
+            <Plus className="w-5 h-5" />
+            Add Asset
+          </button>
+        </div>
       </div>
+
+      {/* Search and Filter Controls */}
+      {showFilters && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search assets by name, specifications, or tags..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              >
+                <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <div className="flex flex-wrap gap-2">
+                {statusOrder.map(status => (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      setSelectedStatuses(prev =>
+                        prev.includes(status)
+                          ? prev.filter(s => s !== status)
+                          : [...prev, status]
+                      );
+                    }}
+                    className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                      selectedStatuses.includes(status)
+                        ? `${getStatusHeaderColor(status)} border-current`
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tag Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+              <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
+                {getAvailableTagNames().map(tagName => (
+                  <button
+                    key={tagName}
+                    onClick={() => {
+                      setSelectedTags(prev =>
+                        prev.includes(tagName)
+                          ? prev.filter(t => t !== tagName)
+                          : [...prev, tagName]
+                      );
+                    }}
+                    className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                      selectedTags.includes(tagName)
+                        ? 'text-white border-transparent'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                    style={{
+                      backgroundColor: selectedTags.includes(tagName) ? getTagColor(tagName) : undefined
+                    }}
+                  >
+                    {tagName}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort Controls */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+              <div className="flex items-center gap-2">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                >
+                  <option value="date">Date Added</option>
+                  <option value="name">Name</option>
+                  <option value="status">Status</option>
+                  <option value="quantity">Quantity</option>
+                </select>
+                <button
+                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
+                >
+                  <ArrowUpDown className={`w-4 h-4 ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Clear All Filters */}
+          {(selectedStatuses.length > 0 || selectedTags.length > 0 || searchTerm) && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedStatuses([]);
+                  setSelectedTags([]);
+                }}
+                className="text-sm text-gray-600 hover:text-gray-800 underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Kanban Board - Horizontal Scrolling Container */}
       <div className="overflow-x-auto -mx-6 px-6 pb-4">

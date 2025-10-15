@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { X, FileText, Calendar, Clock, Package } from 'lucide-react';
+import { X, FileText, Calendar, Clock, Package, Hash, Tag } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import StatusSelect from '@/components/shared/StatusSelect';
 import QuotesList from './QuotesList';
+import { getTagColor } from '@/utils/assetTags';
 import type { Asset } from '@/lib/supabase';
 import type { AssetStatus } from '@/types/database';
 
@@ -44,7 +45,9 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
         specifications: asset.specifications || '',
         timeline: asset.timeline || '',
         status: newStatus,
-        assigned_supplier_id: asset.assigned_supplier_id
+        assigned_supplier_id: asset.assigned_supplier_id,
+        quantity: asset.quantity,
+        tags: asset.tags || []
       });
 
       // Notify parent component of the update
@@ -186,6 +189,19 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     </div>
                   </div>
 
+                  {/* Quantity */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <Hash className="w-4 h-4 inline mr-1.5 text-purple-600" />
+                      Quantity
+                    </label>
+                    <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                      <p className="text-gray-800">
+                        {asset.quantity ? asset.quantity.toLocaleString() : 'Not specified'}
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Status - Interactive Dropdown */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -203,6 +219,28 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     />
                   </div>
                 </div>
+
+                {/* Tags Section */}
+                {asset.tags && asset.tags.length > 0 && (
+                  <div className="mt-6">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      <Tag className="w-4 h-4 inline mr-1.5 text-purple-600" />
+                      Tags
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {asset.tags.map(tagName => (
+                        <span
+                          key={tagName}
+                          className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-white"
+                          style={{ backgroundColor: getTagColor(tagName) }}
+                        >
+                          <Tag className="w-3 h-3" />
+                          {tagName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </section>
 
               {/* Quotes Section */}
@@ -287,4 +325,3 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
 };
 
 export default AssetDetailModal;
-

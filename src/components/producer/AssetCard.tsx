@@ -1,6 +1,7 @@
 import React from 'react';
-import { Calendar, FileText, Building2, Edit, Trash2 } from 'lucide-react';
+import { Calendar, FileText, Building2, Edit, Trash2, Hash, Tag } from 'lucide-react';
 import type { Asset } from '@/lib/supabase';
+import { getTagColor } from '@/utils/assetTags';
 
 interface AssetCardProps {
   asset: Asset;
@@ -119,6 +120,37 @@ const AssetCard: React.FC<AssetCardProps> = ({
         <div className="flex items-center gap-2 mb-3 text-white/80">
           <Calendar className="w-4 h-4" />
           <p className="text-xs">{formattedTimeline}</p>
+        </div>
+      )}
+
+      {/* Quantity */}
+      {asset.quantity && (
+        <div className="flex items-center gap-2 mb-3 text-white/80">
+          <Hash className="w-4 h-4" />
+          <p className="text-xs">Qty: {asset.quantity}</p>
+        </div>
+      )}
+
+      {/* Tags */}
+      {asset.tags && asset.tags.length > 0 && (
+        <div className="mb-3">
+          <div className="flex flex-wrap gap-1">
+            {asset.tags.slice(0, 3).map(tagName => (
+              <span
+                key={tagName}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white"
+                style={{ backgroundColor: getTagColor(tagName) }}
+              >
+                <Tag className="w-3 h-3" />
+                {tagName}
+              </span>
+            ))}
+            {asset.tags.length > 3 && (
+              <span className="text-xs text-white/60 px-2 py-1">
+                +{asset.tags.length - 3} more
+              </span>
+            )}
+          </div>
         </div>
       )}
 
