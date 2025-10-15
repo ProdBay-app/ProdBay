@@ -54,6 +54,11 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Debug: Log sorting changes
+  useEffect(() => {
+    console.log('Sorting changed:', { sortBy, sortOrder });
+  }, [sortBy, sortOrder]);
+
   // Define the status order for Kanban columns (workflow order)
   const statusOrder: AssetStatus[] = [
     'Pending',
@@ -229,8 +234,8 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
     }
   };
 
-  // Filter and sort assets
-  const filteredAndSortedAssets = useMemo(() => {
+  // Filter assets
+  const filteredAssets = useMemo(() => {
     let filtered = assets;
 
     // Apply search filter
@@ -255,8 +260,28 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
       );
     }
 
-    // Apply sorting
-    filtered.sort((a, b) => {
+    return filtered;
+  }, [assets, searchTerm, selectedStatuses, selectedTags]);
+
+  // Group filtered assets by status and apply sorting within each group
+  const groupedAssets = useMemo(() => {
+    const groups: Record<AssetStatus, Asset[]> = {
+      'Pending': [],
+      'Quoting': [],
+      'Approved': [],
+      'In Production': [],
+      'Delivered': []
+    };
+
+    // Group assets by status
+    filteredAssets.forEach(asset => {
+      if (groups[asset.status]) {
+        groups[asset.status].push(asset);
+      }
+    });
+
+    // Apply sorting within each status group
+    const sortFunction = (a: Asset, b: Asset) => {
       let comparison = 0;
       
       switch (sortBy) {
@@ -279,29 +304,20 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
       }
 
       return sortOrder === 'asc' ? comparison : -comparison;
-    });
-
-    return filtered;
-  }, [assets, searchTerm, selectedStatuses, selectedTags, sortBy, sortOrder]);
-
-  // Group filtered assets by status
-  const groupedAssets = useMemo(() => {
-    const groups: Record<AssetStatus, Asset[]> = {
-      'Pending': [],
-      'Quoting': [],
-      'Approved': [],
-      'In Production': [],
-      'Delivered': []
     };
 
-    filteredAndSortedAssets.forEach(asset => {
-      if (groups[asset.status]) {
-        groups[asset.status].push(asset);
-      }
+    // Sort each group
+    Object.keys(groups).forEach(status => {
+      groups[status as AssetStatus].sort(sortFunction);
     });
 
     return groups;
-  }, [filteredAndSortedAssets]);
+  }, [filteredAssets, sortBy, sortOrder]);
+
+  // For display purposes, get all filtered assets (used for count)
+  const filteredAndSortedAssets = useMemo(() => {
+    return Object.values(groupedAssets).flat();
+  }, [groupedAssets]);
 
   // Filter out empty status groups for display
   const activeStatuses = useMemo(() => {
@@ -510,7 +526,15 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
 
             {/* Sort Controls */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sort By
+                <span className="ml-2 text-xs text-purple-600 font-normal">
+                  ({sortBy === 'date' ? 'Date Added' : 
+                    sortBy === 'name' ? 'Name' : 
+                    sortBy === 'status' ? 'Status' : 
+                    sortBy === 'quantity' ? 'Quantity' : 'Date Added'} - {sortOrder === 'asc' ? 'A→Z' : 'Z→A'})
+                </span>
+              </label>
               <div className="flex items-center gap-2">
                 <select
                   value={sortBy}
@@ -524,18 +548,31 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
                 </select>
                 <button
                   onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className={`p-2 border rounded-lg transition-colors ${
+                    sortOrder === 'asc' 
+                      ? 'border-purple-300 bg-purple-50 text-purple-700' 
+                      : 'border-gray-300 hover:bg-gray-50'
+                  }`}
                   title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
                 >
-                  <ArrowUpDown className={`w-4 h-4 ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
+                  <ArrowUpDown className={`w-4 h-4 transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Clear All Filters */}
-          {(selectedStatuses.length > 0 || selectedTags.length > 0 || searchTerm) && (
-            <div className="flex justify-end">
+          {(selectedStatuses.length > 0 || selectedTags.length > 0 || searchTerm || sortBy !== 'date' || sortOrder !== 'desc') && (
+            <div className="flex justify-between">
+              <button
+                onClick={() => {
+                  setSortBy('date');
+                  setSortOrder('desc');
+                }}
+                className="text-sm text-gray-600 hover:text-gray-800 underline"
+              >
+                Reset sort
+              </button>
               <button
                 onClick={() => {
                   setSearchTerm('');
