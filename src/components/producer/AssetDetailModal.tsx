@@ -380,33 +380,33 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 </div>
               )}
 
-              {/* Timeline Management Section */}
-              <section>
+              {/* Timeline Management Section - Temporarily disabled for debugging */}
+              {/* <section>
                 <AssetTimelineManager 
                   asset={asset}
                   onTimelineUpdate={() => {
                     // Refresh asset data if needed
                   }}
                 />
-              </section>
+              </section> */}
 
-              {/* Supplier Status Tracking Section */}
-              <section>
+              {/* Supplier Status Tracking Section - Temporarily disabled for debugging */}
+              {/* <section>
                 <SupplierStatusTracker 
                   asset={asset}
                   onStatusUpdate={() => {
                     // Refresh data if needed
                   }}
                 />
-              </section>
+              </section> */}
 
-              {/* Quotes Section */}
-              <section>
+              {/* Quotes Section - Temporarily disabled for debugging */}
+              {/* <section>
                 <QuotesList 
                   assetId={asset.id} 
                   assetName={asset.asset_name}
                 />
-              </section>
+              </section> */}
 
               {/* Metadata Section */}
               <section>
@@ -478,13 +478,13 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
         </div>
       </div>
 
-      {/* Asset Subdivision Modal */}
-      <AssetSubdivisionModal
+      {/* Asset Subdivision Modal - Temporarily disabled for debugging */}
+      {/* <AssetSubdivisionModal
         isOpen={isSubdivisionModalOpen}
         originalAsset={asset}
         onClose={() => setIsSubdivisionModalOpen(false)}
         onAssetsCreated={handleAssetsCreated}
-      />
+      /> */}
     </div>
   );
 };
