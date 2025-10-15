@@ -616,8 +616,8 @@ const ProjectDetailPage: React.FC = () => {
         variant="danger"
       />
 
-      {/* Asset Detail Modal (for clicking highlighted brief text) */}
-      <AssetDetailModal
+      {/* Asset Detail Modal (for clicking highlighted brief text) - DISABLED FOR DEBUGGING */}
+      {/* <AssetDetailModal
         isOpen={isAssetDetailModalOpen}
         asset={viewingAsset}
         onClose={() => {
@@ -625,7 +625,7 @@ const ProjectDetailPage: React.FC = () => {
           setViewingAsset(null);
         }}
         onAssetUpdate={handleAssetUpdate}
-      />
+      /> */}
     </>
   );
 };
