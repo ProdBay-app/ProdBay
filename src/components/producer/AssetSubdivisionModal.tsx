@@ -136,13 +136,14 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
         aria-hidden="true"
+        style={{ zIndex: 100000 }}
       />
 
       {/* Modal Container */}
-      <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="fixed inset-0 overflow-y-auto" style={{ zIndex: 100001 }}>
         <div className="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
           {/* Modal Content */}
           <div
