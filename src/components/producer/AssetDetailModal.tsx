@@ -468,13 +468,13 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
         </div>
       </div>
 
-      {/* Asset Subdivision Modal - Temporarily disabled for debugging */}
-      {/* <AssetSubdivisionModal
+      {/* Asset Subdivision Modal */}
+      <AssetSubdivisionModal
         isOpen={isSubdivisionModalOpen}
         originalAsset={asset}
         onClose={() => setIsSubdivisionModalOpen(false)}
         onAssetsCreated={handleAssetsCreated}
-      /> */}
+      />
     </div>
   );
 };
