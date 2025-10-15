@@ -104,7 +104,7 @@ const AssetDetailModalTest: React.FC<AssetDetailModalTestProps> = ({ isOpen, ass
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
