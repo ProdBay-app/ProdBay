@@ -11,7 +11,8 @@
  * Development mode is detected by:
  * 1. NODE_ENV being 'development' (Vite sets this automatically)
  * 2. Running on localhost (for local development)
- * 3. Having a specific development flag in the environment
+ * 3. Running on Vercel preview/staging domains
+ * 4. Having a specific development flag in the environment
  * 
  * @returns {boolean} True if running in development mode
  */
@@ -26,6 +27,19 @@ export const isDevelopmentMode = (): boolean => {
     return true;
   }
 
+  // Check for Vercel preview/staging environments
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // Vercel preview URLs: *.vercel.app, *.vercel-staging.com
+    if (hostname.includes('.vercel.app') || hostname.includes('.vercel-staging.com')) {
+      return true;
+    }
+    // Custom staging domains (you can add your specific staging domain here)
+    if (hostname.includes('staging') || hostname.includes('dev') || hostname.includes('test')) {
+      return true;
+    }
+  }
+
   // Check for explicit development flag
   if (import.meta.env.VITE_DEV_MODE === 'true') {
     return true;
@@ -38,12 +52,35 @@ export const isDevelopmentMode = (): boolean => {
  * Check if supplier impersonation should be enabled
  * 
  * This is a more specific check for the impersonation feature,
- * which should only be available in development environments.
+ * which should be available in development and staging environments.
  * 
  * @returns {boolean} True if supplier impersonation should be enabled
  */
 export const isSupplierImpersonationEnabled = (): boolean => {
   return isDevelopmentMode();
+};
+
+/**
+ * Check if we're running on a staging environment
+ * 
+ * @returns {boolean} True if running on staging
+ */
+export const isStagingEnvironment = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  
+  const hostname = window.location.hostname;
+  
+  // Vercel staging domains
+  if (hostname.includes('.vercel.app') || hostname.includes('.vercel-staging.com')) {
+    return true;
+  }
+  
+  // Custom staging domains
+  if (hostname.includes('staging') || hostname.includes('dev') || hostname.includes('test')) {
+    return true;
+  }
+  
+  return false;
 };
 
 /**
@@ -56,6 +93,7 @@ export const getDevEnvironmentInfo = () => {
     mode: import.meta.env.MODE,
     hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
     isDev: isDevelopmentMode(),
+    isStaging: isStagingEnvironment(),
     isImpersonationEnabled: isSupplierImpersonationEnabled(),
   };
 };

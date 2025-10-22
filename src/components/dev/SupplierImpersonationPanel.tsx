@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSupplierImpersonation } from '@/contexts/SupplierImpersonationContext';
-import { Users, UserCheck, X, RefreshCw } from 'lucide-react';
+import { getDevEnvironmentInfo } from '@/utils/devMode';
+import { Users, UserCheck, X, RefreshCw, Info } from 'lucide-react';
 
 const SupplierImpersonationPanel: React.FC = () => {
   const {
@@ -12,6 +13,8 @@ const SupplierImpersonationPanel: React.FC = () => {
     stopImpersonation,
     refreshSuppliers,
   } = useSupplierImpersonation();
+  
+  const envInfo = getDevEnvironmentInfo();
 
   const handleSupplierSelect = (supplierId: string) => {
     const supplier = availableSuppliers.find(s => s.id === supplierId);
@@ -26,6 +29,10 @@ const SupplierImpersonationPanel: React.FC = () => {
         <div className="flex items-center space-x-2">
           <Users className="h-5 w-5 text-yellow-600" />
           <h3 className="text-lg font-semibold text-yellow-800">Developer: Supplier Impersonation</h3>
+          <div className="flex items-center space-x-1 px-2 py-1 bg-yellow-200 text-yellow-800 rounded text-xs">
+            <Info className="h-3 w-3" />
+            <span>{envInfo.isStaging ? 'Staging' : 'Local'}</span>
+          </div>
         </div>
         <button
           onClick={refreshSuppliers}
