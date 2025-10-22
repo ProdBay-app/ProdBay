@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Quote, Asset, Project } from '@/lib/supabase';
-import { FileText, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
+import { useSupplierImpersonation } from '@/contexts/SupplierImpersonationContext';
+import { FileText, CheckCircle, XCircle, Clock, Eye, UserCheck } from 'lucide-react';
 
 export interface SupplierQuote extends Quote {
   asset?: Asset;
@@ -10,30 +11,36 @@ export interface SupplierQuote extends Quote {
 export interface SupplierDashboardProps {
   // Data
   quotes: SupplierQuote[];
-  loading: boolean;
   
   // Utils
   getStatusBadge: (status: string) => React.ReactElement;
-  
-  // Actions
-  loadQuotes: () => Promise<void>;
-  refreshQuotes: () => Promise<void>;
 }
 
 const SupplierDashboard: React.FC<SupplierDashboardProps> = ({
   quotes,
-  loading,
-  getStatusBadge,
-  loadQuotes,
-  refreshQuotes
+  getStatusBadge
 }) => {
+  const { isImpersonating, impersonatedSupplier } = useSupplierImpersonation();
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Quotes</h1>
-          <p className="text-gray-600 mt-1">View quotes you have submitted and their status</p>
+          <div className="flex items-center space-x-3">
+            <h1 className="text-3xl font-bold text-gray-900">My Quotes</h1>
+            {isImpersonating && (
+              <div className="flex items-center space-x-2 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                <UserCheck className="h-4 w-4" />
+                <span>Impersonating: {impersonatedSupplier?.supplier_name}</span>
+              </div>
+            )}
+          </div>
+          <p className="text-gray-600 mt-1">
+            {isImpersonating 
+              ? `View quotes for ${impersonatedSupplier?.supplier_name} (Developer Mode)`
+              : 'View quotes you have submitted and their status'
+            }
+          </p>
         </div>
       </div>
 

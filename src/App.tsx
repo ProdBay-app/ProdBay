@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { SupplierImpersonationProvider } from '@/contexts/SupplierImpersonationContext';
 import LoadingFallback from '@/components/LoadingFallback';
 
 // Lazy-loaded routes and layouts to reduce initial bundle size
@@ -42,7 +43,11 @@ function App() {
         </Route>
         
         {/* Supplier routes */}
-        <Route path="/supplier" element={<Layout />}>
+        <Route path="/supplier" element={
+          <SupplierImpersonationProvider>
+            <Layout />
+          </SupplierImpersonationProvider>
+        }>
           <Route index element={<Navigate to="/supplier/quotes" replace />} />
           <Route path="quotes" element={<SupplierDashboard />} />
           <Route path="submit" element={<SupplierSubmitQuote />} />

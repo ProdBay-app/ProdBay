@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getSupabase } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
+import { useSupplierImpersonation } from '@/contexts/SupplierImpersonationContext';
 import SupplierDashboard from './SupplierDashboard';
+import SupplierImpersonationPanel from '@/components/dev/SupplierImpersonationPanel';
+import DevOnlyWrapper from '@/components/dev/DevOnlyWrapper';
 import type { Quote, Asset, Project } from '@/lib/supabase';
 
 export interface SupplierQuote extends Quote {
@@ -38,26 +41,35 @@ export interface SupplierDashboardProps extends
 
 const SupplierDashboardContainer: React.FC = () => {
   const { showError } = useNotification();
+  const { isImpersonating, impersonatedSupplier } = useSupplierImpersonation();
   
   // State
   const [quotes, setQuotes] = useState<SupplierQuote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load quotes on mount
+  // Load quotes on mount and when impersonation state changes
   useEffect(() => {
     loadQuotes();
-  }, []);
+  }, [isImpersonating, impersonatedSupplier]);
 
   // Data fetching function
   const loadQuotes = useCallback(async () => {
     try {
       setError(null);
       const supabase = await getSupabase();
-      const { data, error } = await supabase
+      
+      // Build query based on impersonation state
+      let query = supabase
         .from('quotes')
-        .select(`*, asset:assets(*, project:projects(*))`)
-        .order('created_at', { ascending: false });
+        .select(`*, asset:assets(*, project:projects(*))`);
+      
+      // If impersonating, filter by supplier_id
+      if (isImpersonating && impersonatedSupplier) {
+        query = query.eq('supplier_id', impersonatedSupplier.id);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -75,7 +87,7 @@ const SupplierDashboardContainer: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [showError]);
+  }, [showError, isImpersonating, impersonatedSupplier]);
 
   // Refresh quotes data
   const refreshQuotes = useCallback(async () => {
@@ -125,13 +137,17 @@ const SupplierDashboardContainer: React.FC = () => {
 
   // Pass all data and functions to the presentational component
   return (
-    <SupplierDashboard
-      quotes={quotes}
-      loading={loading}
-      getStatusBadge={getStatusBadge}
-      loadQuotes={loadQuotes}
-      refreshQuotes={refreshQuotes}
-    />
+    <div className="space-y-6">
+      {/* Development-only supplier impersonation panel */}
+      <DevOnlyWrapper>
+        <SupplierImpersonationPanel />
+      </DevOnlyWrapper>
+      
+      <SupplierDashboard
+        quotes={quotes}
+        getStatusBadge={getStatusBadge}
+      />
+    </div>
   );
 };
 
