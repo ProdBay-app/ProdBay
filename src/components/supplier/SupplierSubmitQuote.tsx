@@ -1,12 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { getSupabase } from '@/lib/supabase';
-import type { Asset, Supplier } from '@/lib/supabase';
+import { useSupplierImpersonation } from '@/contexts/SupplierImpersonationContext';
 import { useNotification } from '@/hooks/useNotification';
-import { DollarSign, FileText, Send, Package } from 'lucide-react';
+import { FileText, Send, Package, AlertCircle, Loader2 } from 'lucide-react';
+
+// Interface for quotable assets returned by the backend
+interface QuotableAsset {
+  id: string;
+  asset_name: string;
+  specifications: string;
+  timeline: string;
+  status: string;
+  created_at: string;
+  project: {
+    id: string;
+    project_name: string;
+    client_name: string;
+    brief_description: string;
+  };
+  quote_request_id: string;
+  quote_request_date: string;
+}
+
 
 const SupplierSubmitQuote: React.FC = () => {
   const { showSuccess, showError } = useNotification();
-  const [assets, setAssets] = useState<Asset[]>([]);
+  const { isImpersonating, impersonatedSupplier } = useSupplierImpersonation();
+  const [assets, setAssets] = useState<QuotableAsset[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     asset_id: '',
     cost: 0,
@@ -14,55 +36,98 @@ const SupplierSubmitQuote: React.FC = () => {
   });
   const [submitting, setSubmitting] = useState(false);
 
+  // Load quotable assets when supplier impersonation changes
   useEffect(() => {
-    loadAssets();
-  }, []);
+    if (isImpersonating && impersonatedSupplier) {
+      loadQuotableAssets();
+    } else {
+      // Clear assets when no supplier is selected
+      setAssets([]);
+      setError(null);
+    }
+  }, [isImpersonating, impersonatedSupplier]);
 
-  const loadAssets = async () => {
+  const loadQuotableAssets = async () => {
+    if (!impersonatedSupplier) {
+      setError('No supplier selected');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
     try {
-      const supabase = await getSupabase();
-      const { data } = await supabase
-        .from('assets')
-        .select('*')
-        .order('created_at', { ascending: false });
-      setAssets(data || []);
-    } catch (e) {
-      console.error('Failed to load assets', e instanceof Error ? e.message : String(e));
+      const response = await fetch(
+        `${import.meta.env.VITE_RAILWAY_API_URL}/api/suppliers/${impersonatedSupplier.id}/quotable-assets`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || `HTTP ${response.status}: Failed to fetch quotable assets`);
+      }
+
+      if (data.success) {
+        setAssets(data.data.assets || []);
+        if (data.data.assets.length === 0) {
+          setError('You have no pending quote requests.');
+        }
+      } else {
+        throw new Error(data.error?.message || 'Failed to fetch quotable assets');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load quotable assets';
+      console.error('Failed to load quotable assets:', errorMessage);
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.asset_id || formData.cost <= 0) return;
+    
+    // Check if we have a valid supplier context
+    if (!isImpersonating || !impersonatedSupplier) {
+      showError('No supplier selected. Please use the supplier impersonation panel to select a supplier.');
+      return;
+    }
+    
     setSubmitting(true);
     try {
-      // In a real app, supplier_id is from auth. For MVP, pick first supplier or a placeholder.
-      let supplierId: string | null = null;
-      const { data: suppliers } = await (await getSupabase()).from('suppliers').select('id').limit(1);
-      supplierId = suppliers && suppliers.length > 0 ? suppliers[0].id : null;
-
-      if (!supplierId) {
-        showError('No supplier found. Please ask admin to create a supplier entry.');
-        return;
-      }
-
       const supabase = await getSupabase();
       const { error } = await supabase
         .from('quotes')
         .insert({
-          supplier_id: supplierId,
+          supplier_id: impersonatedSupplier.id,
           asset_id: formData.asset_id,
           cost: formData.cost,
           notes_capacity: formData.notes_capacity,
           status: 'Submitted'
         });
 
-      if (error) throw error;
-      showSuccess('Quote submitted successfully');
+      if (error) {
+        // Handle specific RLS policy violations
+        if (error.message.includes('new row violates row-level security policy')) {
+          throw new Error('You are not authorized to submit quotes for this asset. Please contact the administrator.');
+        }
+        throw error;
+      }
+      
+      showSuccess(`Quote submitted successfully for ${impersonatedSupplier.supplier_name}`);
       setFormData({ asset_id: '', cost: 0, notes_capacity: '' });
     } catch (err) {
       console.error('Failed to submit quote', err instanceof Error ? err.message : String(err));
-      showError('Failed to submit quote');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to submit quote';
+      showError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -76,6 +141,63 @@ const SupplierSubmitQuote: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Submit Quote</h1>
         </div>
 
+        {/* Supplier Context Indicator */}
+        {isImpersonating && impersonatedSupplier ? (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <Package className="h-5 w-5 text-blue-600" />
+              <span className="text-sm font-medium text-blue-800">
+                Submitting quote as: <strong>{impersonatedSupplier.supplier_name}</strong>
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+              <span className="text-sm font-medium text-yellow-800">
+                No supplier selected. Please use the supplier impersonation panel to select a supplier.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+              <span className="text-sm font-medium text-blue-800">
+                Loading your quotable assets...
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <span className="text-sm font-medium text-red-800">
+                {error}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* No Assets State */}
+        {!loading && !error && assets.length === 0 && isImpersonating && impersonatedSupplier && (
+          <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <Package className="h-5 w-5 text-gray-600" />
+              <span className="text-sm font-medium text-gray-800">
+                You have no pending quote requests. Check back later or contact the producer.
+              </span>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Asset *</label>
@@ -83,13 +205,28 @@ const SupplierSubmitQuote: React.FC = () => {
               value={formData.asset_id}
               onChange={(e) => setFormData((p) => ({ ...p, asset_id: e.target.value }))}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              disabled={loading || assets.length === 0}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">Select an asset</option>
-              {assets.map((a) => (
-                <option key={a.id} value={a.id}>{a.asset_name}</option>
+              <option value="">
+                {loading 
+                  ? 'Loading assets...' 
+                  : assets.length === 0 
+                    ? 'No quotable assets available' 
+                    : 'Select an asset'
+                }
+              </option>
+              {assets.map((asset) => (
+                <option key={asset.id} value={asset.id}>
+                  {asset.asset_name} - {asset.project.client_name}
+                </option>
               ))}
             </select>
+            {assets.length > 0 && (
+              <p className="mt-1 text-xs text-gray-500">
+                {assets.length} asset{assets.length !== 1 ? 's' : ''} available for quoting
+              </p>
+            )}
           </div>
 
           <div>
@@ -123,11 +260,28 @@ const SupplierSubmitQuote: React.FC = () => {
           <div className="flex justify-end pt-4 border-t">
             <button
               type="submit"
-              disabled={submitting || !formData.asset_id || formData.cost <= 0}
-              className="flex items-center space-x-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+              disabled={
+                submitting || 
+                loading || 
+                !formData.asset_id || 
+                formData.cost <= 0 || 
+                !isImpersonating || 
+                !impersonatedSupplier ||
+                assets.length === 0
+              }
+              className="flex items-center space-x-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Send className="h-4 w-4" />
-              <span>{submitting ? 'Submitting...' : 'Submit Quote'}</span>
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Submitting...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  <span>Submit Quote</span>
+                </>
+              )}
             </button>
           </div>
         </form>

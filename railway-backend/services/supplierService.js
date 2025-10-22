@@ -467,6 +467,212 @@ ${fromEmail}`;
       };
     }
   }
+
+  /**
+   * Submit a quote with ownership validation
+   * @param {Object} quoteData - Quote data including supplier_id, asset_id, cost, etc.
+   * @returns {Promise<Object>} Created quote
+   */
+  static async submitQuote(quoteData) {
+    try {
+      const { supplier_id, asset_id, cost, notes_capacity, status } = quoteData;
+
+      // Validate that supplier exists
+      const { data: supplier, error: supplierError } = await supabase
+        .from('suppliers')
+        .select('id, supplier_name')
+        .eq('id', supplier_id)
+        .single();
+
+      if (supplierError || !supplier) {
+        throw new Error(`Supplier not found: ${supplier_id}`);
+      }
+
+      // Validate that asset exists
+      const { data: asset, error: assetError } = await supabase
+        .from('assets')
+        .select('id, asset_name')
+        .eq('id', asset_id)
+        .single();
+
+      if (assetError || !asset) {
+        throw new Error(`Asset not found: ${asset_id}`);
+      }
+
+      // Create the quote
+      const { data: quote, error: quoteError } = await supabase
+        .from('quotes')
+        .insert({
+          supplier_id,
+          asset_id,
+          cost,
+          notes_capacity: notes_capacity || '',
+          status: status || 'Submitted'
+        })
+        .select(`
+          *,
+          supplier:suppliers(*),
+          asset:assets(*)
+        `)
+        .single();
+
+      if (quoteError) {
+        throw new Error(`Failed to create quote: ${quoteError.message}`);
+      }
+
+      return {
+        quote,
+        supplier: supplier.supplier_name,
+        asset: asset.asset_name
+      };
+
+    } catch (error) {
+      console.error('Error in submitQuote:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a quote with ownership validation
+   * @param {string} quoteId - Quote ID to update
+   * @param {Object} updateData - Data to update
+   * @param {string} impersonatedSupplierId - ID of the impersonated supplier
+   * @returns {Promise<Object>} Updated quote
+   */
+  static async updateQuote(quoteId, updateData, impersonatedSupplierId) {
+    try {
+      // First, get the quote to validate ownership
+      const { data: existingQuote, error: fetchError } = await supabase
+        .from('quotes')
+        .select('id, supplier_id, supplier:suppliers(supplier_name)')
+        .eq('id', quoteId)
+        .single();
+
+      if (fetchError || !existingQuote) {
+        throw new Error(`Quote not found: ${quoteId}`);
+      }
+
+      // Validate ownership
+      if (existingQuote.supplier_id !== impersonatedSupplierId) {
+        throw new Error(`Ownership violation: Quote belongs to ${existingQuote.supplier.supplier_name}, but you are impersonating a different supplier`);
+      }
+
+      // Update the quote
+      const { data: updatedQuote, error: updateError } = await supabase
+        .from('quotes')
+        .update(updateData)
+        .eq('id', quoteId)
+        .select(`
+          *,
+          supplier:suppliers(*),
+          asset:assets(*)
+        `)
+        .single();
+
+      if (updateError) {
+        throw new Error(`Failed to update quote: ${updateError.message}`);
+      }
+
+      return {
+        quote: updatedQuote,
+        supplier: existingQuote.supplier.supplier_name
+      };
+
+    } catch (error) {
+      console.error('Error in updateQuote:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get quotable assets for a specific supplier
+   * Returns assets for which the supplier has received quote requests with 'Pending' status
+   * @param {string} supplierId - The supplier's UUID
+   * @returns {Promise<Object>} Object containing assets and metadata
+   */
+  static async getQuotableAssets(supplierId) {
+    try {
+      // First, verify the supplier exists
+      const { data: supplier, error: supplierError } = await supabase
+        .from('suppliers')
+        .select('id, supplier_name')
+        .eq('id', supplierId)
+        .single();
+
+      if (supplierError || !supplier) {
+        throw new Error(`Supplier not found: ${supplierId}`);
+      }
+
+      // Query for assets with pending quote requests for this supplier
+      const { data: quotes, error: quotesError } = await supabase
+        .from('quotes')
+        .select(`
+          id,
+          asset_id,
+          status,
+          created_at,
+          asset:assets(
+            id,
+            asset_name,
+            specifications,
+            timeline,
+            status,
+            created_at,
+            project:projects(
+              id,
+              project_name,
+              client_name,
+              brief_description
+            )
+          )
+        `)
+        .eq('supplier_id', supplierId)
+        .eq('status', 'Pending')
+        .order('created_at', { ascending: false });
+
+      if (quotesError) {
+        console.error('Error fetching quotable assets:', quotesError);
+        throw new Error(`Database connection failed: ${quotesError.message}`);
+      }
+
+      // Extract unique assets from the quotes
+      const assets = [];
+      const seenAssetIds = new Set();
+
+      for (const quote of quotes || []) {
+        if (quote.asset && !seenAssetIds.has(quote.asset.id)) {
+          seenAssetIds.add(quote.asset.id);
+          assets.push({
+            id: quote.asset.id,
+            asset_name: quote.asset.asset_name,
+            specifications: quote.asset.specifications,
+            timeline: quote.asset.timeline,
+            status: quote.asset.status,
+            created_at: quote.asset.created_at,
+            project: quote.asset.project,
+            quote_request_id: quote.id,
+            quote_request_date: quote.created_at
+          });
+        }
+      }
+
+      return {
+        supplier: {
+          id: supplier.id,
+          supplier_name: supplier.supplier_name
+        },
+        assets: assets,
+        total_count: assets.length,
+        message: assets.length === 0 
+          ? 'No pending quote requests found for this supplier'
+          : `Found ${assets.length} assets with pending quote requests`
+      };
+
+    } catch (error) {
+      console.error('Error in getQuotableAssets:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = SupplierService;
