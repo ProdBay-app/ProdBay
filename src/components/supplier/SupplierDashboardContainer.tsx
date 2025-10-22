@@ -4,6 +4,7 @@ import { useNotification } from '@/hooks/useNotification';
 import { useSupplierImpersonation } from '@/contexts/SupplierImpersonationContext';
 import SupplierDashboard from './SupplierDashboard';
 import SupplierImpersonationPanel from '@/components/dev/SupplierImpersonationPanel';
+import OwnershipTestPanel from '@/components/dev/OwnershipTestPanel';
 import DevOnlyWrapper from '@/components/dev/DevOnlyWrapper';
 import type { Quote, Asset, Project } from '@/lib/supabase';
 
@@ -141,6 +142,11 @@ const SupplierDashboardContainer: React.FC = () => {
       {/* Development-only supplier impersonation panel */}
       <DevOnlyWrapper>
         <SupplierImpersonationPanel />
+      </DevOnlyWrapper>
+      
+      {/* Development-only ownership test panel */}
+      <DevOnlyWrapper>
+        <OwnershipTestPanel />
       </DevOnlyWrapper>
       
       <SupplierDashboard

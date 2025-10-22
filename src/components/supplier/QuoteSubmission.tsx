@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSupabase } from '@/lib/supabase';
-import type { Quote, Asset, Supplier } from '@/lib/supabase';
+import { useSupplierImpersonation } from '@/contexts/SupplierImpersonationContext';
+import type { Quote, Asset, Supplier, Project } from '@/lib/supabase';
+
+interface AssetWithProject extends Asset {
+  project?: Project;
+}
 import { useNotification } from '@/hooks/useNotification';
 import { 
   DollarSign, 
@@ -10,15 +15,18 @@ import {
   CheckCircle, 
   Package, 
   Clock,
-  Building2 
+  Building2,
+  AlertCircle,
+  UserCheck
 } from 'lucide-react';
 
 const QuoteSubmission: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
+  const { isImpersonating, impersonatedSupplier } = useSupplierImpersonation();
   const [quote, setQuote] = useState<Quote | null>(null);
-  const [asset, setAsset] = useState<Asset | null>(null);
+  const [asset, setAsset] = useState<AssetWithProject | null>(null);
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [formData, setFormData] = useState({
     cost: 0,
@@ -27,6 +35,7 @@ const QuoteSubmission: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [ownershipValidated, setOwnershipValidated] = useState(false);
 
   const handleLogoClick = () => {
     navigate('/');
@@ -63,6 +72,19 @@ const QuoteSubmission: React.FC = () => {
       setAsset(quoteData.asset);
       setSupplier(quoteData.supplier);
 
+      // Validate ownership if impersonation is active
+      if (isImpersonating && impersonatedSupplier) {
+        if (quoteData.supplier_id !== impersonatedSupplier.id) {
+          showError(`This quote is assigned to ${quoteData.supplier.supplier_name}, but you are impersonating ${impersonatedSupplier.supplier_name}. Please select the correct supplier.`);
+          setOwnershipValidated(false);
+        } else {
+          setOwnershipValidated(true);
+        }
+      } else {
+        // If not impersonating, allow access (for public token-based access)
+        setOwnershipValidated(true);
+      }
+
       // If quote already has data, populate form
       if (quoteData.cost > 0 || quoteData.notes_capacity) {
         setFormData({
@@ -84,6 +106,13 @@ const QuoteSubmission: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check ownership validation
+    if (!ownershipValidated) {
+      showError('You are not authorized to submit this quote. Please select the correct supplier.');
+      return;
+    }
+    
     setSubmitting(true);
 
     try {
@@ -97,13 +126,21 @@ const QuoteSubmission: React.FC = () => {
         })
         .eq('id', quote!.id);
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific RLS policy violations
+        if (error.message.includes('new row violates row-level security policy') || 
+            error.message.includes('violates row-level security policy')) {
+          throw new Error('You are not authorized to update this quote. Please contact the administrator.');
+        }
+        throw error;
+      }
 
       setSubmitted(true);
       showSuccess('Quote submitted successfully!');
     } catch (error) {
       console.error('Error submitting quote:', error);
-      showError('Failed to submit quote. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit quote. Please try again.';
+      showError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -230,6 +267,31 @@ const QuoteSubmission: React.FC = () => {
                 <h2 className="text-xl font-semibold">Submit Your Quote</h2>
               </div>
 
+              {/* Ownership Validation Indicator */}
+              {isImpersonating && impersonatedSupplier && (
+                <div className={`mb-6 p-4 rounded-lg border ${
+                  ownershipValidated 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
+                }`}>
+                  <div className="flex items-center space-x-2">
+                    {ownershipValidated ? (
+                      <UserCheck className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-red-600" />
+                    )}
+                    <span className={`text-sm font-medium ${
+                      ownershipValidated ? 'text-green-800' : 'text-red-800'
+                    }`}>
+                      {ownershipValidated 
+                        ? `✓ Authorized to submit quote as ${impersonatedSupplier.supplier_name}`
+                        : `✗ This quote is assigned to ${supplier?.supplier_name}, but you are impersonating ${impersonatedSupplier.supplier_name}`
+                      }
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="cost" className="block text-sm font-medium text-gray-700 mb-2">
@@ -268,7 +330,7 @@ const QuoteSubmission: React.FC = () => {
                 <div className="flex justify-end pt-4 border-t">
                   <button
                     type="submit"
-                    disabled={submitting || formData.cost <= 0}
+                    disabled={submitting || formData.cost <= 0 || !ownershipValidated}
                     className="flex items-center space-x-2 px-8 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <Send className="h-4 w-4" />

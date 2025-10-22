@@ -107,6 +107,8 @@ app.get('/', (req, res) => {
       'GET /api/health': 'Health check endpoint',
       'GET /api/suppliers/suggestions/:assetId': 'Get suggested suppliers for an asset',
       'POST /api/suppliers/send-quote-requests': 'Send quote requests to selected suppliers',
+      'POST /api/suppliers/submit-quote': 'Submit a quote with ownership validation (requires x-impersonated-supplier-id header)',
+      'PUT /api/suppliers/update-quote': 'Update a quote with ownership validation (requires x-impersonated-supplier-id header)',
       'GET /api/suppliers/health': 'Supplier service health check',
       'POST /api/ai-allocate-assets': 'AI-powered asset analysis from brief',
       'POST /api/ai-create-assets': 'Create assets based on AI analysis',

@@ -467,6 +467,122 @@ ${fromEmail}`;
       };
     }
   }
+
+  /**
+   * Submit a quote with ownership validation
+   * @param {Object} quoteData - Quote data including supplier_id, asset_id, cost, etc.
+   * @returns {Promise<Object>} Created quote
+   */
+  static async submitQuote(quoteData) {
+    try {
+      const { supplier_id, asset_id, cost, notes_capacity, status } = quoteData;
+
+      // Validate that supplier exists
+      const { data: supplier, error: supplierError } = await supabase
+        .from('suppliers')
+        .select('id, supplier_name')
+        .eq('id', supplier_id)
+        .single();
+
+      if (supplierError || !supplier) {
+        throw new Error(`Supplier not found: ${supplier_id}`);
+      }
+
+      // Validate that asset exists
+      const { data: asset, error: assetError } = await supabase
+        .from('assets')
+        .select('id, asset_name')
+        .eq('id', asset_id)
+        .single();
+
+      if (assetError || !asset) {
+        throw new Error(`Asset not found: ${asset_id}`);
+      }
+
+      // Create the quote
+      const { data: quote, error: quoteError } = await supabase
+        .from('quotes')
+        .insert({
+          supplier_id,
+          asset_id,
+          cost,
+          notes_capacity: notes_capacity || '',
+          status: status || 'Submitted'
+        })
+        .select(`
+          *,
+          supplier:suppliers(*),
+          asset:assets(*)
+        `)
+        .single();
+
+      if (quoteError) {
+        throw new Error(`Failed to create quote: ${quoteError.message}`);
+      }
+
+      return {
+        quote,
+        supplier: supplier.supplier_name,
+        asset: asset.asset_name
+      };
+
+    } catch (error) {
+      console.error('Error in submitQuote:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a quote with ownership validation
+   * @param {string} quoteId - Quote ID to update
+   * @param {Object} updateData - Data to update
+   * @param {string} impersonatedSupplierId - ID of the impersonated supplier
+   * @returns {Promise<Object>} Updated quote
+   */
+  static async updateQuote(quoteId, updateData, impersonatedSupplierId) {
+    try {
+      // First, get the quote to validate ownership
+      const { data: existingQuote, error: fetchError } = await supabase
+        .from('quotes')
+        .select('id, supplier_id, supplier:suppliers(supplier_name)')
+        .eq('id', quoteId)
+        .single();
+
+      if (fetchError || !existingQuote) {
+        throw new Error(`Quote not found: ${quoteId}`);
+      }
+
+      // Validate ownership
+      if (existingQuote.supplier_id !== impersonatedSupplierId) {
+        throw new Error(`Ownership violation: Quote belongs to ${existingQuote.supplier.supplier_name}, but you are impersonating a different supplier`);
+      }
+
+      // Update the quote
+      const { data: updatedQuote, error: updateError } = await supabase
+        .from('quotes')
+        .update(updateData)
+        .eq('id', quoteId)
+        .select(`
+          *,
+          supplier:suppliers(*),
+          asset:assets(*)
+        `)
+        .single();
+
+      if (updateError) {
+        throw new Error(`Failed to update quote: ${updateError.message}`);
+      }
+
+      return {
+        quote: updatedQuote,
+        supplier: existingQuote.supplier.supplier_name
+      };
+
+    } catch (error) {
+      console.error('Error in updateQuote:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = SupplierService;
