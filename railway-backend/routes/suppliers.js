@@ -429,6 +429,81 @@ router.post('/submit-quote', async (req, res) => {
 });
 
 /**
+ * GET /api/suppliers/:supplierId/quotable-assets
+ * Get assets for which the supplier has received quote requests (Pending status)
+ */
+router.get('/:supplierId/quotable-assets', async (req, res) => {
+  try {
+    const { supplierId } = req.params;
+
+    // Validate supplierId parameter
+    if (!supplierId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_PARAMETER',
+          message: 'Supplier ID is required'
+        }
+      });
+    }
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(supplierId)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_SUPPLIER_ID',
+          message: 'Supplier ID must be a valid UUID'
+        }
+      });
+    }
+
+    // Get quotable assets for the supplier
+    const result = await SupplierService.getQuotableAssets(supplierId);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      message: `Found ${result.assets.length} quotable assets for supplier`
+    });
+
+  } catch (error) {
+    console.error('Quotable assets endpoint error:', error);
+
+    // Handle specific error types
+    if (error.message.includes('Supplier not found')) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'SUPPLIER_NOT_FOUND',
+          message: error.message
+        }
+      });
+    }
+
+    if (error.message.includes('Database connection failed')) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Failed to connect to database'
+        }
+      });
+    }
+
+    // Generic error handler
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while fetching quotable assets'
+      }
+    });
+  }
+});
+
+/**
  * PUT /api/suppliers/update-quote
  * Update a quote with ownership validation
  */

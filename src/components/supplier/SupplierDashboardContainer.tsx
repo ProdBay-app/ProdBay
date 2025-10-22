@@ -5,6 +5,7 @@ import { useSupplierImpersonation } from '@/contexts/SupplierImpersonationContex
 import SupplierDashboard from './SupplierDashboard';
 import SupplierImpersonationPanel from '@/components/dev/SupplierImpersonationPanel';
 import OwnershipTestPanel from '@/components/dev/OwnershipTestPanel';
+import QuotableAssetsTestPanel from '@/components/dev/QuotableAssetsTestPanel';
 import DevOnlyWrapper from '@/components/dev/DevOnlyWrapper';
 import type { Quote, Asset, Project } from '@/lib/supabase';
 
@@ -147,6 +148,11 @@ const SupplierDashboardContainer: React.FC = () => {
       {/* Development-only ownership test panel */}
       <DevOnlyWrapper>
         <OwnershipTestPanel />
+      </DevOnlyWrapper>
+      
+      {/* Development-only quotable assets test panel */}
+      <DevOnlyWrapper>
+        <QuotableAssetsTestPanel />
       </DevOnlyWrapper>
       
       <SupplierDashboard

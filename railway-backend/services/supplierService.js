@@ -583,6 +583,96 @@ ${fromEmail}`;
       throw error;
     }
   }
+
+  /**
+   * Get quotable assets for a specific supplier
+   * Returns assets for which the supplier has received quote requests with 'Pending' status
+   * @param {string} supplierId - The supplier's UUID
+   * @returns {Promise<Object>} Object containing assets and metadata
+   */
+  static async getQuotableAssets(supplierId) {
+    try {
+      // First, verify the supplier exists
+      const { data: supplier, error: supplierError } = await supabase
+        .from('suppliers')
+        .select('id, supplier_name')
+        .eq('id', supplierId)
+        .single();
+
+      if (supplierError || !supplier) {
+        throw new Error(`Supplier not found: ${supplierId}`);
+      }
+
+      // Query for assets with pending quote requests for this supplier
+      const { data: quotes, error: quotesError } = await supabase
+        .from('quotes')
+        .select(`
+          id,
+          asset_id,
+          status,
+          created_at,
+          asset:assets(
+            id,
+            asset_name,
+            specifications,
+            timeline,
+            status,
+            created_at,
+            project:projects(
+              id,
+              project_name,
+              client_name,
+              brief_description
+            )
+          )
+        `)
+        .eq('supplier_id', supplierId)
+        .eq('status', 'Pending')
+        .order('created_at', { ascending: false });
+
+      if (quotesError) {
+        console.error('Error fetching quotable assets:', quotesError);
+        throw new Error(`Database connection failed: ${quotesError.message}`);
+      }
+
+      // Extract unique assets from the quotes
+      const assets = [];
+      const seenAssetIds = new Set();
+
+      for (const quote of quotes || []) {
+        if (quote.asset && !seenAssetIds.has(quote.asset.id)) {
+          seenAssetIds.add(quote.asset.id);
+          assets.push({
+            id: quote.asset.id,
+            asset_name: quote.asset.asset_name,
+            specifications: quote.asset.specifications,
+            timeline: quote.asset.timeline,
+            status: quote.asset.status,
+            created_at: quote.asset.created_at,
+            project: quote.asset.project,
+            quote_request_id: quote.id,
+            quote_request_date: quote.created_at
+          });
+        }
+      }
+
+      return {
+        supplier: {
+          id: supplier.id,
+          supplier_name: supplier.supplier_name
+        },
+        assets: assets,
+        total_count: assets.length,
+        message: assets.length === 0 
+          ? 'No pending quote requests found for this supplier'
+          : `Found ${assets.length} assets with pending quote requests`
+      };
+
+    } catch (error) {
+      console.error('Error in getQuotableAssets:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = SupplierService;
