@@ -6,6 +6,33 @@ const { supabase } = require('../config/database');
  */
 class SupplierService {
   /**
+   * Log a quote status change to the history table
+   * @param {string} quoteId - The quote ID
+   * @param {string} status - The new status
+   * @param {string} notes - Optional notes about the change
+   * @returns {Promise<void>}
+   */
+  static async logQuoteStatusChange(quoteId, status, notes = null) {
+    try {
+      const { error } = await supabase
+        .from('quote_status_history')
+        .insert({
+          quote_id: quoteId,
+          status: status,
+          notes: notes
+        });
+
+      if (error) {
+        console.error('Failed to log quote status change:', error);
+        // Don't throw error - logging failure shouldn't break the main operation
+      }
+    } catch (error) {
+      console.error('Error in logQuoteStatusChange:', error);
+      // Don't throw error - logging failure shouldn't break the main operation
+    }
+  }
+
+  /**
    * Find relevant suppliers based on asset requirements
    * @param {string} assetName - Name of the asset
    * @param {string[]} requiredTags - Optional tags for filtering
@@ -520,6 +547,9 @@ ${fromEmail}`;
         throw new Error(`Failed to create quote: ${quoteError.message}`);
       }
 
+      // Log the initial status change
+      await this.logQuoteStatusChange(quote.id, status || 'Submitted', 'Quote submitted by supplier');
+
       return {
         quote,
         supplier: supplier.supplier_name,
@@ -571,6 +601,11 @@ ${fromEmail}`;
 
       if (updateError) {
         throw new Error(`Failed to update quote: ${updateError.message}`);
+      }
+
+      // Log the status change if the status was updated
+      if (updateData.status && updateData.status !== existingQuote.status) {
+        await this.logQuoteStatusChange(quoteId, updateData.status, 'Quote updated by supplier');
       }
 
       return {
@@ -670,6 +705,61 @@ ${fromEmail}`;
 
     } catch (error) {
       console.error('Error in getQuotableAssets:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get quote status history for a specific quote
+   * @param {string} quoteId - The quote's UUID
+   * @returns {Promise<Object>} Quote history with chronological status changes
+   */
+  static async getQuoteHistory(quoteId) {
+    try {
+      // First, verify the quote exists and get basic info
+      const { data: quote, error: quoteError } = await supabase
+        .from('quotes')
+        .select(`
+          id,
+          status,
+          supplier:suppliers(id, supplier_name),
+          asset:assets(id, asset_name, project:projects(project_name, client_name))
+        `)
+        .eq('id', quoteId)
+        .single();
+
+      if (quoteError || !quote) {
+        throw new Error(`Quote not found: ${quoteId}`);
+      }
+
+      // Get the status history
+      const { data: history, error: historyError } = await supabase
+        .from('quote_status_history')
+        .select('*')
+        .eq('quote_id', quoteId)
+        .order('created_at', { ascending: true });
+
+      if (historyError) {
+        console.error('Error fetching quote history:', historyError);
+        throw new Error(`Database connection failed: ${historyError.message}`);
+      }
+
+      return {
+        quote: {
+          id: quote.id,
+          current_status: quote.status,
+          supplier: quote.supplier,
+          asset: quote.asset
+        },
+        history: history || [],
+        total_changes: (history || []).length,
+        message: (history || []).length === 0 
+          ? 'No status changes recorded for this quote'
+          : `Found ${(history || []).length} status changes`
+      };
+
+    } catch (error) {
+      console.error('Error in getQuoteHistory:', error);
       throw error;
     }
   }

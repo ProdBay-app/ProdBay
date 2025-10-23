@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Quote, Asset, Project } from '@/lib/supabase';
 import { useSupplierImpersonation } from '@/contexts/SupplierImpersonationContext';
-import { FileText, CheckCircle, XCircle, Clock, Eye, UserCheck } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Clock, Eye, UserCheck, History } from 'lucide-react';
 
 export interface SupplierQuote extends Quote {
   asset?: Asset;
@@ -14,11 +14,15 @@ export interface SupplierDashboardProps {
   
   // Utils
   getStatusBadge: (status: string) => React.ReactElement;
+  
+  // Actions
+  onOpenHistory: (quoteId: string) => void;
 }
 
 const SupplierDashboard: React.FC<SupplierDashboardProps> = ({
   quotes,
-  getStatusBadge
+  getStatusBadge,
+  onOpenHistory
 }) => {
   const { isImpersonating, impersonatedSupplier } = useSupplierImpersonation();
 
@@ -65,11 +69,21 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({
                       {q.project?.project_name} {q.project?.client_name ? `• ${q.project?.client_name}` : ''}
                     </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {getStatusBadge(q.status)}
-                    {q.status === 'Accepted' && <CheckCircle className="h-5 w-5 text-green-600" />}
-                    {q.status === 'Rejected' && <XCircle className="h-5 w-5 text-red-600" />}
-                    {q.status === 'Submitted' && <Clock className="h-5 w-5 text-yellow-600" />}
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      {getStatusBadge(q.status)}
+                      {q.status === 'Accepted' && <CheckCircle className="h-5 w-5 text-green-600" />}
+                      {q.status === 'Rejected' && <XCircle className="h-5 w-5 text-red-600" />}
+                      {q.status === 'Submitted' && <Clock className="h-5 w-5 text-yellow-600" />}
+                    </div>
+                    <button
+                      onClick={() => onOpenHistory(q.id)}
+                      className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                      title="View quote history"
+                    >
+                      <History className="h-4 w-4" />
+                      <span>History</span>
+                    </button>
                   </div>
                 </div>
                 <div className="mt-2 text-sm text-gray-700">

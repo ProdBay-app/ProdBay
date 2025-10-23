@@ -3,6 +3,7 @@ import { getSupabase } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import { useSupplierImpersonation } from '@/contexts/SupplierImpersonationContext';
 import SupplierDashboard from './SupplierDashboard';
+import QuoteHistoryModal from './QuoteHistoryModal';
 import SupplierImpersonationPanel from '@/components/dev/SupplierImpersonationPanel';
 import OwnershipTestPanel from '@/components/dev/OwnershipTestPanel';
 import QuotableAssetsTestPanel from '@/components/dev/QuotableAssetsTestPanel';
@@ -50,6 +51,7 @@ const SupplierDashboardContainer: React.FC = () => {
   const [quotes, setQuotes] = useState<SupplierQuote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedQuoteForHistory, setSelectedQuoteForHistory] = useState<string | null>(null);
 
   // Load quotes on mount and when impersonation state changes
   useEffect(() => {
@@ -157,6 +159,15 @@ const SupplierDashboardContainer: React.FC = () => {
       }
     }
   }, [showSuccess, showError]);
+
+  // History modal handlers
+  const openQuoteHistory = useCallback((quoteId: string) => {
+    setSelectedQuoteForHistory(quoteId);
+  }, []);
+
+  const closeQuoteHistory = useCallback(() => {
+    setSelectedQuoteForHistory(null);
+  }, []);
 
   // Data fetching function
   const loadQuotes = useCallback(async () => {
@@ -266,6 +277,13 @@ const SupplierDashboardContainer: React.FC = () => {
       <SupplierDashboard
         quotes={quotes}
         getStatusBadge={getStatusBadge}
+        onOpenHistory={openQuoteHistory}
+      />
+      
+      {/* Quote History Modal */}
+      <QuoteHistoryModal
+        quoteId={selectedQuoteForHistory}
+        onClose={closeQuoteHistory}
       />
     </div>
   );

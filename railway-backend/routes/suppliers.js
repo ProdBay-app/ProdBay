@@ -615,6 +615,81 @@ router.put('/update-quote', async (req, res) => {
 });
 
 /**
+ * GET /api/quotes/:quoteId/history
+ * Get quote status history for a specific quote
+ */
+router.get('/quotes/:quoteId/history', async (req, res) => {
+  try {
+    const { quoteId } = req.params;
+
+    // Validate quoteId parameter
+    if (!quoteId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_PARAMETER',
+          message: 'Quote ID is required'
+        }
+      });
+    }
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(quoteId)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_QUOTE_ID',
+          message: 'Quote ID must be a valid UUID'
+        }
+      });
+    }
+
+    // Get quote history
+    const result = await SupplierService.getQuoteHistory(quoteId);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+      message: result.message
+    });
+
+  } catch (error) {
+    console.error('Quote history endpoint error:', error);
+
+    // Handle specific error types
+    if (error.message.includes('Quote not found')) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'QUOTE_NOT_FOUND',
+          message: error.message
+        }
+      });
+    }
+
+    if (error.message.includes('Database connection failed')) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'DATABASE_ERROR',
+          message: 'Failed to connect to database'
+        }
+      });
+    }
+
+    // Generic error handler
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while fetching quote history'
+      }
+    });
+  }
+});
+
+/**
  * GET /api/suppliers/health
  * Health check endpoint for supplier service
  */
