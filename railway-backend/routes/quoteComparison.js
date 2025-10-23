@@ -201,51 +201,6 @@ router.get('/compare/:assetId/summary', async (req, res) => {
 });
 
 /**
- * GET /api/quotes/test-history-table
- * Test endpoint to check if quote_status_history table exists
- */
-router.get('/test-history-table', async (req, res) => {
-  try {
-    console.log('[TEST] Testing quote_status_history table access...');
-    
-    // Try to query the table
-    const { data, error } = await supabase
-      .from('quote_status_history')
-      .select('*')
-      .limit(1);
-
-    if (error) {
-      console.error('[TEST] Error accessing quote_status_history table:', error);
-      return res.status(500).json({
-        success: false,
-        error: {
-          code: 'TABLE_ACCESS_ERROR',
-          message: `Failed to access quote_status_history table: ${error.message}`
-        }
-      });
-    }
-
-    console.log('[TEST] Successfully accessed quote_status_history table');
-    res.status(200).json({
-      success: true,
-      message: 'quote_status_history table is accessible',
-      table_exists: true,
-      record_count: data ? data.length : 0
-    });
-
-  } catch (error) {
-    console.error('[TEST] Unexpected error testing history table:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'UNEXPECTED_ERROR',
-        message: error.message
-      }
-    });
-  }
-});
-
-/**
  * GET /api/quotes/:quoteId/history
  * Get quote status history for a specific quote
  */
