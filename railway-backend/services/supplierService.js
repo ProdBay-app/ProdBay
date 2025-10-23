@@ -14,6 +14,8 @@ class SupplierService {
    */
   static async logQuoteStatusChange(quoteId, status, notes = null) {
     try {
+      console.log(`[AUDIT] Logging quote status change: ${quoteId} -> ${status} (${notes || 'no notes'})`);
+      
       const { error } = await supabase
         .from('quote_status_history')
         .insert({
@@ -25,6 +27,8 @@ class SupplierService {
       if (error) {
         console.error('Failed to log quote status change:', error);
         // Don't throw error - logging failure shouldn't break the main operation
+      } else {
+        console.log(`[AUDIT] Successfully logged quote status change for ${quoteId}`);
       }
     } catch (error) {
       console.error('Error in logQuoteStatusChange:', error);
@@ -548,6 +552,7 @@ ${fromEmail}`;
       }
 
       // Log the initial status change
+      console.log(`[AUDIT] About to log initial status change for quote ${quote.id}`);
       await this.logQuoteStatusChange(quote.id, status || 'Submitted', 'Quote submitted by supplier');
 
       return {
