@@ -27,14 +27,13 @@ interface ProjectDetailTabsProps {
 type TabType = 'overview' | 'budget' | 'timeline' | 'actions';
 
 /**
- * ProjectDetailTabs - Integrated 4-column expanding layout for project details
+ * ProjectDetailTabs - Tetris-style expanding blocks for project details
  * 
  * Features:
- * - Four self-contained columns with integrated headers and content
- * - Each column expands vertically when active
- * - Only one column can be expanded at a time
- * - Smooth vertical expansion animations
- * - Equal width columns regardless of expansion state
+ * - Four static header cards that remain always visible
+ * - Single content panel that expands below the headers
+ * - Only one content panel visible at a time
+ * - Smooth transitions between content changes
  * - Preserves all existing functionality
  */
 const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
@@ -47,7 +46,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
   onEditMilestone,
   onDeleteMilestone
 }) => {
-  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   
   // Format currency for display
   const formatCurrency = (amount: number): string => {
@@ -109,12 +108,12 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
     }
   ];
 
-  // Render content for each column based on tab type
-  const renderColumnContent = (tabType: TabType) => {
-    switch (tabType) {
+  // Render content based on active tab
+  const renderContent = () => {
+    switch (activeTab) {
       case 'overview':
         return (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Client Name */}
             <div className="flex items-start gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
@@ -225,7 +224,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
           );
         }
         return (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ActionCounter
               label="Your Actions"
               count={trackingSummary.actions.producerActions}
@@ -253,70 +252,50 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 
   return (
     <div className="mb-8">
-      {/* Integrated 4-Column Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {tabs.map((tab, index) => {
-          const isActive = activeIndex === index;
+      {/* Static Header Cards Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
           const isDisabled = (tab.id === 'budget' || tab.id === 'timeline' || tab.id === 'actions') && loadingTracking;
           
           return (
-            <div
+            <button
               key={tab.id}
+              onClick={() => !isDisabled && setActiveTab(tab.id)}
+              disabled={isDisabled}
               className={`
-                bg-white rounded-lg shadow-sm border-2 transition-all duration-300 overflow-hidden
+                flex items-center gap-3 p-4 rounded-lg border-2 transition-all duration-200
                 ${isActive 
-                  ? `${tab.activeColor} shadow-lg` 
-                  : `${tab.bgColor} ${tab.borderColor} ${tab.hoverColor} hover:shadow-md`
+                  ? `${tab.activeColor} shadow-md` 
+                  : `${tab.bgColor} ${tab.borderColor} ${tab.hoverColor} hover:shadow-sm`
                 }
-                ${isDisabled ? 'opacity-50' : ''}
+                ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2
               `}
+              aria-pressed={isActive}
+              aria-label={`${tab.title} tab`}
             >
-              {/* Header - Always Visible */}
-              <button
-                onClick={() => !isDisabled && setActiveIndex(index)}
-                disabled={isDisabled}
-                className={`
-                  w-full flex items-center gap-3 p-4 text-left transition-all duration-200
-                  ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
-                  focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-inset
-                `}
-                aria-pressed={isActive}
-                aria-label={`${tab.title} section`}
-                aria-expanded={isActive}
-                aria-controls={`content-${tab.id}`}
-              >
-                <div className={`p-2 ${tab.bgColor} rounded-lg`}>
-                  {tab.icon}
-                </div>
-                <div className="flex-1">
-                  <h3 className={`font-semibold ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>
-                    {tab.title}
-                  </h3>
-                  {isDisabled && (
-                    <p className="text-xs text-gray-500 mt-1">Loading...</p>
-                  )}
-                </div>
-              </button>
-
-              {/* Content - Expandable */}
-              <div
-                id={`content-${tab.id}`}
-                className={`
-                  transition-all duration-300 ease-in-out overflow-hidden
-                  ${isActive 
-                    ? 'max-h-screen opacity-100' 
-                    : 'max-h-0 opacity-0'
-                  }
-                `}
-                aria-labelledby={`header-${tab.id}`}
-              >
-                <div className="px-4 pb-4">
-                  {renderColumnContent(tab.id)}
-                </div>
+              <div className={`p-2 ${tab.bgColor} rounded-lg`}>
+                {tab.icon}
               </div>
-            </div>
+              <div className="text-left">
+                <h3 className={`font-semibold ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>
+                  {tab.title}
+                </h3>
+                {isDisabled && (
+                  <p className="text-xs text-gray-500 mt-1">Loading...</p>
+                )}
+              </div>
+            </button>
           );
         })}
+      </div>
+
+      {/* Dynamic Content Panel */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-6">
+          {renderContent()}
+        </div>
       </div>
     </div>
   );
