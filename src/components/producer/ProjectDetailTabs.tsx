@@ -48,6 +48,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
   onDeleteMilestone
 }) => {
   const [activeTab, setActiveTab] = useState<TabType | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
   
   // Format currency for display
   const formatCurrency = (amount: number): string => {
@@ -327,6 +328,26 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
     }
   };
 
+  // Handle tab switching with animation
+  const handleTabClick = (tabId: TabType) => {
+    if (isAnimating) return; // Prevent clicks during animation
+    
+    setIsAnimating(true);
+    
+    if (activeTab === tabId) {
+      // If clicking the same tab, just collapse
+      setActiveTab(null);
+      setTimeout(() => setIsAnimating(false), 500);
+    } else {
+      // If clicking a different tab, collapse first then expand
+      setActiveTab(null);
+      setTimeout(() => {
+        setActiveTab(tabId);
+        setTimeout(() => setIsAnimating(false), 500);
+      }, 250);
+    }
+  };
+
   // Get active tab data for styling
   const activeTabData = activeTab ? tabs.find(tab => tab.id === activeTab) : null;
 
@@ -346,7 +367,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
               icon={tab.icon}
               summaryData={tab.summaryData}
               isActive={isActive}
-              onClick={() => !isDisabled && setActiveTab(tab.id)}
+              onClick={() => !isDisabled && handleTabClick(tab.id)}
               activeColor={tab.activeColor}
               bgColor={tab.bgColor}
               borderColor={tab.borderColor}
@@ -362,7 +383,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       <div 
         className={`
           overflow-hidden transition-all duration-300 transition-[max-height] duration-500 ease-in-out
-          ${activeTab ? 'max-h-[1000px] rounded-b-lg rounded-t-none -mt-0.5 border-l-2 border-r-2 border-b-2 border-t-0 shadow-none' : 'max-h-0 rounded-lg shadow-sm border border-gray-200'}
+          ${activeTab ? 'max-h-[1000px] rounded-b-lg rounded-t-none -mt-1 border-l-2 border-r-2 border-b-2 border-t-0 shadow-none' : 'max-h-0 rounded-lg shadow-sm border border-gray-200 mt-4'}
           ${activeTabData?.activeColor || 'bg-white'}
           ${activeTabData?.borderColor || ''}
         `}
