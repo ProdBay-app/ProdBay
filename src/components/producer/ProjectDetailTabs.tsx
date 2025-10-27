@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   DollarSign, 
@@ -49,7 +49,19 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabType | null>('overview');
   const [isAnimating, setIsAnimating] = useState(false);
-  
+  const [activeCardPosition, setActiveCardPosition] = useState({ x: 0, width: 0 });
+
+  // Calculate card position for animation origin
+  const calculateCardPosition = (tabId: TabType) => {
+    const tabIndex = tabs.findIndex(tab => tab.id === tabId);
+    const cardWidth = 25; // Approximate card width as percentage
+    const cardSpacing = 1; // Approximate gap between cards as percentage
+    const xOffset = (tabIndex * (cardWidth + cardSpacing)) + (cardWidth / 2);
+    return {
+      x: xOffset,
+      width: cardWidth
+    };
+  };
 
   // Format currency for display
   const formatCurrency = (amount: number): string => {
@@ -340,11 +352,23 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       setActiveTab(null);
       setTimeout(() => setIsAnimating(false), 500);
     } else {
-      // If clicking a different tab, switch directly
+      // Calculate position for the new active card
+      const newPosition = calculateCardPosition(tabId);
+      setActiveCardPosition(newPosition);
+      
+      // Switch to new tab
       setActiveTab(tabId);
       setTimeout(() => setIsAnimating(false), 500);
     }
   };
+
+  // Initialize active card position on mount
+  useEffect(() => {
+    if (activeTab) {
+      const initialPosition = calculateCardPosition(activeTab);
+      setActiveCardPosition(initialPosition);
+    }
+  }, []);
 
   // Get active tab data for styling
   const activeTabData = activeTab ? tabs.find(tab => tab.id === activeTab) : null;
@@ -390,8 +414,11 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
             `}
             style={{
               height: activeTab ? '400px' : '0px',
-              transform: activeTab ? 'scaleY(1)' : 'scaleY(0)',
-              transformOrigin: 'top center'
+              transform: activeTab 
+                ? 'scaleY(1) scaleX(1)' 
+                : `scaleY(0.1) scaleX(0.8) translateX(${activeCardPosition.x - 50}%)`,
+              transformOrigin: `${activeCardPosition.x}% top`,
+              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
             {/* Content Area */}
