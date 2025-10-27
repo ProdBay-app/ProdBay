@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   User, 
   DollarSign, 
@@ -48,17 +48,6 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
   onDeleteMilestone
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const [contentOpacity, setContentOpacity] = useState<number>(1);
-  
-  // Handle content fade animation when tab changes
-  useEffect(() => {
-    setContentOpacity(0);
-    const timer = setTimeout(() => {
-      setContentOpacity(1);
-    }, 50);
-    
-    return () => clearTimeout(timer);
-  }, [activeTab]);
   
   // Format currency for display
   const formatCurrency = (amount: number): string => {
@@ -341,7 +330,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
   return (
     <div className="mb-8">
       {/* Header Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const isDisabled = (tab.id === 'budget' || tab.id === 'timeline' || tab.id === 'actions') && loadingTracking;
@@ -360,6 +349,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
               borderColor={tab.borderColor}
               hoverColor={tab.hoverColor}
               isDisabled={isDisabled}
+              zIndex={isActive ? '' : 'relative z-10'}
             />
           );
         })}
@@ -367,14 +357,12 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 
       {/* Dynamic Content Panel */}
       <div 
-        key={activeTab}
         className={`
-          overflow-hidden transition-all duration-300 transition-opacity duration-300 ease-in-out
-          ${activeTab ? 'rounded-b-lg rounded-t-none -mt-0.5 border-l-2 border-r-2 border-b-2 border-t-0 shadow-none' : 'rounded-lg shadow-sm border border-gray-200'}
+          overflow-hidden transition-all duration-300 transition-[max-height] duration-500 ease-in-out
+          ${activeTab ? 'max-h-[1000px] rounded-b-lg rounded-t-none -mt-0.5 border-l-2 border-r-2 border-b-2 border-t-0 shadow-none' : 'max-h-0 rounded-lg shadow-sm border border-gray-200'}
           ${activeTab ? tabs.find(tab => tab.id === activeTab)?.activeColor || 'bg-white' : 'bg-white'}
           ${activeTab ? tabs.find(tab => tab.id === activeTab)?.borderColor || '' : ''}
         `}
-        style={{ opacity: contentOpacity }}
       >
         <div className="p-6">
           {renderContent()}

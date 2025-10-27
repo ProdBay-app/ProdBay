@@ -19,6 +19,7 @@ interface HeaderCardProps {
   borderColor: string;
   hoverColor: string;
   isDisabled: boolean;
+  zIndex?: string;
 }
 
 /**
@@ -41,7 +42,8 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
   bgColor,
   borderColor,
   hoverColor,
-  isDisabled
+  isDisabled,
+  zIndex
 }) => {
   
   // Format currency for display
@@ -135,6 +137,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         }
         ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2
+        ${zIndex || ''}
       `}
       aria-pressed={isActive}
       aria-label={`${title} section`}
