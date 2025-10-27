@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -50,19 +50,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabType | null>('overview');
   const [isAnimating, setIsAnimating] = useState(false);
-  const [activeCardPosition, setActiveCardPosition] = useState({ x: 0, width: 0 });
 
-  // Calculate card position for animation origin
-  const calculateCardPosition = (tabId: TabType) => {
-    const tabIndex = tabs.findIndex(tab => tab.id === tabId);
-    const cardWidth = 25; // Approximate card width as percentage
-    const cardSpacing = 1; // Approximate gap between cards as percentage
-    const xOffset = (tabIndex * (cardWidth + cardSpacing)) + (cardWidth / 2);
-    return {
-      x: xOffset,
-      width: cardWidth
-    };
-  };
 
   // Format currency for display
   const formatCurrency = (amount: number): string => {
@@ -353,38 +341,25 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       setActiveTab(null);
       setTimeout(() => setIsAnimating(false), 500);
     } else {
-      // Calculate position for the new active card
-      const newPosition = calculateCardPosition(tabId);
-      setActiveCardPosition(newPosition);
-      
       // Switch to new tab
       setActiveTab(tabId);
       setTimeout(() => setIsAnimating(false), 500);
     }
   };
 
-  // Initialize active card position on mount
-  useEffect(() => {
-    if (activeTab) {
-      const initialPosition = calculateCardPosition(activeTab);
-      setActiveCardPosition(initialPosition);
-    }
-  }, []);
 
   // Get active tab data for styling
   const activeTabData = activeTab ? tabs.find(tab => tab.id === activeTab) : null;
 
   return (
     <div className="mb-8">
-      {/* Unified Card System */}
+      {/* Tetris Block Layout */}
       <div className="relative">
-        {/* Inactive Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* All 4 Cards - Always Visible */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isDisabled = (tab.id === 'budget' || tab.id === 'timeline' || tab.id === 'actions') && loadingTracking;
-            
-            if (isActive) return null; // Skip active card, it will be rendered as unified entity
             
             return (
               <HeaderCard
@@ -393,101 +368,56 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
                 title={tab.title}
                 icon={tab.icon}
                 summaryData={tab.summaryData}
-                isActive={false}
+                isActive={isActive}
                 onClick={() => !isDisabled && handleTabClick(tab.id)}
                 activeColor={tab.activeColor}
                 bgColor={tab.bgColor}
                 borderColor={tab.borderColor}
                 hoverColor={tab.hoverColor}
                 isDisabled={isDisabled}
-                zIndex="relative z-10"
+                zIndex={isActive ? 'relative z-20' : 'relative z-10'}
               />
             );
           })}
         </div>
 
-        {/* Unified Active Card + Content Entity */}
+        {/* Tetris Block Content - Flows Under Cards */}
         <AnimatePresence mode="wait">
           {activeTab && (
             <motion.div
               key={activeTab}
               initial={{ 
-                height: 120, // Start as card height
-                scaleX: 0.25, // Start as card width
-                scaleY: 1,
-                x: (activeCardPosition.x - 50) * 4, // Start from card position
-                opacity: 1
+                height: 0,
+                opacity: 0,
+                y: -20
               }}
               animate={{ 
-                height: 520, // Expand to full height
-                scaleX: 1, // Expand to full width
-                scaleY: 1,
-                x: 0, // Move to center
-                opacity: 1
+                height: 400,
+                opacity: 1,
+                y: 0
               }}
               exit={{ 
-                height: 120,
-                scaleX: 0.25,
-                scaleY: 1,
-                x: (activeCardPosition.x - 50) * 4,
-                opacity: 1
+                height: 0,
+                opacity: 0,
+                y: -20
               }}
               transition={{
                 duration: 0.6,
-                ease: [0.4, 0, 0.2, 1],
-                scale: { duration: 0.5 },
-                x: { duration: 0.5 }
+                ease: [0.4, 0, 0.2, 1]
               }}
               className={`
-                absolute top-0 left-0 right-0 overflow-hidden
+                relative overflow-hidden -mt-1
                 ${activeTabData?.activeColor || 'bg-white'}
                 ${activeTabData?.borderColor || ''}
-                rounded-lg shadow-lg border-2
+                rounded-b-lg rounded-t-none border-l-2 border-r-2 border-b-2 border-t-0 shadow-lg
               `}
             >
-              {/* Card Header - Always Visible */}
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 ${activeTabData?.bgColor || 'bg-gray-100'} rounded-lg`}>
-                      {activeTabData?.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg text-gray-900">
-                        {activeTabData?.title}
-                      </h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-xl font-bold text-gray-900">
-                          {activeTabData?.summaryData?.primary}
-                        </span>
-                        <span className="text-sm text-gray-600">
-                          {activeTabData?.summaryData?.secondary}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                      {activeTabData?.summaryData?.status}
-                    </span>
-                    <button
-                      onClick={() => handleTabClick(activeTab)}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Expanding Content Area */}
+              {/* Content Area */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.4 }}
-                className="p-6"
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="p-6 h-full"
               >
                 {renderContent()}
               </motion.div>
