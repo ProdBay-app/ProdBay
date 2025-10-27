@@ -252,8 +252,8 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 
   return (
     <div className="mb-8">
-      {/* Static Header Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* Header Cards Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const isDisabled = (tab.id === 'budget' || tab.id === 'timeline' || tab.id === 'actions') && loadingTracking;
@@ -264,10 +264,10 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
               onClick={() => !isDisabled && setActiveTab(tab.id)}
               disabled={isDisabled}
               className={`
-                flex items-center gap-3 p-4 rounded-lg border-2 transition-all duration-200
+                flex items-center gap-3 p-4 border-2 transition-all duration-300
                 ${isActive 
-                  ? `${tab.activeColor} shadow-md` 
-                  : `${tab.bgColor} ${tab.borderColor} ${tab.hoverColor} hover:shadow-sm`
+                  ? `${tab.activeColor} shadow-lg rounded-t-lg rounded-b-none` 
+                  : `${tab.bgColor} ${tab.borderColor} ${tab.hoverColor} hover:shadow-sm rounded-lg`
                 }
                 ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2
@@ -275,7 +275,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
               aria-pressed={isActive}
               aria-label={`${tab.title} tab`}
             >
-              <div className={`p-2 ${tab.bgColor} rounded-lg`}>
+              <div className={`p-2 ${isActive ? tab.bgColor : tab.bgColor} rounded-lg`}>
                 {tab.icon}
               </div>
               <div className="text-left">
@@ -292,7 +292,11 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       </div>
 
       {/* Dynamic Content Panel */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className={`
+        shadow-sm border border-gray-200 overflow-hidden transition-all duration-300
+        ${activeTab ? 'rounded-b-lg rounded-t-none -mt-1' : 'rounded-lg'}
+        ${activeTab ? tabs.find(tab => tab.id === activeTab)?.activeColor || 'bg-white' : 'bg-white'}
+      `}>
         <div className="p-6">
           {renderContent()}
         </div>
