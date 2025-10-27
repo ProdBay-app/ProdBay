@@ -47,7 +47,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
   onEditMilestone,
   onDeleteMilestone
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType | null>(null);
   
   // Format currency for display
   const formatCurrency = (amount: number): string => {
@@ -327,6 +327,9 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
     }
   };
 
+  // Get active tab data for styling
+  const activeTabData = activeTab ? tabs.find(tab => tab.id === activeTab) : null;
+
   return (
     <div className="mb-8">
       {/* Header Cards Row */}
@@ -360,8 +363,8 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
         className={`
           overflow-hidden transition-all duration-300 transition-[max-height] duration-500 ease-in-out
           ${activeTab ? 'max-h-[1000px] rounded-b-lg rounded-t-none -mt-0.5 border-l-2 border-r-2 border-b-2 border-t-0 shadow-none' : 'max-h-0 rounded-lg shadow-sm border border-gray-200'}
-          ${activeTab ? tabs.find(tab => tab.id === activeTab)?.activeColor || 'bg-white' : 'bg-white'}
-          ${activeTab ? tabs.find(tab => tab.id === activeTab)?.borderColor || '' : ''}
+          ${activeTabData?.activeColor || 'bg-white'}
+          ${activeTabData?.borderColor || ''}
         `}
       >
         <div className="p-6">
