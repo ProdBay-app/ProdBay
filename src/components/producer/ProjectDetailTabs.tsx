@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   User, 
   DollarSign, 
@@ -49,28 +49,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabType | null>('overview');
   const [isAnimating, setIsAnimating] = useState(false);
-  const [activeCardPosition, setActiveCardPosition] = useState({ x: 0, y: 0, width: 0 });
   
-  // Calculate active card position for animation origin
-  const calculateCardPosition = (tabId: TabType) => {
-    const tabIndex = tabs.findIndex(tab => tab.id === tabId);
-    const cardWidth = 25; // Approximate card width as percentage
-    const cardSpacing = 1; // Approximate gap between cards as percentage
-    const xOffset = (tabIndex * (cardWidth + cardSpacing)) + (cardWidth / 2);
-    return {
-      x: xOffset,
-      y: 0,
-      width: cardWidth
-    };
-  };
-
-  // Initialize active card position on mount
-  useEffect(() => {
-    if (activeTab) {
-      const initialPosition = calculateCardPosition(activeTab);
-      setActiveCardPosition(initialPosition);
-    }
-  }, []);
 
   // Format currency for display
   const formatCurrency = (amount: number): string => {
@@ -352,20 +331,19 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 
   // Handle tab switching with animation
   const handleTabClick = (tabId: TabType) => {
-    if (isAnimating || activeTab === tabId) return; // Prevent clicks during animation or same tab
+    if (isAnimating) return; // Prevent clicks during animation
     
     setIsAnimating(true);
     
-    // Calculate position for the new active card
-    const newPosition = calculateCardPosition(tabId);
-    setActiveCardPosition(newPosition);
-    
-    // Always collapse first, then expand to new tab
-    setActiveTab(null);
-    setTimeout(() => {
+    if (activeTab === tabId) {
+      // If clicking the same tab, collapse it
+      setActiveTab(null);
+      setTimeout(() => setIsAnimating(false), 500);
+    } else {
+      // If clicking a different tab, switch directly
       setActiveTab(tabId);
       setTimeout(() => setIsAnimating(false), 500);
-    }, 250);
+    }
   };
 
   // Get active tab data for styling
@@ -373,54 +351,103 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 
   return (
     <div className="mb-8">
-      {/* Header Cards Row */}
-      <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          const isDisabled = (tab.id === 'budget' || tab.id === 'timeline' || tab.id === 'actions') && loadingTracking;
-          
-          return (
-            <HeaderCard
-              key={tab.id}
-              id={tab.id}
-              title={tab.title}
-              icon={tab.icon}
-              summaryData={tab.summaryData}
-              isActive={isActive}
-              onClick={() => !isDisabled && handleTabClick(tab.id)}
-              activeColor={tab.activeColor}
-              bgColor={tab.bgColor}
-              borderColor={tab.borderColor}
-              hoverColor={tab.hoverColor}
-              isDisabled={isDisabled}
-              zIndex={isActive ? '' : 'relative z-10'}
-            />
-          );
-        })}
-      </div>
-
-      {/* Dynamic Content Panel */}
-      <div className={`${activeTab ? '' : 'pt-4'}`}>
-        <div 
-          className={`
-            overflow-hidden transition-all duration-500 ease-out
-            ${activeTab ? 'max-h-[1000px] rounded-b-lg rounded-t-none -mt-1 border-l-2 border-r-2 border-b-2 border-t-0 shadow-none' : 'max-h-0 rounded-lg shadow-sm border border-gray-200'}
-            ${activeTabData?.activeColor || 'bg-white'}
-            ${activeTabData?.borderColor || ''}
-          `}
-          style={{
-            transform: activeTab 
-              ? 'translateY(0) scale(1)' 
-              : `translateY(-20px) scale(0.8) translateX(${activeCardPosition.x - 50}%)`,
-            transformOrigin: `${activeCardPosition.x}% top`,
-            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            opacity: activeTab ? 1 : 0
-          }}
-        >
-          <div className="p-6">
-            {renderContent()}
-          </div>
+      {/* Unified Card System */}
+      <div className="relative">
+        {/* Inactive Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const isDisabled = (tab.id === 'budget' || tab.id === 'timeline' || tab.id === 'actions') && loadingTracking;
+            
+            if (isActive) return null; // Skip active card, it will be rendered separately
+            
+            return (
+              <HeaderCard
+                key={tab.id}
+                id={tab.id}
+                title={tab.title}
+                icon={tab.icon}
+                summaryData={tab.summaryData}
+                isActive={false}
+                onClick={() => !isDisabled && handleTabClick(tab.id)}
+                activeColor={tab.activeColor}
+                bgColor={tab.bgColor}
+                borderColor={tab.borderColor}
+                hoverColor={tab.hoverColor}
+                isDisabled={isDisabled}
+                zIndex="relative z-10"
+              />
+            );
+          })}
         </div>
+
+        {/* Active Card with Expanding Content */}
+        {activeTab && (
+          <div 
+            className={`
+              absolute top-0 left-0 right-0 transition-all duration-500 ease-out
+              ${activeTabData?.activeColor || 'bg-white'}
+              ${activeTabData?.borderColor || ''}
+              rounded-lg shadow-lg
+            `}
+            style={{
+              transform: activeTab ? 'scaleY(1) scaleX(1)' : 'scaleY(0.1) scaleX(0.8)',
+              transformOrigin: 'top center',
+              zIndex: 20
+            }}
+          >
+            {/* Card Header */}
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 ${activeTabData?.bgColor || 'bg-gray-100'} rounded-lg`}>
+                    {activeTabData?.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">
+                      {activeTabData?.title}
+                    </h3>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className="text-xl font-bold text-gray-900">
+                        {activeTabData?.summaryData?.primary}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {activeTabData?.summaryData?.secondary}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                    {activeTabData?.summaryData?.status}
+                  </span>
+                  <button
+                    onClick={() => handleTabClick(activeTab)}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Expanding Content Area */}
+            <div 
+              className="overflow-hidden transition-all duration-500 ease-out"
+              style={{
+                maxHeight: activeTab ? '600px' : '0px',
+                transform: activeTab ? 'scaleY(1)' : 'scaleY(0)',
+                transformOrigin: 'top center'
+              }}
+            >
+              <div className="p-6">
+                {renderContent()}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
