@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   DollarSign, 
@@ -48,6 +48,17 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
   onDeleteMilestone
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [contentOpacity, setContentOpacity] = useState<number>(1);
+  
+  // Handle content fade animation when tab changes
+  useEffect(() => {
+    setContentOpacity(0);
+    const timer = setTimeout(() => {
+      setContentOpacity(1);
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [activeTab]);
   
   // Format currency for display
   const formatCurrency = (amount: number): string => {
@@ -355,11 +366,16 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       </div>
 
       {/* Dynamic Content Panel */}
-      <div className={`
-        overflow-hidden transition-all duration-300
-        ${activeTab ? 'rounded-b-lg rounded-t-none -mt-0.5 border-t-0 shadow-none' : 'rounded-lg shadow-sm border border-gray-200'}
-        ${activeTab ? tabs.find(tab => tab.id === activeTab)?.activeColor || 'bg-white' : 'bg-white'}
-      `}>
+      <div 
+        key={activeTab}
+        className={`
+          overflow-hidden transition-all duration-300 transition-opacity duration-300 ease-in-out
+          ${activeTab ? 'rounded-b-lg rounded-t-none -mt-0.5 border-l-2 border-r-2 border-b-2 border-t-0 shadow-none' : 'rounded-lg shadow-sm border border-gray-200'}
+          ${activeTab ? tabs.find(tab => tab.id === activeTab)?.activeColor || 'bg-white' : 'bg-white'}
+          ${activeTab ? tabs.find(tab => tab.id === activeTab)?.borderColor || '' : ''}
+        `}
+        style={{ opacity: contentOpacity }}
+      >
         <div className="p-6">
           {renderContent()}
         </div>
