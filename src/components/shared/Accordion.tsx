@@ -1,5 +1,8 @@
 import React, { useState, ReactNode } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
+import { useAccessibleAnimation } from '@/hooks/useReducedMotion';
+import { TRANSITIONS } from '@/utils/animations';
 
 interface AccordionItemProps {
   id: string;
@@ -37,10 +40,11 @@ const useAccordion = () => {
  * AccordionItem - Individual collapsible section within an accordion
  * 
  * Features:
- * - Smooth expand/collapse animations
+ * - Smooth expand/collapse animations with Framer Motion
  * - Customizable icon and styling
  * - Keyboard navigation support
  * - Accessible ARIA attributes
+ * - Respects user's motion preferences
  */
 const AccordionItem: React.FC<AccordionItemProps> = ({
   id,
@@ -51,6 +55,8 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
   onToggle,
   className = ''
 }) => {
+  const { getAnimationVariant, getTransition } = useAccessibleAnimation();
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -58,53 +64,92 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
     }
   };
 
+  // Animation variants for the content area
+  const contentVariants = getAnimationVariant({
+    initial: { height: 0, opacity: 0 },
+    animate: { height: "auto", opacity: 1 },
+    exit: { height: 0, opacity: 0 },
+  });
+
+  // Animation variants for the chevron icon
+  const chevronVariants = getAnimationVariant({
+    expanded: { rotate: 180 },
+    collapsed: { rotate: 0 },
+  });
+
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${className}`}>
+    <motion.div 
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${className}`}
+      layout
+    >
       {/* Header - Clickable area */}
-      <button
+      <motion.button
         onClick={() => onToggle(id)}
         onKeyDown={handleKeyDown}
-        className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-inset"
+        className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-inset"
         aria-expanded={isExpanded}
         aria-controls={`accordion-content-${id}`}
         id={`accordion-header-${id}`}
+        whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.02)" }}
+        whileTap={{ scale: 0.995 }}
+        transition={getTransition(TRANSITIONS.fast)}
       >
         <div className="flex items-center gap-3">
           {icon && (
-            <div className="flex-shrink-0">
+            <motion.div 
+              className="flex-shrink-0"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={getTransition(TRANSITIONS.spring)}
+            >
               {icon}
-            </div>
+            </motion.div>
           )}
           <h3 className="text-lg font-semibold text-gray-900">
             {title}
           </h3>
         </div>
         
-        {/* Chevron icon */}
-        <div className="flex-shrink-0 ml-4">
-          {isExpanded ? (
-            <ChevronUp className="w-5 h-5 text-gray-500" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-500" />
-          )}
-        </div>
-      </button>
+        {/* Chevron icon with rotation animation */}
+        <motion.div 
+          className="flex-shrink-0 ml-4"
+          variants={chevronVariants}
+          animate={isExpanded ? "expanded" : "collapsed"}
+          transition={getTransition(TRANSITIONS.normal)}
+        >
+          <ChevronDown className="w-5 h-5 text-gray-500" />
+        </motion.div>
+      </motion.button>
 
-      {/* Content - Collapsible area */}
-      <div
-        id={`accordion-content-${id}`}
-        className={`transition-all duration-300 ease-in-out ${
-          isExpanded 
-            ? 'max-h-screen opacity-100' 
-            : 'max-h-0 opacity-0 overflow-hidden'
-        }`}
-        aria-labelledby={`accordion-header-${id}`}
-      >
-        <div className="px-6 pb-6">
-          {children}
-        </div>
-      </div>
-    </div>
+      {/* Content - Collapsible area with Framer Motion */}
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            id={`accordion-content-${id}`}
+            variants={contentVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={getTransition(TRANSITIONS.normal)}
+            style={{ overflow: "hidden" }}
+            aria-labelledby={`accordion-header-${id}`}
+          >
+            <motion.div 
+              className="px-6 pb-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={getTransition({
+                ...TRANSITIONS.normal,
+                delay: 0.1
+              })}
+            >
+              {children}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
@@ -113,9 +158,10 @@ const AccordionItem: React.FC<AccordionItemProps> = ({
  * 
  * Features:
  * - Single or multiple item expansion modes
- * - Smooth animations
+ * - Smooth animations with Framer Motion
  * - Keyboard navigation
  * - Accessible design
+ * - Staggered animations for multiple items
  */
 const Accordion: React.FC<AccordionProps> = ({
   children,
@@ -157,9 +203,21 @@ const Accordion: React.FC<AccordionProps> = ({
 
   return (
     <AccordionContext.Provider value={contextValue}>
-      <div className={`space-y-4 ${className}`}>
+      <motion.div 
+        className={`space-y-4 ${className}`}
+        initial="initial"
+        animate="animate"
+        variants={{
+          initial: {},
+          animate: {
+            transition: {
+              staggerChildren: 0.1,
+            },
+          },
+        }}
+      >
         {children}
-      </div>
+      </motion.div>
     </AccordionContext.Provider>
   );
 };

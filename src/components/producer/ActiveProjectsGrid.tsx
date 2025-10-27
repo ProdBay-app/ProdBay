@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Plus, FolderOpen, Archive, ArrowRight } from 'lucide-react';
+import { AnimatedGrid } from '@/components/shared/AnimatedList';
+import { FadeIn, SlideIn } from '@/components/shared/AnimatedContainer';
 import { ProducerService, type ProjectFormData } from '@/services/producerService';
 import { RailwayApiService } from '@/services/railwayApiService';
 import { useNotification } from '@/hooks/useNotification';
@@ -715,7 +717,11 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <AnimatedGrid
+                staggerDelay={0.1}
+                className=""
+                itemClassName=""
+              >
                 {activeProjects.map((project) => (
                   <ProjectCard
                     key={project.id}
@@ -723,7 +729,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                     onClick={handleProjectClick}
                   />
                 ))}
-              </div>
+              </AnimatedGrid>
               
               {/* View All link when projects are limited */}
               {hasMoreActive && (
@@ -770,7 +776,11 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <AnimatedGrid
+                  staggerDelay={0.1}
+                  className=""
+                  itemClassName=""
+                >
                   {archivedProjects.map((project) => (
                     <ProjectCard
                       key={project.id}
@@ -778,7 +788,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                       onClick={handleProjectClick}
                     />
                   ))}
-                </div>
+                </AnimatedGrid>
                 
                 {/* View All link when archived projects are limited */}
                 {hasMoreArchived && (

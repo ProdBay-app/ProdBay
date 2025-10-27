@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAccessibleAnimation } from '@/hooks/useReducedMotion';
 import { 
   User, 
   DollarSign, 
@@ -50,6 +51,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabType | null>('overview');
   const [isAnimating, setIsAnimating] = useState(false);
+  const { getTransition } = useAccessibleAnimation();
 
 
   // Format currency for display
@@ -339,11 +341,11 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
     if (activeTab === tabId) {
       // If clicking the same tab, collapse it
       setActiveTab(null);
-      setTimeout(() => setIsAnimating(false), 500);
+      setTimeout(() => setIsAnimating(false), 300);
     } else {
       // Switch to new tab
       setActiveTab(tabId);
-      setTimeout(() => setIsAnimating(false), 500);
+      setTimeout(() => setIsAnimating(false), 300);
     }
   };
 
@@ -376,38 +378,44 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
                 />
                 
                 {/* Content panel for this specific card */}
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                   {isActive && activeTab === tab.id && (
                     <motion.div
+                      key={tab.id}
                       initial={{ 
                         height: 0,
                         opacity: 0
                       }}
                       animate={{ 
-                        height: 400,
+                        height: "auto",
                         opacity: 1
                       }}
                       exit={{ 
                         height: 0,
                         opacity: 0
                       }}
-                      transition={{
-                        duration: 0.6,
+                      transition={getTransition({
+                        duration: 0.4,
                         ease: [0.4, 0, 0.2, 1]
-                      }}
+                      })}
                       className={`
                         relative overflow-hidden -mt-1
                         ${tab.activeColor}
                         ${tab.borderColor}
                         rounded-b-lg rounded-t-none border-l-2 border-r-2 border-b-2 border-t-0 shadow-lg
                       `}
+                      style={{ overflow: "hidden" }}
                     >
                       {/* Content Area */}
                       <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.4 }}
-                        className="p-6 h-full"
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={getTransition({
+                          delay: 0.1,
+                          duration: 0.3
+                        })}
+                        className="p-6"
                       >
                         {renderContent()}
                       </motion.div>
