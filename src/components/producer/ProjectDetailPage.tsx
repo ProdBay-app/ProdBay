@@ -2,22 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
-  Calendar, 
-  User, 
-  DollarSign, 
-  Clock,
-  AlertCircle,
-  CheckSquare,
-  Users as UsersIcon
+  AlertCircle
 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { ProjectSummaryService } from '@/services/projectSummaryService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetList from './AssetList';
 import EditableBrief from './EditableBrief';
-import BudgetTrackingBar from './widgets/BudgetTrackingBar';
-import TimelineWidget from './widgets/TimelineWidget';
-import ActionCounter from './widgets/ActionCounter';
+import ProjectDetailAccordion from './ProjectDetailAccordion';
 import ClientProjectsModal from './ClientProjectsModal';
 import BudgetAssetsModal from './BudgetAssetsModal';
 import MilestoneFormModal from './MilestoneFormModal';
@@ -144,26 +136,6 @@ const ProjectDetailPage: React.FC = () => {
     fetchAssets();
   }, [projectId]);
 
-  // Format currency
-  const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  // Format date
-  const formatDate = (dateString: string | null): string => {
-    if (!dateString) return 'Not set';
-    
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
 
   // Get status badge color
   const getStatusBadgeColor = (status: Project['project_status']): string => {
@@ -427,119 +399,17 @@ const ProjectDetailPage: React.FC = () => {
       {/* Two-column layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Overview Section */}
-        <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Overview</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Client Name */}
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <User className="w-5 h-5 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Client</p>
-                <button
-                  onClick={() => setIsClientModalOpen(true)}
-                  className="text-lg font-semibold text-teal-600 hover:text-teal-700 hover:underline transition-colors text-left"
-                  title={`View all projects for ${project.client_name}`}
-                >
-                  {project.client_name}
-                </button>
-              </div>
-            </div>
-
-            {/* Budget */}
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="w-5 h-5 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Budget</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatCurrency(project.financial_parameters ?? 0)}
-                </p>
-              </div>
-            </div>
-
-            {/* Deadline */}
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Deadline</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatDate(project.timeline_deadline ?? null)}
-                </p>
-              </div>
-            </div>
-
-            {/* Created Date */}
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <Clock className="w-5 h-5 text-gray-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Created</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatDate(project.created_at)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Project Health Section - Tracking Widgets */}
-        {!loadingTracking && trackingSummary && (
-          <div className="mb-8 space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Project Health</h2>
-              <p className="text-gray-600 mb-6">Real-time tracking of budget, timeline, and pending actions</p>
-            </div>
-            
-            {/* Budget Tracking Bar - Full Width */}
-            <BudgetTrackingBar
-              total={trackingSummary.budget.total}
-              spent={trackingSummary.budget.spent}
-              remaining={trackingSummary.budget.remaining}
-              percentageUsed={trackingSummary.budget.percentageUsed}
-              onClick={() => setIsBudgetModalOpen(true)}
-            />
-            
-            {/* Timeline Widget - Full Width */}
-            <TimelineWidget
-              deadline={trackingSummary.timeline.deadline}
-              daysRemaining={trackingSummary.timeline.daysRemaining}
-              milestones={trackingSummary.timeline.milestones}
-              onAddMilestone={handleAddMilestoneClick}
-              onEditMilestone={handleEditMilestoneClick}
-              onDeleteMilestone={handleDeleteMilestoneClick}
-            />
-            
-            {/* Action Counters - Side by Side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ActionCounter
-                label="Your Actions"
-                count={trackingSummary.actions.producerActions}
-                icon={CheckSquare}
-                iconColor="text-blue-600"
-                bgColor="bg-blue-100"
-                description="Tasks requiring your attention"
-              />
-              
-              <ActionCounter
-                label="Their Actions"
-                count={trackingSummary.actions.supplierActions}
-                icon={UsersIcon}
-                iconColor="text-purple-600"
-                bgColor="bg-purple-100"
-                description="Pending supplier responses"
-              />
-            </div>
-          </div>
-        )}
+        {/* Project Details Accordion */}
+        <ProjectDetailAccordion
+          project={project}
+          trackingSummary={trackingSummary}
+          loadingTracking={loadingTracking}
+          onClientClick={() => setIsClientModalOpen(true)}
+          onBudgetClick={() => setIsBudgetModalOpen(true)}
+          onAddMilestone={handleAddMilestoneClick}
+          onEditMilestone={handleEditMilestoneClick}
+          onDeleteMilestone={handleDeleteMilestoneClick}
+        />
 
         {/* Dynamic grid: 66/33 split (collapsed) or 50/50 split (expanded) */}
         <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
