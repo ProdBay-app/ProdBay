@@ -9,7 +9,7 @@ import { ProjectSummaryService } from '@/services/projectSummaryService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetList from './AssetList';
 import EditableBrief from './EditableBrief';
-import ProjectDetailAccordion from './ProjectDetailAccordion';
+import ProjectDetailTabs from './ProjectDetailTabs';
 import ClientProjectsModal from './ClientProjectsModal';
 import BudgetAssetsModal from './BudgetAssetsModal';
 import MilestoneFormModal from './MilestoneFormModal';
@@ -399,8 +399,8 @@ const ProjectDetailPage: React.FC = () => {
       {/* Two-column layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Project Details Accordion */}
-        <ProjectDetailAccordion
+        {/* Project Details Tabs */}
+        <ProjectDetailTabs
           project={project}
           trackingSummary={trackingSummary}
           loadingTracking={loadingTracking}
