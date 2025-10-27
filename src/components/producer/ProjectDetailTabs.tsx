@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
   DollarSign, 
@@ -403,30 +404,57 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
           })}
         </div>
 
-        {/* Tetris Block Expansion */}
-        {activeTab && (
-          <div 
-            className={`
-              relative transition-all duration-500 ease-out overflow-hidden -mt-1
-              ${activeTabData?.activeColor || 'bg-white'}
-              ${activeTabData?.borderColor || ''}
-              rounded-b-lg rounded-t-none border-l-2 border-r-2 border-b-2 border-t-0 shadow-lg
-            `}
-            style={{
-              height: activeTab ? '400px' : '0px',
-              transform: activeTab 
-                ? 'scaleY(1) scaleX(1)' 
-                : `scaleY(0.1) scaleX(0.8) translateX(${activeCardPosition.x - 50}%)`,
-              transformOrigin: `${activeCardPosition.x}% top`,
-              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            {/* Content Area */}
-            <div className="p-6 h-full">
-              {renderContent()}
-            </div>
-          </div>
-        )}
+        {/* Tetris Block Expansion with Framer Motion */}
+        <AnimatePresence mode="wait">
+          {activeTab && (
+            <motion.div
+              key={activeTab}
+              initial={{ 
+                height: 0,
+                scaleX: 0.3,
+                scaleY: 0.1,
+                x: (activeCardPosition.x - 50) * 4, // Convert percentage to pixels
+                opacity: 0
+              }}
+              animate={{ 
+                height: 400,
+                scaleX: 1,
+                scaleY: 1,
+                x: 0,
+                opacity: 1
+              }}
+              exit={{ 
+                height: 0,
+                scaleX: 0.3,
+                scaleY: 0.1,
+                x: (activeCardPosition.x - 50) * 4,
+                opacity: 0
+              }}
+              transition={{
+                duration: 0.6,
+                ease: [0.4, 0, 0.2, 1],
+                scale: { duration: 0.4 },
+                x: { duration: 0.5 }
+              }}
+              className={`
+                relative overflow-hidden -mt-1
+                ${activeTabData?.activeColor || 'bg-white'}
+                ${activeTabData?.borderColor || ''}
+                rounded-b-lg rounded-t-none border-l-2 border-r-2 border-b-2 border-t-0 shadow-lg
+              `}
+            >
+              {/* Content Area */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="p-6 h-full"
+              >
+                {renderContent()}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
