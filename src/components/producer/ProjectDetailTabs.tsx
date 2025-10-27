@@ -348,82 +348,76 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
   };
 
 
-  // Get active tab data for styling
-  const activeTabData = activeTab ? tabs.find(tab => tab.id === activeTab) : null;
-
   return (
     <div className="mb-8">
       {/* Tetris Block Layout */}
       <div className="relative">
-        {/* All 4 Cards - Always Visible */}
+        {/* All 4 Cards with their content panels - Always Visible */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isDisabled = (tab.id === 'budget' || tab.id === 'timeline' || tab.id === 'actions') && loadingTracking;
             
             return (
-              <HeaderCard
-                key={tab.id}
-                id={tab.id}
-                title={tab.title}
-                icon={tab.icon}
-                summaryData={tab.summaryData}
-                isActive={isActive}
-                onClick={() => !isDisabled && handleTabClick(tab.id)}
-                activeColor={tab.activeColor}
-                bgColor={tab.bgColor}
-                borderColor={tab.borderColor}
-                hoverColor={tab.hoverColor}
-                isDisabled={isDisabled}
-                zIndex={isActive ? 'relative z-20' : 'relative z-10'}
-              />
+              <div key={tab.id} className="relative flex flex-col">
+                <HeaderCard
+                  id={tab.id}
+                  title={tab.title}
+                  icon={tab.icon}
+                  summaryData={tab.summaryData}
+                  isActive={isActive}
+                  onClick={() => !isDisabled && handleTabClick(tab.id)}
+                  activeColor={tab.activeColor}
+                  bgColor={tab.bgColor}
+                  borderColor={tab.borderColor}
+                  hoverColor={tab.hoverColor}
+                  isDisabled={isDisabled}
+                  zIndex={isActive ? 'relative z-20' : 'relative z-10'}
+                />
+                
+                {/* Content panel for this specific card */}
+                <AnimatePresence>
+                  {isActive && activeTab === tab.id && (
+                    <motion.div
+                      initial={{ 
+                        height: 0,
+                        opacity: 0
+                      }}
+                      animate={{ 
+                        height: 400,
+                        opacity: 1
+                      }}
+                      exit={{ 
+                        height: 0,
+                        opacity: 0
+                      }}
+                      transition={{
+                        duration: 0.6,
+                        ease: [0.4, 0, 0.2, 1]
+                      }}
+                      className={`
+                        relative overflow-hidden -mt-1
+                        ${tab.activeColor}
+                        ${tab.borderColor}
+                        rounded-b-lg rounded-t-none border-l-2 border-r-2 border-b-2 border-t-0 shadow-lg
+                      `}
+                    >
+                      {/* Content Area */}
+                      <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.4 }}
+                        className="p-6 h-full"
+                      >
+                        {renderContent()}
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             );
           })}
         </div>
-
-        {/* Tetris Block Content - Flows Under Cards */}
-        <AnimatePresence mode="wait">
-          {activeTab && (
-            <motion.div
-              key={activeTab}
-              initial={{ 
-                height: 0,
-                opacity: 0,
-                y: -20
-              }}
-              animate={{ 
-                height: 400,
-                opacity: 1,
-                y: 0
-              }}
-              exit={{ 
-                height: 0,
-                opacity: 0,
-                y: -20
-              }}
-              transition={{
-                duration: 0.6,
-                ease: [0.4, 0, 0.2, 1]
-              }}
-              className={`
-                relative overflow-hidden -mt-1
-                ${activeTabData?.activeColor || 'bg-white'}
-                ${activeTabData?.borderColor || ''}
-                rounded-b-lg rounded-t-none border-l-2 border-r-2 border-b-2 border-t-0 shadow-lg
-              `}
-            >
-              {/* Content Area */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.4 }}
-                className="p-6 h-full"
-              >
-                {renderContent()}
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );
