@@ -50,7 +50,6 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<TabType | null>('overview');
   const [isAnimating, setIsAnimating] = useState(false);
-  const [animationStage, setAnimationStage] = useState<'vertical' | 'horizontal' | 'collapsing' | 'idle'>('idle');
 
 
   // Format currency for display
@@ -338,27 +337,13 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
     setIsAnimating(true);
     
     if (activeTab === tabId) {
-      // Collapse: Start with horizontal collapse
-      setAnimationStage('collapsing');
-      // After horizontal collapse completes, reset vertical
-      setTimeout(() => {
-        setActiveTab(null);
-        setAnimationStage('idle');
-        setIsAnimating(false);
-      }, 600);
+      // If clicking the same tab, collapse it
+      setActiveTab(null);
+      setTimeout(() => setIsAnimating(false), 500);
     } else {
-      // Expand: Start with vertical expansion
-      setAnimationStage('vertical');
+      // Switch to new tab
       setActiveTab(tabId);
-      
-      // After vertical expansion completes, expand horizontally
-      setTimeout(() => {
-        setAnimationStage('horizontal');
-        setTimeout(() => {
-          setAnimationStage('idle');
-          setIsAnimating(false);
-        }, 400);
-      }, 400);
+      setTimeout(() => setIsAnimating(false), 500);
     }
   };
 
@@ -396,42 +381,19 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
                     <motion.div
                       initial={{ 
                         height: 0,
-                        width: '100%',
                         opacity: 0
                       }}
                       animate={{ 
-                        height: animationStage === 'vertical' || animationStage === 'horizontal' || animationStage === 'idle' ? 400 : 0,
-                        width: animationStage === 'horizontal' || animationStage === 'idle' 
-                          ? '400%' 
-                          : animationStage === 'collapsing' 
-                          ? '100%'
-                          : '100%',
-                        opacity: animationStage === 'vertical' || animationStage === 'horizontal' || animationStage === 'idle' ? 1 : 0
+                        height: 400,
+                        opacity: 1
                       }}
                       exit={{ 
                         height: 0,
-                        width: '100%',
                         opacity: 0
                       }}
                       transition={{
-                        height: {
-                          duration: animationStage === 'collapsing' ? 0 : 0.4,
-                          ease: [0.4, 0, 0.2, 1]
-                        },
-                        width: {
-                          duration: 0.4,
-                          delay: animationStage === 'horizontal' ? 0 : animationStage === 'collapsing' ? 0 : undefined,
-                          ease: [0.4, 0, 0.2, 1]
-                        },
-                        opacity: {
-                          duration: 0.3,
-                          ease: [0.4, 0, 0.2, 1]
-                        }
-                      }}
-                      style={{
-                        position: animationStage === 'horizontal' || animationStage === 'idle' ? 'absolute' : 'relative',
-                        left: animationStage === 'horizontal' || animationStage === 'idle' ? '-300%' : '0',
-                        zIndex: animationStage === 'horizontal' || animationStage === 'idle' ? 30 : 20
+                        duration: 0.6,
+                        ease: [0.4, 0, 0.2, 1]
                       }}
                       className={`
                         relative overflow-hidden -mt-1
