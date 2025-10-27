@@ -377,11 +377,17 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       <div className={`${activeTab ? '' : 'pt-4'}`}>
         <div 
           className={`
-            overflow-hidden transition-all duration-300 transition-[max-height] duration-500 ease-in-out
+            overflow-hidden transition-all duration-500 ease-out
             ${activeTab ? 'max-h-[1000px] rounded-b-lg rounded-t-none -mt-1 border-l-2 border-r-2 border-b-2 border-t-0 shadow-none' : 'max-h-0 rounded-lg shadow-sm border border-gray-200'}
             ${activeTabData?.activeColor || 'bg-white'}
             ${activeTabData?.borderColor || ''}
           `}
+          style={{
+            transform: activeTab ? 'translateY(0) scale(1)' : 'translateY(-20px) scale(0.95)',
+            transformOrigin: 'top center',
+            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+            opacity: activeTab ? 1 : 0
+          }}
         >
           <div className="p-6">
             {renderContent()}
