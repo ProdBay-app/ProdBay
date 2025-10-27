@@ -10,6 +10,7 @@ import {
 import BudgetTrackingBar from './widgets/BudgetTrackingBar';
 import TimelineWidget from './widgets/TimelineWidget';
 import ActionCounter from './widgets/ActionCounter';
+import HeaderCard from './HeaderCard';
 import type { Project } from '@/lib/supabase';
 import type { ProjectTrackingSummary, ProjectMilestone } from '@/types/database';
 
@@ -68,7 +69,79 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
     });
   };
 
-  // Tab configuration
+  // Extract summary data for each card
+  const getSummaryData = (tabId: TabType) => {
+    switch (tabId) {
+      case 'overview':
+        return {
+          primary: project.client_name,
+          secondary: project.project_status,
+          status: 'Active'
+        };
+      case 'budget':
+        if (!trackingSummary) {
+          return {
+            primary: formatCurrency(project.financial_parameters ?? 0),
+            secondary: 'Loading...',
+            status: 'Loading'
+          };
+        }
+        return {
+          primary: formatCurrency(trackingSummary.budget.total),
+          secondary: `${trackingSummary.budget.percentageUsed.toFixed(1)}% used`,
+          status: trackingSummary.budget.percentageUsed >= 90 
+            ? 'Critical' 
+            : trackingSummary.budget.percentageUsed >= 70 
+            ? 'Warning' 
+            : 'Healthy'
+        };
+      case 'timeline':
+        if (!trackingSummary) {
+          return {
+            primary: project.timeline_deadline ? formatDate(project.timeline_deadline) : 'Not set',
+            secondary: 'Loading...',
+            status: 'Loading'
+          };
+        }
+        return {
+          primary: trackingSummary.timeline.daysRemaining 
+            ? `${trackingSummary.timeline.daysRemaining} days`
+            : 'No deadline',
+          secondary: trackingSummary.timeline.deadline 
+            ? formatDate(trackingSummary.timeline.deadline)
+            : 'Not set',
+          status: trackingSummary.timeline.daysRemaining 
+            ? (trackingSummary.timeline.daysRemaining < 0 
+                ? 'Overdue' 
+                : trackingSummary.timeline.daysRemaining <= 7 
+                ? 'Due soon' 
+                : 'On track')
+            : 'No deadline'
+        };
+      case 'actions':
+        if (!trackingSummary) {
+          return {
+            primary: 'Loading...',
+            secondary: 'Loading...',
+            status: 'Loading'
+          };
+        }
+        const totalActions = trackingSummary.actions.producerActions + trackingSummary.actions.supplierActions;
+        return {
+          primary: totalActions,
+          secondary: `${trackingSummary.actions.producerActions} yours, ${trackingSummary.actions.supplierActions} theirs`,
+          status: totalActions === 0 ? 'All caught up!' : `${totalActions} pending`
+        };
+      default:
+        return {
+          primary: 'N/A',
+          secondary: 'N/A',
+          status: 'Unknown'
+        };
+    }
+  };
+
+  // Tab configuration with summary data
   const tabs = [
     {
       id: 'overview' as TabType,
@@ -77,7 +150,8 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       bgColor: 'bg-purple-100',
       borderColor: 'border-purple-200',
       hoverColor: 'hover:bg-purple-50',
-      activeColor: 'bg-purple-50 border-purple-300'
+      activeColor: 'bg-purple-50 border-purple-300',
+      summaryData: getSummaryData('overview')
     },
     {
       id: 'budget' as TabType,
@@ -86,7 +160,8 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       bgColor: 'bg-green-100',
       borderColor: 'border-green-200',
       hoverColor: 'hover:bg-green-50',
-      activeColor: 'bg-green-50 border-green-300'
+      activeColor: 'bg-green-50 border-green-300',
+      summaryData: getSummaryData('budget')
     },
     {
       id: 'timeline' as TabType,
@@ -95,7 +170,8 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       bgColor: 'bg-blue-100',
       borderColor: 'border-blue-200',
       hoverColor: 'hover:bg-blue-50',
-      activeColor: 'bg-blue-50 border-blue-300'
+      activeColor: 'bg-blue-50 border-blue-300',
+      summaryData: getSummaryData('timeline')
     },
     {
       id: 'actions' as TabType,
@@ -104,7 +180,8 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       bgColor: 'bg-orange-100',
       borderColor: 'border-orange-200',
       hoverColor: 'hover:bg-orange-50',
-      activeColor: 'bg-orange-50 border-orange-300'
+      activeColor: 'bg-orange-50 border-orange-300',
+      summaryData: getSummaryData('actions')
     }
   ];
 
@@ -259,34 +336,20 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
           const isDisabled = (tab.id === 'budget' || tab.id === 'timeline' || tab.id === 'actions') && loadingTracking;
           
           return (
-            <button
+            <HeaderCard
               key={tab.id}
+              id={tab.id}
+              title={tab.title}
+              icon={tab.icon}
+              summaryData={tab.summaryData}
+              isActive={isActive}
               onClick={() => !isDisabled && setActiveTab(tab.id)}
-              disabled={isDisabled}
-              className={`
-                flex items-center gap-3 p-4 border-2 transition-all duration-300
-                ${isActive 
-                  ? `${tab.activeColor} shadow-lg rounded-t-lg rounded-b-none` 
-                  : `${tab.bgColor} ${tab.borderColor} ${tab.hoverColor} hover:shadow-sm rounded-lg`
-                }
-                ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2
-              `}
-              aria-pressed={isActive}
-              aria-label={`${tab.title} tab`}
-            >
-              <div className={`p-2 ${isActive ? tab.bgColor : tab.bgColor} rounded-lg`}>
-                {tab.icon}
-              </div>
-              <div className="text-left">
-                <h3 className={`font-semibold ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>
-                  {tab.title}
-                </h3>
-                {isDisabled && (
-                  <p className="text-xs text-gray-500 mt-1">Loading...</p>
-                )}
-              </div>
-            </button>
+              activeColor={tab.activeColor}
+              bgColor={tab.bgColor}
+              borderColor={tab.borderColor}
+              hoverColor={tab.hoverColor}
+              isDisabled={isDisabled}
+            />
           );
         })}
       </div>
@@ -294,7 +357,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       {/* Dynamic Content Panel */}
       <div className={`
         shadow-sm border border-gray-200 overflow-hidden transition-all duration-300
-        ${activeTab ? 'rounded-b-lg rounded-t-none -mt-1' : 'rounded-lg'}
+        ${activeTab ? 'rounded-b-lg rounded-t-none -mt-px' : 'rounded-lg'}
         ${activeTab ? tabs.find(tab => tab.id === activeTab)?.activeColor || 'bg-white' : 'bg-white'}
       `}>
         <div className="p-6">
