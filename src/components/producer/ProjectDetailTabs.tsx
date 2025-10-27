@@ -356,8 +356,8 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 
       {/* Dynamic Content Panel */}
       <div className={`
-        shadow-sm border border-gray-200 overflow-hidden transition-all duration-300
-        ${activeTab ? 'rounded-b-lg rounded-t-none -mt-px' : 'rounded-lg'}
+        overflow-hidden transition-all duration-300
+        ${activeTab ? 'rounded-b-lg rounded-t-none -mt-0.5 border-t-0 shadow-none' : 'rounded-lg shadow-sm border border-gray-200'}
         ${activeTab ? tabs.find(tab => tab.id === activeTab)?.activeColor || 'bg-white' : 'bg-white'}
       `}>
         <div className="p-6">

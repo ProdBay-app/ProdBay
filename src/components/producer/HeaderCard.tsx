@@ -130,7 +130,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         flex flex-col items-center justify-center p-4 border-2 transition-all duration-300
         min-h-[120px] aspect-square
         ${isActive 
-          ? `${activeColor} shadow-lg rounded-t-lg rounded-b-none` 
+          ? `${activeColor} shadow-none rounded-t-lg rounded-b-none border-b-0` 
           : `${bgColor} ${borderColor} ${hoverColor} hover:shadow-sm rounded-lg`
         }
         ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
