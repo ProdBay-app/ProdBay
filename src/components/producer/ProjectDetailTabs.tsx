@@ -47,7 +47,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
   onEditMilestone,
   onDeleteMilestone
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType | null>('overview');
   const [isAnimating, setIsAnimating] = useState(false);
   
   // Format currency for display
@@ -330,22 +330,16 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 
   // Handle tab switching with animation
   const handleTabClick = (tabId: TabType) => {
-    if (isAnimating) return; // Prevent clicks during animation
+    if (isAnimating || activeTab === tabId) return; // Prevent clicks during animation or same tab
     
     setIsAnimating(true);
     
-    if (activeTab === tabId) {
-      // If clicking the same tab, just collapse
-      setActiveTab(null);
+    // Always collapse first, then expand to new tab
+    setActiveTab(null);
+    setTimeout(() => {
+      setActiveTab(tabId);
       setTimeout(() => setIsAnimating(false), 500);
-    } else {
-      // If clicking a different tab, collapse first then expand
-      setActiveTab(null);
-      setTimeout(() => {
-        setActiveTab(tabId);
-        setTimeout(() => setIsAnimating(false), 500);
-      }, 250);
-    }
+    }, 250);
   };
 
   // Get active tab data for styling
@@ -380,16 +374,18 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
       </div>
 
       {/* Dynamic Content Panel */}
-      <div 
-        className={`
-          overflow-hidden transition-all duration-300 transition-[max-height] duration-500 ease-in-out
-          ${activeTab ? 'max-h-[1000px] rounded-b-lg rounded-t-none -mt-1 border-l-2 border-r-2 border-b-2 border-t-0 shadow-none' : 'max-h-0 rounded-lg shadow-sm border border-gray-200 mt-4'}
-          ${activeTabData?.activeColor || 'bg-white'}
-          ${activeTabData?.borderColor || ''}
-        `}
-      >
-        <div className="p-6">
-          {renderContent()}
+      <div className={`${activeTab ? '' : 'pt-4'}`}>
+        <div 
+          className={`
+            overflow-hidden transition-all duration-300 transition-[max-height] duration-500 ease-in-out
+            ${activeTab ? 'max-h-[1000px] rounded-b-lg rounded-t-none -mt-1 border-l-2 border-r-2 border-b-2 border-t-0 shadow-none' : 'max-h-0 rounded-lg shadow-sm border border-gray-200'}
+            ${activeTabData?.activeColor || 'bg-white'}
+            ${activeTabData?.borderColor || ''}
+          `}
+        >
+          <div className="p-6">
+            {renderContent()}
+          </div>
         </div>
       </div>
     </div>
