@@ -351,15 +351,13 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
 
   return (
     <div className="mb-8">
-      {/* Unified Card System */}
+      {/* Tetris Block Layout */}
       <div className="relative">
-        {/* Inactive Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* All 4 Cards - Always Visible */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isDisabled = (tab.id === 'budget' || tab.id === 'timeline' || tab.id === 'actions') && loadingTracking;
-            
-            if (isActive) return null; // Skip active card, it will be rendered separately
             
             return (
               <HeaderCard
@@ -368,83 +366,37 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
                 title={tab.title}
                 icon={tab.icon}
                 summaryData={tab.summaryData}
-                isActive={false}
+                isActive={isActive}
                 onClick={() => !isDisabled && handleTabClick(tab.id)}
                 activeColor={tab.activeColor}
                 bgColor={tab.bgColor}
                 borderColor={tab.borderColor}
                 hoverColor={tab.hoverColor}
                 isDisabled={isDisabled}
-                zIndex="relative z-10"
+                zIndex={isActive ? 'relative z-20' : 'relative z-10'}
               />
             );
           })}
         </div>
 
-        {/* Active Card with Expanding Content */}
+        {/* Tetris Block Expansion */}
         {activeTab && (
           <div 
             className={`
-              absolute top-0 left-0 right-0 transition-all duration-500 ease-out
+              relative transition-all duration-500 ease-out overflow-hidden -mt-1
               ${activeTabData?.activeColor || 'bg-white'}
               ${activeTabData?.borderColor || ''}
-              rounded-lg shadow-lg
+              rounded-b-lg rounded-t-none border-l-2 border-r-2 border-b-2 border-t-0 shadow-lg
             `}
             style={{
-              transform: activeTab ? 'scaleY(1) scaleX(1)' : 'scaleY(0.1) scaleX(0.8)',
-              transformOrigin: 'top center',
-              zIndex: 20
+              height: activeTab ? '400px' : '0px',
+              transform: activeTab ? 'scaleY(1)' : 'scaleY(0)',
+              transformOrigin: 'top center'
             }}
           >
-            {/* Card Header */}
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`p-2 ${activeTabData?.bgColor || 'bg-gray-100'} rounded-lg`}>
-                    {activeTabData?.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">
-                      {activeTabData?.title}
-                    </h3>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-xl font-bold text-gray-900">
-                        {activeTabData?.summaryData?.primary}
-                      </span>
-                      <span className="text-sm text-gray-600">
-                        {activeTabData?.summaryData?.secondary}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                    {activeTabData?.summaryData?.status}
-                  </span>
-                  <button
-                    onClick={() => handleTabClick(activeTab)}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Expanding Content Area */}
-            <div 
-              className="overflow-hidden transition-all duration-500 ease-out"
-              style={{
-                maxHeight: activeTab ? '600px' : '0px',
-                transform: activeTab ? 'scaleY(1)' : 'scaleY(0)',
-                transformOrigin: 'top center'
-              }}
-            >
-              <div className="p-6">
-                {renderContent()}
-              </div>
+            {/* Content Area */}
+            <div className="p-6 h-full">
+              {renderContent()}
             </div>
           </div>
         )}
