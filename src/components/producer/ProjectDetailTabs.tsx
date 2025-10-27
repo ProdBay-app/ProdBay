@@ -49,7 +49,7 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
   onDeleteMilestone
 }) => {
   const [activeTab, setActiveTab] = useState<TabType | null>('overview');
-  const [animationState, setAnimationState] = useState<'idle' | 'expanding-vertical' | 'expanded' | 'collapsing-horizontal'>('idle');
+  const [isAnimating, setIsAnimating] = useState(false);
 
 
   // Format currency for display
@@ -330,62 +330,20 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
     }
   };
 
-  // Handle tab switching with staged animation
+  // Handle tab switching with animation
   const handleTabClick = (tabId: TabType) => {
+    if (isAnimating) return; // Prevent clicks during animation
+    
+    setIsAnimating(true);
+    
     if (activeTab === tabId) {
-      // Collapse: Horizontal first, then vertical
-      setAnimationState('collapsing-horizontal');
-      setTimeout(() => {
-        setActiveTab(null);
-        setAnimationState('idle');
-      }, 400);
+      // If clicking the same tab, collapse it
+      setActiveTab(null);
+      setTimeout(() => setIsAnimating(false), 500);
     } else {
-      // Expand: Vertical first, then horizontal
+      // Switch to new tab
       setActiveTab(tabId);
-      setAnimationState('expanding-vertical');
-      setTimeout(() => {
-        setAnimationState('expanded');
-      }, 400);
-    }
-  };
-
-  // Animation variants for smooth two-stage expansion/collapse
-  const contentVariants = {
-    closed: {
-      height: 0,
-      width: '100%',
-      opacity: 0,
-      transition: {
-        duration: 0.3,
-        ease: [0.4, 0, 0.2, 1] as const
-      }
-    },
-    expandingVertical: {
-      height: 400,
-      width: '100%',
-      opacity: 1,
-      transition: {
-        duration: 0.4,
-        ease: [0.4, 0, 0.2, 1] as const
-      }
-    },
-    expandingHorizontal: {
-      height: 400,
-      width: '400%',
-      opacity: 1,
-      transition: {
-        duration: 0.4,
-        ease: [0.4, 0, 0.2, 1] as const
-      }
-    },
-    collapsingHorizontal: {
-      height: 400,
-      width: '100%',
-      opacity: 1,
-      transition: {
-        duration: 0.4,
-        ease: [0.4, 0, 0.2, 1] as const
-      }
+      setTimeout(() => setIsAnimating(false), 500);
     }
   };
 
@@ -421,23 +379,21 @@ const ProjectDetailTabs: React.FC<ProjectDetailTabsProps> = ({
                 <AnimatePresence>
                   {isActive && activeTab === tab.id && (
                     <motion.div
-                      key={`content-${tab.id}`}
-                      initial="closed"
-                      variants={contentVariants}
-                      animate={
-                        animationState === 'expanding-vertical' 
-                          ? 'expandingVertical'
-                          : animationState === 'expanded'
-                          ? 'expandingHorizontal'
-                          : animationState === 'collapsing-horizontal'
-                          ? 'collapsingHorizontal'
-                          : 'closed'
-                      }
-                      exit="closed"
-                      style={{
-                        position: animationState === 'expanded' ? 'absolute' : 'relative',
-                        left: animationState === 'expanded' ? '-300%' : '0',
-                        zIndex: animationState === 'expanded' ? 30 : 20
+                      initial={{ 
+                        height: 0,
+                        opacity: 0
+                      }}
+                      animate={{ 
+                        height: 400,
+                        opacity: 1
+                      }}
+                      exit={{ 
+                        height: 0,
+                        opacity: 0
+                      }}
+                      transition={{
+                        duration: 0.6,
+                        ease: [0.4, 0, 0.2, 1]
                       }}
                       className={`
                         relative overflow-hidden -mt-1
