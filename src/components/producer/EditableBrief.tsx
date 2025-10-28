@@ -161,21 +161,30 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
     result = result.replace(/[""]/g, '"');           // Normalize curly double quotes to straight
     result = result.replace(/'/g, '"');              // Convert all single quotes to double quotes for consistency
     
-    // Normalize dashes
+    // Normalize dashes - only normalize special dashes, preserve hyphens in words
     result = result.replace(/—/g, '-');              // Em dash to hyphen
     result = result.replace(/–/g, '-');              // En dash to hyphen
     
+    // Normalize bullet points and list markers - handle all variations
+    result = result.replace(/[•·▪▫‣⁃]\s*/g, '');     // Remove various bullet point characters
+    result = result.replace(/^[•*]\s+/gm, '');       // Remove bullet points at start of lines
+    result = result.replace(/^-\s+/gm, '');          // Remove dashes at start of lines
+    result = result.replace(/\s*[•*]\s*/g, ' ');     // Remove bullet points anywhere in text
+    // Note: We don't remove dashes in the middle of text to preserve word hyphens like "afro-tech"
+    
     // Normalize markdown formatting (stripped when saved to DB)
-    // Use explicit character codes to avoid escaping issues
     result = result.replace(/\*\*(.+?)\*\*/g, '$1'); // Remove bold markers (capture group)
     result = result.replace(/\*/g, '');              // Remove remaining single asterisks (italic)
     result = result.replace(/^#+\s+/gm, '');         // Remove markdown heading markers
-    result = result.replace(/^[•\-\*]\s+/gm, '');    // Remove bullet point markers
+    
+    // Normalize parentheses and brackets for better matching
+    result = result.replace(/[()]/g, '');            // Remove parentheses
+    result = result.replace(/[\[\]]/g, '');          // Remove square brackets
     
     // Normalize whitespace
     result = result.replace(/\r\n/g, ' ');           // Replace Windows line breaks with space
     result = result.replace(/\n/g, ' ');             // Replace Unix line breaks with space
-    result = result.replace(/\s+/g, ' ');            // Replace multiple spaces with single space
+    result = result.replace(/[ \t]+/g, ' ');         // Replace multiple spaces/tabs with single space (preserve hyphens)
     result = result.toLowerCase();                   // Convert to lowercase for case-insensitive matching
     result = result.trim();                          // Remove leading/trailing whitespace
     
