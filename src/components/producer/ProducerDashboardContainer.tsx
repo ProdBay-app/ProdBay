@@ -39,7 +39,6 @@ export interface ProducerDashboardData {
   isSubmittingAsset: boolean;
   projectForm: ProjectFormData;
   assetForm: AssetFormData;
-  allocationMethod: 'static' | 'ai';
   
   // AI and supplier states
   aiSuggestions: {
@@ -162,7 +161,6 @@ const ProducerDashboardContainer: React.FC = () => {
     status: 'Pending',
     assigned_supplier_id: undefined
   });
-  const [allocationMethod, setAllocationMethod] = useState<'static' | 'ai'>('static');
   
   // AI and supplier states
   const [aiSuggestions, setAiSuggestions] = useState<{
@@ -222,7 +220,6 @@ const ProducerDashboardContainer: React.FC = () => {
         financial_parameters: undefined,
         timeline_deadline: ''
       });
-      setAllocationMethod('ai'); // Always use AI allocation for new projects
       setShowProjectModal(true);
     }
   }, [location.state, projects, showProjectModal]);
@@ -293,7 +290,6 @@ const ProducerDashboardContainer: React.FC = () => {
       financial_parameters: undefined,
       timeline_deadline: ''
     });
-    setAllocationMethod('ai'); // Always use AI allocation for new projects
     setShowProjectModal(true);
   }, []);
 
@@ -308,7 +304,6 @@ const ProducerDashboardContainer: React.FC = () => {
       financial_parameters: selectedProject.financial_parameters,
       timeline_deadline: selectedProject.timeline_deadline || ''
     });
-    setAllocationMethod('static');
     setShowProjectModal(true);
   }, [selectedProject]);
 
@@ -347,7 +342,7 @@ const ProducerDashboardContainer: React.FC = () => {
               createdProject.id, 
               projectForm.brief_description,
               {
-                allocationMethod: allocationMethod,
+                allocationMethod: 'ai', // Always use AI allocation for new projects
                 projectContext: {
                   financial_parameters: projectForm.financial_parameters,
                   timeline_deadline: projectForm.timeline_deadline,
@@ -361,7 +356,7 @@ const ProducerDashboardContainer: React.FC = () => {
               showWarning(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
             } else {
               console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
-              const methodText = allocationMethod === 'ai' ? 'AI-powered' : 'static';
+              const methodText = 'AI-powered';
               showSuccess(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated using ${methodText} allocation.`, { duration: 6000 });
             }
           } catch (briefError) {
@@ -389,7 +384,7 @@ const ProducerDashboardContainer: React.FC = () => {
     } finally {
       setIsSubmittingProject(false);
     }
-  }, [isEditingProject, selectedProject, projectForm, allocationMethod, loadProjects, showSuccess, showWarning, showError, closeProjectModal]);
+  }, [isEditingProject, selectedProject, projectForm, loadProjects, showSuccess, showWarning, showError, closeProjectModal]);
 
   const deleteProject = useCallback(async () => {
     if (!selectedProject) return;
@@ -809,7 +804,6 @@ const ProducerDashboardContainer: React.FC = () => {
       isSubmittingAsset={isSubmittingAsset}
       projectForm={projectForm}
       assetForm={assetForm}
-      allocationMethod={allocationMethod}
       
       // AI and supplier states
       aiSuggestions={aiSuggestions}
