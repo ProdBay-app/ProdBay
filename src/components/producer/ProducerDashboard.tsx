@@ -43,7 +43,6 @@ export interface ProducerDashboardProps {
   isSubmittingAsset: boolean;
   projectForm: ProjectFormData;
   assetForm: AssetFormData;
-  allocationMethod: 'static' | 'ai';
   
   // AI and supplier states
   aiSuggestions: {
@@ -68,7 +67,6 @@ export interface ProducerDashboardProps {
   openEditProject: () => void;
   closeProjectModal: () => void;
   updateProjectForm: (field: keyof ProjectFormData, value: string | number | undefined) => void;
-  setAllocationMethod: (method: 'static' | 'ai') => void;
   submitProjectForm: (e: React.FormEvent) => Promise<void>;
   deleteProject: () => Promise<void>;
   
@@ -133,7 +131,6 @@ const ProducerDashboard: React.FC<ProducerDashboardProps> = ({
   isSubmittingAsset,
   projectForm,
   assetForm,
-  allocationMethod,
   
   // AI and supplier states
   aiSuggestions,
@@ -154,7 +151,6 @@ const ProducerDashboard: React.FC<ProducerDashboardProps> = ({
   openEditProject,
   closeProjectModal,
   updateProjectForm,
-  setAllocationMethod,
   submitProjectForm,
   deleteProject,
   
@@ -245,11 +241,9 @@ const ProducerDashboard: React.FC<ProducerDashboardProps> = ({
         isEditing={isEditingProject}
         isSubmitting={isSubmittingProject}
         projectForm={projectForm}
-        allocationMethod={allocationMethod}
         onClose={closeProjectModal}
         onSubmit={submitProjectForm}
         onFormChange={updateProjectForm}
-        onAllocationMethodChange={setAllocationMethod}
       />
 
       <AssetModal

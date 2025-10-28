@@ -67,7 +67,6 @@ export interface ProducerDashboardActions {
   openEditProject: () => void;
   closeProjectModal: () => void;
   updateProjectForm: (field: keyof ProjectFormData, value: string | number | undefined) => void;
-  setAllocationMethod: (method: 'static' | 'ai') => void;
   submitProjectForm: (e: React.FormEvent) => Promise<void>;
   deleteProject: () => Promise<void>;
   
@@ -223,7 +222,7 @@ const ProducerDashboardContainer: React.FC = () => {
         financial_parameters: undefined,
         timeline_deadline: ''
       });
-      setAllocationMethod('static');
+      setAllocationMethod('ai'); // Always use AI allocation for new projects
       setShowProjectModal(true);
     }
   }, [location.state, projects, showProjectModal]);
@@ -294,7 +293,7 @@ const ProducerDashboardContainer: React.FC = () => {
       financial_parameters: undefined,
       timeline_deadline: ''
     });
-    setAllocationMethod('static');
+    setAllocationMethod('ai'); // Always use AI allocation for new projects
     setShowProjectModal(true);
   }, []);
 
@@ -326,9 +325,6 @@ const ProducerDashboardContainer: React.FC = () => {
     }));
   }, []);
 
-  const setAllocationMethodHandler = useCallback((method: 'static' | 'ai') => {
-    setAllocationMethod(method);
-  }, []);
 
   const submitProjectForm = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -834,7 +830,6 @@ const ProducerDashboardContainer: React.FC = () => {
       openEditProject={openEditProject}
       closeProjectModal={closeProjectModal}
       updateProjectForm={updateProjectForm}
-      setAllocationMethod={setAllocationMethodHandler}
       submitProjectForm={submitProjectForm}
       deleteProject={deleteProject}
       

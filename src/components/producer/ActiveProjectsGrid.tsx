@@ -304,7 +304,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       financial_parameters: undefined,
       timeline_deadline: ''
     });
-    setAllocationMethod('static');
+    setAllocationMethod('ai'); // Always use AI allocation for new projects
     setShowProjectModal(true);
   }, []);
 
@@ -838,11 +838,9 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         isEditing={isEditingProject}
         isSubmitting={isSubmittingProject}
         projectForm={projectForm}
-        allocationMethod={allocationMethod}
         onClose={closeProjectModal}
         onSubmit={submitProjectForm}
         onFormChange={updateProjectForm}
-        onAllocationMethodChange={setAllocationMethod}
         onPdfUpload={handlePdfUpload}
         isUploadingPdf={isUploadingPdf}
         uploadError={uploadError}
