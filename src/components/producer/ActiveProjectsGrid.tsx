@@ -67,7 +67,6 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     financial_parameters: undefined,
     timeline_deadline: ''
   });
-  const [allocationMethod, setAllocationMethod] = useState<'static' | 'ai'>('static');
   
   // State management - PDF upload
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
@@ -271,7 +270,6 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         financial_parameters: undefined,
         timeline_deadline: ''
       });
-      setAllocationMethod('static');
       setShowProjectModal(true);
       
       // Clear the navigation state to prevent re-opening modal on subsequent renders
@@ -304,7 +302,6 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       financial_parameters: undefined,
       timeline_deadline: ''
     });
-    setAllocationMethod('ai'); // Always use AI allocation for new projects
     setShowProjectModal(true);
   }, []);
 
@@ -556,7 +553,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
             createdProject.id,
             projectForm.brief_description,
             {
-              allocationMethod: allocationMethod,
+              allocationMethod: 'ai', // Always use AI allocation for new projects
               projectContext: {
                 financial_parameters: projectForm.financial_parameters,
                 timeline_deadline: projectForm.timeline_deadline,
@@ -592,7 +589,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     } finally {
       setIsSubmittingProject(false);
     }
-  }, [projectForm, allocationMethod, navigate, showWarning, showError]);
+  }, [projectForm, navigate, showWarning, showError]);
 
   // Loading state
   if (loading) {
