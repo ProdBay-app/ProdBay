@@ -556,7 +556,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
             createdProject.id,
             projectForm.brief_description,
             {
-              allocationMethod: allocationMethod,
+              allocationMethod: 'ai', // Hardcode to AI allocation for new projects
               projectContext: {
                 financial_parameters: projectForm.financial_parameters,
                 timeline_deadline: projectForm.timeline_deadline,
@@ -592,7 +592,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     } finally {
       setIsSubmittingProject(false);
     }
-  }, [projectForm, allocationMethod, navigate, showWarning, showError]);
+  }, [projectForm, navigate, showWarning, showError]);
 
   // Loading state
   if (loading) {

@@ -153,7 +153,7 @@ export const useProjectManagement = (): UseProjectManagementReturn => {
               createdProject.id, 
               projectForm.brief_description,
               {
-                allocationMethod: allocationMethod,
+                allocationMethod: 'ai', // Hardcode to AI allocation for new projects
                 projectContext: {
                   financial_parameters: projectForm.financial_parameters,
                   timeline_deadline: projectForm.timeline_deadline,
@@ -167,8 +167,7 @@ export const useProjectManagement = (): UseProjectManagementReturn => {
               showWarning(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
             } else {
               console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
-              const methodText = allocationMethod === 'ai' ? 'AI-powered' : 'static';
-              showSuccess(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated using ${methodText} allocation.`, { duration: 6000 });
+              showSuccess(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated using AI-powered allocation.`, { duration: 6000 });
             }
           } catch (briefError) {
             console.error('Brief processing error:', briefError);
