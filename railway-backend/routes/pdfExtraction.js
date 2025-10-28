@@ -56,8 +56,32 @@ router.post('/extract-text-from-pdf', upload.single('pdf'), async (req, res) => 
 
     console.log(`Processing PDF: ${req.file.originalname} (${req.file.size} bytes)`);
 
-    // Extract text from PDF buffer using pdf-parse
-    const pdfData = await pdfParse(req.file.buffer);
+    // Extract text from PDF buffer using pdf-parse with custom options
+    // to preserve whitespace and prevent text item combining
+    const pdfData = await pdfParse(req.file.buffer, {
+      pagerender: (pageData) => {
+        const render_options = {
+          // Preserve original whitespace characters
+          normalizeWhitespace: false,
+          // Prevent combining text items which can cause spacing issues
+          disableCombineTextItems: true
+        };
+        
+        return pageData.getTextContent(render_options)
+          .then(function(textContent) {
+            let lastY, text = '';
+            for (let item of textContent.items) {
+              if (lastY == item.transform[5] || !lastY) {
+                text += item.str;
+              } else {
+                text += '\n' + item.str;
+              }
+              lastY = item.transform[5];
+            }
+            return text;
+          });
+      }
+    });
 
     // Check if any text was extracted
     if (!pdfData.text || pdfData.text.trim().length === 0) {
@@ -70,15 +94,11 @@ router.post('/extract-text-from-pdf', upload.single('pdf'), async (req, res) => 
     }
 
     // Clean up the extracted text
-    // - Preserve necessary whitespace between words
-    // - Remove only excessive whitespace (3+ consecutive spaces)
-    // - Normalize line breaks
+    // - Minimal processing to preserve all original formatting
+    // - Only normalize line breaks and convert non-breaking spaces
     const cleanedText = pdfData.text
       .replace(/\r\n/g, '\n')           // Normalize line breaks
-      .replace(/\n{3,}/g, '\n\n')       // Max 2 consecutive line breaks
-      .replace(/[ \t]{3,}/g, '  ')      // Replace 3+ spaces/tabs with 2 spaces (preserve word boundaries)
-      .replace(/\u00A0/g, ' ')          // Convert all non-breaking spaces to regular spaces
-      .replace(/\t/g, ' ')              // Convert remaining tabs to spaces
+      .replace(/\u00A0/g, ' ')          // Convert non-breaking spaces to regular spaces
       .trim();
 
     console.log(`Successfully extracted ${cleanedText.length} characters from PDF`);
