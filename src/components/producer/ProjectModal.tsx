@@ -44,8 +44,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   const [currentStep, setCurrentStep] = useState<'step1' | 'step2'>('step1');
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  if (!isOpen) return null;
-
   // Reset step when modal opens/closes
   useEffect(() => {
     if (isOpen) {
@@ -53,6 +51,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
       setIsTransitioning(false);
     }
   }, [isOpen]);
+
+  if (!isOpen) return null;
 
   // Handle step transitions
   const handleNextStep = async () => {
