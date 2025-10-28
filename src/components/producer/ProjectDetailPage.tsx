@@ -53,6 +53,10 @@ const ProjectDetailPage: React.FC = () => {
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
+  // Active section state for expandable card layout
+  type ActiveSection = 'Overview' | 'Budget' | 'Timeline' | 'Actions';
+  const [activeSection, setActiveSection] = useState<ActiveSection>('Overview');
+
   // Milestone management state
   const [isMilestoneFormOpen, setIsMilestoneFormOpen] = useState(false);
   const [milestoneFormMode, setMilestoneFormMode] = useState<'create' | 'edit'>('create');
@@ -371,6 +375,50 @@ const ProjectDetailPage: React.FC = () => {
     );
   }
 
+  // Placeholder components for expandable card layout
+  const SummaryCard: React.FC<{
+    title: string;
+    isActive: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+  }> = ({ title, isActive, onClick, children }) => (
+    <div
+      className={`rounded-lg shadow-sm border p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+        isActive 
+          ? 'bg-teal-50 border-teal-200 shadow-md' 
+          : 'bg-white border-gray-200 hover:border-gray-300'
+      }`}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
+      <h3 className={`text-lg font-semibold mb-2 ${
+        isActive ? 'text-teal-700' : 'text-gray-900'
+      }`}>
+        {title}
+      </h3>
+      <div className="text-sm text-gray-600">
+        {children}
+      </div>
+    </div>
+  );
+
+  const DetailView: React.FC<{
+    title: string;
+    children: React.ReactNode;
+  }> = ({ title, children }) => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">{title}</h2>
+      {children}
+    </div>
+  );
+
   // Main content
   return (
     <>
@@ -424,158 +472,362 @@ const ProjectDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Two-column layout */}
+      {/* Expandable Card Layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Overview Section */}
-        <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Overview</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Client Name */}
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <User className="w-5 h-5 text-purple-600" />
+        {/* Summary Cards Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <SummaryCard
+            title="Overview"
+            isActive={activeSection === 'Overview'}
+            onClick={() => setActiveSection('Overview')}
+          >
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-purple-600" />
+                <span className="text-xs font-medium">{project.client_name}</span>
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Client</p>
-                <button
-                  onClick={() => setIsClientModalOpen(true)}
-                  className="text-lg font-semibold text-teal-600 hover:text-teal-700 hover:underline transition-colors text-left"
-                  title={`View all projects for ${project.client_name}`}
-                >
-                  {project.client_name}
-                </button>
-              </div>
-            </div>
-
-            {/* Budget */}
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="w-5 h-5 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Budget</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatCurrency(project.financial_parameters ?? 0)}
-                </p>
-              </div>
-            </div>
-
-            {/* Deadline */}
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Deadline</p>
-                <p className="text-lg font-semibold text-gray-900">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-blue-600" />
+                <span className="text-xs">
                   {formatDate(project.timeline_deadline ?? null)}
-                </p>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-green-600" />
+                <span className="text-xs">{formatCurrency(project.financial_parameters ?? 0)}</span>
               </div>
             </div>
+          </SummaryCard>
 
-            {/* Created Date */}
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <Clock className="w-5 h-5 text-gray-600" />
+          <SummaryCard
+            title="Budget"
+            isActive={activeSection === 'Budget'}
+            onClick={() => setActiveSection('Budget')}
+          >
+            <div className="space-y-3">
+              {/* Total Budget */}
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-green-600" />
+                <span className="text-xs font-medium">
+                  {trackingSummary ? formatCurrency(trackingSummary.budget.total) : 'Loading...'}
+                </span>
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Created</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatDate(project.created_at)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Project Health Section - Tracking Widgets */}
-        {!loadingTracking && trackingSummary && (
-          <div className="mb-8 space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Project Health</h2>
-              <p className="text-gray-600 mb-6">Real-time tracking of budget, timeline, and pending actions</p>
-            </div>
-            
-            {/* Budget Tracking Bar - Full Width */}
-            <BudgetTrackingBar
-              total={trackingSummary.budget.total}
-              spent={trackingSummary.budget.spent}
-              remaining={trackingSummary.budget.remaining}
-              percentageUsed={trackingSummary.budget.percentageUsed}
-              onClick={() => setIsBudgetModalOpen(true)}
-            />
-            
-            {/* Timeline Widget - Full Width */}
-            <TimelineWidget
-              deadline={trackingSummary.timeline.deadline}
-              daysRemaining={trackingSummary.timeline.daysRemaining}
-              milestones={trackingSummary.timeline.milestones}
-              onAddMilestone={handleAddMilestoneClick}
-              onEditMilestone={handleEditMilestoneClick}
-              onDeleteMilestone={handleDeleteMilestoneClick}
-            />
-            
-            {/* Action Counters - Side by Side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ActionCounter
-                label="Your Actions"
-                count={trackingSummary.actions.producerActions}
-                icon={CheckSquare}
-                iconColor="text-blue-600"
-                bgColor="bg-blue-100"
-                description="Tasks requiring your attention"
-              />
               
-              <ActionCounter
-                label="Their Actions"
-                count={trackingSummary.actions.supplierActions}
-                icon={UsersIcon}
-                iconColor="text-purple-600"
-                bgColor="bg-purple-100"
-                description="Pending supplier responses"
+              {/* Progress Bar */}
+              {trackingSummary && (
+                <div className="w-full">
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-500 ease-out rounded-full ${
+                        trackingSummary.budget.percentageUsed >= 90
+                          ? 'bg-red-500'
+                          : trackingSummary.budget.percentageUsed >= 70
+                          ? 'bg-yellow-500'
+                          : 'bg-green-500'
+                      }`}
+                      style={{ width: `${Math.min(trackingSummary.budget.percentageUsed, 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-xs text-gray-600">
+                      {trackingSummary.budget.percentageUsed.toFixed(1)}% used
+                    </span>
+                    <span className={`text-xs font-medium ${
+                      trackingSummary.budget.remaining < 0 ? 'text-red-600' : 'text-green-600'
+                    }`}>
+                      {formatCurrency(trackingSummary.budget.remaining)} remaining
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Loading State */}
+              {!trackingSummary && (
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="h-full bg-gray-300 rounded-full animate-pulse" style={{ width: '30%' }} />
+                </div>
+              )}
+            </div>
+          </SummaryCard>
+
+          <SummaryCard
+            title="Timeline"
+            isActive={activeSection === 'Timeline'}
+            onClick={() => setActiveSection('Timeline')}
+          >
+            <div className="space-y-2">
+              {/* Start Date */}
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-gray-600" />
+                <span className="text-xs font-medium">Started</span>
+                <span className="text-xs text-gray-600">
+                  {formatDate(project.created_at)}
+                </span>
+              </div>
+              
+              {/* Deadline */}
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-blue-600" />
+                <span className="text-xs font-medium">Deadline</span>
+                <span className="text-xs text-gray-600">
+                  {formatDate(project.timeline_deadline ?? null)}
+                </span>
+              </div>
+              
+              {/* Days Remaining */}
+              {trackingSummary?.timeline.daysRemaining !== null && trackingSummary?.timeline.daysRemaining !== undefined && (
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-medium ${
+                    trackingSummary.timeline.daysRemaining < 0 
+                      ? 'text-red-600' 
+                      : trackingSummary.timeline.daysRemaining <= 7 
+                      ? 'text-orange-600' 
+                      : 'text-green-600'
+                  }`}>
+                    {trackingSummary.timeline.daysRemaining < 0 
+                      ? `${Math.abs(trackingSummary.timeline.daysRemaining)} days overdue`
+                      : `${trackingSummary.timeline.daysRemaining} days left`
+                    }
+                  </span>
+                </div>
+              )}
+              
+              {/* Milestone Count */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">
+                  {trackingSummary?.timeline.milestones.length || 0} milestones
+                </span>
+              </div>
+            </div>
+          </SummaryCard>
+
+          <SummaryCard
+            title="Actions"
+            isActive={activeSection === 'Actions'}
+            onClick={() => setActiveSection('Actions')}
+          >
+            <div className="space-y-2">
+              {/* Your Actions */}
+              <div className="flex items-center gap-2">
+                <CheckSquare className="w-4 h-4 text-blue-600" />
+                <span className="text-xs font-medium">Your Actions</span>
+                <span className={`text-xs font-bold ${
+                  trackingSummary && trackingSummary.actions.producerActions > 0 
+                    ? 'text-orange-600' 
+                    : 'text-gray-600'
+                }`}>
+                  {trackingSummary ? trackingSummary.actions.producerActions : '0'}
+                </span>
+              </div>
+              
+              {/* Their Actions */}
+              <div className="flex items-center gap-2">
+                <UsersIcon className="w-4 h-4 text-purple-600" />
+                <span className="text-xs font-medium">Their Actions</span>
+                <span className={`text-xs font-bold ${
+                  trackingSummary && trackingSummary.actions.supplierActions > 0 
+                    ? 'text-orange-600' 
+                    : 'text-gray-600'
+                }`}>
+                  {trackingSummary ? trackingSummary.actions.supplierActions : '0'}
+                </span>
+              </div>
+              
+              {/* Total Pending Actions */}
+              <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+                <AlertCircle className="w-4 h-4 text-gray-500" />
+                <span className="text-xs font-medium text-gray-600">Total Pending</span>
+                <span className={`text-xs font-bold ${
+                  trackingSummary && (trackingSummary.actions.producerActions + trackingSummary.actions.supplierActions) > 0 
+                    ? 'text-orange-600' 
+                    : 'text-gray-600'
+                }`}>
+                  {trackingSummary 
+                    ? trackingSummary.actions.producerActions + trackingSummary.actions.supplierActions 
+                    : '0'
+                  }
+                </span>
+              </div>
+            </div>
+          </SummaryCard>
+        </div>
+
+        {/* Detail View Area */}
+        <div className="transition-all duration-300 ease-in-out">
+          {activeSection === 'Overview' && (
+            <DetailView title="Overview">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Client Name */}
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <User className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 mb-1">Client</p>
+                    <button
+                      onClick={() => setIsClientModalOpen(true)}
+                      className="text-lg font-semibold text-teal-600 hover:text-teal-700 hover:underline transition-colors text-left"
+                      title={`View all projects for ${project.client_name}`}
+                    >
+                      {project.client_name}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Budget */}
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 mb-1">Budget</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {formatCurrency(project.financial_parameters ?? 0)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Deadline */}
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Calendar className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 mb-1">Deadline</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {formatDate(project.timeline_deadline ?? null)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Created Date */}
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-gray-100 rounded-lg">
+                    <Clock className="w-5 h-5 text-gray-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 mb-1">Created</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {formatDate(project.created_at)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </DetailView>
+          )}
+
+          {activeSection === 'Budget' && (
+            <DetailView title="Budget Tracking">
+              {!loadingTracking && trackingSummary ? (
+                <div className="space-y-6">
+                  <BudgetTrackingBar
+                    total={trackingSummary.budget.total}
+                    spent={trackingSummary.budget.spent}
+                    remaining={trackingSummary.budget.remaining}
+                    percentageUsed={trackingSummary.budget.percentageUsed}
+                    onClick={() => setIsBudgetModalOpen(true)}
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading budget information...</p>
+                </div>
+              )}
+            </DetailView>
+          )}
+
+          {activeSection === 'Timeline' && (
+            <DetailView title="Project Timeline">
+              {!loadingTracking && trackingSummary ? (
+                <TimelineWidget
+                  deadline={trackingSummary.timeline.deadline}
+                  daysRemaining={trackingSummary.timeline.daysRemaining}
+                  milestones={trackingSummary.timeline.milestones}
+                  onAddMilestone={handleAddMilestoneClick}
+                  onEditMilestone={handleEditMilestoneClick}
+                  onDeleteMilestone={handleDeleteMilestoneClick}
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading timeline information...</p>
+                </div>
+              )}
+            </DetailView>
+          )}
+
+          {activeSection === 'Actions' && (
+            <DetailView title="Action Items">
+              {!loadingTracking && trackingSummary ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <ActionCounter
+                    label="Your Actions"
+                    count={trackingSummary.actions.producerActions}
+                    icon={CheckSquare}
+                    iconColor="text-blue-600"
+                    bgColor="bg-blue-100"
+                    description="Tasks requiring your attention"
+                  />
+                  
+                  <ActionCounter
+                    label="Their Actions"
+                    count={trackingSummary.actions.supplierActions}
+                    icon={UsersIcon}
+                    iconColor="text-purple-600"
+                    bgColor="bg-purple-100"
+                    description="Pending supplier responses"
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading action items...</p>
+                </div>
+              )}
+            </DetailView>
+          )}
+        </div>
+
+        {/* Assets and Brief Section - Keep existing functionality */}
+        <div className="mt-8">
+          {/* Dynamic grid: 66/33 split (collapsed) or 50/50 split (expanded) */}
+          <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
+            
+            {/* LEFT COLUMN - Main content (Assets) */}
+            <div className={`space-y-6 ${isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
+              
+              {/* Assets Section - Kanban Board */}
+              <AssetList 
+                projectId={project.id}
+                hoveredAssetId={hoveredAssetId}
+                onAssetHover={setHoveredAssetId}
               />
             </div>
-          </div>
-        )}
 
-        {/* Dynamic grid: 66/33 split (collapsed) or 50/50 split (expanded) */}
-        <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
-          
-          {/* LEFT COLUMN - Main content (Assets) */}
-          <div className={`space-y-6 ${isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
-            
-            {/* Assets Section - Kanban Board */}
-            <AssetList 
-              projectId={project.id}
-              hoveredAssetId={hoveredAssetId}
-              onAssetHover={setHoveredAssetId}
-            />
-          </div>
-
-          {/* RIGHT COLUMN - Brief */}
-          <div className="lg:col-span-1">
-            <EditableBrief
-              projectId={project.id}
-              briefDescription={project.brief_description}
-              physicalParameters={project.physical_parameters ?? ''}
-              isExpanded={isBriefExpanded}
-              onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
-              onBriefUpdate={(briefDesc, physicalParams) => {
-                // Optimistically update local project state
-                setProject(prev => prev ? {
-                  ...prev,
-                  brief_description: briefDesc,
-                  physical_parameters: physicalParams
-                } : null);
-              }}
-              assets={assets}
-              hoveredAssetId={hoveredAssetId}
-              onAssetHover={setHoveredAssetId}
-              onAssetClick={handleAssetClick}
-            />
+            {/* RIGHT COLUMN - Brief */}
+            <div className="lg:col-span-1">
+              <EditableBrief
+                projectId={project.id}
+                briefDescription={project.brief_description}
+                physicalParameters={project.physical_parameters ?? ''}
+                isExpanded={isBriefExpanded}
+                onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+                onBriefUpdate={(briefDesc, physicalParams) => {
+                  // Optimistically update local project state
+                  setProject(prev => prev ? {
+                    ...prev,
+                    brief_description: briefDesc,
+                    physical_parameters: physicalParams
+                  } : null);
+                }}
+                assets={assets}
+                hoveredAssetId={hoveredAssetId}
+                onAssetHover={setHoveredAssetId}
+                onAssetClick={handleAssetClick}
+              />
+            </div>
           </div>
         </div>
       </div>
