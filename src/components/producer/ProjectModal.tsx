@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, Loader2, CheckCircle, XCircle, Sparkles } from 'lucide-react';
+import { Upload, FileText, Loader2, CheckCircle, XCircle, Sparkles, Download } from 'lucide-react';
 import type { ProjectFormData } from '@/services/producerService';
 
 interface ProjectModalProps {
@@ -18,6 +18,8 @@ interface ProjectModalProps {
   isUploadingPdf?: boolean;
   uploadError?: string | null;
   uploadedFilename?: string | null;
+  uploadedPdfFile?: File | null;
+  onPdfDownload?: (file: File) => void;
   // AI brief analysis props
   onAnalyzeBrief?: () => void;
   isAnalyzingBrief?: boolean;
@@ -37,6 +39,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   isUploadingPdf = false,
   uploadError = null,
   uploadedFilename = null,
+  uploadedPdfFile = null,
+  onPdfDownload,
   onAnalyzeBrief,
   isAnalyzingBrief = false
 }) => {
@@ -132,10 +136,23 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   ) : uploadedFilename ? (
                     <div className="flex flex-col items-center gap-2">
                       <CheckCircle className="w-8 h-8 text-green-600" />
-                      <p className="text-sm text-gray-700">
-                        <FileText className="w-4 h-4 inline mr-1" />
-                        {uploadedFilename}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm text-gray-700">
+                          <FileText className="w-4 h-4 inline mr-1" />
+                          {uploadedFilename}
+                        </p>
+                        {uploadedPdfFile && onPdfDownload && (
+                          <button
+                            type="button"
+                            onClick={() => onPdfDownload(uploadedPdfFile)}
+                            className="flex items-center gap-1 px-2 py-1 text-xs text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded transition-colors"
+                            title="Download PDF"
+                          >
+                            <Download className="w-3 h-3" />
+                            Download
+                          </button>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-500">Text extracted successfully. Drop another PDF to replace.</p>
                     </div>
                   ) : (

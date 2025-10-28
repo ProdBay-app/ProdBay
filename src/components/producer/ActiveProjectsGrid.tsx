@@ -73,6 +73,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadedFilename, setUploadedFilename] = useState<string | null>(null);
+  const [uploadedPdfFile, setUploadedPdfFile] = useState<File | null>(null);
   
   // State management - AI brief analysis
   const [isAnalyzingBrief, setIsAnalyzingBrief] = useState(false);
@@ -393,6 +394,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       
       // Update success state
       setUploadedFilename(file.name);
+      setUploadedPdfFile(file); // Store the original PDF file for download
       showSuccess(`Text extracted from ${file.name}!`);
       
     } catch (error) {
@@ -404,6 +406,38 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       setIsUploadingPdf(false);
     }
   }, [updateProjectForm, showSuccess, showError]);
+
+  /**
+   * Handles PDF download functionality.
+   * 
+   * Uses native browser APIs to trigger a file download of the original PDF.
+   * 
+   * @param file - The PDF file to download
+   */
+  const handlePdfDownload = useCallback((file: File) => {
+    try {
+      // Create a blob URL from the file
+      const blobUrl = URL.createObjectURL(file);
+      
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = file.name; // Use the original filename
+      
+      // Append to DOM, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the blob URL to prevent memory leaks
+      URL.revokeObjectURL(blobUrl);
+      
+      showSuccess(`Downloaded ${file.name}`);
+    } catch (error) {
+      console.error('PDF download error:', error);
+      showError('Failed to download PDF file');
+    }
+  }, [showSuccess, showError]);
 
   /**
    * Handles AI-powered brief analysis to extract project highlights.
@@ -813,6 +847,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         isUploadingPdf={isUploadingPdf}
         uploadError={uploadError}
         uploadedFilename={uploadedFilename}
+        uploadedPdfFile={uploadedPdfFile}
+        onPdfDownload={handlePdfDownload}
         onAnalyzeBrief={handleAnalyzeBrief}
         isAnalyzingBrief={isAnalyzingBrief}
       />
