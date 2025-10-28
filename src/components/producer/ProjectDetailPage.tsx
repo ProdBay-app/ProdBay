@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -23,6 +24,8 @@ import BudgetAssetsModal from './BudgetAssetsModal';
 import MilestoneFormModal from './MilestoneFormModal';
 import AssetDetailModal from './AssetDetailModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
+import SummaryCard from '@/components/shared/SummaryCard';
+import DetailView from '@/components/shared/DetailView';
 import type { Project, Asset } from '@/lib/supabase';
 import type { ProjectTrackingSummary, ProjectMilestone } from '@/types/database';
 import type { MilestoneFormData } from './MilestoneFormModal';
@@ -32,11 +35,15 @@ import type { MilestoneFormData } from './MilestoneFormModal';
  * 
  * Features:
  * - Route structure (/producer/projects/:projectId)
- * - Dynamic two-column responsive layout with expand/collapse
- * - Data fetching for a single project
+ * - Interactive expandable card layout with four main sections
+ * - Summary cards for Overview, Budget, Timeline, and Actions
+ * - Detailed views that expand based on user selection
+ * - Data fetching for a single project with real-time tracking
  * - Editable project brief with auto-save
  * - Asset management (Kanban board)
  * - Quote management integration
+ * - Milestone management with CRUD operations
+ * - Responsive design with mobile-first approach
  */
 const ProjectDetailPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -56,6 +63,29 @@ const ProjectDetailPage: React.FC = () => {
   // Active section state for expandable card layout
   type ActiveSection = 'Overview' | 'Budget' | 'Timeline' | 'Actions';
   const [activeSection, setActiveSection] = useState<ActiveSection>('Overview');
+
+  // Animation variants for staggered content animations
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 20 
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0
+    }
+  };
 
   // Milestone management state
   const [isMilestoneFormOpen, setIsMilestoneFormOpen] = useState(false);
@@ -375,50 +405,6 @@ const ProjectDetailPage: React.FC = () => {
     );
   }
 
-  // Placeholder components for expandable card layout
-  const SummaryCard: React.FC<{
-    title: string;
-    isActive: boolean;
-    onClick: () => void;
-    children: React.ReactNode;
-  }> = ({ title, isActive, onClick, children }) => (
-    <div
-      className={`rounded-lg shadow-sm border p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
-        isActive 
-          ? 'bg-teal-50 border-teal-200 shadow-md' 
-          : 'bg-white border-gray-200 hover:border-gray-300'
-      }`}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-    >
-      <h3 className={`text-lg font-semibold mb-2 ${
-        isActive ? 'text-teal-700' : 'text-gray-900'
-      }`}>
-        {title}
-      </h3>
-      <div className="text-sm text-gray-600">
-        {children}
-      </div>
-    </div>
-  );
-
-  const DetailView: React.FC<{
-    title: string;
-    children: React.ReactNode;
-  }> = ({ title, children }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">{title}</h2>
-      {children}
-    </div>
-  );
-
   // Main content
   return (
     <>
@@ -654,66 +640,87 @@ const ProjectDetailPage: React.FC = () => {
         </div>
 
         {/* Detail View Area */}
-        <div className="transition-all duration-300 ease-in-out">
+        <AnimatePresence mode="wait">
           {activeSection === 'Overview' && (
             <DetailView title="Overview">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Client Name */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <User className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Client</p>
-                    <button
-                      onClick={() => setIsClientModalOpen(true)}
-                      className="text-lg font-semibold text-teal-600 hover:text-teal-700 hover:underline transition-colors text-left"
-                      title={`View all projects for ${project.client_name}`}
-                    >
-                      {project.client_name}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Budget */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <DollarSign className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Budget</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(project.financial_parameters ?? 0)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Deadline */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Calendar className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Deadline</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatDate(project.timeline_deadline ?? null)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Created Date */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
-                    <Clock className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">Created</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatDate(project.created_at)}
-                    </p>
-                  </div>
-                </div>
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {/* Client Name */}
+            <motion.div 
+              className="flex items-start gap-3"
+              variants={itemVariants}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <User className="w-5 h-5 text-purple-600" />
               </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">Client</p>
+                <button
+                  onClick={() => setIsClientModalOpen(true)}
+                  className="text-lg font-semibold text-teal-600 hover:text-teal-700 hover:underline transition-colors text-left"
+                  title={`View all projects for ${project.client_name}`}
+                >
+                  {project.client_name}
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Budget */}
+            <motion.div 
+              className="flex items-start gap-3"
+              variants={itemVariants}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <div className="p-2 bg-green-100 rounded-lg">
+                <DollarSign className="w-5 h-5 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">Budget</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {formatCurrency(project.financial_parameters ?? 0)}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Deadline */}
+            <motion.div 
+              className="flex items-start gap-3"
+              variants={itemVariants}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Calendar className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">Deadline</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {formatDate(project.timeline_deadline ?? null)}
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Created Date */}
+            <motion.div 
+              className="flex items-start gap-3"
+              variants={itemVariants}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Clock className="w-5 h-5 text-gray-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">Created</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {formatDate(project.created_at)}
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
             </DetailView>
           )}
 
@@ -721,13 +728,13 @@ const ProjectDetailPage: React.FC = () => {
             <DetailView title="Budget Tracking">
               {!loadingTracking && trackingSummary ? (
                 <div className="space-y-6">
-                  <BudgetTrackingBar
-                    total={trackingSummary.budget.total}
-                    spent={trackingSummary.budget.spent}
-                    remaining={trackingSummary.budget.remaining}
-                    percentageUsed={trackingSummary.budget.percentageUsed}
-                    onClick={() => setIsBudgetModalOpen(true)}
-                  />
+            <BudgetTrackingBar
+              total={trackingSummary.budget.total}
+              spent={trackingSummary.budget.spent}
+              remaining={trackingSummary.budget.remaining}
+              percentageUsed={trackingSummary.budget.percentageUsed}
+              onClick={() => setIsBudgetModalOpen(true)}
+            />
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -741,14 +748,14 @@ const ProjectDetailPage: React.FC = () => {
           {activeSection === 'Timeline' && (
             <DetailView title="Project Timeline">
               {!loadingTracking && trackingSummary ? (
-                <TimelineWidget
-                  deadline={trackingSummary.timeline.deadline}
-                  daysRemaining={trackingSummary.timeline.daysRemaining}
-                  milestones={trackingSummary.timeline.milestones}
-                  onAddMilestone={handleAddMilestoneClick}
-                  onEditMilestone={handleEditMilestoneClick}
-                  onDeleteMilestone={handleDeleteMilestoneClick}
-                />
+            <TimelineWidget
+              deadline={trackingSummary.timeline.deadline}
+              daysRemaining={trackingSummary.timeline.daysRemaining}
+              milestones={trackingSummary.timeline.milestones}
+              onAddMilestone={handleAddMilestoneClick}
+              onEditMilestone={handleEditMilestoneClick}
+              onDeleteMilestone={handleDeleteMilestoneClick}
+            />
               ) : (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
@@ -761,72 +768,72 @@ const ProjectDetailPage: React.FC = () => {
           {activeSection === 'Actions' && (
             <DetailView title="Action Items">
               {!loadingTracking && trackingSummary ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <ActionCounter
-                    label="Your Actions"
-                    count={trackingSummary.actions.producerActions}
-                    icon={CheckSquare}
-                    iconColor="text-blue-600"
-                    bgColor="bg-blue-100"
-                    description="Tasks requiring your attention"
-                  />
-                  
-                  <ActionCounter
-                    label="Their Actions"
-                    count={trackingSummary.actions.supplierActions}
-                    icon={UsersIcon}
-                    iconColor="text-purple-600"
-                    bgColor="bg-purple-100"
-                    description="Pending supplier responses"
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ActionCounter
+                label="Your Actions"
+                count={trackingSummary.actions.producerActions}
+                icon={CheckSquare}
+                iconColor="text-blue-600"
+                bgColor="bg-blue-100"
+                description="Tasks requiring your attention"
+              />
+              
+              <ActionCounter
+                label="Their Actions"
+                count={trackingSummary.actions.supplierActions}
+                icon={UsersIcon}
+                iconColor="text-purple-600"
+                bgColor="bg-purple-100"
+                description="Pending supplier responses"
+              />
+            </div>
               ) : (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
                   <p className="text-gray-600">Loading action items...</p>
-                </div>
-              )}
+          </div>
+        )}
             </DetailView>
           )}
-        </div>
+        </AnimatePresence>
 
         {/* Assets and Brief Section - Keep existing functionality */}
         <div className="mt-8">
-          {/* Dynamic grid: 66/33 split (collapsed) or 50/50 split (expanded) */}
-          <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
+        {/* Dynamic grid: 66/33 split (collapsed) or 50/50 split (expanded) */}
+        <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
+          
+          {/* LEFT COLUMN - Main content (Assets) */}
+          <div className={`space-y-6 ${isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
             
-            {/* LEFT COLUMN - Main content (Assets) */}
-            <div className={`space-y-6 ${isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
-              
-              {/* Assets Section - Kanban Board */}
-              <AssetList 
-                projectId={project.id}
-                hoveredAssetId={hoveredAssetId}
-                onAssetHover={setHoveredAssetId}
-              />
-            </div>
+            {/* Assets Section - Kanban Board */}
+            <AssetList 
+              projectId={project.id}
+              hoveredAssetId={hoveredAssetId}
+              onAssetHover={setHoveredAssetId}
+            />
+          </div>
 
-            {/* RIGHT COLUMN - Brief */}
-            <div className="lg:col-span-1">
-              <EditableBrief
-                projectId={project.id}
-                briefDescription={project.brief_description}
-                physicalParameters={project.physical_parameters ?? ''}
-                isExpanded={isBriefExpanded}
-                onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
-                onBriefUpdate={(briefDesc, physicalParams) => {
-                  // Optimistically update local project state
-                  setProject(prev => prev ? {
-                    ...prev,
-                    brief_description: briefDesc,
-                    physical_parameters: physicalParams
-                  } : null);
-                }}
-                assets={assets}
-                hoveredAssetId={hoveredAssetId}
-                onAssetHover={setHoveredAssetId}
-                onAssetClick={handleAssetClick}
-              />
+          {/* RIGHT COLUMN - Brief */}
+          <div className="lg:col-span-1">
+            <EditableBrief
+              projectId={project.id}
+              briefDescription={project.brief_description}
+              physicalParameters={project.physical_parameters ?? ''}
+              isExpanded={isBriefExpanded}
+              onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+              onBriefUpdate={(briefDesc, physicalParams) => {
+                // Optimistically update local project state
+                setProject(prev => prev ? {
+                  ...prev,
+                  brief_description: briefDesc,
+                  physical_parameters: physicalParams
+                } : null);
+              }}
+              assets={assets}
+              hoveredAssetId={hoveredAssetId}
+              onAssetHover={setHoveredAssetId}
+              onAssetClick={handleAssetClick}
+            />
             </div>
           </div>
         </div>
