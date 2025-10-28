@@ -8,6 +8,7 @@ import { ProducerService, type ProjectFormData, type AssetFormData } from '@/ser
 import { RailwayApiService } from '@/services/railwayApiService';
 import { useNotification } from '@/hooks/useNotification';
 import ProducerDashboard from './ProducerDashboard';
+import ProjectCreationLoadingOverlay from '@/components/ProjectCreationLoadingOverlay';
 import type { Project, Asset, Quote, Supplier } from '@/lib/supabase';
 
 export interface ProducerDashboardData {
@@ -145,6 +146,7 @@ const ProducerDashboardContainer: React.FC = () => {
   // Form states
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [isSubmittingProject, setIsSubmittingProject] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isEditingAsset, setIsEditingAsset] = useState(false);
   const [isSubmittingAsset, setIsSubmittingAsset] = useState(false);
   const [projectForm, setProjectForm] = useState<ProjectFormData>({
@@ -334,6 +336,11 @@ const ProducerDashboardContainer: React.FC = () => {
     e.preventDefault();
     setIsSubmittingProject(true);
     
+    // Only show loading overlay for new project creation, not editing
+    if (!isEditingProject) {
+      setIsCreatingProject(true);
+    }
+    
     try {
       if (isEditingProject && selectedProject) {
         // Update existing project
@@ -392,6 +399,7 @@ const ProducerDashboardContainer: React.FC = () => {
       showError('Failed to save project');
     } finally {
       setIsSubmittingProject(false);
+      setIsCreatingProject(false);
     }
   }, [isEditingProject, selectedProject, projectForm, allocationMethod, loadProjects, showSuccess, showWarning, showError, closeProjectModal]);
 
@@ -787,7 +795,9 @@ const ProducerDashboardContainer: React.FC = () => {
 
   // Pass all data and functions to the presentational component
   return (
-    <ProducerDashboard
+    <>
+      <ProjectCreationLoadingOverlay isVisible={isCreatingProject} />
+      <ProducerDashboard
       // Data
       projects={projects}
       selectedProject={selectedProject}
@@ -872,6 +882,7 @@ const ProducerDashboardContainer: React.FC = () => {
       hasMultipleQuotes={hasMultipleQuotes}
       availableTags={availableTags}
     />
+    </>
   );
 };
 

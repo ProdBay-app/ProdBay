@@ -11,6 +11,7 @@ import SearchBar from '@/components/shared/SearchBar';
 import StatusFilter from '@/components/shared/StatusFilter';
 import SortControl from '@/components/shared/SortControl';
 import ProjectModal from './ProjectModal';
+import ProjectCreationLoadingOverlay from '@/components/ProjectCreationLoadingOverlay';
 import type { Project } from '@/lib/supabase';
 
 export interface ActiveProjectsGridProps {
@@ -59,6 +60,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [isSubmittingProject, setIsSubmittingProject] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [projectForm, setProjectForm] = useState<ProjectFormData>({
     project_name: '',
     client_name: '',
@@ -544,6 +546,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const submitProjectForm = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmittingProject(true);
+    setIsCreatingProject(true);
     
     try {
       // Step 1: Create the project in Supabase
@@ -591,6 +594,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       showError('Failed to create project. Please try again.');
     } finally {
       setIsSubmittingProject(false);
+      setIsCreatingProject(false);
     }
   }, [projectForm, navigate, showWarning, showError]);
 
@@ -625,7 +629,9 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <ProjectCreationLoadingOverlay isVisible={isCreatingProject} />
+      <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -852,7 +858,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         onAnalyzeBrief={handleAnalyzeBrief}
         isAnalyzingBrief={isAnalyzingBrief}
       />
-    </div>
+      </div>
+    </>
   );
 };
 
