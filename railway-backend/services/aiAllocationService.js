@@ -39,12 +39,44 @@ class AIAllocationService {
         cleanedContent = cleanedContent.substring(jsonStart, jsonEnd + 1);
       }
       
+      // Additional JSON cleaning - handle common AI response issues
+      cleanedContent = this.cleanJsonResponse(cleanedContent);
+      
       return JSON.parse(cleanedContent);
     } catch (error) {
       console.error('Failed to parse AI response:', error);
       console.error('Raw content:', content);
-      throw new Error(`Failed to parse AI response: ${error.message}`);
+      console.error('Cleaned content:', cleanedContent);
+      const parseError = new Error(`Failed to parse AI response: ${error.message}`);
+      parseError.rawContent = content;
+      throw parseError;
     }
+  }
+
+  /**
+   * Clean common JSON formatting issues from AI responses
+   */
+  cleanJsonResponse(jsonString) {
+    let cleaned = jsonString;
+    
+    // Remove any trailing commas before closing brackets/braces
+    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
+    
+    // Fix incomplete arrays by removing trailing commas
+    cleaned = cleaned.replace(/,(\s*])/g, '$1');
+    
+    // Fix incomplete objects by removing trailing commas
+    cleaned = cleaned.replace(/,(\s*})/g, '$1');
+    
+    // Remove any incomplete property definitions at the end
+    cleaned = cleaned.replace(/,\s*"[^"]*":\s*"[^"]*$/, '');
+    
+    // Ensure proper array closing
+    if (cleaned.includes('"assets": [') && !cleaned.includes(']')) {
+      cleaned = cleaned.replace(/"assets": \[([^]]*)$/, '"assets": [$1]');
+    }
+    
+    return cleaned;
   }
 
   /**
@@ -64,7 +96,7 @@ class AIAllocationService {
         messages: [
           {
             role: "system",
-            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure."
+            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure. Ensure all JSON arrays and objects are properly closed with correct brackets and braces. Do not include trailing commas."
           },
           {
             role: "user",
@@ -72,7 +104,7 @@ class AIAllocationService {
           }
         ],
         temperature: 0.3,
-        max_tokens: 2000
+        max_tokens: 4000
       });
 
       // Log the raw response for debugging
@@ -104,10 +136,31 @@ class AIAllocationService {
         projectContext
       }, null, processingTime, false, error.message);
 
+      // Try to extract partial assets from malformed JSON
+      let fallbackAssets = [];
+      try {
+        const partialMatch = error.message.match(/position (\d+)/);
+        if (partialMatch) {
+          const position = parseInt(partialMatch[1]);
+          const rawContent = error.rawContent || '';
+          const partialJson = rawContent.substring(0, position);
+          const cleanedPartial = this.cleanJsonResponse(partialJson);
+          
+          // Try to parse partial JSON and extract what we can
+          const partialData = JSON.parse(cleanedPartial + ']}');
+          if (partialData.assets && Array.isArray(partialData.assets)) {
+            fallbackAssets = partialData.assets;
+            console.log(`Extracted ${fallbackAssets.length} partial assets from malformed JSON`);
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Failed to extract partial assets:', fallbackError);
+      }
+
       return {
         success: false,
         error: error.message,
-        fallbackAssets: this.getFallbackAssets(briefDescription)
+        fallbackAssets: fallbackAssets.length > 0 ? fallbackAssets : this.getFallbackAssets(briefDescription)
       };
     }
   }
