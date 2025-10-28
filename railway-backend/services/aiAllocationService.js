@@ -71,12 +71,128 @@ class AIAllocationService {
     // Remove any incomplete property definitions at the end
     cleaned = cleaned.replace(/,\s*"[^"]*":\s*"[^"]*$/, '');
     
+    // Handle duplicate properties within objects - keep only the last occurrence
+    cleaned = this.removeDuplicateProperties(cleaned);
+    
     // Ensure proper array closing
     if (cleaned.includes('"assets": [') && !cleaned.includes(']')) {
       cleaned = cleaned.replace(/"assets": \[([^]]*)$/, '"assets": [$1]');
     }
     
     return cleaned;
+  }
+
+  /**
+   * Remove duplicate properties within JSON objects
+   */
+  removeDuplicateProperties(jsonString) {
+    let cleaned = jsonString;
+    
+    // Handle the specific case where properties are duplicated within the same object
+    // This is a simpler approach that focuses on the most common issues
+    
+    // Remove duplicate property patterns like: "priority": "high", "priority": "medium"
+    cleaned = cleaned.replace(/"priority":\s*"[^"]*",\s*"priority":\s*"[^"]*"/g, (match) => {
+      // Keep only the last occurrence
+      const priorities = match.match(/"priority":\s*"([^"]*)"/g);
+      return priorities ? priorities[priorities.length - 1] : match;
+    });
+    
+    // Remove duplicate estimated_cost_range
+    cleaned = cleaned.replace(/"estimated_cost_range":\s*"[^"]*",\s*"estimated_cost_range":\s*"[^"]*"/g, (match) => {
+      const costs = match.match(/"estimated_cost_range":\s*"([^"]*)"/g);
+      return costs ? costs[costs.length - 1] : match;
+    });
+    
+    // Remove duplicate specifications
+    cleaned = cleaned.replace(/"specifications":\s*"[^"]*",\s*"specifications":\s*"[^"]*"/g, (match) => {
+      const specs = match.match(/"specifications":\s*"([^"]*)"/g);
+      return specs ? specs[specs.length - 1] : match;
+    });
+    
+    // Remove duplicate source_text
+    cleaned = cleaned.replace(/"source_text":\s*"[^"]*",\s*"source_text":\s*"[^"]*"/g, (match) => {
+      const sources = match.match(/"source_text":\s*"([^"]*)"/g);
+      return sources ? sources[sources.length - 1] : match;
+    });
+    
+    // Remove duplicate asset_name
+    cleaned = cleaned.replace(/"asset_name":\s*"[^"]*",\s*"asset_name":\s*"[^"]*"/g, (match) => {
+      const names = match.match(/"asset_name":\s*"([^"]*)"/g);
+      return names ? names[names.length - 1] : match;
+    });
+    
+    return cleaned;
+  }
+
+  /**
+   * Extract assets from malformed JSON using multiple strategies
+   */
+  extractAssetsFromMalformedJson(rawContent) {
+    const assets = [];
+    
+    try {
+      // Strategy 1: Try to find complete asset objects using regex
+      const assetPattern = /{\s*"asset_name":\s*"[^"]*"[^}]*}/g;
+      const assetMatches = rawContent.match(assetPattern);
+      
+      if (assetMatches) {
+        for (const assetMatch of assetMatches) {
+          try {
+            // Clean and parse each asset object
+            const cleanedAsset = this.cleanJsonResponse(assetMatch);
+            const asset = JSON.parse(cleanedAsset);
+            
+            // Validate that it has required fields
+            if (asset.asset_name && asset.specifications) {
+              assets.push({
+                asset_name: asset.asset_name,
+                specifications: asset.specifications,
+                priority: asset.priority || 'medium',
+                estimated_cost_range: asset.estimated_cost_range || 'medium',
+                source_text: asset.source_text || ''
+              });
+            }
+          } catch (parseError) {
+            // Skip malformed individual assets
+            continue;
+          }
+        }
+      }
+      
+      // Strategy 2: If no complete assets found, try to extract from partial JSON
+      if (assets.length === 0) {
+        const partialMatch = rawContent.match(/"assets":\s*\[([\s\S]*?)(?:\]|$)/);
+        if (partialMatch) {
+          const assetsContent = partialMatch[1];
+          const assetObjects = assetsContent.split(/(?<=})\s*,(?=\s*{)/);
+          
+          for (const assetObj of assetObjects) {
+            try {
+              const cleanedAsset = this.cleanJsonResponse(assetObj.trim());
+              const asset = JSON.parse(cleanedAsset);
+              
+              if (asset.asset_name && asset.specifications) {
+                assets.push({
+                  asset_name: asset.asset_name,
+                  specifications: asset.specifications,
+                  priority: asset.priority || 'medium',
+                  estimated_cost_range: asset.estimated_cost_range || 'medium',
+                  source_text: asset.source_text || ''
+                });
+              }
+            } catch (parseError) {
+              continue;
+            }
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error extracting assets from malformed JSON:', error);
+    }
+    
+    return assets;
   }
 
   /**
@@ -96,7 +212,7 @@ class AIAllocationService {
         messages: [
           {
             role: "system",
-            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure. Ensure all JSON arrays and objects are properly closed with correct brackets and braces. Do not include trailing commas."
+            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure. Ensure all JSON arrays and objects are properly closed with correct brackets and braces. Do not include trailing commas. Each property in an object must appear only once - no duplicate properties within the same object."
           },
           {
             role: "user",
@@ -139,17 +255,11 @@ class AIAllocationService {
       // Try to extract partial assets from malformed JSON
       let fallbackAssets = [];
       try {
-        const partialMatch = error.message.match(/position (\d+)/);
-        if (partialMatch) {
-          const position = parseInt(partialMatch[1]);
-          const rawContent = error.rawContent || '';
-          const partialJson = rawContent.substring(0, position);
-          const cleanedPartial = this.cleanJsonResponse(partialJson);
-          
-          // Try to parse partial JSON and extract what we can
-          const partialData = JSON.parse(cleanedPartial + ']}');
-          if (partialData.assets && Array.isArray(partialData.assets)) {
-            fallbackAssets = partialData.assets;
+        const rawContent = error.rawContent || '';
+        if (rawContent) {
+          // Try multiple strategies to extract assets
+          fallbackAssets = this.extractAssetsFromMalformedJson(rawContent);
+          if (fallbackAssets.length > 0) {
             console.log(`Extracted ${fallbackAssets.length} partial assets from malformed JSON`);
           }
         }
