@@ -181,6 +181,9 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
     result = result.replace(/[()]/g, '');            // Remove parentheses
     result = result.replace(/[\[\]]/g, '');          // Remove square brackets
     
+    // Normalize punctuation for better matching
+    result = result.replace(/[.,;:!?]+$/, '');       // Remove trailing punctuation
+    
     // Normalize whitespace
     result = result.replace(/\r\n/g, ' ');           // Replace Windows line breaks with space
     result = result.replace(/\n/g, ' ');             // Replace Unix line breaks with space
@@ -220,29 +223,78 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
         // STRATEGY: Multi-pass matching for maximum resilience
         // Pass 1: Try exact match (fastest, works if no differences)
         let matchIndex = text.indexOf(originalSourceText);
-        const matchLength = originalSourceText.length;
+        let matchLength = originalSourceText.length;
         
         // Pass 2: Try case-insensitive match (handles capitalization differences)
         if (matchIndex === -1) {
           matchIndex = text.toLowerCase().indexOf(originalSourceText.toLowerCase());
         }
         
-        // Pass 3: Try normalized match (handles whitespace + case differences)
+        // Pass 3: Try normalized match (handles whitespace + case + bullet point differences)
         if (matchIndex === -1) {
           // Check if it exists in normalized form
           const normalizedIndex = normalizedBriefText.indexOf(normalizedSourceText);
           
           if (normalizedIndex !== -1) {
             // Found in normalized text! Now find it in original using fuzzy search
-            // Strategy: Search for the first few words case-insensitively
+            // Strategy: Search for the first few words case-insensitively, ignoring bullet points
             const firstWords = originalSourceText.split(/\s+/).slice(0, 3).join(' ');
-            matchIndex = text.toLowerCase().indexOf(firstWords.toLowerCase());
+            const searchText = text.toLowerCase();
+            const searchWords = firstWords.toLowerCase();
+            
+            // Try to find the words, accounting for potential bullet points
+            matchIndex = searchText.indexOf(searchWords);
             
             if (matchIndex === -1) {
-              // Last resort: Try just the first word
+              // Try with bullet point variations
+              const bulletVariations = [
+                '• ' + searchWords,
+                '· ' + searchWords,
+                '- ' + searchWords,
+                '* ' + searchWords
+              ];
+              
+              for (const variation of bulletVariations) {
+                matchIndex = searchText.indexOf(variation);
+                if (matchIndex !== -1) {
+                  // Adjust match length to account for bullet point
+                  matchLength = originalSourceText.length + (variation.length - searchWords.length);
+                  break;
+                }
+              }
+            }
+            
+            // If still no match, try finding the normalized text in the original text
+            if (matchIndex === -1) {
+              // Find where the normalized text appears in the original text
+              const normalizedInOriginal = text.toLowerCase().indexOf(normalizedSourceText);
+              if (normalizedInOriginal !== -1) {
+                matchIndex = normalizedInOriginal;
+                matchLength = originalSourceText.length;
+              }
+            }
+            
+            if (matchIndex === -1) {
+              // Last resort: Try just the first word with bullet point variations
               const firstWord = originalSourceText.split(/\s+/)[0];
               if (firstWord && firstWord.length > 3) {
-                matchIndex = text.toLowerCase().indexOf(firstWord.toLowerCase());
+                const firstWordLower = firstWord.toLowerCase();
+                const bulletVariations = [
+                  '• ' + firstWordLower,
+                  '· ' + firstWordLower,
+                  '- ' + firstWordLower,
+                  '* ' + firstWordLower,
+                  firstWordLower
+                ];
+                
+                for (const variation of bulletVariations) {
+                  matchIndex = searchText.indexOf(variation);
+                  if (matchIndex !== -1) {
+                    // Use the original source text length for consistency
+                    matchLength = originalSourceText.length;
+                    break;
+                  }
+                }
               }
             }
           }
