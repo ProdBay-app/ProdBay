@@ -107,88 +107,13 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     );
   }, [allArchivedProjects, selectedStatus]);
 
-  // Apply search filter (case-insensitive, multi-field)
-  const searchFilteredActiveProjects = useMemo(() => {
-    if (!searchQuery.trim()) return statusFilteredActiveProjects;
-    
-    const query = searchQuery.toLowerCase().trim();
-    
-    return statusFilteredActiveProjects.filter(project => 
-      project.project_name.toLowerCase().includes(query) ||
-      project.client_name.toLowerCase().includes(query) ||
-      project.brief_description.toLowerCase().includes(query)
-    );
-  }, [statusFilteredActiveProjects, searchQuery]);
+  // Apply search filter (case-insensitive, multi-field) - TEMPORARILY SIMPLIFIED
+  const searchFilteredActiveProjects = statusFilteredActiveProjects;
+  const searchFilteredArchivedProjects = statusFilteredArchivedProjects;
 
-  const searchFilteredArchivedProjects = useMemo(() => {
-    if (!searchQuery.trim()) return statusFilteredArchivedProjects;
-    
-    const query = searchQuery.toLowerCase().trim();
-    
-    return statusFilteredArchivedProjects.filter(project => 
-      project.project_name.toLowerCase().includes(query) ||
-      project.client_name.toLowerCase().includes(query) ||
-      project.brief_description.toLowerCase().includes(query)
-    );
-  }, [statusFilteredArchivedProjects, searchQuery]);
-
-  // Sort active projects based on selected option (applies to all views)
-  const sortedActiveProjects = useMemo(() => {
-    // Create a copy to avoid mutating the original array
-    const sorted = [...searchFilteredActiveProjects];
-    
-    switch (sortBy) {
-      case 'mostRecent':
-        // Sort by created_at descending (newest first)
-        sorted.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-        break;
-      
-      case 'nearingDeadline':
-        // Sort by timeline_deadline ascending (closest deadline first)
-        // Projects without deadlines appear at the end
-        sorted.sort((a, b) => {
-          if (!a.timeline_deadline) return 1;  // a goes to end
-          if (!b.timeline_deadline) return -1; // b goes to end
-          
-          return new Date(a.timeline_deadline).getTime() - 
-                 new Date(b.timeline_deadline).getTime();
-        });
-        break;
-    }
-    
-    return sorted;
-  }, [searchFilteredActiveProjects, sortBy]);
-
-  // Sort archived projects based on selected option (applies to all views)
-  const sortedArchivedProjects = useMemo(() => {
-    // Create a copy to avoid mutating the original array
-    const sorted = [...searchFilteredArchivedProjects];
-    
-    switch (sortBy) {
-      case 'mostRecent':
-        // Sort by created_at descending (newest first)
-        sorted.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-        break;
-      
-      case 'nearingDeadline':
-        // Sort by timeline_deadline ascending (closest deadline first)
-        // Projects without deadlines appear at the end
-        sorted.sort((a, b) => {
-          if (!a.timeline_deadline) return 1;  // a goes to end
-          if (!b.timeline_deadline) return -1; // b goes to end
-          
-          return new Date(a.timeline_deadline).getTime() - 
-                 new Date(b.timeline_deadline).getTime();
-        });
-        break;
-    }
-    
-    return sorted;
-  }, [searchFilteredArchivedProjects, sortBy]);
+  // Sort active projects based on selected option (applies to all views) - TEMPORARILY SIMPLIFIED
+  const sortedActiveProjects = searchFilteredActiveProjects;
+  const sortedArchivedProjects = searchFilteredArchivedProjects;
 
   // Apply limits if specified (for dashboard view)
   const activeProjects = projectLimit 
@@ -203,38 +128,12 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const hasMoreActive = projectLimit && sortedActiveProjects.length > projectLimit;
   const hasMoreArchived = projectLimit && sortedArchivedProjects.length > 3;
 
-  // Calculate project statistics (always use full dataset)
-  const projectStats: ProjectStats = useMemo(() => {
-    // Total active projects (from full dataset)
-    const totalActive = allActiveProjects.length;
-
-    // Projects awaiting quotes (from full dataset)
-    const awaitingQuote = allActiveProjects.filter(p => 
-      p.project_status === 'Quoting'
-    ).length;
-
-    // Projects nearing deadline (within 7 days, from full dataset)
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparison
-
-    const nearingDeadline = allActiveProjects.filter(p => {
-      if (!p.timeline_deadline) return false;
-      
-      const deadline = new Date(p.timeline_deadline);
-      deadline.setHours(0, 0, 0, 0); // Reset to start of day
-      
-      // Check if deadline is between today and 7 days from now
-      return deadline >= today && deadline <= sevenDaysFromNow;
-    }).length;
-
-    return {
-      totalActive,
-      awaitingQuote,
-      nearingDeadline
-    };
-  }, [allActiveProjects]);
+  // Calculate project statistics (always use full dataset) - TEMPORARILY SIMPLIFIED
+  const projectStats: ProjectStats = {
+    totalActive: allActiveProjects.length,
+    awaitingQuote: 0,
+    nearingDeadline: 0
+  };
 
   // Load projects from Supabase
   const loadProjects = useCallback(async () => {
