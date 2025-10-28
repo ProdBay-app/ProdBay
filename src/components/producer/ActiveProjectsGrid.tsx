@@ -11,6 +11,7 @@ import SearchBar from '@/components/shared/SearchBar';
 import StatusFilter from '@/components/shared/StatusFilter';
 import SortControl from '@/components/shared/SortControl';
 import ProjectModal from './ProjectModal';
+import ProjectCreationLoadingOverlay from '@/components/ProjectCreationLoadingOverlay';
 import type { Project } from '@/lib/supabase';
 
 export interface ActiveProjectsGridProps {
@@ -59,6 +60,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [isSubmittingProject, setIsSubmittingProject] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [projectForm, setProjectForm] = useState<ProjectFormData>({
     project_name: '',
     client_name: '',
@@ -544,14 +546,30 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const submitProjectForm = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmittingProject(true);
+    setIsCreatingProject(true);
+    
+    // Start timing the entire project creation process
+    const startTime = performance.now();
+    console.log('🚀 [PROJECT CREATION] Starting project creation process...');
+    
+    // Initialize variables for timing
+    let supabaseDuration = 0;
+    let briefDuration = 0;
     
     try {
       // Step 1: Create the project in Supabase
+      const supabaseStartTime = performance.now();
+      console.log('📊 [PROJECT CREATION] Step 1: Creating project in Supabase...');
       const createdProject = await ProducerService.createProject(projectForm);
+      const supabaseEndTime = performance.now();
+      supabaseDuration = Math.round(supabaseEndTime - supabaseStartTime);
+      console.log(`✅ [PROJECT CREATION] Step 1 Complete: Supabase project creation took ${supabaseDuration}ms`);
       
       // Step 2: Process the brief if provided (optional but recommended)
       if (projectForm.brief_description.trim()) {
         try {
+          const briefStartTime = performance.now();
+          console.log('🤖 [PROJECT CREATION] Step 2: Processing brief with Railway API...');
           const briefResult = await RailwayApiService.processBrief(
             createdProject.id,
             projectForm.brief_description,
@@ -564,6 +582,9 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
               }
             }
           );
+          const briefEndTime = performance.now();
+          briefDuration = Math.round(briefEndTime - briefStartTime);
+          console.log(`✅ [PROJECT CREATION] Step 2 Complete: Railway API brief processing took ${briefDuration}ms`);
           
           // Check if brief processing succeeded
           if (!briefResult.success) {
@@ -582,15 +603,34 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       
       // Step 3: Redirect to the new project's dedicated page
       // This provides immediate, actionable feedback and completes the creation-to-management flow
+      console.log('🔄 [PROJECT CREATION] Step 3: Preparing navigation to project page...');
       navigate(`/producer/projects/${createdProject.id}`);
       // Note: Modal closes automatically as component unmounts during navigation
       
+      // Calculate and log total duration
+      const endTime = performance.now();
+      const totalDuration = Math.round(endTime - startTime);
+      console.log(`🎉 [PROJECT CREATION] SUCCESS! Total project creation time: ${totalDuration}ms (${(totalDuration / 1000).toFixed(2)}s)`);
+      console.log(`📈 [PROJECT CREATION] Performance Summary:`);
+      console.log(`   - Supabase: ${supabaseDuration}ms`);
+      if (projectForm.brief_description.trim()) {
+        console.log(`   - Railway API: ${briefDuration}ms`);
+        console.log(`   - Total API calls: ${supabaseDuration + briefDuration}ms`);
+        console.log(`   - Overhead: ${totalDuration - supabaseDuration - briefDuration}ms`);
+      } else {
+        console.log(`   - No brief processing (skipped Railway API)`);
+        console.log(`   - Overhead: ${totalDuration - supabaseDuration}ms`);
+      }
+      
     } catch (err) {
       // Failed to create project in Supabase
-      console.error('Failed to create project:', err);
+      const endTime = performance.now();
+      const totalDuration = Math.round(endTime - startTime);
+      console.error(`❌ [PROJECT CREATION] FAILED after ${totalDuration}ms (${(totalDuration / 1000).toFixed(2)}s):`, err);
       showError('Failed to create project. Please try again.');
     } finally {
       setIsSubmittingProject(false);
+      setIsCreatingProject(false);
     }
   }, [projectForm, navigate, showWarning, showError]);
 
@@ -625,7 +665,9 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <ProjectCreationLoadingOverlay isVisible={isCreatingProject} />
+      <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -852,7 +894,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         onAnalyzeBrief={handleAnalyzeBrief}
         isAnalyzingBrief={isAnalyzingBrief}
       />
-    </div>
+      </div>
+    </>
   );
 };
 
