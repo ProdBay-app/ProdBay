@@ -44,6 +44,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   onAnalyzeBrief,
   isAnalyzingBrief = false
 }) => {
+  if (!isOpen) return null;
+
   // Step management for wizard flow
   const [currentStep, setCurrentStep] = useState<'step1' | 'step2'>('step1');
   
@@ -53,8 +55,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
       setCurrentStep('step1');
     }
   }, [isOpen, isEditing]);
-  
-  if (!isOpen) return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target as HTMLInputElement;
