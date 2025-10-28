@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, Loader2, CheckCircle, XCircle, Sparkles, Download, ArrowLeft, ArrowRight } from 'lucide-react';
 import type { ProjectFormData } from '@/services/producerService';
@@ -47,7 +47,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   if (!isOpen) return null;
 
   // Reset step when modal opens/closes
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       setCurrentStep('step1');
       setIsTransitioning(false);
