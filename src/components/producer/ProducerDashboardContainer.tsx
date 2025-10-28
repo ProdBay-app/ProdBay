@@ -341,19 +341,42 @@ const ProducerDashboardContainer: React.FC = () => {
       setIsCreatingProject(true);
     }
     
+    // Start timing for new project creation
+    const startTime = performance.now();
+    if (!isEditingProject) {
+      console.log('🚀 [PROJECT CREATION] Starting project creation process (Dashboard)...');
+    }
+    
+    // Initialize variables for timing
+    let supabaseDuration = 0;
+    let briefDuration = 0;
+    let refreshDuration = 0;
+    
     try {
       if (isEditingProject && selectedProject) {
         // Update existing project
+        const updateStartTime = performance.now();
+        console.log('📝 [PROJECT UPDATE] Updating existing project...');
         await ProducerService.updateProject(selectedProject.id, projectForm);
         await loadProjects();
+        const updateEndTime = performance.now();
+        const updateDuration = Math.round(updateEndTime - updateStartTime);
+        console.log(`✅ [PROJECT UPDATE] Project update completed in ${updateDuration}ms`);
         showSuccess('Project updated successfully');
       } else {
         // Create new project
+        const supabaseStartTime = performance.now();
+        console.log('📊 [PROJECT CREATION] Step 1: Creating project in Supabase (Dashboard)...');
         const createdProject = await ProducerService.createProject(projectForm);
+        const supabaseEndTime = performance.now();
+        supabaseDuration = Math.round(supabaseEndTime - supabaseStartTime);
+        console.log(`✅ [PROJECT CREATION] Step 1 Complete: Supabase project creation took ${supabaseDuration}ms`);
         
         // Process brief if provided
         if (projectForm.brief_description) {
           try {
+            const briefStartTime = performance.now();
+            console.log('🤖 [PROJECT CREATION] Step 2: Processing brief with Railway API (Dashboard)...');
             const briefResult = await RailwayApiService.processBrief(
               createdProject.id, 
               projectForm.brief_description,
@@ -366,6 +389,9 @@ const ProducerDashboardContainer: React.FC = () => {
                 }
               }
             );
+            const briefEndTime = performance.now();
+            briefDuration = Math.round(briefEndTime - briefStartTime);
+            console.log(`✅ [PROJECT CREATION] Step 2 Complete: Railway API brief processing took ${briefDuration}ms`);
             
             if (!briefResult.success) {
               console.warn('Brief processing failed:', briefResult.error?.message);
@@ -384,6 +410,8 @@ const ProducerDashboardContainer: React.FC = () => {
         }
         
         // Refresh projects and select the new one
+        const refreshStartTime = performance.now();
+        console.log('🔄 [PROJECT CREATION] Step 3: Refreshing project data and selecting new project...');
         await loadProjects();
         const updatedProject = await ProducerService.loadProject(createdProject.id);
         if (updatedProject) {
@@ -391,11 +419,37 @@ const ProducerDashboardContainer: React.FC = () => {
         } else {
           setSelectedProject(createdProject);
         }
+        const refreshEndTime = performance.now();
+        refreshDuration = Math.round(refreshEndTime - refreshStartTime);
+        console.log(`✅ [PROJECT CREATION] Step 3 Complete: Project refresh took ${refreshDuration}ms`);
+        
+        // Calculate and log total duration for new project creation
+        const endTime = performance.now();
+        const totalDuration = Math.round(endTime - startTime);
+        console.log(`🎉 [PROJECT CREATION] SUCCESS! Total project creation time (Dashboard): ${totalDuration}ms (${(totalDuration / 1000).toFixed(2)}s)`);
+        console.log(`📈 [PROJECT CREATION] Performance Summary (Dashboard):`);
+        console.log(`   - Supabase: ${supabaseDuration}ms`);
+        if (projectForm.brief_description) {
+          console.log(`   - Railway API: ${briefDuration}ms`);
+          console.log(`   - Project Refresh: ${refreshDuration}ms`);
+          console.log(`   - Total API calls: ${supabaseDuration + briefDuration}ms`);
+          console.log(`   - Overhead: ${totalDuration - supabaseDuration - briefDuration - refreshDuration}ms`);
+        } else {
+          console.log(`   - No brief processing (skipped Railway API)`);
+          console.log(`   - Project Refresh: ${refreshDuration}ms`);
+          console.log(`   - Overhead: ${totalDuration - supabaseDuration - refreshDuration}ms`);
+        }
       }
       
       closeProjectModal();
     } catch (err) {
-      console.error('Failed to submit project form', err);
+      const endTime = performance.now();
+      const totalDuration = Math.round(endTime - startTime);
+      if (isEditingProject) {
+        console.error(`❌ [PROJECT UPDATE] FAILED after ${totalDuration}ms (${(totalDuration / 1000).toFixed(2)}s):`, err);
+      } else {
+        console.error(`❌ [PROJECT CREATION] FAILED after ${totalDuration}ms (${(totalDuration / 1000).toFixed(2)}s):`, err);
+      }
       showError('Failed to save project');
     } finally {
       setIsSubmittingProject(false);
