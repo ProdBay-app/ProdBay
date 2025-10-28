@@ -70,12 +70,15 @@ router.post('/extract-text-from-pdf', upload.single('pdf'), async (req, res) => 
     }
 
     // Clean up the extracted text
-    // - Remove excessive whitespace
+    // - Preserve necessary whitespace between words
+    // - Remove only excessive whitespace (3+ consecutive spaces)
     // - Normalize line breaks
     const cleanedText = pdfData.text
       .replace(/\r\n/g, '\n')           // Normalize line breaks
       .replace(/\n{3,}/g, '\n\n')       // Max 2 consecutive line breaks
-      .replace(/[ \t]{2,}/g, ' ')       // Remove excessive spaces
+      .replace(/[ \t]{3,}/g, '  ')      // Replace 3+ spaces/tabs with 2 spaces (preserve word boundaries)
+      .replace(/\u00A0/g, ' ')          // Convert all non-breaking spaces to regular spaces
+      .replace(/\t/g, ' ')              // Convert remaining tabs to spaces
       .trim();
 
     console.log(`Successfully extracted ${cleanedText.length} characters from PDF`);
