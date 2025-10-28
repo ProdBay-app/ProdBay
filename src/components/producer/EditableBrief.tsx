@@ -156,7 +156,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   const normalizeText = (str: string): string => {
     let result = str;
     
-    // Normalize quotes - Convert all quote types to standard double quote
+    // Normalize quotes - Convert all quote types to a consistent format
     result = result.replace(/['']/g, "'");           // Normalize curly single quotes to straight
     result = result.replace(/[""]/g, '"');           // Normalize curly double quotes to straight
     result = result.replace(/'/g, '"');              // Convert all single quotes to double quotes for consistency
