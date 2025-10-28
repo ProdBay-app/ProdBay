@@ -78,12 +78,16 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   const [isAnalyzingBrief, setIsAnalyzingBrief] = useState(false);
 
   // Filter projects by status group (active vs archived)
-  const allActiveProjects = projects.filter(p => 
-    ['New', 'In Progress', 'Quoting'].includes(p.project_status)
+  const allActiveProjects = useMemo(() => 
+    projects.filter(p => 
+      ['New', 'In Progress', 'Quoting'].includes(p.project_status)
+    ), [projects]
   );
   
-  const allArchivedProjects = projects.filter(p => 
-    ['Completed', 'Cancelled'].includes(p.project_status)
+  const allArchivedProjects = useMemo(() => 
+    projects.filter(p => 
+      ['Completed', 'Cancelled'].includes(p.project_status)
+    ), [projects]
   );
 
   // Apply status filter (specific status or 'all')
