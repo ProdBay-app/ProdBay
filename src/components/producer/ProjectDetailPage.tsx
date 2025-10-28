@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -470,44 +470,15 @@ const ProjectDetailPage: React.FC = () => {
   // Main content
   return (
     <>
-      {/* Header with breadcrumbs */}
+      {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-            <Link 
-              to="/producer/dashboard" 
-              className="hover:text-teal-600 transition-colors"
-            >
-              Dashboard
-            </Link>
-            <span>/</span>
-            <Link 
-              to="/producer/projects" 
-              className="hover:text-teal-600 transition-colors"
-            >
-              Projects
-            </Link>
-            <span>/</span>
-            <span className="text-gray-900 font-medium">{project.project_name}</span>
-          </nav>
-
-          {/* Page title and back button */}
+          {/* Page title */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/producer/projects')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Back to projects"
-              >
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {project.project_name}
-                </h1>
-                <p className="text-gray-600 mt-1">Project Details</p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {project.project_name}
+              </h1>
             </div>
             
             {/* Status badge */}
