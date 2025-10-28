@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Maximize2, Minimize2, Loader2, Edit3, Eye } from 'lucide-react';
+import { Save, Maximize2, Minimize2, Loader2, Edit3, Eye, Download } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import type { Asset } from '@/lib/supabase';
@@ -303,6 +303,127 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
     return elements;
   };
 
+  // Handle PDF download - generates a PDF from the brief text
+  const handleDownloadPdf = () => {
+    try {
+      // Create a new window for PDF generation
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        showError('Unable to open print window. Please check your popup blocker.');
+        return;
+      }
+
+      // Get the current brief content (edited or original)
+      const currentBriefDescription = mode === 'edit' ? editedBriefDescription : briefDescription;
+      const currentPhysicalParameters = mode === 'edit' ? editedPhysicalParameters : physicalParameters;
+
+      // Create HTML content for the PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Project Brief - ${projectId}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              border-bottom: 2px solid #e5e7eb;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: bold;
+              color: #1f2937;
+              margin-bottom: 10px;
+            }
+            .project-id {
+              color: #6b7280;
+              font-size: 14px;
+            }
+            .section {
+              margin-bottom: 30px;
+            }
+            .section-title {
+              font-size: 18px;
+              font-weight: 600;
+              color: #374151;
+              margin-bottom: 15px;
+              border-bottom: 1px solid #e5e7eb;
+              padding-bottom: 5px;
+            }
+            .content {
+              white-space: pre-wrap;
+              line-height: 1.7;
+            }
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #e5e7eb;
+              color: #6b7280;
+              font-size: 12px;
+              text-align: center;
+            }
+            @media print {
+              body { margin: 0; padding: 15px; }
+              .header { page-break-after: avoid; }
+              .section { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="title">Project Brief</div>
+            <div class="project-id">Project ID: ${projectId}</div>
+          </div>
+          
+          <div class="section">
+            <div class="section-title">Description</div>
+            <div class="content">${currentBriefDescription || 'No description provided.'}</div>
+          </div>
+          
+          ${currentPhysicalParameters ? `
+          <div class="section">
+            <div class="section-title">Physical Parameters</div>
+            <div class="content">${currentPhysicalParameters}</div>
+          </div>
+          ` : ''}
+          
+          <div class="footer">
+            Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Write content to the new window
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+      // Wait for content to load, then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          // Close the window after printing
+          setTimeout(() => {
+            printWindow.close();
+          }, 1000);
+        }, 500);
+      };
+
+      showSuccess('PDF download initiated');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showError('Failed to generate PDF');
+    }
+  };
+
   return (
     <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
       {/* Header */}
@@ -320,6 +441,16 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
 
         {/* Right side controls */}
         <div className="flex items-center gap-2">
+          {/* Download PDF Button */}
+          <button
+            onClick={handleDownloadPdf}
+            className="flex items-center gap-2 px-3 py-1.5 bg-teal-100 text-teal-700 hover:bg-teal-200 rounded-lg transition-colors text-sm font-medium"
+            title="Download brief as PDF"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download PDF</span>
+          </button>
+
           {/* Mode Toggle Button */}
           <button
             onClick={() => setMode(prev => prev === 'view' ? 'edit' : 'view')}
