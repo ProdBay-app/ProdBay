@@ -63,13 +63,19 @@ const ProjectDetailPage: React.FC = () => {
   // Active section state for expandable card layout
   type ActiveSection = 'Overview' | 'Budget' | 'Timeline' | 'Actions';
   const [activeSection, setActiveSection] = useState<ActiveSection>('Overview');
+  
+  // Mobile detection and touch gesture state
+  const [isMobile, setIsMobile] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   // Animation variants for staggered content animations
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
+      transition: prefersReducedMotion ? { duration: 0 } : {
         staggerChildren: 0.1,
         delayChildren: 0.1
       }
@@ -77,12 +83,12 @@ const ProjectDetailPage: React.FC = () => {
   };
 
   const itemVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 20 
+    hidden: {
+      opacity: 0,
+      y: prefersReducedMotion ? 0 : 20
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0
     }
   };
@@ -101,6 +107,62 @@ const ProjectDetailPage: React.FC = () => {
   const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
   const [isAssetDetailModalOpen, setIsAssetDetailModalOpen] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
+
+  // Mobile detection and reduced motion preference
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    const checkReducedMotion = () => {
+      setPrefersReducedMotion(
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      );
+    };
+    
+    checkMobile();
+    checkReducedMotion();
+    
+    window.addEventListener('resize', checkMobile);
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    mediaQuery.addEventListener('change', checkReducedMotion);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      mediaQuery.removeEventListener('change', checkReducedMotion);
+    };
+  }, []);
+
+  // Touch gesture handlers for mobile navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isMobile || !touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe || isRightSwipe) {
+      const sections: ActiveSection[] = ['Overview', 'Budget', 'Timeline', 'Actions'];
+      const currentIndex = sections.indexOf(activeSection);
+      
+      if (isLeftSwipe && currentIndex < sections.length - 1) {
+        setActiveSection(sections[currentIndex + 1]);
+      } else if (isRightSwipe && currentIndex > 0) {
+        setActiveSection(sections[currentIndex - 1]);
+      }
+    }
+  };
 
   // Fetch project data
   useEffect(() => {
@@ -462,11 +524,17 @@ const ProjectDetailPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Summary Cards Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className={`grid gap-4 mb-8 ${
+          isMobile 
+            ? 'grid-cols-2 gap-3' 
+            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
+        }`}>
           <SummaryCard
             title="Overview"
             isActive={activeSection === 'Overview'}
             onClick={() => setActiveSection('Overview')}
+            isMobile={isMobile}
+            prefersReducedMotion={prefersReducedMotion}
           >
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -490,6 +558,8 @@ const ProjectDetailPage: React.FC = () => {
             title="Budget"
             isActive={activeSection === 'Budget'}
             onClick={() => setActiveSection('Budget')}
+            isMobile={isMobile}
+            prefersReducedMotion={prefersReducedMotion}
           >
             <div className="space-y-3">
               {/* Total Budget */}
@@ -541,6 +611,8 @@ const ProjectDetailPage: React.FC = () => {
             title="Timeline"
             isActive={activeSection === 'Timeline'}
             onClick={() => setActiveSection('Timeline')}
+            isMobile={isMobile}
+            prefersReducedMotion={prefersReducedMotion}
           >
             <div className="space-y-2">
               {/* Start Date */}
@@ -592,6 +664,8 @@ const ProjectDetailPage: React.FC = () => {
             title="Actions"
             isActive={activeSection === 'Actions'}
             onClick={() => setActiveSection('Actions')}
+            isMobile={isMobile}
+            prefersReducedMotion={prefersReducedMotion}
           >
             <div className="space-y-2">
               {/* Your Actions */}
@@ -639,10 +713,35 @@ const ProjectDetailPage: React.FC = () => {
           </SummaryCard>
         </div>
 
+        {/* Mobile Navigation Indicator */}
+        {isMobile && (
+          <div className="flex justify-center mb-4">
+            <div className="flex space-x-2">
+              {['Overview', 'Budget', 'Timeline', 'Actions'].map((section) => (
+                <div
+                  key={section}
+                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                    activeSection === section 
+                      ? 'bg-teal-500' 
+                      : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 ml-3 mt-0.5">Swipe to navigate</p>
+          </div>
+        )}
+
         {/* Detail View Area */}
-        <AnimatePresence mode="wait">
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="touch-pan-y"
+        >
+          <AnimatePresence mode="wait">
           {activeSection === 'Overview' && (
-            <DetailView title="Overview">
+            <DetailView title="Overview" isMobile={isMobile}>
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
             variants={containerVariants}
@@ -725,7 +824,7 @@ const ProjectDetailPage: React.FC = () => {
           )}
 
           {activeSection === 'Budget' && (
-            <DetailView title="Budget Tracking">
+            <DetailView title="Budget Tracking" isMobile={isMobile}>
               {!loadingTracking && trackingSummary ? (
                 <div className="space-y-6">
             <BudgetTrackingBar
@@ -746,7 +845,7 @@ const ProjectDetailPage: React.FC = () => {
           )}
 
           {activeSection === 'Timeline' && (
-            <DetailView title="Project Timeline">
+            <DetailView title="Project Timeline" isMobile={isMobile}>
               {!loadingTracking && trackingSummary ? (
             <TimelineWidget
               deadline={trackingSummary.timeline.deadline}
@@ -766,7 +865,7 @@ const ProjectDetailPage: React.FC = () => {
           )}
 
           {activeSection === 'Actions' && (
-            <DetailView title="Action Items">
+            <DetailView title="Action Items" isMobile={isMobile}>
               {!loadingTracking && trackingSummary ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ActionCounter
@@ -795,7 +894,8 @@ const ProjectDetailPage: React.FC = () => {
         )}
             </DetailView>
           )}
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
 
         {/* Assets and Brief Section - Keep existing functionality */}
         <div className="mt-8">

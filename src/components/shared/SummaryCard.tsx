@@ -6,6 +6,8 @@ interface SummaryCardProps {
   isActive: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  isMobile?: boolean;
+  prefersReducedMotion?: boolean;
 }
 
 /**
@@ -34,11 +36,17 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   title, 
   isActive, 
   onClick, 
-  children 
+  children,
+  isMobile = false,
+  prefersReducedMotion = false
 }) => {
   return (
     <motion.div
-      className={`rounded-lg shadow-sm border p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+      className={`rounded-lg shadow-sm border cursor-pointer transition-all duration-200 ${
+        isMobile 
+          ? 'p-3 min-h-[60px] touch-manipulation' 
+          : 'p-4 hover:shadow-md'
+      } ${
         isActive 
           ? 'bg-teal-50 border-teal-200 shadow-md' 
           : 'bg-white border-gray-200 hover:border-gray-300'
@@ -52,25 +60,31 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
           onClick();
         }
       }}
-      whileHover={{ 
+      whileHover={!isMobile && !prefersReducedMotion ? { 
         scale: 1.03,
         transition: { duration: 0.2, ease: "easeOut" }
-      }}
-      whileTap={{ 
-        scale: 0.98,
+      } : {}}
+      whileTap={!prefersReducedMotion ? { 
+        scale: isMobile ? 0.95 : 0.98,
         transition: { duration: 0.1, ease: "easeInOut" }
-      }}
-      transition={{
+      } : {}}
+      transition={prefersReducedMotion ? { duration: 0 } : {
         duration: 0.2,
         ease: "easeOut"
       }}
     >
-      <h3 className={`text-lg font-semibold mb-2 ${
+      <h3 className={`font-semibold mb-2 ${
+        isMobile 
+          ? 'text-base mb-1' 
+          : 'text-lg mb-2'
+      } ${
         isActive ? 'text-teal-700' : 'text-gray-900'
       }`}>
         {title}
       </h3>
-      <div className="text-sm text-gray-600">
+      <div className={`text-gray-600 ${
+        isMobile ? 'text-xs space-y-1' : 'text-sm'
+      }`}>
         {children}
       </div>
     </motion.div>

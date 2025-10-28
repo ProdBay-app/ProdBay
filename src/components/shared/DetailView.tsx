@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 interface DetailViewProps {
   title: string;
   children: React.ReactNode;
+  isMobile?: boolean;
+  prefersReducedMotion?: boolean;
 }
 
 /**
@@ -23,22 +25,30 @@ interface DetailViewProps {
  *   <div>Detailed content here</div>
  * </DetailView>
  */
-const DetailView: React.FC<DetailViewProps> = ({ title, children }) => {
+const DetailView: React.FC<DetailViewProps> = ({ title, children, isMobile = false, prefersReducedMotion = false }) => {
   return (
     <motion.div 
-      className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
-      initial={{ opacity: 0, y: 20 }}
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 ${
+        isMobile ? 'p-4' : 'p-6'
+      }`}
+      initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ 
+      exit={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }}
+      transition={prefersReducedMotion ? { duration: 0 } : { 
         duration: 0.3, 
         ease: "easeOut",
         layout: { duration: 0.3 }
       }}
       layout
     >
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">{title}</h2>
-      {children}
+      <h2 className={`font-bold text-gray-900 ${
+        isMobile ? 'text-lg mb-4' : 'text-2xl mb-6'
+      }`}>
+        {title}
+      </h2>
+      <div className={isMobile ? 'space-y-4' : ''}>
+        {children}
+      </div>
     </motion.div>
   );
 };
