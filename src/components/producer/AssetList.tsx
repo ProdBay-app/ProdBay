@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Package, AlertCircle, Plus, Search, Filter, ArrowUpDown, X } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
@@ -16,6 +16,9 @@ interface AssetListProps {
   // NEW: Props for bi-directional hover linking with brief
   hoveredAssetId?: string | null;
   onAssetHover?: (assetId: string | null) => void;
+  
+  // NEW: Prop to know when brief panel is expanded for optimized scrolling
+  isBriefExpanded?: boolean;
 }
 
 /**
@@ -29,7 +32,7 @@ interface AssetListProps {
  * - Empty state when no assets exist
  * - Bi-directional hover linking with project brief (highlights assets when brief text hovered)
  */
-const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAssetHover }) => {
+const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAssetHover, isBriefExpanded = false }) => {
   const { showError, showSuccess } = useNotification();
 
   // State management
@@ -54,10 +57,41 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Scroll indicator state
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   // Debug: Log sorting changes
   useEffect(() => {
     console.log('Sorting changed:', { sortBy, sortOrder });
   }, [sortBy, sortOrder]);
+
+  // Check if content can scroll horizontally
+  const checkScrollability = useCallback(() => {
+    if (!scrollContainerRef.current) return;
+    
+    const container = scrollContainerRef.current;
+    const canScroll = container.scrollWidth > container.clientWidth;
+    const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
+    
+    setCanScrollRight(canScroll && !isAtEnd);
+    setShowScrollIndicator(isBriefExpanded && canScroll);
+  }, [isBriefExpanded]);
+
+  // Check scrollability when assets change or brief expansion state changes
+  useEffect(() => {
+    checkScrollability();
+  }, [assets, isBriefExpanded, checkScrollability]);
+
+  // Handle scroll events to update indicators
+  const handleScroll = useCallback(() => {
+    if (!scrollContainerRef.current) return;
+    
+    const container = scrollContainerRef.current;
+    const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
+    setCanScrollRight(!isAtEnd);
+  }, []);
 
   // Define the status order for Kanban columns (workflow order)
   const statusOrder: AssetStatus[] = [
@@ -588,9 +622,14 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
         </div>
       )}
 
-      {/* Kanban Board - Horizontal Scrolling Container */}
-      <div className="overflow-x-auto -mx-6 px-6 pb-4">
-        <div className="flex gap-6 min-w-max">
+      {/* Kanban Board - Horizontal Scrolling Container with Visual Indicators */}
+      <div className="relative">
+        <div 
+          ref={scrollContainerRef}
+          className="overflow-x-auto -mx-6 px-6 pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+          onScroll={handleScroll}
+        >
+          <div className="flex gap-6 min-w-max">
           {/* Render each status column */}
           {activeStatuses.map((status) => {
             const assetsInStatus = groupedAssets[status];
@@ -625,13 +664,27 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
               </div>
             );
           })}
+          </div>
         </div>
+        
+        {/* Visual Scroll Indicator - Right Edge Gradient */}
+        {showScrollIndicator && canScrollRight && (
+          <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 flex items-center justify-center">
+            <div className="w-1 h-8 bg-gradient-to-b from-purple-400 to-purple-600 rounded-full opacity-60 animate-pulse"></div>
+          </div>
+        )}
       </div>
 
       {/* Scroll hint for users (only show if there are multiple columns) */}
       {activeStatuses.length > 1 && (
         <div className="mt-4 text-center text-sm text-gray-500">
-          ← Scroll horizontally to view all status columns →
+          {isBriefExpanded ? (
+            <span className="text-purple-600 font-medium">
+              ← Scroll to view all asset columns (brief panel expanded) →
+            </span>
+          ) : (
+            <span>← Scroll horizontally to view all status columns →</span>
+          )}
         </div>
       )}
 

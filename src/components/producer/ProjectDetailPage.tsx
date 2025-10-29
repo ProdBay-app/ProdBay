@@ -886,43 +886,44 @@ const ProjectDetailPage: React.FC = () => {
           </DetailView>
         </div>
 
-        {/* Assets and Brief Section - Keep existing functionality */}
+        {/* Assets and Brief Section - Enhanced with smooth transitions */}
         <div className="mt-8">
-        {/* Dynamic grid: 66/33 split (collapsed) or 50/50 split (expanded) */}
-        <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
-          
-          {/* LEFT COLUMN - Main content (Assets) */}
-          <div className={`space-y-6 ${isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
+          {/* Dynamic grid with smooth transitions: 66/33 split (collapsed) or 50/50 split (expanded) */}
+          <div className={`grid grid-cols-1 gap-8 transition-all duration-500 ease-in-out ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
             
-            {/* Assets Section - Kanban Board */}
-            <AssetList 
-              projectId={project.id}
-              hoveredAssetId={hoveredAssetId}
-              onAssetHover={setHoveredAssetId}
-            />
-          </div>
+            {/* LEFT COLUMN - Main content (Assets) with smooth width transitions */}
+            <div className={`space-y-6 transition-all duration-500 ease-in-out ${isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
+              
+              {/* Assets Section - Kanban Board */}
+              <AssetList 
+                projectId={project.id}
+                hoveredAssetId={hoveredAssetId}
+                onAssetHover={setHoveredAssetId}
+                isBriefExpanded={isBriefExpanded}
+              />
+            </div>
 
-          {/* RIGHT COLUMN - Brief */}
-          <div className="lg:col-span-1">
-            <EditableBrief
-              projectId={project.id}
-              briefDescription={project.brief_description}
-              physicalParameters={project.physical_parameters ?? ''}
-              isExpanded={isBriefExpanded}
-              onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
-              onBriefUpdate={(briefDesc, physicalParams) => {
-                // Optimistically update local project state
-                setProject(prev => prev ? {
-                  ...prev,
-                  brief_description: briefDesc,
-                  physical_parameters: physicalParams
-                } : null);
-              }}
-              assets={assets}
-              hoveredAssetId={hoveredAssetId}
-              onAssetHover={setHoveredAssetId}
-              onAssetClick={handleAssetClick}
-            />
+            {/* RIGHT COLUMN - Brief with smooth width transitions */}
+            <div className="lg:col-span-1 transition-all duration-500 ease-in-out">
+              <EditableBrief
+                projectId={project.id}
+                briefDescription={project.brief_description}
+                physicalParameters={project.physical_parameters ?? ''}
+                isExpanded={isBriefExpanded}
+                onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+                onBriefUpdate={(briefDesc, physicalParams) => {
+                  // Optimistically update local project state
+                  setProject(prev => prev ? {
+                    ...prev,
+                    brief_description: briefDesc,
+                    physical_parameters: physicalParams
+                  } : null);
+                }}
+                assets={assets}
+                hoveredAssetId={hoveredAssetId}
+                onAssetHover={setHoveredAssetId}
+                onAssetClick={handleAssetClick}
+              />
             </div>
           </div>
         </div>
