@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Package, AlertCircle, Plus, Search, Filter, ArrowUpDown, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Package, AlertCircle, Search, ArrowUpDown, X } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetCard from './AssetCard';
@@ -16,6 +16,14 @@ interface AssetListProps {
   // NEW: Props for bi-directional hover linking with brief
   hoveredAssetId?: string | null;
   onAssetHover?: (assetId: string | null) => void;
+  
+  // NEW: Prop to know when brief panel is expanded for optimized scrolling
+  isBriefExpanded?: boolean;
+  
+  // NEW: Props for external button controls (handled by parent component)
+  onAddAsset?: () => void; // External add asset button handler
+  onToggleFilters?: () => void; // External filter toggle handler
+  showFilters?: boolean; // Filter visibility state
 }
 
 /**
@@ -29,7 +37,15 @@ interface AssetListProps {
  * - Empty state when no assets exist
  * - Bi-directional hover linking with project brief (highlights assets when brief text hovered)
  */
-const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAssetHover }) => {
+const AssetList: React.FC<AssetListProps> = ({ 
+  projectId, 
+  hoveredAssetId, 
+  onAssetHover, 
+  isBriefExpanded = false,
+  onAddAsset,
+  onToggleFilters,
+  showFilters = false
+}) => {
   const { showError, showSuccess } = useNotification();
 
   // State management
@@ -52,12 +68,18 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'name' | 'status' | 'date' | 'quantity'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [showFilters, setShowFilters] = useState(false);
+  // showFilters is now passed as a prop
+
+  // Scroll container ref for measuring
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Debug: Log sorting changes
   useEffect(() => {
     console.log('Sorting changed:', { sortBy, sortOrder });
   }, [sortBy, sortOrder]);
+
+  // Check if content can scroll horizontally
+  // Scroll functionality removed - no longer needed
 
   // Define the status order for Kanban columns (workflow order)
   const statusOrder: AssetStatus[] = [
@@ -108,7 +130,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   }, [projectId, showError]);
 
   // Handle adding a new asset
-  const handleAddAsset = async (assetData: { 
+  const handleAddAssetInternal = async (assetData: { 
     asset_name: string; 
     specifications: string;
     quantity?: number;
@@ -141,6 +163,8 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
       setIsSubmitting(false);
     }
   };
+
+  // External add asset button is handled by parent component
 
   // Handle opening the edit modal
   const handleOpenEditModal = (asset: Asset) => {
@@ -319,10 +343,6 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
     return Object.values(groupedAssets).flat();
   }, [groupedAssets]);
 
-  // Filter out empty status groups for display
-  const activeStatuses = useMemo(() => {
-    return statusOrder.filter(status => groupedAssets[status].length > 0);
-  }, [groupedAssets]);
 
   // Loading state
   if (loading) {
@@ -402,46 +422,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   // Main Kanban board display
   return (
     <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      {/* Section Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Package className="w-6 h-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-900">Assets</h2>
-          <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">
-            {filteredAndSortedAssets.length}
-            {filteredAndSortedAssets.length !== assets.length && ` of ${assets.length}`}
-          </span>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {/* Filter Toggle Button */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-              showFilters || selectedStatuses.length > 0 || selectedTags.length > 0 || searchTerm
-                ? 'bg-purple-50 border-purple-200 text-purple-700'
-                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Filter className="w-4 h-4" />
-            Filters
-            {(selectedStatuses.length > 0 || selectedTags.length > 0 || searchTerm) && (
-              <span className="ml-1 px-1.5 py-0.5 bg-purple-600 text-white text-xs rounded-full">
-                {selectedStatuses.length + selectedTags.length + (searchTerm ? 1 : 0)}
-              </span>
-            )}
-          </button>
-
-          {/* Add Asset Button */}
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            Add Asset
-          </button>
-        </div>
-      </div>
+      {/* Section Header removed - now handled in top row */}
 
       {/* Search and Filter Controls */}
       {showFilters && (
@@ -588,17 +569,27 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
         </div>
       )}
 
-      {/* Kanban Board - Horizontal Scrolling Container */}
-      <div className="overflow-x-auto -mx-6 px-6 pb-4">
-        <div className="flex gap-6 min-w-max">
+      {/* Kanban Board - Responsive Container with Conditional Scrolling */}
+      <div className="relative">
+        <div 
+          ref={scrollContainerRef}
+          className={`-mx-6 px-6 pb-4 ${
+            isBriefExpanded 
+              ? 'overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100' 
+              : 'overflow-x-visible'
+          }`}
+        >
+          <div className={`flex gap-4 ${isBriefExpanded ? 'min-w-max' : 'justify-start'}`}>
           {/* Render each status column */}
-          {activeStatuses.map((status) => {
+          {statusOrder.map((status) => {
             const assetsInStatus = groupedAssets[status];
             
             return (
               <div
                 key={status}
-                className="flex-shrink-0 w-80"
+                className={`flex-shrink-0 ${
+                  isBriefExpanded ? 'w-48' : 'w-40'
+                }`}
               >
                 {/* Column Header */}
                 <div className={`rounded-lg border px-4 py-3 mb-4 ${getStatusHeaderColor(status)}`}>
@@ -608,7 +599,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
                 </div>
 
                 {/* Column Content - Vertical Stack of Asset Cards */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {assetsInStatus.map((asset) => (
                     <AssetCard 
                       key={asset.id} 
@@ -625,15 +616,10 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
               </div>
             );
           })}
+          </div>
         </div>
+        
       </div>
-
-      {/* Scroll hint for users (only show if there are multiple columns) */}
-      {activeStatuses.length > 1 && (
-        <div className="mt-4 text-center text-sm text-gray-500">
-          ← Scroll horizontally to view all status columns →
-        </div>
-      )}
 
       {/* Add Asset Modal */}
       <AssetFormModal
@@ -641,7 +627,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
         isSubmitting={isSubmitting}
         mode="create"
         onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddAsset}
+        onSubmit={handleAddAssetInternal}
       />
 
       {/* Edit Asset Modal */}

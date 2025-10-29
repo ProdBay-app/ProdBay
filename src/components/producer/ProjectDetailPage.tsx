@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
@@ -14,6 +14,7 @@ import {
 import { ProducerService } from '@/services/producerService';
 import { ProjectSummaryService } from '@/services/projectSummaryService';
 import { useNotification } from '@/hooks/useNotification';
+import Button from '@/components/ui/Button';
 import AssetList from './AssetList';
 import EditableBrief from './EditableBrief';
 import BudgetTrackingBar from './widgets/BudgetTrackingBar';
@@ -23,6 +24,7 @@ import ClientProjectsModal from './ClientProjectsModal';
 import BudgetAssetsModal from './BudgetAssetsModal';
 import MilestoneFormModal from './MilestoneFormModal';
 import AssetDetailModal from './AssetDetailModal';
+import AssetFormModal from './AssetFormModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import SummaryCard from '@/components/shared/SummaryCard';
 import DetailView from '@/components/shared/DetailView';
@@ -104,6 +106,12 @@ const ProjectDetailPage: React.FC = () => {
   const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
   const [isAssetDetailModalOpen, setIsAssetDetailModalOpen] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  // Ref for measuring Assets block height
+  const assetsBlockRef = useRef<HTMLDivElement>(null);
+  const [assetsBlockHeight, setAssetsBlockHeight] = useState<number>(0);
 
   // Mobile detection and reduced motion preference
   useEffect(() => {
@@ -237,6 +245,14 @@ const ProjectDetailPage: React.FC = () => {
     fetchAssets();
   }, [projectId]);
 
+  // Measure Assets block height when brief is expanded
+  useEffect(() => {
+    if (isBriefExpanded && assetsBlockRef.current) {
+      const height = assetsBlockRef.current.offsetHeight;
+      setAssetsBlockHeight(height);
+    }
+  }, [isBriefExpanded, assets]);
+
   // Format currency
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-US', {
@@ -287,6 +303,47 @@ const ProjectDetailPage: React.FC = () => {
   const handleAssetClick = (asset: Asset) => {
     setViewingAsset(asset);
     setIsAssetDetailModalOpen(true);
+  };
+
+  // Handle filter toggle
+  const handleToggleFilters = () => {
+    setShowFilters(prev => !prev);
+  };
+
+  // Handle add asset button
+  const handleAddAsset = () => {
+    setIsAddModalOpen(true);
+  };
+
+  // Handle asset creation from modal
+  const handleCreateAsset = async (assetData: { 
+    asset_name: string; 
+    specifications: string;
+    quantity?: number;
+    tags?: string[];
+  }) => {
+    try {
+      // Create asset via API
+      if (!project) return;
+      const newAsset = await ProducerService.createAsset(project.id, {
+        asset_name: assetData.asset_name,
+        specifications: assetData.specifications,
+        status: 'Pending',
+        timeline: '',
+        assigned_supplier_id: undefined,
+        quantity: assetData.quantity,
+        tags: assetData.tags || []
+      });
+
+      // Add to local assets state
+      setAssets(prev => [...prev, newAsset]);
+
+      // Close modal
+      setIsAddModalOpen(false);
+    } catch (err) {
+      console.error('Error creating asset:', err);
+      // Error handling could be improved with a notification system
+    }
   };
 
   /**
@@ -886,44 +943,117 @@ const ProjectDetailPage: React.FC = () => {
           </DetailView>
         </div>
 
-        {/* Assets and Brief Section - Keep existing functionality */}
+        {/* Assets and Brief Section - Layout matching reference image */}
         <div className="mt-8">
-        {/* Dynamic grid: 66/33 split (collapsed) or 50/50 split (expanded) */}
-        <div className={`grid grid-cols-1 gap-8 transition-all duration-300 ${isBriefExpanded ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}>
           
-          {/* LEFT COLUMN - Main content (Assets) */}
-          <div className={`space-y-6 ${isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}`}>
+          {/* Top Row - Asset Headers & Filters + Brief Header (always visible) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-stretch">
             
-            {/* Assets Section - Kanban Board */}
+            {/* Asset Headers & Filters Section */}
+            <div className="lg:col-span-2 h-full">
+              <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6 pb-4 h-full flex flex-col">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">Assets ({assets.length})</h3>
+                  </div>
+                  
+                  {/* Filters and Add Asset buttons moved here */}
+                  <div className="flex items-center gap-3">
+                    {/* Filter Toggle Button */}
+                    <Button
+                      onClick={handleToggleFilters}
+                      variant={showFilters ? 'secondary' : 'outline'}
+                      icon={
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                      }
+                    >
+                      Filters
+                    </Button>
+
+                    {/* Add Asset Button */}
+                    <Button 
+                      onClick={handleAddAsset}
+                      variant="primary"
+                      icon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      }
+                    >
+                      Add Asset
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Brief Header - Always visible in top row */}
+            <div className="lg:col-span-1 h-full">
+              <EditableBrief
+                projectId={project.id}
+                briefDescription={project.brief_description}
+                physicalParameters={project.physical_parameters ?? ''}
+                isExpanded={false} // Always show header only in top row
+                onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+                onBriefUpdate={(briefDesc, physicalParams) => {
+                  // Optimistically update local project state
+                  setProject(prev => prev ? {
+                    ...prev,
+                    brief_description: briefDesc,
+                    physical_parameters: physicalParams
+                  } : null);
+                }}
+                assets={assets}
+                hoveredAssetId={hoveredAssetId}
+                onAssetHover={setHoveredAssetId}
+                onAssetClick={handleAssetClick}
+              />
+            </div>
+          </div>
+
+          {/* Main Content Area - Side by side layout when brief expanded */}
+          <div className={`grid gap-6 ${isBriefExpanded ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
+            
+            {/* Assets Section - 2/3 width when brief expanded, full width when collapsed */}
+            <div ref={assetsBlockRef} className={isBriefExpanded ? 'lg:col-span-2' : 'col-span-1'}>
             <AssetList 
               projectId={project.id}
               hoveredAssetId={hoveredAssetId}
               onAssetHover={setHoveredAssetId}
-            />
-          </div>
-
-          {/* RIGHT COLUMN - Brief */}
-          <div className="lg:col-span-1">
-            <EditableBrief
-              projectId={project.id}
-              briefDescription={project.brief_description}
-              physicalParameters={project.physical_parameters ?? ''}
-              isExpanded={isBriefExpanded}
-              onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
-              onBriefUpdate={(briefDesc, physicalParams) => {
-                // Optimistically update local project state
-                setProject(prev => prev ? {
-                  ...prev,
-                  brief_description: briefDesc,
-                  physical_parameters: physicalParams
-                } : null);
-              }}
-              assets={assets}
-              hoveredAssetId={hoveredAssetId}
-              onAssetHover={setHoveredAssetId}
-              onAssetClick={handleAssetClick}
+              isBriefExpanded={isBriefExpanded}
+              onAddAsset={handleAddAsset}
+              onToggleFilters={handleToggleFilters}
+              showFilters={showFilters}
             />
             </div>
+            
+            {/* Brief Expanded Content - 1/3 width when expanded, hidden when collapsed */}
+            {isBriefExpanded && (
+              <div className="lg:col-span-1">
+                <EditableBrief
+                  projectId={project.id}
+                  briefDescription={project.brief_description}
+                  physicalParameters={project.physical_parameters ?? ''}
+                  isExpanded={true} // Always expanded in main content area
+                  onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+                  onBriefUpdate={(briefDesc, physicalParams) => {
+                    // Optimistically update local project state
+                    setProject(prev => prev ? {
+                      ...prev,
+                      brief_description: briefDesc,
+                      physical_parameters: physicalParams
+                    } : null);
+                  }}
+                  assets={assets}
+                  hoveredAssetId={hoveredAssetId}
+                  onAssetHover={setHoveredAssetId}
+                  onAssetClick={handleAssetClick}
+                  maxHeight={assetsBlockHeight}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -973,6 +1103,15 @@ const ProjectDetailPage: React.FC = () => {
           setViewingAsset(null);
         }}
         onAssetUpdate={handleAssetUpdate}
+      />
+
+      {/* Asset Form Modal (for adding new assets) */}
+      <AssetFormModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleCreateAsset}
+        mode="create"
+        isSubmitting={false}
       />
     </>
   );

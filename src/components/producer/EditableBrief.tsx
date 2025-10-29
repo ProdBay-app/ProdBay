@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Save, Maximize2, Minimize2, Loader2, Edit3, Eye, Download } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
+import Button from '@/components/ui/Button';
 import type { Asset } from '@/lib/supabase';
 
 interface EditableBriefProps {
@@ -17,6 +18,9 @@ interface EditableBriefProps {
   hoveredAssetId?: string | null;
   onAssetHover?: (assetId: string | null) => void;
   onAssetClick?: (asset: Asset) => void;
+  
+  // NEW: Max height to match Assets block
+  maxHeight?: number;
 }
 
 /**
@@ -43,7 +47,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   assets,              // Will be used for interactive highlighting in next step
   hoveredAssetId,      // Will be used for interactive highlighting in next step
   onAssetHover,        // Will be used for interactive highlighting in next step
-  onAssetClick         // Will be used for interactive highlighting in next step
+  onAssetClick,        // Will be used for interactive highlighting in next step
+  maxHeight            // Max height to match Assets block
 }) => {
   const { showSuccess, showError } = useNotification();
 
@@ -486,184 +491,189 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   };
 
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-gray-900">Brief</h2>
-          
-          {/* Unsaved Changes Indicator */}
-          {isDirty && (
-            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-medium">
-              Unsaved Changes
-            </span>
-          )}
-        </div>
+    <div 
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ${
+        isExpanded && maxHeight ? 'flex flex-col' : 'h-full flex flex-col'
+      }`}
+      style={isExpanded && maxHeight ? { height: `${maxHeight}px` } : {}}
+    >
+      {/* Header - Only show when collapsed */}
+      {!isExpanded && (
+        <div className="p-6 pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-gray-900">Brief</h2>
+              
+              {/* Unsaved Changes Indicator */}
+              {isDirty && (
+                <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-medium">
+                  Unsaved Changes
+                </span>
+              )}
+            </div>
 
-        {/* Right side controls */}
-        <div className="flex items-center gap-2">
-          {/* Download PDF Button */}
-          <button
-            onClick={handleDownloadPdf}
-            className="flex items-center gap-2 px-3 py-1.5 bg-teal-100 text-teal-700 hover:bg-teal-200 rounded-lg transition-colors text-sm font-medium"
-            title="Download brief as PDF"
-          >
-            <Download className="w-4 h-4" />
-            <span>Download PDF</span>
-          </button>
-
-          {/* Mode Toggle Button */}
-          <button
-            onClick={() => setMode(prev => prev === 'view' ? 'edit' : 'view')}
-            disabled={isSaving}
-            className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            title={mode === 'view' ? 'Switch to edit mode' : 'Switch to view mode'}
-          >
-            {mode === 'view' ? (
-              <>
-                <Edit3 className="w-4 h-4" />
-                <span>Edit</span>
-              </>
-            ) : (
-              <>
-                <Eye className="w-4 h-4" />
-                <span>View</span>
-              </>
-            )}
-          </button>
-
-          {/* Expand/Collapse Button */}
-          <button
-            onClick={onToggleExpand}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label={isExpanded ? 'Collapse brief' : 'Expand brief'}
-            title={isExpanded ? 'Collapse' : 'Expand'}
-          >
-            {isExpanded ? (
-              <Minimize2 className="w-5 h-5 text-gray-600" />
-            ) : (
-              <Maximize2 className="w-5 h-5 text-gray-600" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* EDIT MODE - Textareas for editing */}
-      {mode === 'edit' && (
-        <>
-          {/* Brief Description */}
-          <div className="mb-6">
-            <label 
-              htmlFor="brief-description" 
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
-              Description
-            </label>
-            <textarea
-              ref={briefTextareaRef}
-              id="brief-description"
-              value={editedBriefDescription}
-              onChange={handleBriefDescriptionChange}
-              placeholder="Enter project description..."
-              className="
-                w-full px-4 py-3 
-                bg-gray-50 border border-gray-300 rounded-lg
-                text-gray-900 leading-relaxed
-                focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                resize-none overflow-hidden
-                transition-all duration-200
-              "
-              style={{ minHeight: '150px' }}
-              disabled={isSaving}
-            />
-          </div>
-
-          {/* Physical Parameters */}
-          <div className="mb-6">
-            <label 
-              htmlFor="physical-parameters" 
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
-              Physical Parameters
-            </label>
-            <textarea
-              ref={physicalTextareaRef}
-              id="physical-parameters"
-              value={editedPhysicalParameters}
-              onChange={handlePhysicalParametersChange}
-              placeholder="Enter physical parameters..."
-              className="
-                w-full px-4 py-3 
-                bg-gray-50 border border-gray-300 rounded-lg
-                text-gray-900 leading-relaxed
-                focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                resize-none overflow-hidden
-                transition-all duration-200
-              "
-              style={{ minHeight: '100px' }}
-              disabled={isSaving}
-            />
-          </div>
-
-          {/* Save Button - Only visible when dirty */}
-          {isDirty && (
-            <div className="pt-4 border-t border-gray-200">
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className={`
-                  w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg
-                  font-medium transition-all duration-200
-                  ${isSaving
-                    ? 'bg-gray-400 cursor-not-allowed text-white'
-                    : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow'
-                  }
-                `}
+            {/* Right side controls */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Download PDF Button */}
+              <Button
+                onClick={handleDownloadPdf}
+                variant="teal"
+                icon={<Download className="w-4 h-4" />}
+                title="Download brief as PDF"
               >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Saving...
-                  </>
+                Download PDF
+              </Button>
+
+              {/* Mode Toggle Button */}
+              <Button
+                onClick={() => setMode(prev => prev === 'view' ? 'edit' : 'view')}
+                disabled={isSaving}
+                variant="secondary"
+                icon={mode === 'view' ? <Edit3 className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                title={mode === 'view' ? 'Switch to edit mode' : 'Switch to view mode'}
+              >
+                {mode === 'view' ? 'Edit' : 'View'}
+              </Button>
+
+              {/* Expand/Collapse Button */}
+              <button
+                onClick={onToggleExpand}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label={isExpanded ? 'Collapse brief' : 'Expand brief'}
+                title={isExpanded ? 'Collapse' : 'Expand'}
+              >
+                {isExpanded ? (
+                  <Minimize2 className="w-5 h-5 text-gray-600" />
                 ) : (
-                  <>
-                    <Save className="w-5 h-5" />
-                    Save Changes
-                  </>
+                  <Maximize2 className="w-5 h-5 text-gray-600" />
                 )}
               </button>
             </div>
-          )}
-        </>
-      )}
-
-      {/* VIEW MODE - Interactive display with asset highlighting */}
-      {mode === 'view' && (
-        <>
-          {/* Brief Description */}
-          <div className="mb-6">
-            <h3 className="block text-sm font-semibold text-gray-700 mb-2">
-              Description
-            </h3>
-            <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 leading-relaxed min-h-[150px] whitespace-pre-wrap">
-              {renderInteractiveContent(briefDescription)}
-            </div>
           </div>
-
-          {/* Physical Parameters */}
-          {physicalParameters && (
-            <div className="mb-6">
-              <h3 className="block text-sm font-semibold text-gray-700 mb-2">
-                Physical Parameters
-              </h3>
-              <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 leading-relaxed min-h-[100px] whitespace-pre-wrap">
-                {renderInteractiveContent(physicalParameters)}
-              </div>
-            </div>
-          )}
-        </>
+        </div>
       )}
-    </section>
+
+      {/* Content - Only show when expanded */}
+      {isExpanded && (
+        <div className="p-6 overflow-y-auto flex-1 min-h-0">
+          {/* EDIT MODE - Textareas for editing */}
+          {mode === 'edit' && (
+            <>
+              {/* Brief Description */}
+              <div className="mb-6">
+                <label 
+                  htmlFor="brief-description" 
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                  Description
+                </label>
+                <textarea
+                  ref={briefTextareaRef}
+                  id="brief-description"
+                  value={editedBriefDescription}
+                  onChange={handleBriefDescriptionChange}
+                  placeholder="Enter project description..."
+                  className="
+                    w-full px-4 py-3 
+                    bg-gray-50 border border-gray-300 rounded-lg
+                    text-gray-900 leading-relaxed
+                    focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                    resize-none overflow-hidden
+                    transition-all duration-200
+                  "
+                  style={{}}
+                  disabled={isSaving}
+                />
+              </div>
+
+              {/* Physical Parameters */}
+              <div className="mb-6">
+                <label 
+                  htmlFor="physical-parameters" 
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                  Physical Parameters
+                </label>
+                <textarea
+                  ref={physicalTextareaRef}
+                  id="physical-parameters"
+                  value={editedPhysicalParameters}
+                  onChange={handlePhysicalParametersChange}
+                  placeholder="Enter physical parameters..."
+                  className="
+                    w-full px-4 py-3 
+                    bg-gray-50 border border-gray-300 rounded-lg
+                    text-gray-900 leading-relaxed
+                    focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                    resize-none overflow-hidden
+                    transition-all duration-200
+                  "
+                  style={{}}
+                  disabled={isSaving}
+                />
+              </div>
+
+              {/* Save Button - Only visible when dirty */}
+              {isDirty && (
+                <div className="pt-4 border-t border-gray-200">
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className={`
+                      w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg
+                      font-medium transition-all duration-200
+                      ${isSaving
+                        ? 'bg-gray-400 cursor-not-allowed text-white'
+                        : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow'
+                      }
+                    `}
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-5 h-5" />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* VIEW MODE - Interactive display with asset highlighting */}
+          {mode === 'view' && (
+            <>
+              {/* Brief Description */}
+              <div className="mb-6">
+                <h3 className="block text-sm font-semibold text-gray-700 mb-2">
+                  Description
+                </h3>
+                <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 leading-relaxed whitespace-pre-wrap">
+                  {renderInteractiveContent(briefDescription)}
+                </div>
+              </div>
+
+              {/* Physical Parameters */}
+              {physicalParameters && (
+                <div className="mb-6">
+                  <h3 className="block text-sm font-semibold text-gray-700 mb-2">
+                    Physical Parameters
+                  </h3>
+                  <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 leading-relaxed whitespace-pre-wrap">
+                    {renderInteractiveContent(physicalParameters)}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 

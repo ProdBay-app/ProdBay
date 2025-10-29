@@ -9,6 +9,7 @@ import {
   DollarSign,
   Clock
 } from 'lucide-react';
+import Footer from './Footer';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -259,6 +260,8 @@ const Home: React.FC = () => {
           </p>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };
