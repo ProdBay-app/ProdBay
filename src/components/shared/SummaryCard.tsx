@@ -8,6 +8,7 @@ interface SummaryCardProps {
   children: React.ReactNode;
   isMobile?: boolean;
   prefersReducedMotion?: boolean;
+  showAsHeader?: boolean;
 }
 
 /**
@@ -38,7 +39,8 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   onClick, 
   children,
   isMobile = false,
-  prefersReducedMotion = false
+  prefersReducedMotion = false,
+  showAsHeader = false
 }) => {
   return (
     <motion.div
@@ -82,11 +84,14 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
       }`}>
         {title}
       </h3>
-      <div className={`text-gray-600 ${
-        isMobile ? 'text-xs space-y-1' : 'text-sm'
-      }`}>
-        {children}
-      </div>
+      {/* Only show summary content when not acting as header or when not active */}
+      {!(showAsHeader && isActive) && (
+        <div className={`text-gray-600 ${
+          isMobile ? 'text-xs space-y-1' : 'text-sm'
+        }`}>
+          {children}
+        </div>
+      )}
     </motion.div>
   );
 };
