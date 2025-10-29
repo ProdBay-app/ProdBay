@@ -70,22 +70,19 @@ const ProjectDetailPage: React.FC = () => {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  // Animation variants for staggered content animations
+  // Animation variants for staggered content animations - disabled for expanded sections
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 1 },
     visible: {
       opacity: 1,
-      transition: prefersReducedMotion ? { duration: 0 } : {
-        staggerChildren: 0.1,
-        delayChildren: 0.1
-      }
+      transition: { duration: 0 }
     }
   };
 
   const itemVariants = {
     hidden: {
-      opacity: 0,
-      y: prefersReducedMotion ? 0 : 20
+      opacity: 1,
+      y: 0
     },
     visible: {
       opacity: 1,
