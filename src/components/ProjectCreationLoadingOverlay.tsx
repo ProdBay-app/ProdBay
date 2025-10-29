@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, CheckCircle, Clock, Database, Cpu, FileText, Users, Zap, Target, Rocket } from 'lucide-react';
 
 interface ProjectCreationLoadingOverlayProps {
@@ -21,24 +21,6 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
   // Current step state (0-9)
   const [currentStep, setCurrentStep] = useState(0);
   
-  // Array of encouraging taglines to display during project creation
-  const taglines = [
-    "Crafting your project masterpiece...",
-    "Summoning the creative spirits...",
-    "Building something amazing...",
-    "Channeling our inner genius...",
-    "Creating magic in progress...",
-    "Assembling your dream project...",
-    "Brewing up something special...",
-    "Weaving project wonders...",
-    "Conjuring up excellence...",
-    "Engineering your success...",
-    "Sculpting your vision...",
-    "Orchestrating perfection...",
-    "Cultivating greatness...",
-    "Fashioning your future...",
-    "Molding possibilities..."
-  ];
 
   // 10 visual steps representing the project creation process
   const steps = [
@@ -54,12 +36,6 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
     { icon: CheckCircle, text: "Project creation complete!", color: "text-emerald-600" }
   ];
 
-  // Randomly select a tagline using useMemo to avoid re-selection on every render
-  // This ensures the tagline stays consistent during the loading state
-  const selectedTagline = useMemo(() => {
-    const randomIndex = Math.floor(Math.random() * taglines.length);
-    return taglines[randomIndex];
-  }, []); // Empty dependency array ensures it only runs once
 
   // Step progression effect - advance every 5 seconds
   useEffect(() => {
@@ -127,23 +103,6 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
           <h3 className={`text-lg font-semibold ${currentStepData.color} mb-2`}>
             {currentStepData.text}
           </h3>
-          <p className="text-gray-600 text-sm leading-relaxed">
-            {selectedTagline}
-          </p>
-        </div>
-
-        {/* Step indicators */}
-        <div className="flex space-x-2">
-          {steps.map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index <= currentStep 
-                  ? 'bg-teal-500' 
-                  : 'bg-gray-300'
-              }`}
-            />
-          ))}
         </div>
 
         {/* Subtle instruction */}
