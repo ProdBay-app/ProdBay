@@ -343,10 +343,6 @@ const AssetList: React.FC<AssetListProps> = ({
     return Object.values(groupedAssets).flat();
   }, [groupedAssets]);
 
-  // Filter out empty status groups for display
-  const activeStatuses = useMemo(() => {
-    return statusOrder.filter(status => groupedAssets[status].length > 0);
-  }, [groupedAssets]);
 
   // Loading state
   if (loading) {
@@ -585,7 +581,7 @@ const AssetList: React.FC<AssetListProps> = ({
         >
           <div className={`flex gap-4 ${isBriefExpanded ? 'min-w-max' : 'justify-start'}`}>
           {/* Render each status column */}
-          {activeStatuses.map((status) => {
+          {statusOrder.map((status) => {
             const assetsInStatus = groupedAssets[status];
             
             return (
