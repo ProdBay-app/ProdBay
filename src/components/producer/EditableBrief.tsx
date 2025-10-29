@@ -501,7 +501,10 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
         <div className="p-6 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-gray-900">Brief</h2>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Brief</h2>
+                <p className="text-sm text-gray-600 mt-1">Project requirements and details</p>
+              </div>
               
               {/* Unsaved Changes Indicator */}
               {isDirty && (

@@ -909,7 +909,7 @@ const ProjectDetailPage: React.FC = () => {
               <div className="bg-orange-100 border border-orange-200 rounded-lg p-6 pb-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-2xl font-bold text-orange-800">Assets</h3>
+                    <h3 className="text-2xl font-bold text-orange-800">Assets ({assets.length})</h3>
                     <p className="text-sm text-orange-600 mt-1">Manage your project assets</p>
                   </div>
                   
