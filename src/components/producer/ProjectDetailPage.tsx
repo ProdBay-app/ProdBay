@@ -960,18 +960,26 @@ const ProjectDetailPage: React.FC = () => {
             
             {/* Brief Expanded Content - Overlay when expanded */}
             {isBriefExpanded && (
-              <div className="absolute top-0 right-0 w-1/3 h-full bg-green-100 border border-green-200 rounded-lg p-4 z-10 shadow-lg">
-                <h3 className="text-lg font-semibold text-green-800 mb-4">Brief Expanded</h3>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-green-700 mb-2">Description</h4>
-                    <p className="text-sm text-green-600">Full brief content displayed here with proper formatting and details.</p>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-green-700 mb-2">Physical Parameters</h4>
-                    <p className="text-sm text-green-600">Physical specifications and requirements.</p>
-                  </div>
-                </div>
+              <div className="absolute top-0 right-0 w-1/3 h-full z-10">
+                <EditableBrief
+                  projectId={project.id}
+                  briefDescription={project.brief_description}
+                  physicalParameters={project.physical_parameters ?? ''}
+                  isExpanded={isBriefExpanded}
+                  onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+                  onBriefUpdate={(briefDesc, physicalParams) => {
+                    // Optimistically update local project state
+                    setProject(prev => prev ? {
+                      ...prev,
+                      brief_description: briefDesc,
+                      physical_parameters: physicalParams
+                    } : null);
+                  }}
+                  assets={assets}
+                  hoveredAssetId={hoveredAssetId}
+                  onAssetHover={setHoveredAssetId}
+                  onAssetClick={handleAssetClick}
+                />
               </div>
             )}
           </div>
