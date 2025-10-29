@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { Package, AlertCircle, Plus, Search, Filter, ArrowUpDown, X } from 'lucide-react';
+import { Package, AlertCircle, Search, ArrowUpDown, X } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetCard from './AssetCard';
@@ -55,7 +55,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'name' | 'status' | 'date' | 'quantity'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters] = useState(false);
 
   // Scroll indicator state
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
@@ -437,45 +437,14 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   // Main Kanban board display
   return (
     <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      {/* Section Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <Package className="w-6 h-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-900">Assets</h2>
-          <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">
-            {filteredAndSortedAssets.length}
-            {filteredAndSortedAssets.length !== assets.length && ` of ${assets.length}`}
-          </span>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {/* Filter Toggle Button */}
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-              showFilters || selectedStatuses.length > 0 || selectedTags.length > 0 || searchTerm
-                ? 'bg-purple-50 border-purple-200 text-purple-700'
-                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Filter className="w-4 h-4" />
-            Filters
-            {(selectedStatuses.length > 0 || selectedTags.length > 0 || searchTerm) && (
-              <span className="ml-1 px-1.5 py-0.5 bg-purple-600 text-white text-xs rounded-full">
-                {selectedStatuses.length + selectedTags.length + (searchTerm ? 1 : 0)}
-              </span>
-            )}
-          </button>
-
-          {/* Add Asset Button */}
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            Add Asset
-          </button>
-        </div>
+      {/* Section Header - Simplified */}
+      <div className="flex items-center gap-2 mb-6">
+        <Package className="w-6 h-6 text-purple-600" />
+        <h2 className="text-2xl font-bold text-gray-900">Assets</h2>
+        <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">
+          {filteredAndSortedAssets.length}
+          {filteredAndSortedAssets.length !== assets.length && ` of ${assets.length}`}
+        </span>
       </div>
 
       {/* Search and Filter Controls */}
@@ -634,7 +603,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
           }`}
           onScroll={handleScroll}
         >
-          <div className={`flex gap-6 ${isBriefExpanded ? 'min-w-max' : 'justify-start'}`}>
+          <div className={`flex gap-4 ${isBriefExpanded ? 'min-w-max' : 'justify-start'}`}>
           {/* Render each status column */}
           {activeStatuses.map((status) => {
             const assetsInStatus = groupedAssets[status];
@@ -643,7 +612,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
               <div
                 key={status}
                 className={`flex-shrink-0 ${
-                  isBriefExpanded ? 'w-80' : 'w-64'
+                  isBriefExpanded ? 'w-48' : 'w-40'
                 }`}
               >
                 {/* Column Header */}
@@ -654,7 +623,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
                 </div>
 
                 {/* Column Content - Vertical Stack of Asset Cards */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {assetsInStatus.map((asset) => (
                     <AssetCard 
                       key={asset.id} 

@@ -895,8 +895,33 @@ const ProjectDetailPage: React.FC = () => {
             {/* Asset Headers & Filters Section */}
             <div className="lg:col-span-2">
               <div className="bg-orange-100 border border-orange-200 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-orange-800">Asset Headers & Filters</h3>
-                <p className="text-sm text-orange-600 mt-1">Filter and manage your project assets</p>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-orange-800">Asset Headers & Filters</h3>
+                    <p className="text-sm text-orange-600 mt-1">Filter and manage your project assets</p>
+                  </div>
+                  
+                  {/* Filters and Add Asset buttons moved here */}
+                  <div className="flex items-center gap-3">
+                    {/* Filter Toggle Button */}
+                    <button
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-white border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                      </svg>
+                      Filters
+                    </button>
+
+                    {/* Add Asset Button */}
+                    <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Asset
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -924,23 +949,32 @@ const ProjectDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Brief Expanded Content - Full width when expanded */}
-          {isBriefExpanded && (
-            <div className="mb-6">
-              <div className="bg-green-100 border border-green-200 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-green-800">Brief Expanded</h3>
-                <p className="text-sm text-green-600 mt-1">Full brief content displayed here</p>
-              </div>
-            </div>
-          )}
-          
           {/* Assets Section - Full width Kanban board */}
-          <AssetList 
-            projectId={project.id}
-            hoveredAssetId={hoveredAssetId}
-            onAssetHover={setHoveredAssetId}
-            isBriefExpanded={isBriefExpanded}
-          />
+          <div className="relative">
+            <AssetList 
+              projectId={project.id}
+              hoveredAssetId={hoveredAssetId}
+              onAssetHover={setHoveredAssetId}
+              isBriefExpanded={isBriefExpanded}
+            />
+            
+            {/* Brief Expanded Content - Overlay when expanded */}
+            {isBriefExpanded && (
+              <div className="absolute top-0 right-0 w-1/3 h-full bg-green-100 border border-green-200 rounded-lg p-4 z-10 shadow-lg">
+                <h3 className="text-lg font-semibold text-green-800 mb-4">Brief Expanded</h3>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-green-700 mb-2">Description</h4>
+                    <p className="text-sm text-green-600">Full brief content displayed here with proper formatting and details.</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-green-700 mb-2">Physical Parameters</h4>
+                    <p className="text-sm text-green-600">Physical specifications and requirements.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
