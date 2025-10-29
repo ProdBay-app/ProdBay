@@ -970,9 +970,6 @@ const ProjectDetailPage: React.FC = () => {
                       }
                     >
                       Filters
-                      {showFilters && (
-                        <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                      )}
                     </Button>
 
                     {/* Add Asset Button */}
