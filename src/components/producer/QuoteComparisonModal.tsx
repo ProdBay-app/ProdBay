@@ -3,6 +3,7 @@ import { X, DollarSign, Clock, Calendar, ChevronDown, ChevronUp, CheckCircle, XC
 import { QuoteComparisonService, type Quote, type Asset, type ComparisonMetrics } from '@/services/quoteComparisonService';
 import { useNotification } from '@/hooks/useNotification';
 import { getSupabase } from '@/lib/supabase';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface QuoteComparisonModalProps {
   isOpen: boolean;
@@ -25,6 +26,9 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
   const [expandedQuotes, setExpandedQuotes] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<'cost' | 'response_time' | 'validity'>('cost');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // Handle Escape key to close modal
+  useEscapeKey(isOpen, onClose, loading);
 
   useEffect(() => {
     if (isOpen && assetId) {

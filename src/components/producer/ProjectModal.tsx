@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, Loader2, CheckCircle, XCircle, Sparkles, Download, ArrowLeft, ArrowRight } from 'lucide-react';
 import type { ProjectFormData } from '@/services/producerService';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -48,6 +49,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
 
   // Step management for wizard flow
   const [currentStep, setCurrentStep] = useState<'step1' | 'step2'>('step1');
+  
+  // Handle Escape key to close modal
+  useEscapeKey(isOpen, onClose, isSubmitting || isAnalyzingBrief);
   
   // Reset to step 1 when modal opens for new projects
   React.useEffect(() => {

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Package, Search, Filter, CheckSquare, Square, X } from 'lucide-react';
 import type { Asset, SuggestedSupplier } from '@/lib/supabase';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface SupplierSelectionModalProps {
   isOpen: boolean;
@@ -26,6 +27,9 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Handle Escape key to close modal
+  useEscapeKey(isOpen, onClose, loading);
 
   // Get all unique service categories from suppliers
   const allCategories = useMemo(() => {
