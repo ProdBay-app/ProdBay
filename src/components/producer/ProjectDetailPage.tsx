@@ -981,7 +981,7 @@ const ProjectDetailPage: React.FC = () => {
                   projectId={project.id}
                   briefDescription={project.brief_description}
                   physicalParameters={project.physical_parameters ?? ''}
-                  isExpanded={isBriefExpanded}
+                  isExpanded={true} // Always expanded in main content area
                   onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
                   onBriefUpdate={(briefDesc, physicalParams) => {
                     // Optimistically update local project state
