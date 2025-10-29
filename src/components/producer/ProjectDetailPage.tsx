@@ -910,7 +910,6 @@ const ProjectDetailPage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-2xl font-bold text-orange-800">Assets ({assets.length})</h3>
-                    <p className="text-sm text-orange-600 mt-1">Manage your project assets</p>
                   </div>
                   
                   {/* Filters and Add Asset buttons moved here */}
