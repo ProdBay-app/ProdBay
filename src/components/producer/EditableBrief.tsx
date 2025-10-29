@@ -487,7 +487,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
 
   return (
     <section className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all duration-300 ${
-      isExpanded ? 'sticky top-8 shadow-lg' : ''
+      isExpanded ? 'shadow-lg' : ''
     }`}>
       {/* Header */}
       <div className="flex items-center justify-between">
