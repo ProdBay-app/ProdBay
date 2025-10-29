@@ -555,7 +555,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
 
       {/* Content - Only show when expanded */}
       {isExpanded && (
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-6 overflow-y-auto flex-1 min-h-0">
           {/* EDIT MODE - Textareas for editing */}
           {mode === 'edit' && (
             <>
@@ -581,7 +581,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                     resize-none overflow-hidden
                     transition-all duration-200
                   "
-                  style={{ minHeight: '150px' }}
+                  style={{}}
                   disabled={isSaving}
                 />
               </div>
@@ -608,7 +608,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                     resize-none overflow-hidden
                     transition-all duration-200
                   "
-                  style={{ minHeight: '100px' }}
+                  style={{}}
                   disabled={isSaving}
                 />
               </div>
@@ -653,7 +653,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                 <h3 className="block text-sm font-semibold text-gray-700 mb-2">
                   Description
                 </h3>
-                <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 leading-relaxed min-h-[150px] whitespace-pre-wrap">
+                <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 leading-relaxed whitespace-pre-wrap">
                   {renderInteractiveContent(briefDescription)}
                 </div>
               </div>
@@ -664,7 +664,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                   <h3 className="block text-sm font-semibold text-gray-700 mb-2">
                     Physical Parameters
                   </h3>
-                  <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 leading-relaxed min-h-[100px] whitespace-pre-wrap">
+                  <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 leading-relaxed whitespace-pre-wrap">
                     {renderInteractiveContent(physicalParameters)}
                   </div>
                 </div>
