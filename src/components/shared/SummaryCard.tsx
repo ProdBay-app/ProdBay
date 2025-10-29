@@ -8,7 +8,6 @@ interface SummaryCardProps {
   children: React.ReactNode;
   isMobile?: boolean;
   prefersReducedMotion?: boolean;
-  showAsHeader?: boolean;
 }
 
 /**
@@ -39,8 +38,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   onClick, 
   children,
   isMobile = false,
-  prefersReducedMotion = false,
-  showAsHeader = false
+  prefersReducedMotion = false
 }) => {
   return (
     <motion.div
@@ -70,30 +68,63 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
         scale: isMobile ? 0.95 : 0.98,
         transition: { duration: 0.1, ease: "easeInOut" }
       } : {}}
+      animate={prefersReducedMotion ? {} : {
+        rotateY: isActive ? 0 : 0,
+        scale: isActive ? 1.05 : 1,
+      }}
       transition={prefersReducedMotion ? { duration: 0 } : {
-        duration: 0.2,
-        ease: "easeOut"
+        duration: 0.4,
+        ease: "easeInOut"
+      }}
+      style={{ 
+        transformStyle: 'preserve-3d',
+        perspective: '1000px'
       }}
     >
-      <h3 className={`font-semibold mb-2 transition-all duration-200 ${
-        isMobile 
-          ? 'text-base mb-1' 
-          : 'text-lg mb-2'
-      } ${
-        isActive 
-          ? 'text-center text-teal-700 font-bold' 
-          : 'text-gray-900'
-      }`}>
+      {/* Card Header - Always visible */}
+      <motion.h3 
+        className={`font-semibold mb-2 transition-all duration-200 ${
+          isMobile 
+            ? 'text-base mb-1' 
+            : 'text-lg mb-2'
+        } ${
+          isActive 
+            ? 'text-center text-teal-700 font-bold' 
+            : 'text-gray-900'
+        }`}
+        animate={prefersReducedMotion ? {} : {
+          y: isActive ? -10 : 0,
+          scale: isActive ? 1.1 : 1,
+        }}
+        transition={prefersReducedMotion ? { duration: 0 } : {
+          duration: 0.3,
+          ease: "easeOut"
+        }}
+      >
         {title}
-      </h3>
-      {/* Only show summary content when not acting as header or when not active */}
-      {!(showAsHeader && isActive) && (
-        <div className={`text-gray-600 ${
+      </motion.h3>
+      
+      {/* Card Content - Flips away when active */}
+      <motion.div 
+        className={`text-gray-600 ${
           isMobile ? 'text-xs space-y-1' : 'text-sm'
-        }`}>
-          {children}
-        </div>
-      )}
+        }`}
+        animate={prefersReducedMotion ? {} : {
+          rotateX: isActive ? 90 : 0,
+          opacity: isActive ? 0 : 1,
+          y: isActive ? 20 : 0,
+        }}
+        transition={prefersReducedMotion ? { duration: 0 } : {
+          duration: 0.4,
+          ease: "easeInOut"
+        }}
+        style={{ 
+          transformStyle: 'preserve-3d',
+          backfaceVisibility: 'hidden'
+        }}
+      >
+        {children}
+      </motion.div>
     </motion.div>
   );
 };

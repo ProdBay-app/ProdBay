@@ -503,7 +503,6 @@ const ProjectDetailPage: React.FC = () => {
             onClick={() => setActiveSection('Overview')}
             isMobile={isMobile}
             prefersReducedMotion={prefersReducedMotion}
-            showAsHeader={true}
           >
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -529,7 +528,6 @@ const ProjectDetailPage: React.FC = () => {
             onClick={() => setActiveSection('Budget')}
             isMobile={isMobile}
             prefersReducedMotion={prefersReducedMotion}
-            showAsHeader={true}
           >
             <div className="space-y-3">
               {/* Total Budget */}
@@ -583,7 +581,6 @@ const ProjectDetailPage: React.FC = () => {
             onClick={() => setActiveSection('Timeline')}
             isMobile={isMobile}
             prefersReducedMotion={prefersReducedMotion}
-            showAsHeader={true}
           >
             <div className="space-y-2">
               {/* Start Date */}
@@ -637,7 +634,6 @@ const ProjectDetailPage: React.FC = () => {
             onClick={() => setActiveSection('Actions')}
             isMobile={isMobile}
             prefersReducedMotion={prefersReducedMotion}
-            showAsHeader={true}
           >
             <div className="space-y-2">
               {/* Your Actions */}
