@@ -31,15 +31,11 @@ const DetailView: React.FC<DetailViewProps> = ({ title, children, isMobile = fal
       className={`bg-white rounded-lg shadow-sm border border-gray-200 ${
         isMobile ? 'p-4' : 'p-6'
       }`}
-      initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }}
+      animate={{ opacity: 1 }}
       transition={prefersReducedMotion ? { duration: 0 } : { 
-        duration: 0.3, 
-        ease: "easeOut",
-        layout: { duration: 0.3 }
+        duration: 0.2,
+        ease: "easeOut"
       }}
-      layout
     >
       {/* Only render header if title is provided */}
       {title && (
