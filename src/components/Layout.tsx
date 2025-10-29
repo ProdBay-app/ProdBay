@@ -56,7 +56,7 @@ const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <nav className={`${getNavColor()} text-white shadow-lg`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
@@ -98,7 +98,7 @@ const Layout: React.FC = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-8 px-4">
+      <main className="flex-1 max-w-7xl mx-auto py-8 px-4 w-full">
         <Outlet />
       </main>
 
