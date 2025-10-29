@@ -75,12 +75,14 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
         ease: "easeOut"
       }}
     >
-      <h3 className={`font-semibold mb-2 ${
+      <h3 className={`font-semibold mb-2 transition-all duration-200 ${
         isMobile 
           ? 'text-base mb-1' 
           : 'text-lg mb-2'
       } ${
-        isActive ? 'text-teal-700' : 'text-gray-900'
+        isActive 
+          ? 'text-center text-teal-700 font-bold' 
+          : 'text-gray-900'
       }`}>
         {title}
       </h3>
