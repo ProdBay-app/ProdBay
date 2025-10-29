@@ -437,15 +437,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   // Main Kanban board display
   return (
     <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      {/* Section Header - Simplified */}
-      <div className="flex items-center gap-2 mb-6">
-        <Package className="w-6 h-6 text-purple-600" />
-        <h2 className="text-2xl font-bold text-gray-900">Assets</h2>
-        <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">
-          {filteredAndSortedAssets.length}
-          {filteredAndSortedAssets.length !== assets.length && ` of ${assets.length}`}
-        </span>
-      </div>
+      {/* Section Header removed - now handled in top row */}
 
       {/* Search and Filter Controls */}
       {showFilters && (
