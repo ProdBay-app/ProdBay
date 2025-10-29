@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { ProjectSummaryService } from '@/services/projectSummaryService';
+import { BriefAssetService } from '@/services/briefAssetService';
+import { getSupabase } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import AssetList from './AssetList';
 import EditableBrief from './EditableBrief';
@@ -234,6 +236,9 @@ const ProjectDetailPage: React.FC = () => {
       try {
         const assetsData = await ProducerService.getAssetsByProjectId(projectId);
         setAssets(assetsData);
+        
+        // Refresh brief with existing manually created assets
+        await refreshBriefWithManualAssets(projectId, assetsData);
       } catch (err) {
         console.error('Error fetching assets for brief:', err);
         // Silently fail - brief will just not have interactive highlights
@@ -243,6 +248,49 @@ const ProjectDetailPage: React.FC = () => {
 
     fetchAssets();
   }, [projectId]);
+
+  // Refresh brief with existing manually created assets
+  const refreshBriefWithManualAssets = async (projectId: string, assets: Asset[]) => {
+    try {
+      const manuallyCreatedAssets = assets.filter(asset => BriefAssetService.isManuallyCreated(asset));
+      
+      // Get current brief to check if Additional Assets section exists
+      const supabase = await getSupabase();
+      const { data: project, error } = await supabase
+        .from('projects')
+        .select('brief_description')
+        .eq('id', projectId)
+        .single();
+
+      if (error || !project) return;
+
+      const briefDescription = project.brief_description || '';
+      const hasAdditionalAssetsSection = briefDescription.includes('## Additional Assets');
+      
+      // If there are manually created assets but no Additional Assets section, add them
+      if (manuallyCreatedAssets.length > 0 && !hasAdditionalAssetsSection) {
+        let updatedBrief = briefDescription + '\n\n## Additional Assets\n';
+        
+        for (const asset of manuallyCreatedAssets) {
+          updatedBrief += `- **${asset.asset_name}**: ${asset.specifications || 'No specifications provided'}\n`;
+        }
+        
+        // Update the project brief
+        await supabase
+          .from('projects')
+          .update({ brief_description: updatedBrief })
+          .eq('id', projectId);
+        
+        // Update local project state
+        setProject(prev => prev ? {
+          ...prev,
+          brief_description: updatedBrief
+        } : null);
+      }
+    } catch (err) {
+      console.error('Error refreshing brief with manual assets:', err);
+    }
+  };
 
   // Measure Assets block height when brief is expanded
   useEffect(() => {
@@ -337,6 +385,15 @@ const ProjectDetailPage: React.FC = () => {
       // Add to local assets state
       setAssets(prev => [...prev, newAsset]);
 
+      // Add manually created asset to brief
+      await BriefAssetService.addAssetToBrief(project.id, newAsset);
+
+      // Update local project state to reflect brief changes
+      setProject(prev => prev ? {
+        ...prev,
+        brief_description: prev.brief_description // Will be updated by the service
+      } : null);
+
       // Close modal
       setIsAddModalOpen(false);
     } catch (err) {
@@ -356,6 +413,30 @@ const ProjectDetailPage: React.FC = () => {
     // Also update viewingAsset if it's the same asset
     if (viewingAsset?.id === updatedAsset.id) {
       setViewingAsset(updatedAsset);
+    }
+  };
+
+  /**
+   * Handle asset deletion
+   * Removes asset from local state and brief if it was manually created
+   */
+  const handleAssetDelete = async (deletedAsset: Asset) => {
+    try {
+      // Remove from local assets state
+      setAssets(prev => prev.filter(a => a.id !== deletedAsset.id));
+
+      // Remove from brief if it was manually created
+      if (BriefAssetService.isManuallyCreated(deletedAsset) && project) {
+        await BriefAssetService.removeAssetFromBrief(project.id, deletedAsset);
+        
+        // Update local project state to reflect brief changes
+        setProject(prev => prev ? {
+          ...prev,
+          brief_description: prev.brief_description // Will be updated by the service
+        } : null);
+      }
+    } catch (err) {
+      console.error('Error handling asset deletion:', err);
     }
   };
 
@@ -1028,6 +1109,7 @@ const ProjectDetailPage: React.FC = () => {
               onAddAsset={handleAddAsset}
               onToggleFilters={handleToggleFilters}
               showFilters={showFilters}
+              onAssetDelete={handleAssetDelete}
             />
             </div>
             

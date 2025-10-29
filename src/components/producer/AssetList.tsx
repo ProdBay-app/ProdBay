@@ -24,6 +24,7 @@ interface AssetListProps {
   onAddAsset?: () => void; // External add asset button handler
   onToggleFilters?: () => void; // External filter toggle handler
   showFilters?: boolean; // Filter visibility state
+  onAssetDelete?: (asset: Asset) => void; // External asset deletion handler
 }
 
 /**
@@ -44,7 +45,8 @@ const AssetList: React.FC<AssetListProps> = ({
   isBriefExpanded = false,
   onAddAsset,
   onToggleFilters,
-  showFilters = false
+  showFilters = false,
+  onAssetDelete
 }) => {
   const { showError, showSuccess } = useNotification();
 
@@ -225,8 +227,13 @@ const AssetList: React.FC<AssetListProps> = ({
       // Delete asset from database (cascade deletes related quotes)
       await ProducerService.deleteAsset(deletingAsset.id);
 
-      // Remove from local state
-      setAssets(prev => prev.filter(a => a.id !== deletingAsset.id));
+      // Use external deletion handler if provided, otherwise handle locally
+      if (onAssetDelete) {
+        onAssetDelete(deletingAsset);
+      } else {
+        // Fallback to local state management
+        setAssets(prev => prev.filter(a => a.id !== deletingAsset.id));
+      }
 
       // Close modal and show success
       setIsDeleteModalOpen(false);
