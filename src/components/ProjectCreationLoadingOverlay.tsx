@@ -81,7 +81,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
             <CurrentIcon className="w-10 h-10" />
           </div>
           {/* Pulsing ring around the icon */}
-          <div className={`absolute inset-0 rounded-full border-2 ${currentStepData.color.replace('text-', 'border-')} animate-ping opacity-20`}></div>
+          <div className={`absolute inset-0 rounded-full border-2 ${currentStepData.color.replace('text-', 'border-')} animate-ping`} style={{ opacity: 0.3 }}></div>
         </div>
 
         {/* Step progress bar */}
