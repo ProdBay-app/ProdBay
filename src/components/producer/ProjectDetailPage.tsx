@@ -889,11 +889,11 @@ const ProjectDetailPage: React.FC = () => {
         {/* Assets and Brief Section - Layout matching reference image */}
         <div className="mt-8">
           
-          {/* Top Row - Asset Headers & Filters + Brief (when collapsed) */}
-          <div className={`grid grid-cols-1 gap-6 mb-6 ${isBriefExpanded ? 'lg:grid-cols-1' : 'lg:grid-cols-3'}`}>
+          {/* Top Row - Asset Headers & Filters + Brief Header (always visible) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             
             {/* Asset Headers & Filters Section */}
-            <div className={isBriefExpanded ? 'lg:col-span-1' : 'lg:col-span-2'}>
+            <div className="lg:col-span-2">
               <div className="bg-orange-100 border border-orange-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -925,66 +925,37 @@ const ProjectDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Brief Section - Compact when collapsed, hidden when expanded */}
-            {!isBriefExpanded && (
-              <div className="lg:col-span-1">
-                <EditableBrief
-                  projectId={project.id}
-                  briefDescription={project.brief_description}
-                  physicalParameters={project.physical_parameters ?? ''}
-                  isExpanded={isBriefExpanded}
-                  onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
-                  onBriefUpdate={(briefDesc, physicalParams) => {
-                    // Optimistically update local project state
-                    setProject(prev => prev ? {
-                      ...prev,
-                      brief_description: briefDesc,
-                      physical_parameters: physicalParams
-                    } : null);
-                  }}
-                  assets={assets}
-                  hoveredAssetId={hoveredAssetId}
-                  onAssetHover={setHoveredAssetId}
-                  onAssetClick={handleAssetClick}
-                />
-              </div>
-            )}
+            {/* Brief Header - Always visible in top row */}
+            <div className="lg:col-span-1">
+              <EditableBrief
+                projectId={project.id}
+                briefDescription={project.brief_description}
+                physicalParameters={project.physical_parameters ?? ''}
+                isExpanded={isBriefExpanded}
+                onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+                onBriefUpdate={(briefDesc, physicalParams) => {
+                  // Optimistically update local project state
+                  setProject(prev => prev ? {
+                    ...prev,
+                    brief_description: briefDesc,
+                    physical_parameters: physicalParams
+                  } : null);
+                }}
+                assets={assets}
+                hoveredAssetId={hoveredAssetId}
+                onAssetHover={setHoveredAssetId}
+                onAssetClick={handleAssetClick}
+              />
+            </div>
           </div>
 
           {/* Assets Section - Full width Kanban board */}
-          <div className="relative">
-            <AssetList 
-              projectId={project.id}
-              hoveredAssetId={hoveredAssetId}
-              onAssetHover={setHoveredAssetId}
-              isBriefExpanded={isBriefExpanded}
-            />
-            
-            {/* Brief Expanded Content - Overlay when expanded */}
-            {isBriefExpanded && (
-              <div className="absolute top-0 right-0 w-1/3 h-full z-10">
-                <EditableBrief
-                  projectId={project.id}
-                  briefDescription={project.brief_description}
-                  physicalParameters={project.physical_parameters ?? ''}
-                  isExpanded={isBriefExpanded}
-                  onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
-                  onBriefUpdate={(briefDesc, physicalParams) => {
-                    // Optimistically update local project state
-                    setProject(prev => prev ? {
-                      ...prev,
-                      brief_description: briefDesc,
-                      physical_parameters: physicalParams
-                    } : null);
-                  }}
-                  assets={assets}
-                  hoveredAssetId={hoveredAssetId}
-                  onAssetHover={setHoveredAssetId}
-                  onAssetClick={handleAssetClick}
-                />
-              </div>
-            )}
-          </div>
+          <AssetList 
+            projectId={project.id}
+            hoveredAssetId={hoveredAssetId}
+            onAssetHover={setHoveredAssetId}
+            isBriefExpanded={isBriefExpanded}
+          />
         </div>
       </div>
 

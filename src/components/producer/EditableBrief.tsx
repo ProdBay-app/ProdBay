@@ -486,73 +486,73 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   };
 
   return (
-    <section className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all duration-300 ${
-      isExpanded ? 'shadow-lg' : ''
-    }`}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-gray-900">Brief</h2>
-          
-          {/* Unsaved Changes Indicator */}
-          {isDirty && (
-            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-medium">
-              Unsaved Changes
-            </span>
-          )}
-        </div>
-
-        {/* Right side controls */}
-        <div className="flex items-center gap-2">
-          {/* Download PDF Button */}
-          <button
-            onClick={handleDownloadPdf}
-            className="flex items-center gap-2 px-3 py-1.5 bg-teal-100 text-teal-700 hover:bg-teal-200 rounded-lg transition-colors text-sm font-medium"
-            title="Download brief as PDF"
-          >
-            <Download className="w-4 h-4" />
-            <span>Download PDF</span>
-          </button>
-
-          {/* Mode Toggle Button */}
-          <button
-            onClick={() => setMode(prev => prev === 'view' ? 'edit' : 'view')}
-            disabled={isSaving}
-            className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            title={mode === 'view' ? 'Switch to edit mode' : 'Switch to view mode'}
-          >
-            {mode === 'view' ? (
-              <>
-                <Edit3 className="w-4 h-4" />
-                <span>Edit</span>
-              </>
-            ) : (
-              <>
-                <Eye className="w-4 h-4" />
-                <span>View</span>
-              </>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300">
+      {/* Header - Always visible */}
+      <div className="p-6 pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900">Brief</h2>
+            
+            {/* Unsaved Changes Indicator */}
+            {isDirty && (
+              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-medium">
+                Unsaved Changes
+              </span>
             )}
-          </button>
+          </div>
 
-          {/* Expand/Collapse Button */}
-          <button
-            onClick={onToggleExpand}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label={isExpanded ? 'Collapse brief' : 'Expand brief'}
-            title={isExpanded ? 'Collapse' : 'Expand'}
-          >
-            {isExpanded ? (
-              <Minimize2 className="w-5 h-5 text-gray-600" />
-            ) : (
-              <Maximize2 className="w-5 h-5 text-gray-600" />
-            )}
-          </button>
+          {/* Right side controls */}
+          <div className="flex items-center gap-2">
+            {/* Download PDF Button */}
+            <button
+              onClick={handleDownloadPdf}
+              className="flex items-center gap-2 px-3 py-1.5 bg-teal-100 text-teal-700 hover:bg-teal-200 rounded-lg transition-colors text-sm font-medium"
+              title="Download brief as PDF"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download PDF</span>
+            </button>
+
+            {/* Mode Toggle Button */}
+            <button
+              onClick={() => setMode(prev => prev === 'view' ? 'edit' : 'view')}
+              disabled={isSaving}
+              className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              title={mode === 'view' ? 'Switch to edit mode' : 'Switch to view mode'}
+            >
+              {mode === 'view' ? (
+                <>
+                  <Edit3 className="w-4 h-4" />
+                  <span>Edit</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4" />
+                  <span>View</span>
+                </>
+              )}
+            </button>
+
+            {/* Expand/Collapse Button */}
+            <button
+              onClick={onToggleExpand}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label={isExpanded ? 'Collapse brief' : 'Expand brief'}
+              title={isExpanded ? 'Collapse' : 'Expand'}
+            >
+              {isExpanded ? (
+                <Minimize2 className="w-5 h-5 text-gray-600" />
+              ) : (
+                <Maximize2 className="w-5 h-5 text-gray-600" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Content - Only show when expanded */}
       {isExpanded && (
-        <div className="mt-4">
+        <div className="px-6 pb-6">
 
       {/* EDIT MODE - Textareas for editing */}
       {mode === 'edit' && (
@@ -671,7 +671,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
       )}
         </div>
       )}
-    </section>
+    </div>
   );
 };
 
