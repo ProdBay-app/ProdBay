@@ -19,6 +19,11 @@ interface AssetListProps {
   
   // NEW: Prop to know when brief panel is expanded for optimized scrolling
   isBriefExpanded?: boolean;
+  
+  // NEW: Props for external button controls (handled by parent component)
+  onAddAsset?: () => void; // External add asset button handler
+  onToggleFilters?: () => void; // External filter toggle handler
+  showFilters?: boolean; // Filter visibility state
 }
 
 /**
@@ -32,7 +37,15 @@ interface AssetListProps {
  * - Empty state when no assets exist
  * - Bi-directional hover linking with project brief (highlights assets when brief text hovered)
  */
-const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAssetHover, isBriefExpanded = false }) => {
+const AssetList: React.FC<AssetListProps> = ({ 
+  projectId, 
+  hoveredAssetId, 
+  onAssetHover, 
+  isBriefExpanded = false,
+  onAddAsset,
+  onToggleFilters,
+  showFilters = false
+}) => {
   const { showError, showSuccess } = useNotification();
 
   // State management
@@ -55,7 +68,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'name' | 'status' | 'date' | 'quantity'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [showFilters] = useState(false);
+  // showFilters is now passed as a prop
 
   // Scroll indicator state
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
@@ -143,7 +156,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
   }, [projectId, showError]);
 
   // Handle adding a new asset
-  const handleAddAsset = async (assetData: { 
+  const handleAddAssetInternal = async (assetData: { 
     asset_name: string; 
     specifications: string;
     quantity?: number;
@@ -176,6 +189,8 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
       setIsSubmitting(false);
     }
   };
+
+  // External add asset button is handled by parent component
 
   // Handle opening the edit modal
   const handleOpenEditModal = (asset: Asset) => {
@@ -656,7 +671,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
         isSubmitting={isSubmitting}
         mode="create"
         onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddAsset}
+        onSubmit={handleAddAssetInternal}
       />
 
       {/* Edit Asset Modal */}

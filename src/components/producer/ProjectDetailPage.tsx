@@ -23,6 +23,7 @@ import ClientProjectsModal from './ClientProjectsModal';
 import BudgetAssetsModal from './BudgetAssetsModal';
 import MilestoneFormModal from './MilestoneFormModal';
 import AssetDetailModal from './AssetDetailModal';
+import AssetFormModal from './AssetFormModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import SummaryCard from '@/components/shared/SummaryCard';
 import DetailView from '@/components/shared/DetailView';
@@ -104,6 +105,8 @@ const ProjectDetailPage: React.FC = () => {
   const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
   const [isAssetDetailModalOpen, setIsAssetDetailModalOpen] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   // Ref for measuring Assets block height
   const assetsBlockRef = useRef<HTMLDivElement>(null);
@@ -299,6 +302,47 @@ const ProjectDetailPage: React.FC = () => {
   const handleAssetClick = (asset: Asset) => {
     setViewingAsset(asset);
     setIsAssetDetailModalOpen(true);
+  };
+
+  // Handle filter toggle
+  const handleToggleFilters = () => {
+    setShowFilters(prev => !prev);
+  };
+
+  // Handle add asset button
+  const handleAddAsset = () => {
+    setIsAddModalOpen(true);
+  };
+
+  // Handle asset creation from modal
+  const handleCreateAsset = async (assetData: { 
+    asset_name: string; 
+    specifications: string;
+    quantity?: number;
+    tags?: string[];
+  }) => {
+    try {
+      // Create asset via API
+      if (!project) return;
+      const newAsset = await ProducerService.createAsset(project.id, {
+        asset_name: assetData.asset_name,
+        specifications: assetData.specifications,
+        status: 'Pending',
+        timeline: '',
+        assigned_supplier_id: undefined,
+        quantity: assetData.quantity,
+        tags: assetData.tags || []
+      });
+
+      // Add to local assets state
+      setAssets(prev => [...prev, newAsset]);
+
+      // Close modal
+      setIsAddModalOpen(false);
+    } catch (err) {
+      console.error('Error creating asset:', err);
+      // Error handling could be improved with a notification system
+    }
   };
 
   /**
@@ -916,6 +960,7 @@ const ProjectDetailPage: React.FC = () => {
                   <div className="flex items-center gap-3">
                     {/* Filter Toggle Button */}
                     <button
+                      onClick={handleToggleFilters}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-white border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -925,7 +970,10 @@ const ProjectDetailPage: React.FC = () => {
                     </button>
 
                     {/* Add Asset Button */}
-                    <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium">
+                    <button 
+                      onClick={handleAddAsset}
+                      className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium"
+                    >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
@@ -965,12 +1013,15 @@ const ProjectDetailPage: React.FC = () => {
             
             {/* Assets Section - 2/3 width when brief expanded, full width when collapsed */}
             <div ref={assetsBlockRef} className={isBriefExpanded ? 'lg:col-span-2' : 'col-span-1'}>
-              <AssetList 
-                projectId={project.id}
-                hoveredAssetId={hoveredAssetId}
-                onAssetHover={setHoveredAssetId}
-                isBriefExpanded={isBriefExpanded}
-              />
+            <AssetList 
+              projectId={project.id}
+              hoveredAssetId={hoveredAssetId}
+              onAssetHover={setHoveredAssetId}
+              isBriefExpanded={isBriefExpanded}
+              onAddAsset={handleAddAsset}
+              onToggleFilters={handleToggleFilters}
+              showFilters={showFilters}
+            />
             </div>
             
             {/* Brief Expanded Content - 1/3 width when expanded, hidden when collapsed */}
@@ -1047,6 +1098,15 @@ const ProjectDetailPage: React.FC = () => {
           setViewingAsset(null);
         }}
         onAssetUpdate={handleAssetUpdate}
+      />
+
+      {/* Asset Form Modal (for adding new assets) */}
+      <AssetFormModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleCreateAsset}
+        mode="create"
+        isSubmitting={false}
       />
     </>
   );
