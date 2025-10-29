@@ -17,6 +17,9 @@ interface EditableBriefProps {
   hoveredAssetId?: string | null;
   onAssetHover?: (assetId: string | null) => void;
   onAssetClick?: (asset: Asset) => void;
+  
+  // NEW: Max height to match Assets block
+  maxHeight?: number;
 }
 
 /**
@@ -43,7 +46,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   assets,              // Will be used for interactive highlighting in next step
   hoveredAssetId,      // Will be used for interactive highlighting in next step
   onAssetHover,        // Will be used for interactive highlighting in next step
-  onAssetClick         // Will be used for interactive highlighting in next step
+  onAssetClick,        // Will be used for interactive highlighting in next step
+  maxHeight            // Max height to match Assets block
 }) => {
   const { showSuccess, showError } = useNotification();
 
@@ -486,7 +490,12 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300">
+    <div 
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ${
+        isExpanded && maxHeight ? 'flex flex-col' : ''
+      }`}
+      style={isExpanded && maxHeight ? { height: `${maxHeight}px` } : {}}
+    >
       {/* Header - Always visible */}
       <div className="p-6 pb-4">
         <div className="flex items-center justify-between">
@@ -552,7 +561,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
 
       {/* Content - Only show when expanded */}
       {isExpanded && (
-        <div className="px-6 pb-6">
+        <div className="px-6 pb-6 overflow-y-auto flex-1">
 
       {/* EDIT MODE - Textareas for editing */}
       {mode === 'edit' && (

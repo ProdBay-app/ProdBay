@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { 
@@ -104,6 +104,10 @@ const ProjectDetailPage: React.FC = () => {
   const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
   const [isAssetDetailModalOpen, setIsAssetDetailModalOpen] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
+  
+  // Ref for measuring Assets block height
+  const assetsBlockRef = useRef<HTMLDivElement>(null);
+  const [assetsBlockHeight, setAssetsBlockHeight] = useState<number>(0);
 
   // Mobile detection and reduced motion preference
   useEffect(() => {
@@ -236,6 +240,14 @@ const ProjectDetailPage: React.FC = () => {
 
     fetchAssets();
   }, [projectId]);
+
+  // Measure Assets block height when brief is expanded
+  useEffect(() => {
+    if (isBriefExpanded && assetsBlockRef.current) {
+      const height = assetsBlockRef.current.offsetHeight;
+      setAssetsBlockHeight(height);
+    }
+  }, [isBriefExpanded, assets]);
 
   // Format currency
   const formatCurrency = (amount: number): string => {
@@ -949,13 +961,45 @@ const ProjectDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Assets Section - Full width Kanban board */}
-          <AssetList 
-            projectId={project.id}
-            hoveredAssetId={hoveredAssetId}
-            onAssetHover={setHoveredAssetId}
-            isBriefExpanded={isBriefExpanded}
-          />
+          {/* Assets and Brief Section - Side by side when brief expanded */}
+          <div className={`grid gap-6 ${isBriefExpanded ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
+            
+            {/* Assets Section - 2/3 width when brief expanded, full width when collapsed */}
+            <div ref={assetsBlockRef} className={isBriefExpanded ? 'lg:col-span-2' : 'col-span-1'}>
+              <AssetList 
+                projectId={project.id}
+                hoveredAssetId={hoveredAssetId}
+                onAssetHover={setHoveredAssetId}
+                isBriefExpanded={isBriefExpanded}
+              />
+            </div>
+            
+            {/* Brief Expanded Content - 1/3 width when expanded, hidden when collapsed */}
+            {isBriefExpanded && (
+              <div className="lg:col-span-1">
+                <EditableBrief
+                  projectId={project.id}
+                  briefDescription={project.brief_description}
+                  physicalParameters={project.physical_parameters ?? ''}
+                  isExpanded={isBriefExpanded}
+                  onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+                  onBriefUpdate={(briefDesc, physicalParams) => {
+                    // Optimistically update local project state
+                    setProject(prev => prev ? {
+                      ...prev,
+                      brief_description: briefDesc,
+                      physical_parameters: physicalParams
+                    } : null);
+                  }}
+                  assets={assets}
+                  hoveredAssetId={hoveredAssetId}
+                  onAssetHover={setHoveredAssetId}
+                  onAssetClick={handleAssetClick}
+                  maxHeight={assetsBlockHeight}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
