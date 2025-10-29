@@ -14,6 +14,7 @@ import {
 import { ProducerService } from '@/services/producerService';
 import { ProjectSummaryService } from '@/services/projectSummaryService';
 import { useNotification } from '@/hooks/useNotification';
+import Button from '@/components/ui/Button';
 import AssetList from './AssetList';
 import EditableBrief from './EditableBrief';
 import BudgetTrackingBar from './widgets/BudgetTrackingBar';
@@ -959,33 +960,33 @@ const ProjectDetailPage: React.FC = () => {
                   {/* Filters and Add Asset buttons moved here */}
                   <div className="flex items-center gap-3">
                     {/* Filter Toggle Button */}
-                    <button
+                    <Button
                       onClick={handleToggleFilters}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                        showFilters
-                          ? 'bg-purple-100 border-purple-300 text-purple-700 hover:bg-purple-200'
-                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
+                      variant={showFilters ? 'secondary' : 'outline'}
+                      icon={
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                      }
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                      </svg>
                       Filters
                       {showFilters && (
                         <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
                       )}
-                    </button>
+                    </Button>
 
                     {/* Add Asset Button */}
-                    <button 
+                    <Button 
                       onClick={handleAddAsset}
-                      className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium"
+                      variant="primary"
+                      icon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      }
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
                       Add Asset
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

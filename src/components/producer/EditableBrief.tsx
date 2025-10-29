@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Save, Maximize2, Minimize2, Loader2, Edit3, Eye, Download } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
+import Button from '@/components/ui/Button';
 import type { Asset } from '@/lib/supabase';
 
 interface EditableBriefProps {
@@ -514,34 +515,25 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
             {/* Right side controls */}
             <div className="flex items-center gap-2">
               {/* Download PDF Button */}
-              <button
+              <Button
                 onClick={handleDownloadPdf}
-                className="flex items-center gap-2 px-3 py-1.5 bg-teal-100 text-teal-700 hover:bg-teal-200 rounded-lg transition-colors text-sm font-medium"
+                variant="teal"
+                icon={<Download className="w-4 h-4" />}
                 title="Download brief as PDF"
               >
-                <Download className="w-4 h-4" />
-                <span>Download PDF</span>
-              </button>
+                Download PDF
+              </Button>
 
               {/* Mode Toggle Button */}
-              <button
+              <Button
                 onClick={() => setMode(prev => prev === 'view' ? 'edit' : 'view')}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="secondary"
+                icon={mode === 'view' ? <Edit3 className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 title={mode === 'view' ? 'Switch to edit mode' : 'Switch to view mode'}
               >
-                {mode === 'view' ? (
-                  <>
-                    <Edit3 className="w-4 h-4" />
-                    <span>Edit</span>
-                  </>
-                ) : (
-                  <>
-                    <Eye className="w-4 h-4" />
-                    <span>View</span>
-                  </>
-                )}
-              </button>
+                {mode === 'view' ? 'Edit' : 'View'}
+              </Button>
 
               {/* Expand/Collapse Button */}
               <button
