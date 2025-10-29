@@ -486,9 +486,11 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   };
 
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
+    <section className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all duration-300 ${
+      isExpanded ? 'sticky top-8' : ''
+    }`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold text-gray-900">Brief</h2>
           
@@ -547,6 +549,10 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Content - Only show when expanded */}
+      {isExpanded && (
+        <div className="mt-4">
 
       {/* EDIT MODE - Textareas for editing */}
       {mode === 'edit' && (
@@ -662,6 +668,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
             </div>
           )}
         </>
+      )}
+        </div>
       )}
     </section>
   );
