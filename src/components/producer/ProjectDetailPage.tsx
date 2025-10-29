@@ -946,11 +946,11 @@ const ProjectDetailPage: React.FC = () => {
         <div className="mt-8">
           
           {/* Top Row - Asset Headers & Filters + Brief Header (always visible) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-stretch">
             
             {/* Asset Headers & Filters Section */}
-            <div className="lg:col-span-2">
-              <div className="bg-orange-100 border border-orange-200 rounded-lg p-6 pb-4">
+            <div className="lg:col-span-2 h-full">
+              <div className="bg-orange-100 border border-orange-200 rounded-lg p-6 pb-4 h-full flex flex-col">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-2xl font-bold text-orange-800">Assets ({assets.length})</h3>
@@ -992,7 +992,7 @@ const ProjectDetailPage: React.FC = () => {
             </div>
 
             {/* Brief Header - Always visible in top row */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 h-full">
               <EditableBrief
                 projectId={project.id}
                 briefDescription={project.brief_description}

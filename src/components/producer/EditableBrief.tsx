@@ -492,7 +492,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   return (
     <div 
       className={`bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ${
-        isExpanded && maxHeight ? 'flex flex-col' : ''
+        isExpanded && maxHeight ? 'flex flex-col' : 'h-full flex flex-col'
       }`}
       style={isExpanded && maxHeight ? { height: `${maxHeight}px` } : {}}
     >
