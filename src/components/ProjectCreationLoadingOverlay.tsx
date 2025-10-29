@@ -24,16 +24,16 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
 
   // 10 visual steps representing the project creation process
   const steps = [
-    { icon: Database, text: "Initializing project database", color: "text-blue-600" },
-    { icon: FileText, text: "Processing project brief", color: "text-purple-600" },
-    { icon: Cpu, text: "Running AI analysis", color: "text-indigo-600" },
-    { icon: Target, text: "Identifying key requirements", color: "text-pink-600" },
-    { icon: Users, text: "Analyzing supplier capabilities", color: "text-green-600" },
-    { icon: Zap, text: "Generating asset recommendations", color: "text-yellow-600" },
-    { icon: Clock, text: "Calculating timelines", color: "text-orange-600" },
-    { icon: Sparkles, text: "Optimizing resource allocation", color: "text-teal-600" },
-    { icon: Rocket, text: "Finalizing project setup", color: "text-red-600" },
-    { icon: CheckCircle, text: "Project creation complete!", color: "text-emerald-600" }
+    { icon: Database, text: "Initializing project database", color: "text-blue-600", borderColor: "border-blue-600" },
+    { icon: FileText, text: "Processing project brief", color: "text-purple-600", borderColor: "border-purple-600" },
+    { icon: Cpu, text: "Running AI analysis", color: "text-indigo-600", borderColor: "border-indigo-600" },
+    { icon: Target, text: "Identifying key requirements", color: "text-pink-600", borderColor: "border-pink-600" },
+    { icon: Users, text: "Analyzing supplier capabilities", color: "text-green-600", borderColor: "border-green-600" },
+    { icon: Zap, text: "Generating asset recommendations", color: "text-yellow-600", borderColor: "border-yellow-600" },
+    { icon: Clock, text: "Calculating timelines", color: "text-orange-600", borderColor: "border-orange-600" },
+    { icon: Sparkles, text: "Optimizing resource allocation", color: "text-teal-600", borderColor: "border-teal-600" },
+    { icon: Rocket, text: "Finalizing project setup", color: "text-red-600", borderColor: "border-red-600" },
+    { icon: CheckCircle, text: "Project creation complete!", color: "text-emerald-600", borderColor: "border-emerald-600" }
   ];
 
 
@@ -81,7 +81,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
             <CurrentIcon className="w-10 h-10" />
           </div>
           {/* Pulsing ring around the icon */}
-          <div className={`absolute inset-0 rounded-full border-2 ${currentStepData.color.replace('text-', 'border-')} animate-ping`} style={{ opacity: 0.3 }}></div>
+          <div className={`absolute inset-0 rounded-full border-2 ${currentStepData.borderColor} animate-ping`} style={{ opacity: 0.3 }}></div>
         </div>
 
         {/* Step progress bar */}
