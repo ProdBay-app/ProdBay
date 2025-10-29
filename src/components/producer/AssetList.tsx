@@ -76,6 +76,7 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
     const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
     
     setCanScrollRight(canScroll && !isAtEnd);
+    // Only show scroll indicator when brief is expanded AND content overflows
     setShowScrollIndicator(isBriefExpanded && canScroll);
   }, [isBriefExpanded]);
 
@@ -622,14 +623,18 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
         </div>
       )}
 
-      {/* Kanban Board - Horizontal Scrolling Container with Visual Indicators */}
+      {/* Kanban Board - Responsive Container with Conditional Scrolling */}
       <div className="relative">
         <div 
           ref={scrollContainerRef}
-          className="overflow-x-auto -mx-6 px-6 pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+          className={`-mx-6 px-6 pb-4 ${
+            isBriefExpanded 
+              ? 'overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100' 
+              : 'overflow-x-visible'
+          }`}
           onScroll={handleScroll}
         >
-          <div className="flex gap-6 min-w-max">
+          <div className={`flex gap-6 ${isBriefExpanded ? 'min-w-max' : 'justify-start'}`}>
           {/* Render each status column */}
           {activeStatuses.map((status) => {
             const assetsInStatus = groupedAssets[status];
@@ -637,7 +642,9 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
             return (
               <div
                 key={status}
-                className="flex-shrink-0 w-80"
+                className={`flex-shrink-0 ${
+                  isBriefExpanded ? 'w-80' : 'w-64'
+                }`}
               >
                 {/* Column Header */}
                 <div className={`rounded-lg border px-4 py-3 mb-4 ${getStatusHeaderColor(status)}`}>
@@ -675,16 +682,10 @@ const AssetList: React.FC<AssetListProps> = ({ projectId, hoveredAssetId, onAsse
         )}
       </div>
 
-      {/* Scroll hint for users (only show if there are multiple columns) */}
-      {activeStatuses.length > 1 && (
-        <div className="mt-4 text-center text-sm text-gray-500">
-          {isBriefExpanded ? (
-            <span className="text-purple-600 font-medium">
-              ← Scroll to view all asset columns (brief panel expanded) →
-            </span>
-          ) : (
-            <span>← Scroll horizontally to view all status columns →</span>
-          )}
+      {/* Scroll hint for users (only show when brief is expanded and content overflows) */}
+      {isBriefExpanded && showScrollIndicator && (
+        <div className="mt-4 text-center text-sm text-purple-600 font-medium">
+          ← Scroll to view all asset columns (brief panel expanded) →
         </div>
       )}
 
