@@ -708,6 +708,8 @@ const ProjectDetailPage: React.FC = () => {
           className="touch-pan-y"
         >
           <AnimatePresence mode="wait">
+          {/* Fixed height container for consistent sizing */}
+          <div className="min-h-[600px]">
           {activeSection === 'Overview' && (
             <DetailView isMobile={isMobile} prefersReducedMotion={true}>
           <motion.div 
@@ -862,6 +864,7 @@ const ProjectDetailPage: React.FC = () => {
         )}
             </DetailView>
           )}
+          </div>
           </AnimatePresence>
         </div>
 
