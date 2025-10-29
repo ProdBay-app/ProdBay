@@ -76,28 +76,19 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
           transition: { duration: 0.1, ease: "easeInOut" }
         } : {}}
         animate={prefersReducedMotion ? {} : {
-          rotateY: isActive ? 180 : 0,
-          scale: isActive ? 1.1 : 1,
+          scale: isActive ? 1.05 : 1,
         }}
         transition={prefersReducedMotion ? { duration: 0 } : {
-          duration: 0.6,
-          ease: "easeInOut"
+          duration: 0.3,
+          ease: "easeOut"
         }}
         style={{ 
           transformStyle: 'preserve-3d',
           backfaceVisibility: 'hidden'
         }}
       >
-        {/* Front of card - Normal content */}
-        <div 
-          className={`w-full h-full ${
-            isActive ? 'hidden' : 'block'
-          }`}
-          style={{
-            backfaceVisibility: 'hidden',
-            transform: 'rotateY(0deg)'
-          }}
-        >
+        {/* Card content - Always visible */}
+        <div className="w-full h-full">
           <h3 className={`font-semibold mb-2 ${
             isMobile 
               ? 'text-base mb-1' 
@@ -112,40 +103,41 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
           </div>
         </div>
 
-        {/* Back of card - Prominent header when flipped */}
-        <div 
-          className={`w-full h-full flex items-center justify-center ${
-            isActive ? 'block' : 'hidden'
+        {/* Prominent header overlay - Appears on top when active */}
+        <motion.div 
+          className={`w-full h-full flex items-center justify-center absolute inset-0 ${
+            isActive ? 'pointer-events-none' : 'pointer-events-none'
           }`}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={isActive ? {
+            opacity: 1,
+            scale: 1,
+            y: 0
+          } : {
+            opacity: 0,
+            scale: 0.8,
+            y: 20
+          }}
+          transition={prefersReducedMotion ? { duration: 0 } : {
+            duration: 0.4,
+            ease: "easeOut"
+          }}
           style={{
-            backfaceVisibility: 'hidden',
-            transform: 'rotateY(180deg)',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0
+            background: 'rgba(240, 253, 250, 0.95)', // Semi-transparent teal background
+            backdropFilter: 'blur(4px)',
+            borderRadius: '0.5rem'
           }}
         >
-          <motion.h3 
+          <h3 
             className={`font-bold text-center ${
               isMobile 
                 ? 'text-2xl' 
                 : 'text-4xl'
             } text-teal-700`}
-            animate={prefersReducedMotion ? {} : {
-              scale: [1, 1.1, 1],
-            }}
-            transition={prefersReducedMotion ? { duration: 0 } : {
-              duration: 0.8,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
           >
             {title}
-          </motion.h3>
-        </div>
+          </h3>
+        </motion.div>
       </motion.div>
     </div>
   );
