@@ -49,7 +49,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
       }}
     >
       <motion.div
-        className={`rounded-lg shadow-sm border cursor-pointer transition-all duration-200 w-full h-full ${
+        className={`rounded-lg shadow-sm border cursor-pointer w-full h-full ${
           isMobile 
             ? 'p-3 min-h-[60px] touch-manipulation' 
             : 'p-4 hover:shadow-md'
@@ -76,19 +76,26 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
           transition: { duration: 0.1, ease: "easeInOut" }
         } : {}}
         animate={prefersReducedMotion ? {} : {
+          rotateX: isActive ? 180 : 0,
           scale: isActive ? 1.05 : 1,
         }}
         transition={prefersReducedMotion ? { duration: 0 } : {
-          duration: 0.3,
-          ease: "easeOut"
+          duration: 0.6,
+          ease: [0.4, 0.0, 0.2, 1] // Custom cubic-bezier for polished feel
         }}
         style={{ 
           transformStyle: 'preserve-3d',
           backfaceVisibility: 'hidden'
         }}
       >
-        {/* Card content - Always visible */}
-        <div className="w-full h-full">
+        {/* Front of card - Summary content */}
+        <div 
+          className="w-full h-full"
+          style={{
+            backfaceVisibility: 'hidden',
+            transform: 'rotateX(0deg)'
+          }}
+        >
           <h3 className={`font-semibold mb-2 ${
             isMobile 
               ? 'text-base mb-1' 
@@ -103,28 +110,13 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
           </div>
         </div>
 
-        {/* Prominent header overlay - Appears on top when active */}
-        <motion.div 
-          className={`w-full h-full flex items-center justify-center absolute inset-0 ${
-            isActive ? 'pointer-events-none' : 'pointer-events-none'
-          }`}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={isActive ? {
-            opacity: 1,
-            scale: 1,
-            y: 0
-          } : {
-            opacity: 0,
-            scale: 0.8,
-            y: 20
-          }}
-          transition={prefersReducedMotion ? { duration: 0 } : {
-            duration: 0.4,
-            ease: "easeOut"
-          }}
+        {/* Back of card - Prominent header */}
+        <div 
+          className="w-full h-full flex items-center justify-center absolute inset-0"
           style={{
-            background: 'rgba(240, 253, 250, 0.95)', // Semi-transparent teal background
-            backdropFilter: 'blur(4px)',
+            backfaceVisibility: 'hidden',
+            transform: 'rotateX(180deg)',
+            background: 'rgba(240, 253, 250, 0.98)',
             borderRadius: '0.5rem'
           }}
         >
@@ -137,7 +129,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
           >
             {title}
           </h3>
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );
