@@ -937,46 +937,44 @@ const ProjectDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Brief Header - Always visible in top row */}
-            <div className="lg:col-span-1">
-              <EditableBrief
-                projectId={project.id}
-                briefDescription={project.brief_description}
-                physicalParameters={project.physical_parameters ?? ''}
-                isExpanded={isBriefExpanded}
-                onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
-                onBriefUpdate={(briefDesc, physicalParams) => {
-                  // Optimistically update local project state
-                  setProject(prev => prev ? {
-                    ...prev,
-                    brief_description: briefDesc,
-                    physical_parameters: physicalParams
-                  } : null);
-                }}
-                assets={assets}
-                hoveredAssetId={hoveredAssetId}
-                onAssetHover={setHoveredAssetId}
-                onAssetClick={handleAssetClick}
-              />
-            </div>
+            {/* Brief Header - Only show when collapsed */}
+            {!isBriefExpanded && (
+              <div className="lg:col-span-1">
+                <EditableBrief
+                  projectId={project.id}
+                  briefDescription={project.brief_description}
+                  physicalParameters={project.physical_parameters ?? ''}
+                  isExpanded={isBriefExpanded}
+                  onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+                  onBriefUpdate={(briefDesc, physicalParams) => {
+                    // Optimistically update local project state
+                    setProject(prev => prev ? {
+                      ...prev,
+                      brief_description: briefDesc,
+                      physical_parameters: physicalParams
+                    } : null);
+                  }}
+                  assets={assets}
+                  hoveredAssetId={hoveredAssetId}
+                  onAssetHover={setHoveredAssetId}
+                  onAssetClick={handleAssetClick}
+                />
+              </div>
+            )}
           </div>
 
-          {/* Assets and Brief Section - Side by side when brief expanded */}
-          <div className={`grid gap-6 ${isBriefExpanded ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
+          {/* Assets Section - 2/3 width when brief expanded, full width when collapsed */}
+          <div ref={assetsBlockRef} className={`relative ${isBriefExpanded ? 'lg:w-2/3' : 'w-full'}`}>
+            <AssetList 
+              projectId={project.id}
+              hoveredAssetId={hoveredAssetId}
+              onAssetHover={setHoveredAssetId}
+              isBriefExpanded={isBriefExpanded}
+            />
             
-            {/* Assets Section - 2/3 width when brief expanded, full width when collapsed */}
-            <div ref={assetsBlockRef} className={isBriefExpanded ? 'lg:col-span-2' : 'col-span-1'}>
-              <AssetList 
-                projectId={project.id}
-                hoveredAssetId={hoveredAssetId}
-                onAssetHover={setHoveredAssetId}
-                isBriefExpanded={isBriefExpanded}
-              />
-            </div>
-            
-            {/* Brief Expanded Content - 1/3 width when expanded, hidden when collapsed */}
+            {/* Brief Expanded Content - Overlay when expanded */}
             {isBriefExpanded && (
-              <div className="lg:col-span-1">
+              <div className="absolute top-0 right-0 w-1/3 h-full z-10 pl-6">
                 <EditableBrief
                   projectId={project.id}
                   briefDescription={project.brief_description}
