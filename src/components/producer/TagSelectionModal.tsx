@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface TagSelectionModalProps {
   isOpen: boolean;
@@ -18,6 +19,9 @@ const TagSelectionModal: React.FC<TagSelectionModalProps> = ({
   onConfirm
 }) => {
   if (!isOpen) return null;
+
+  // Handle Escape key to close modal
+  useEscapeKey(isOpen, onClose);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">

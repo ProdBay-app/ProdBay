@@ -1,6 +1,7 @@
 import React from 'react';
-import { Brain, Sparkles, Target } from 'lucide-react';
+import { Brain, Sparkles } from 'lucide-react';
 import type { AIAssetSuggestion } from '@/services/aiAllocationService';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface AIAllocationModalProps {
   isOpen: boolean;
@@ -24,6 +25,9 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
   onApply
 }) => {
   if (!isOpen) return null;
+
+  // Handle Escape key to close modal
+  useEscapeKey(isOpen, onClose, loading);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">

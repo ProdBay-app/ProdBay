@@ -1,6 +1,7 @@
 import React from 'react';
 import type { AssetFormData } from '@/services/producerService';
 import type { Supplier } from '@/lib/supabase';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface AssetModalProps {
   isOpen: boolean;
@@ -24,6 +25,9 @@ const AssetModal: React.FC<AssetModalProps> = ({
   onFormChange
 }) => {
   if (!isOpen) return null;
+
+  // Handle Escape key to close modal
+  useEscapeKey(isOpen, onClose, isSubmitting);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target as HTMLInputElement;

@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -70,6 +71,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   };
 
   const colors = getVariantColors();
+
+  // Handle Escape key to close modal
+  useEscapeKey(isOpen, onCancel, isConfirming);
 
   // Handle backdrop click - only allow closing if not confirming
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {

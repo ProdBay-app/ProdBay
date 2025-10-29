@@ -278,18 +278,48 @@ class AIAllocationService {
 
 
   /**
-   * Build prompt for asset analysis
+   * Build prompt for asset analysis with industry-specific categories and examples
    */
   buildAssetAnalysisPrompt(briefDescription, projectContext) {
     return `
-Analyze this event/project brief and identify all required assets with detailed specifications.
+You are a senior event production manager with 15+ years of experience specializing in:
+
+CORPORATE EVENTS & CONFERENCES:
+- Main stage setups (40x20 stages, LED walls, professional AV systems, wireless microphones)
+- Breakout rooms (projection systems, screens, audio for 20-100 people, flip charts)
+- Registration areas (check-in stations, badge printing, directional signage, welcome desks)
+- Networking spaces (cocktail tables, bar setups, ambient lighting, background music)
+- Presentation equipment (laptops, clickers, laser pointers, confidence monitors)
+
+TRADE SHOWS & EXHIBITIONS:
+- Booth construction (modular displays, custom builds, lighting packages, carpeting)
+- Graphics & signage (banners, backdrops, floor graphics, wayfinding, hanging signs)
+- Technology integration (touchscreens, interactive displays, charging stations, WiFi)
+- Demo stations (product displays, sample stations, interactive kiosks)
+- Lead capture systems (badge scanners, lead retrieval, data collection)
+
+SOCIAL EVENTS & WEDDINGS:
+- Ceremony setups (altars, arches, seating arrangements, aisle runners, floral arrangements)
+- Reception spaces (dance floors, DJ booths, photo booths, lighting effects)
+- Catering infrastructure (buffet stations, bar setups, table settings, linens)
+- Entertainment areas (stages, sound systems, lighting, special effects)
+- Guest services (coat check, gift tables, guest books, transportation)
+
+VENUE-SPECIFIC CONSIDERATIONS:
+- Convention centers: Rigging points, power distribution, loading docks, union requirements
+- Hotels: Ballroom setups, breakout rooms, guest services, catering restrictions
+- Outdoor venues: Weather protection, power generation, site preparation, permits
+- Museums/Galleries: Art protection, climate control, security requirements
+- Stadiums/Arenas: Large-scale AV, crowd management, security, parking
+
+Analyze this project brief and identify ALL required assets with detailed specifications.
 
 Project Brief: "${briefDescription}"
 
 Additional Context:
 - Budget: ${projectContext.financial_parameters || 'Not specified'}
 - Timeline: ${projectContext.timeline_deadline || 'Not specified'}
-- Physical Parameters: ${projectContext.physical_parameters || 'Not specified'}
+- Venue: ${projectContext.physical_parameters || 'Not specified'}
 
 CRITICAL REQUIREMENT: For each asset you identify, you MUST extract the exact text snippet from the brief that indicates this asset is needed. This will be used to create interactive links in the UI.
 
@@ -297,14 +327,15 @@ Respond with ONLY a JSON object in this exact format (no markdown, no code block
 {
   "assets": [
     {
-      "asset_name": "Asset Name",
-      "specifications": "Detailed specifications and requirements",
+      "asset_name": "Specific Asset Name",
+      "specifications": "Detailed technical requirements including quantities, dimensions, power needs, setup requirements",
       "priority": "high|medium|low",
       "estimated_cost_range": "low|medium|high",
-      "source_text": "The exact sentence or phrase from the brief that mentions this asset requirement"
+      "source_text": "The exact sentence or phrase from the brief that mentions this asset requirement",
+      "category": "staging|av|catering|marketing|logistics|security|transport|entertainment|floral|photography"
     }
   ],
-  "reasoning": "Explanation of why these assets were identified",
+  "reasoning": "Explanation of why these assets were identified based on event type, scale, and venue requirements",
   "confidence": 0.85
 }
 
@@ -313,15 +344,20 @@ IMPORTANT GUIDELINES:
 - Extract complete sentences or meaningful phrases, not single words
 - If an asset is implied by multiple brief sections, choose the most specific/relevant excerpt
 - The source_text will be highlighted in the UI when users interact with the asset
+- Be specific about quantities, dimensions, and technical requirements
+- Consider the event type and scale when identifying assets
+- Include both explicitly mentioned and industry-standard requirements
 
-Focus on identifying:
-- Production equipment (audio, lighting, staging)
-- Marketing materials (printing, graphics, banners)
-- Services (catering, transport, security)
-- Design and creative assets
-- Logistics and support services
+FOCUS ON IDENTIFYING:
+- Production equipment (audio, lighting, staging, AV systems)
+- Marketing materials (printing, graphics, banners, signage, displays)
+- Services (catering, transport, security, cleaning, staffing)
+- Design and creative assets (decorations, floral, photography, videography)
+- Logistics and support services (registration, networking, seating, power)
+- Venue-specific requirements (rigging, power distribution, access, permits)
+- Entertainment and special effects (music, lighting effects, interactive elements)
 
-Be specific and practical in your asset identification.
+Be specific and practical in your asset identification, considering the event type, scale, and venue requirements.
 `;
   }
 

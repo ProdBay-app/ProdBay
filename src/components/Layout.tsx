@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom';
-import { Building2, Users, Package, FileText, BarChart3, FolderOpen } from 'lucide-react';
+import { Users, Package, FileText, BarChart3 } from 'lucide-react';
 import Footer from './Footer';
 
 const Layout: React.FC = () => {
@@ -30,7 +30,6 @@ const Layout: React.FC = () => {
     if (isProducerPath) {
       return [
         { to: '/producer/dashboard', label: 'Dashboard', icon: BarChart3 },
-        { to: '/producer/projects', label: 'Projects', icon: FolderOpen },
         { to: '/producer/suppliers', label: 'Suppliers', icon: Users }
       ];
     }
@@ -57,7 +56,7 @@ const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <nav className={`${getNavColor()} text-white shadow-lg`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
@@ -99,7 +98,7 @@ const Layout: React.FC = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-8 px-4">
+      <main className="flex-1 max-w-7xl mx-auto py-8 px-4 w-full">
         <Outlet />
       </main>
 

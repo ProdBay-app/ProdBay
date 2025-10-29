@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, CheckCircle, Clock, Database, Cpu, FileText, Users, Zap, Target, Rocket } from 'lucide-react';
 
 interface ProjectCreationLoadingOverlayProps {
@@ -21,45 +21,21 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
   // Current step state (0-9)
   const [currentStep, setCurrentStep] = useState(0);
   
-  // Array of encouraging taglines to display during project creation
-  const taglines = [
-    "Crafting your project masterpiece...",
-    "Summoning the creative spirits...",
-    "Building something amazing...",
-    "Channeling our inner genius...",
-    "Creating magic in progress...",
-    "Assembling your dream project...",
-    "Brewing up something special...",
-    "Weaving project wonders...",
-    "Conjuring up excellence...",
-    "Engineering your success...",
-    "Sculpting your vision...",
-    "Orchestrating perfection...",
-    "Cultivating greatness...",
-    "Fashioning your future...",
-    "Molding possibilities..."
-  ];
 
   // 10 visual steps representing the project creation process
   const steps = [
-    { icon: Database, text: "Initializing project database", color: "text-blue-600" },
-    { icon: FileText, text: "Processing project brief", color: "text-purple-600" },
-    { icon: Cpu, text: "Running AI analysis", color: "text-indigo-600" },
-    { icon: Target, text: "Identifying key requirements", color: "text-pink-600" },
-    { icon: Users, text: "Analyzing supplier capabilities", color: "text-green-600" },
-    { icon: Zap, text: "Generating asset recommendations", color: "text-yellow-600" },
-    { icon: Clock, text: "Calculating timelines", color: "text-orange-600" },
-    { icon: Sparkles, text: "Optimizing resource allocation", color: "text-teal-600" },
-    { icon: Rocket, text: "Finalizing project setup", color: "text-red-600" },
-    { icon: CheckCircle, text: "Project creation complete!", color: "text-emerald-600" }
+    { icon: Database, text: "Initializing project database", color: "text-blue-600", borderColor: "border-blue-600" },
+    { icon: FileText, text: "Processing project brief", color: "text-purple-600", borderColor: "border-purple-600" },
+    { icon: Cpu, text: "Running AI analysis", color: "text-indigo-600", borderColor: "border-indigo-600" },
+    { icon: Target, text: "Identifying key requirements", color: "text-pink-600", borderColor: "border-pink-600" },
+    { icon: Users, text: "Analyzing supplier capabilities", color: "text-green-600", borderColor: "border-green-600" },
+    { icon: Zap, text: "Generating asset recommendations", color: "text-yellow-600", borderColor: "border-yellow-600" },
+    { icon: Clock, text: "Calculating timelines", color: "text-orange-600", borderColor: "border-orange-600" },
+    { icon: Sparkles, text: "Optimizing resource allocation", color: "text-teal-600", borderColor: "border-teal-600" },
+    { icon: Rocket, text: "Finalizing project setup", color: "text-red-600", borderColor: "border-red-600" },
+    { icon: CheckCircle, text: "Project creation complete!", color: "text-emerald-600", borderColor: "border-emerald-600" }
   ];
 
-  // Randomly select a tagline using useMemo to avoid re-selection on every render
-  // This ensures the tagline stays consistent during the loading state
-  const selectedTagline = useMemo(() => {
-    const randomIndex = Math.floor(Math.random() * taglines.length);
-    return taglines[randomIndex];
-  }, []); // Empty dependency array ensures it only runs once
 
   // Step progression effect - advance every 5 seconds
   useEffect(() => {
@@ -105,7 +81,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
             <CurrentIcon className="w-10 h-10" />
           </div>
           {/* Pulsing ring around the icon */}
-          <div className={`absolute inset-0 rounded-full border-2 ${currentStepData.color.replace('text-', 'border-')} animate-ping opacity-20`}></div>
+          <div className={`absolute inset-0 rounded-full border-2 ${currentStepData.borderColor} animate-ping`} style={{ opacity: 0.3 }}></div>
         </div>
 
         {/* Step progress bar */}
@@ -127,23 +103,6 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
           <h3 className={`text-lg font-semibold ${currentStepData.color} mb-2`}>
             {currentStepData.text}
           </h3>
-          <p className="text-gray-600 text-sm leading-relaxed">
-            {selectedTagline}
-          </p>
-        </div>
-
-        {/* Step indicators */}
-        <div className="flex space-x-2">
-          {steps.map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index <= currentStep 
-                  ? 'bg-teal-500' 
-                  : 'bg-gray-300'
-              }`}
-            />
-          ))}
         </div>
 
         {/* Subtle instruction */}
