@@ -951,10 +951,10 @@ const ProjectDetailPage: React.FC = () => {
             
             {/* Asset Headers & Filters Section */}
             <div className="lg:col-span-2 h-full">
-              <div className="bg-orange-100 border border-orange-200 rounded-lg p-6 pb-4 h-full flex flex-col">
+              <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6 pb-4 h-full flex flex-col">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-2xl font-bold text-orange-800">Assets ({assets.length})</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">Assets ({assets.length})</h3>
                   </div>
                   
                   {/* Filters and Add Asset buttons moved here */}
