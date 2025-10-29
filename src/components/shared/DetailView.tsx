@@ -30,7 +30,7 @@ const DetailView: React.FC<DetailViewProps> = ({ title, children, isMobile = fal
     <motion.div 
       className={`bg-white rounded-lg shadow-sm border border-gray-200 ${
         isMobile ? 'p-4' : 'p-6'
-      } min-h-[600px]`}
+      } min-h-[400px]`}
       animate={{ opacity: 1 }}
       transition={prefersReducedMotion ? { duration: 0 } : { 
         duration: 0.2,
