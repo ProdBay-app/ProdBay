@@ -712,7 +712,7 @@ const ProjectDetailPage: React.FC = () => {
         >
           <AnimatePresence mode="wait">
           {activeSection === 'Overview' && (
-            <DetailView title="Overview" isMobile={isMobile}>
+            <DetailView title="Overview" isMobile={isMobile} prefersReducedMotion={true}>
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
             variants={containerVariants}
@@ -795,7 +795,7 @@ const ProjectDetailPage: React.FC = () => {
           )}
 
           {activeSection === 'Budget' && (
-            <DetailView title="Budget Tracking" isMobile={isMobile}>
+            <DetailView title="Budget Tracking" isMobile={isMobile} prefersReducedMotion={true}>
               {!loadingTracking && trackingSummary ? (
                 <div className="space-y-6">
             <BudgetTrackingBar
@@ -816,7 +816,7 @@ const ProjectDetailPage: React.FC = () => {
           )}
 
           {activeSection === 'Timeline' && (
-            <DetailView title="Project Timeline" isMobile={isMobile}>
+            <DetailView title="Project Timeline" isMobile={isMobile} prefersReducedMotion={true}>
               {!loadingTracking && trackingSummary ? (
             <TimelineWidget
               deadline={trackingSummary.timeline.deadline}
@@ -836,7 +836,7 @@ const ProjectDetailPage: React.FC = () => {
           )}
 
           {activeSection === 'Actions' && (
-            <DetailView title="Action Items" isMobile={isMobile}>
+            <DetailView title="Action Items" isMobile={isMobile} prefersReducedMotion={true}>
               {!loadingTracking && trackingSummary ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ActionCounter
