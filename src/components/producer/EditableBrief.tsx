@@ -513,7 +513,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
             </div>
 
             {/* Right side controls */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {/* Download PDF Button */}
               <Button
                 onClick={handleDownloadPdf}
