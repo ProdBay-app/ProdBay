@@ -70,22 +70,19 @@ const ProjectDetailPage: React.FC = () => {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  // Animation variants for staggered content animations
+  // Animation variants for staggered content animations - disabled for expanded sections
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 1 },
     visible: {
       opacity: 1,
-      transition: prefersReducedMotion ? { duration: 0 } : {
-        staggerChildren: 0.1,
-        delayChildren: 0.1
-      }
+      transition: { duration: 0 }
     }
   };
 
   const itemVariants = {
     hidden: {
-      opacity: 0,
-      y: prefersReducedMotion ? 0 : 20
+      opacity: 1,
+      y: 0
     },
     visible: {
       opacity: 1,
@@ -703,169 +700,190 @@ const ProjectDetailPage: React.FC = () => {
           </div>
         )}
 
-        {/* Detail View Area */}
+        {/* Detail View Area - Unified expanded block container */}
         <div
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           className="touch-pan-y"
         >
-          <AnimatePresence mode="wait">
-          {activeSection === 'Overview' && (
-            <DetailView title="Overview" isMobile={isMobile}>
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {/* Client Name */}
-            <motion.div 
-              className="flex items-start gap-3"
-              variants={itemVariants}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            >
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <User className="w-5 h-5 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Client</p>
-                <button
-                  onClick={() => setIsClientModalOpen(true)}
-                  className="text-lg font-semibold text-teal-600 hover:text-teal-700 hover:underline transition-colors text-left"
-                  title={`View all projects for ${project.client_name}`}
+          {/* Single DetailView container - always rendered for consistent sizing */}
+          <DetailView isMobile={isMobile} prefersReducedMotion={true}>
+            <AnimatePresence mode="wait">
+              {activeSection === 'Overview' && (
+                <motion.div 
+                  key="overview"
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="hidden"
                 >
-                  {project.client_name}
-                </button>
-              </div>
-            </motion.div>
+                  {/* Client Name */}
+                  <motion.div 
+                    className="flex items-start gap-3"
+                    variants={itemVariants}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <User className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600 mb-1">Client</p>
+                      <button
+                        onClick={() => setIsClientModalOpen(true)}
+                        className="text-lg font-semibold text-teal-600 hover:text-teal-700 hover:underline transition-colors text-left"
+                        title={`View all projects for ${project.client_name}`}
+                      >
+                        {project.client_name}
+                      </button>
+                    </div>
+                  </motion.div>
 
-            {/* Budget */}
-            <motion.div 
-              className="flex items-start gap-3"
-              variants={itemVariants}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            >
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="w-5 h-5 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Budget</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatCurrency(project.financial_parameters ?? 0)}
-                </p>
-              </div>
-            </motion.div>
+                  {/* Budget */}
+                  <motion.div 
+                    className="flex items-start gap-3"
+                    variants={itemVariants}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <DollarSign className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600 mb-1">Budget</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formatCurrency(project.financial_parameters ?? 0)}
+                      </p>
+                    </div>
+                  </motion.div>
 
-            {/* Deadline */}
-            <motion.div 
-              className="flex items-start gap-3"
-              variants={itemVariants}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            >
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Deadline</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatDate(project.timeline_deadline ?? null)}
-                </p>
-              </div>
-            </motion.div>
+                  {/* Deadline */}
+                  <motion.div 
+                    className="flex items-start gap-3"
+                    variants={itemVariants}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Calendar className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600 mb-1">Deadline</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formatDate(project.timeline_deadline ?? null)}
+                      </p>
+                    </div>
+                  </motion.div>
 
-            {/* Created Date */}
-            <motion.div 
-              className="flex items-start gap-3"
-              variants={itemVariants}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            >
-              <div className="p-2 bg-gray-100 rounded-lg">
-                <Clock className="w-5 h-5 text-gray-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-600 mb-1">Created</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {formatDate(project.created_at)}
-                </p>
-              </div>
-            </motion.div>
-          </motion.div>
-            </DetailView>
-          )}
-
-          {activeSection === 'Budget' && (
-            <DetailView title="Budget Tracking" isMobile={isMobile}>
-              {!loadingTracking && trackingSummary ? (
-                <div className="space-y-6">
-            <BudgetTrackingBar
-              total={trackingSummary.budget.total}
-              spent={trackingSummary.budget.spent}
-              remaining={trackingSummary.budget.remaining}
-              percentageUsed={trackingSummary.budget.percentageUsed}
-              onClick={() => setIsBudgetModalOpen(true)}
-            />
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading budget information...</p>
-                </div>
+                  {/* Created Date */}
+                  <motion.div 
+                    className="flex items-start gap-3"
+                    variants={itemVariants}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <div className="p-2 bg-gray-100 rounded-lg">
+                      <Clock className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600 mb-1">Created</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formatDate(project.created_at)}
+                      </p>
+                    </div>
+                  </motion.div>
+                </motion.div>
               )}
-            </DetailView>
-          )}
 
-          {activeSection === 'Timeline' && (
-            <DetailView title="Project Timeline" isMobile={isMobile}>
-              {!loadingTracking && trackingSummary ? (
-            <TimelineWidget
-              deadline={trackingSummary.timeline.deadline}
-              daysRemaining={trackingSummary.timeline.daysRemaining}
-              milestones={trackingSummary.timeline.milestones}
-              onAddMilestone={handleAddMilestoneClick}
-              onEditMilestone={handleEditMilestoneClick}
-              onDeleteMilestone={handleDeleteMilestoneClick}
-            />
-              ) : (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading timeline information...</p>
-                </div>
+              {activeSection === 'Budget' && (
+                <motion.div
+                  key="budget"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  {!loadingTracking && trackingSummary ? (
+                    <div className="space-y-6">
+                      <BudgetTrackingBar
+                        total={trackingSummary.budget.total}
+                        spent={trackingSummary.budget.spent}
+                        remaining={trackingSummary.budget.remaining}
+                        percentageUsed={trackingSummary.budget.percentageUsed}
+                        onClick={() => setIsBudgetModalOpen(true)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading budget information...</p>
+                    </div>
+                  )}
+                </motion.div>
               )}
-            </DetailView>
-          )}
 
-          {activeSection === 'Actions' && (
-            <DetailView title="Action Items" isMobile={isMobile}>
-              {!loadingTracking && trackingSummary ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ActionCounter
-                label="Your Actions"
-                count={trackingSummary.actions.producerActions}
-                icon={CheckSquare}
-                iconColor="text-blue-600"
-                bgColor="bg-blue-100"
-                description="Tasks requiring your attention"
-              />
-              
-              <ActionCounter
-                label="Their Actions"
-                count={trackingSummary.actions.supplierActions}
-                icon={UsersIcon}
-                iconColor="text-purple-600"
-                bgColor="bg-purple-100"
-                description="Pending supplier responses"
-              />
-            </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading action items...</p>
-          </div>
-        )}
-            </DetailView>
-          )}
-          </AnimatePresence>
+              {activeSection === 'Timeline' && (
+                <motion.div
+                  key="timeline"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  {!loadingTracking && trackingSummary ? (
+                    <TimelineWidget
+                      deadline={trackingSummary.timeline.deadline}
+                      daysRemaining={trackingSummary.timeline.daysRemaining}
+                      milestones={trackingSummary.timeline.milestones}
+                      onAddMilestone={handleAddMilestoneClick}
+                      onEditMilestone={handleEditMilestoneClick}
+                      onDeleteMilestone={handleDeleteMilestoneClick}
+                    />
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading timeline information...</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {activeSection === 'Actions' && (
+                <motion.div
+                  key="actions"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  {!loadingTracking && trackingSummary ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <ActionCounter
+                        label="Your Actions"
+                        count={trackingSummary.actions.producerActions}
+                        icon={CheckSquare}
+                        iconColor="text-blue-600"
+                        bgColor="bg-blue-100"
+                        description="Tasks requiring your attention"
+                      />
+                      
+                      <ActionCounter
+                        label="Their Actions"
+                        count={trackingSummary.actions.supplierActions}
+                        icon={UsersIcon}
+                        iconColor="text-purple-600"
+                        bgColor="bg-purple-100"
+                        description="Pending supplier responses"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading action items...</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </DetailView>
         </div>
 
         {/* Assets and Brief Section - Keep existing functionality */}

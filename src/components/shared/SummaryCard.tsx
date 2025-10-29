@@ -41,53 +41,97 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   prefersReducedMotion = false
 }) => {
   return (
-    <motion.div
-      className={`rounded-lg shadow-sm border cursor-pointer transition-all duration-200 ${
-        isMobile 
-          ? 'p-3 min-h-[60px] touch-manipulation' 
-          : 'p-4 hover:shadow-md'
-      } ${
-        isActive 
-          ? 'bg-teal-50 border-teal-200 shadow-md' 
-          : 'bg-white border-gray-200 hover:border-gray-300'
-      }`}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      whileHover={!isMobile && !prefersReducedMotion ? { 
-        scale: 1.03,
-        transition: { duration: 0.2, ease: "easeOut" }
-      } : {}}
-      whileTap={!prefersReducedMotion ? { 
-        scale: isMobile ? 0.95 : 0.98,
-        transition: { duration: 0.1, ease: "easeInOut" }
-      } : {}}
-      transition={prefersReducedMotion ? { duration: 0 } : {
-        duration: 0.2,
-        ease: "easeOut"
+    <div 
+      className="relative w-full h-full"
+      style={{ 
+        transformStyle: 'preserve-3d',
+        perspective: '1000px'
       }}
     >
-      <h3 className={`font-semibold mb-2 ${
-        isMobile 
-          ? 'text-base mb-1' 
-          : 'text-lg mb-2'
-      } ${
-        isActive ? 'text-teal-700' : 'text-gray-900'
-      }`}>
-        {title}
-      </h3>
-      <div className={`text-gray-600 ${
-        isMobile ? 'text-xs space-y-1' : 'text-sm'
-      }`}>
-        {children}
-      </div>
-    </motion.div>
+      <motion.div
+        className={`rounded-lg shadow-sm border cursor-pointer w-full h-full ${
+          isMobile 
+            ? 'p-3 min-h-[60px] touch-manipulation' 
+            : 'p-4 hover:shadow-md'
+        } ${
+          isActive 
+            ? 'bg-teal-50 border-teal-200 shadow-md' 
+            : 'bg-white border-gray-200 hover:border-gray-300'
+        }`}
+        onClick={onClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+        whileHover={!isMobile && !prefersReducedMotion ? { 
+          scale: 1.03,
+          transition: { duration: 0.2, ease: "easeOut" }
+        } : {}}
+        whileTap={!prefersReducedMotion ? { 
+          scale: isMobile ? 0.95 : 0.98,
+          transition: { duration: 0.1, ease: "easeInOut" }
+        } : {}}
+        animate={prefersReducedMotion ? {} : {
+          rotateX: isActive ? 180 : 0,
+          scale: isActive ? 1.05 : 1,
+        }}
+        transition={prefersReducedMotion ? { duration: 0 } : {
+          duration: 0.6,
+          ease: [0.4, 0.0, 0.2, 1] // Custom cubic-bezier for polished feel
+        }}
+        style={{ 
+          transformStyle: 'preserve-3d',
+          backfaceVisibility: 'hidden'
+        }}
+      >
+        {/* Front of card - Summary content */}
+        <div 
+          className="w-full h-full"
+          style={{
+            backfaceVisibility: 'hidden',
+            transform: 'rotateX(0deg)'
+          }}
+        >
+          <h3 className={`font-semibold mb-2 ${
+            isMobile 
+              ? 'text-base mb-1' 
+              : 'text-lg mb-2'
+          } text-gray-900`}>
+            {title}
+          </h3>
+          <div className={`text-gray-600 ${
+            isMobile ? 'text-xs space-y-1' : 'text-sm'
+          }`}>
+            {children}
+          </div>
+        </div>
+
+        {/* Back of card - Prominent header */}
+        <div 
+          className="w-full h-full flex items-center justify-center absolute inset-0"
+          style={{
+            backfaceVisibility: 'hidden',
+            transform: 'rotateX(180deg)',
+            background: 'rgba(240, 253, 250, 0.98)',
+            borderRadius: '0.5rem'
+          }}
+        >
+          <h3 
+            className={`font-bold text-center ${
+              isMobile 
+                ? 'text-2xl' 
+                : 'text-4xl'
+            } text-teal-700`}
+          >
+            {title}
+          </h3>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 
