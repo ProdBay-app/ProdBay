@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Package, AlertCircle, Search, ArrowUpDown, X } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
@@ -70,9 +70,7 @@ const AssetList: React.FC<AssetListProps> = ({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   // showFilters is now passed as a prop
 
-  // Scroll indicator state
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  // Scroll container ref for measuring
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Debug: Log sorting changes
@@ -81,31 +79,7 @@ const AssetList: React.FC<AssetListProps> = ({
   }, [sortBy, sortOrder]);
 
   // Check if content can scroll horizontally
-  const checkScrollability = useCallback(() => {
-    if (!scrollContainerRef.current) return;
-    
-    const container = scrollContainerRef.current;
-    const canScroll = container.scrollWidth > container.clientWidth;
-    const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
-    
-    setCanScrollRight(canScroll && !isAtEnd);
-    // Only show scroll indicator when brief is expanded AND content overflows
-    setShowScrollIndicator(isBriefExpanded && canScroll);
-  }, [isBriefExpanded]);
-
-  // Check scrollability when assets change or brief expansion state changes
-  useEffect(() => {
-    checkScrollability();
-  }, [assets, isBriefExpanded, checkScrollability]);
-
-  // Handle scroll events to update indicators
-  const handleScroll = useCallback(() => {
-    if (!scrollContainerRef.current) return;
-    
-    const container = scrollContainerRef.current;
-    const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
-    setCanScrollRight(!isAtEnd);
-  }, []);
+  // Scroll functionality removed - no longer needed
 
   // Define the status order for Kanban columns (workflow order)
   const statusOrder: AssetStatus[] = [
@@ -608,7 +582,6 @@ const AssetList: React.FC<AssetListProps> = ({
               ? 'overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100' 
               : 'overflow-x-visible'
           }`}
-          onScroll={handleScroll}
         >
           <div className={`flex gap-4 ${isBriefExpanded ? 'min-w-max' : 'justify-start'}`}>
           {/* Render each status column */}
@@ -650,20 +623,7 @@ const AssetList: React.FC<AssetListProps> = ({
           </div>
         </div>
         
-        {/* Visual Scroll Indicator - Right Edge Gradient */}
-        {showScrollIndicator && canScrollRight && (
-          <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 flex items-center justify-center">
-            <div className="w-1 h-8 bg-gradient-to-b from-purple-400 to-purple-600 rounded-full opacity-60 animate-pulse"></div>
-          </div>
-        )}
       </div>
-
-      {/* Scroll hint for users (only show when brief is expanded and content overflows) */}
-      {isBriefExpanded && showScrollIndicator && (
-        <div className="mt-4 text-center text-sm text-purple-600 font-medium">
-          ← Scroll to view all asset columns (brief panel expanded) →
-        </div>
-      )}
 
       {/* Add Asset Modal */}
       <AssetFormModal
