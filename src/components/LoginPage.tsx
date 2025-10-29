@@ -8,6 +8,7 @@ import {
   Users,
   Shield
 } from 'lucide-react';
+import Footer from './Footer';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -185,6 +186,8 @@ const LoginPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };
