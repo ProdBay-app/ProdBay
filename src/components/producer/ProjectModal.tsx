@@ -113,16 +113,20 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6">
-        <div className="mb-4">
-          <h3 className="text-xl font-semibold">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col">
+        {/* Modal Header - Fixed */}
+        <div className="p-4 sm:p-6 pb-4 border-b border-gray-200 flex-shrink-0">
+          <h3 className="text-lg sm:text-xl font-semibold">
             {isEditing ? 'Edit Project' : 'Create New Project'}
           </h3>
           <p className="text-gray-600 text-sm">
             {isEditing ? 'Update project details and save changes.' : 'Upload your project brief to get started.'}
           </p>
         </div>
+
+        {/* Modal Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
 
         {/* Step Indicator - only show for new projects */}
         {!isEditing && <StepIndicator />}
@@ -563,78 +567,88 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             )}
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4 border-t">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
         </form>
         )}
 
-        {/* Step-based Action Buttons for New Projects */}
-        {!isEditing && (
-          <div className="flex justify-between pt-4 border-t">
-            {currentStep === 'step1' ? (
-              <>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  disabled={isAnalyzingBrief || !projectForm.brief_description || projectForm.brief_description.trim().length === 0}
-                  className="flex items-center gap-2 px-6 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isAnalyzingBrief ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      Next
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={handlePreviousStep}
-                  className="flex items-center gap-2 px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={onSubmit}
-                  disabled={isSubmitting}
-                  className="px-6 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Creating...' : 'Create Project'}
-                </button>
-              </>
-            )}
-          </div>
-        )}
+        </div>
+
+        {/* Modal Footer - Fixed */}
+        <div className="flex-shrink-0 border-t border-gray-200 p-4 sm:p-6">
+          {/* Edit Mode Buttons */}
+          {isEditing && (
+            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full sm:w-auto px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={onSubmit}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          )}
+
+          {/* Step-based Action Buttons for New Projects */}
+          {!isEditing && (
+            <div className="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0">
+              {currentStep === 'step1' ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-full sm:w-auto px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    disabled={isAnalyzingBrief || !projectForm.brief_description || projectForm.brief_description.trim().length === 0}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isAnalyzingBrief ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        Next
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePreviousStep}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onSubmit}
+                    disabled={isSubmitting}
+                    className="w-full sm:w-auto px-6 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Creating...' : 'Create Project'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
