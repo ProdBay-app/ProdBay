@@ -352,9 +352,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               </Step>
             </Stepper>
           ) : (
-
-            {/* Edit Mode - Show original form */}
-            <form onSubmit={onSubmit} className="space-y-5">
+            <>
+              {/* Edit Mode - Show original form */}
+              <form onSubmit={onSubmit} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
@@ -582,7 +582,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             )}
           </div>
 
-            </form>
+              </form>
+            </>
           )}
         </div>
 
