@@ -290,8 +290,12 @@ const Home: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* CTA Section */}
+        {/* CTA Section */}
+        <div className="relative z-10 py-12 sm:py-16">
+          <div className="max-w-7xl mx-auto px-4">
             <div className="text-center px-2">
               <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4 drop-shadow-lg">
                 Ready to streamline your production process?

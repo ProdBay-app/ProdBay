@@ -9,7 +9,7 @@ const Footer: React.FC<FooterProps> = ({ transparent = false }) => {
 
   return (
     <footer className={transparent 
-      ? "bg-transparent backdrop-blur-sm border-t border-white/20" 
+      ? "bg-transparent backdrop-blur-sm shadow-sm border-t border-white/20" 
       : "bg-white border-t border-gray-200"
     }>
       <div className="max-w-7xl mx-auto px-4 py-6">
