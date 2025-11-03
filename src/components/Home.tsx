@@ -36,15 +36,15 @@ const Home: React.FC = () => {
       {/* Content Layer */}
       <div className="relative z-10">
         {/* Header */}
-        <div className="bg-white/90 backdrop-blur-sm shadow-sm">
+        <div className="bg-transparent backdrop-blur-sm shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div 
               className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={handleLogoClick}
               title="Go to Home"
             >
-              <Package className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">ProdBay</h1>
+              <Package className="h-8 w-8 text-blue-300 drop-shadow-lg" />
+              <h1 className="text-2xl font-bold text-white drop-shadow-lg">ProdBay</h1>
             </div>
           </div>
         </div>
@@ -276,7 +276,7 @@ const Home: React.FC = () => {
         </div>
       </div>
       
-      <Footer />
+      <Footer transparent={true} />
       </div>
     </div>
   );
