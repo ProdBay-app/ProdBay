@@ -57,7 +57,7 @@ const Home: React.FC = () => {
             Production Management{' '}
             <RotatingText
               texts={['Simplified', 'Automated', 'Optimized', 'Coordinated']}
-              mainClassName="px-1 text-white overflow-hidden py-0 rounded-lg inline-block"
+              mainClassName="px-2 text-white overflow-hidden py-0.5 rounded-lg inline-block"
               style={{ backgroundColor: '#0d9488' }}
               staggerFrom={"last"}
               initial={{ y: "100%" }}
@@ -65,7 +65,7 @@ const Home: React.FC = () => {
               exit={{ y: "-120%" }}
               staggerDuration={0.025}
               splitLevelClassName="overflow-hidden pb-0"
-              transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              transition={{ type: "spring", damping: 30, stiffness: 400, layout: { type: "spring", damping: 30, stiffness: 400 } }}
               rotationInterval={2000}
             />
           </h2>
