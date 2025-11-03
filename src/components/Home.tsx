@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Footer from './Footer';
 import DarkVeil from './DarkVeil';
+import RotatingText from './RotatingText';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -53,8 +54,19 @@ const Home: React.FC = () => {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h2 className="text-5xl font-bold text-white mb-6 drop-shadow-lg">
-            Production Management
-            <span className="text-blue-300"> Simplified</span>
+            Production Management{' '}
+            <RotatingText
+              texts={['Simplified', 'Automated', 'Optimized', 'Coordinated']}
+              mainClassName="px-2 sm:px-2 md:px-3 bg-purple-900 text-white overflow-hidden py-0.5 sm:py-1 md:py-2 justify-center rounded-lg inline-block"
+              staggerFrom={"last"}
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "-120%" }}
+              staggerDuration={0.025}
+              splitLevelClassName="overflow-hidden pb-0.5 sm:pb-1 md:pb-1"
+              transition={{ type: "spring", damping: 30, stiffness: 400 }}
+              rotationInterval={2000}
+            />
           </h2>
           <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto drop-shadow-md">
             Streamline your production workflow from initial brief to final delivery. 
