@@ -41,12 +41,12 @@ const Home: React.FC = () => {
         <div className="sticky top-0 bg-transparent backdrop-blur-sm shadow-sm z-50">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div 
-              className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center space-x-2 sm:space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={handleLogoClick}
               title="Go to Home"
             >
-              <Package className="h-8 w-8 text-blue-300 drop-shadow-lg" />
-              <h1 className="text-2xl font-bold text-white drop-shadow-lg">ProdBay</h1>
+              <Package className="h-6 w-6 sm:h-8 sm:w-8 text-blue-300 drop-shadow-lg" />
+              <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">ProdBay</h1>
             </div>
           </div>
         </div>
@@ -54,7 +54,7 @@ const Home: React.FC = () => {
         {/* Hero Section - 95% of viewport */}
         <div className="h-[95vh] flex items-center justify-center relative">
           <div className="text-center max-w-7xl mx-auto px-4">
-            <h2 className="text-5xl font-bold text-white mb-6 drop-shadow-lg">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 drop-shadow-lg">
               Production Management{' '}
               <RotatingText
                 texts={['Simplified', 'Automated', 'Optimized', 'Coordinated']}
@@ -70,7 +70,7 @@ const Home: React.FC = () => {
                 rotationInterval={2000}
               />
             </h2>
-            <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto drop-shadow-md">
+            <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-3xl mx-auto drop-shadow-md px-2">
               Streamline your production workflow from initial brief to final delivery. 
               Connect clients, producers, and suppliers in one comprehensive platform.
             </p>
@@ -93,9 +93,9 @@ const Home: React.FC = () => {
           >
             <ScrollStackItem itemClassName="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
               <div className="flex flex-col items-center justify-center h-full">
-                <FileText className="h-16 w-16 text-blue-600 mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Smart Brief Parsing</h3>
-                <p className="text-gray-700 text-center text-lg">
+                <FileText className="h-12 w-12 sm:h-16 sm:w-16 text-blue-600 mb-3 sm:mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Smart Brief Parsing</h3>
+                <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
                   Automatically identify required assets from project descriptions with intelligent parsing
                 </p>
               </div>
@@ -103,9 +103,9 @@ const Home: React.FC = () => {
 
             <ScrollStackItem itemClassName="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200">
               <div className="flex flex-col items-center justify-center h-full">
-                <Users className="h-16 w-16 text-teal-600 mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Supplier Network</h3>
-                <p className="text-gray-700 text-center text-lg">
+                <Users className="h-12 w-12 sm:h-16 sm:w-16 text-teal-600 mb-3 sm:mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Supplier Network</h3>
+                <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
                   Intelligent matching with relevant suppliers based on requirements and capabilities
                 </p>
               </div>
@@ -113,9 +113,9 @@ const Home: React.FC = () => {
 
             <ScrollStackItem itemClassName="bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
               <div className="flex flex-col items-center justify-center h-full">
-                <DollarSign className="h-16 w-16 text-green-600 mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Quote Management</h3>
-                <p className="text-gray-700 text-center text-lg">
+                <DollarSign className="h-12 w-12 sm:h-16 sm:w-16 text-green-600 mb-3 sm:mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Quote Management</h3>
+                <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
                   Streamlined quote collection and comparison process for efficient decision making
                 </p>
               </div>
@@ -123,9 +123,9 @@ const Home: React.FC = () => {
 
             <ScrollStackItem itemClassName="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200">
               <div className="flex flex-col items-center justify-center h-full">
-                <Clock className="h-16 w-16 text-orange-600 mb-4" />
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Real-time Tracking</h3>
-                <p className="text-gray-700 text-center text-lg">
+                <Clock className="h-12 w-12 sm:h-16 sm:w-16 text-orange-600 mb-3 sm:mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Real-time Tracking</h3>
+                <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
                   Monitor project progress and status updates in real-time with comprehensive dashboards
                 </p>
               </div>
@@ -134,17 +134,17 @@ const Home: React.FC = () => {
         </div>
 
         {/* User Portals Section */}
-        <div className="relative z-10 bg-gradient-to-b from-transparent via-purple-900/20 to-purple-900/40 pt-8 pb-20">
+        <div className="relative z-10 bg-gradient-to-b from-transparent via-purple-900/20 to-purple-900/40 pt-4 sm:pt-8 pb-12 sm:pb-20">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-16">
               {/* Client Portal */}
               <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
-                <div className="bg-blue-600 text-white p-6">
-                  <Package className="h-12 w-12 mb-4" />
-                  <h3 className="text-2xl font-bold">Client Portal</h3>
-                  <p className="opacity-90 mt-2">Manage your projects</p>
+                <div className="bg-blue-600 text-white p-4 sm:p-6">
+                  <Package className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
+                  <h3 className="text-xl sm:text-2xl font-bold">Client Portal</h3>
+                  <p className="opacity-90 mt-2 text-sm sm:text-base">Manage your projects</p>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <ul className="space-y-3 mb-6">
                     <li className="flex items-center space-x-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -173,12 +173,12 @@ const Home: React.FC = () => {
               </div>
               {/* Producer Portal */}
               <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
-                <div className="bg-teal-600 text-white p-6">
-                  <Package className="h-12 w-12 mb-4" />
-                  <h3 className="text-2xl font-bold">Producer Portal</h3>
-                  <p className="opacity-90 mt-2">Manage projects and suppliers</p>
+                <div className="bg-teal-600 text-white p-4 sm:p-6">
+                  <Package className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
+                  <h3 className="text-xl sm:text-2xl font-bold">Producer Portal</h3>
+                  <p className="opacity-90 mt-2 text-sm sm:text-base">Manage projects and suppliers</p>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <ul className="space-y-3 mb-6">
                     <li className="flex items-center space-x-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -208,12 +208,12 @@ const Home: React.FC = () => {
 
               {/* Supplier Portal */}
               <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
-                <div className="bg-orange-600 text-white p-6">
-                  <Users className="h-12 w-12 mb-4" />
-                  <h3 className="text-2xl font-bold">Supplier Portal</h3>
-                  <p className="opacity-90 mt-2">Receive and submit quotes</p>
+                <div className="bg-orange-600 text-white p-4 sm:p-6">
+                  <Users className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
+                  <h3 className="text-xl sm:text-2xl font-bold">Supplier Portal</h3>
+                  <p className="opacity-90 mt-2 text-sm sm:text-base">Receive and submit quotes</p>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <ul className="space-y-3 mb-6">
                     <li className="flex items-center space-x-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -243,48 +243,48 @@ const Home: React.FC = () => {
             </div>
 
             {/* Workflow Section */}
-            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-8 mb-16">
-              <h3 className="text-2xl font-bold text-center text-gray-900 mb-8">
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-16">
+              <h3 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-6 sm:mb-8">
                 Automated Production Workflow
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                 <div className="text-center">
-                  <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-blue-600">1</span>
+                  <div className="bg-blue-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-xl sm:text-2xl font-bold text-blue-600">1</span>
                   </div>
-                  <h4 className="font-semibold mb-2">Brief Submission</h4>
-                  <p className="text-gray-600 text-sm">
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Brief Submission</h4>
+                  <p className="text-gray-600 text-xs sm:text-sm">
                     Client submits project brief with requirements and parameters
                   </p>
                 </div>
 
                 <div className="text-center">
-                  <div className="bg-teal-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-teal-600">2</span>
+                  <div className="bg-teal-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-xl sm:text-2xl font-bold text-teal-600">2</span>
                   </div>
-                  <h4 className="font-semibold mb-2">Auto Processing</h4>
-                  <p className="text-gray-600 text-sm">
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Auto Processing</h4>
+                  <p className="text-gray-600 text-xs sm:text-sm">
                     System parses brief and automatically creates required assets
                   </p>
                 </div>
 
                 <div className="text-center">
-                  <div className="bg-orange-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-orange-600">3</span>
+                  <div className="bg-orange-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-xl sm:text-2xl font-bold text-orange-600">3</span>
                   </div>
-                  <h4 className="font-semibold mb-2">Supplier Matching</h4>
-                  <p className="text-gray-600 text-sm">
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Supplier Matching</h4>
+                  <p className="text-gray-600 text-xs sm:text-sm">
                     Relevant suppliers automatically receive quote requests via email
                   </p>
                 </div>
 
                 <div className="text-center">
-                  <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-green-600">4</span>
+                  <div className="bg-green-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-xl sm:text-2xl font-bold text-green-600">4</span>
                   </div>
-                  <h4 className="font-semibold mb-2">Quote Management</h4>
-                  <p className="text-gray-600 text-sm">
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Quote Management</h4>
+                  <p className="text-gray-600 text-xs sm:text-sm">
                     Producer reviews quotes and manages project through to completion
                   </p>
                 </div>
@@ -292,23 +292,23 @@ const Home: React.FC = () => {
             </div>
 
             {/* CTA Section */}
-            <div className="text-center">
-              <h3 className="text-3xl font-bold text-white mb-4 drop-shadow-lg">
+            <div className="text-center px-2">
+              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4 drop-shadow-lg">
                 Ready to streamline your production process?
               </h3>
-              <p className="text-lg text-white/90 mb-8 drop-shadow-md">
+              <p className="text-base sm:text-lg text-white/90 mb-6 sm:mb-8 drop-shadow-md">
                 Get started with ProdBay and transform your production workflow today
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/login"
-                  className="px-8 py-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-lg shadow-lg hover:shadow-xl"
+                  className="px-6 py-3 sm:px-8 sm:py-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl"
                 >
                   Get Started
-                  <ArrowRight className="h-5 w-5 inline ml-2" />
+                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
                 </Link>
               </div>
-              <p className="text-sm text-white/80 mt-4 drop-shadow-sm">
+              <p className="text-xs sm:text-sm text-white/80 mt-4 drop-shadow-sm">
                 Secure login required to access your personalized dashboard
               </p>
             </div>

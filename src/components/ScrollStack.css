@@ -17,6 +17,13 @@
   min-height: 100vh;
 }
 
+@media (max-width: 768px) {
+  .scroll-stack-inner {
+    padding: 15vh 1rem 10rem;
+    min-height: auto;
+  }
+}
+
 /* Optimizations for window scroll */
 .scroll-stack-scroller.use-window-scroll {
   overflow: visible;
@@ -43,6 +50,16 @@
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   position: relative;
+}
+
+@media (max-width: 768px) {
+  .scroll-stack-card {
+    height: auto;
+    min-height: 16rem;
+    margin: 20px 0;
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+  }
 }
 
 .scroll-stack-end {
