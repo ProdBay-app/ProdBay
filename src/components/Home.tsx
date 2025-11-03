@@ -134,7 +134,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* User Portals Section */}
-        <div className="relative z-10 bg-gradient-to-b from-transparent via-purple-900/20 to-purple-900/40 pt-4 sm:pt-8 pb-12 sm:pb-20">
+        <div className="relative z-10 pt-4 sm:pt-8 pb-12 sm:pb-20">
           <div className="max-w-7xl mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-16">
               {/* Client Portal */}
@@ -241,8 +241,12 @@ const Home: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Workflow Section */}
+        {/* Workflow Section */}
+        <div className="relative z-10 py-12 sm:py-16">
+          <div className="max-w-7xl mx-auto px-4">
             <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-16">
               <h3 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-6 sm:mb-8">
                 Automated Production Workflow
