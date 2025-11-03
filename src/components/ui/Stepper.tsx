@@ -1,5 +1,6 @@
 import React, { useState, Children, useRef, useLayoutEffect, HTMLAttributes, ReactNode } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import './Stepper.css';
 
 interface StepperProps extends HTMLAttributes<HTMLDivElement> {
@@ -134,7 +135,14 @@ export default function Stepper({
                 </button>
               )}
               <button onClick={isLastStep ? handleComplete : handleNext} className="next-button" {...nextButtonProps}>
-                {isLastStep ? completeButtonText : nextButtonText}
+                {isLastStep ? (
+                  completeButtonText
+                ) : (
+                  <>
+                    {nextButtonText}
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -244,9 +252,9 @@ function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }
     <motion.div onClick={handleClick} className="step-indicator" animate={status} initial={false}>
       <motion.div
         variants={{
-          inactive: { scale: 1, backgroundColor: '#222', color: '#a3a3a3' },
-          active: { scale: 1, backgroundColor: '#5227FF', color: '#5227FF' },
-          complete: { scale: 1, backgroundColor: '#5227FF', color: '#3b82f6' }
+          inactive: { scale: 1, backgroundColor: '#E5E7EB', color: '#6B7280' },
+          active: { scale: 1, backgroundColor: '#0d9488', color: '#ffffff' },
+          complete: { scale: 1, backgroundColor: '#0d9488', color: '#ffffff' }
         }}
         transition={{ duration: 0.3 }}
         className="step-indicator-inner"
@@ -270,7 +278,7 @@ interface StepConnectorProps {
 function StepConnector({ isComplete }: StepConnectorProps) {
   const lineVariants: Variants = {
     incomplete: { width: 0, backgroundColor: 'transparent' },
-    complete: { width: '100%', backgroundColor: '#5227FF' }
+    complete: { width: '100%', backgroundColor: '#0d9488' }
   };
 
   return (
