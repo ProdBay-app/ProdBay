@@ -47,6 +47,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
   const animationFrameRef = useRef<number | null>(null);
   const lenisRef = useRef<Lenis | null>(null);
   const cardsRef = useRef<HTMLElement[]>([]);
+  const cardInitialTopsRef = useRef<Map<number, number>>(new Map());
   const lastTransformsRef = useRef(new Map<number, any>());
   const isUpdatingRef = useRef(false);
 
@@ -111,7 +112,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
     cardsRef.current.forEach((card, i) => {
       if (!card) return;
 
-      const cardTop = getElementOffset(card);
+      const cardTop = cardInitialTopsRef.current.get(i) || getElementOffset(card);
 
       const triggerStart = cardTop - stackPositionPx - itemStackDistance * i;
       const triggerEnd = cardTop - scaleEndPositionPx;
@@ -131,7 +132,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
       if (blurAmount) {
         let topCardIndex = 0;
         for (let j = 0; j < cardsRef.current.length; j++) {
-          const jCardTop = getElementOffset(cardsRef.current[j]);
+          const jCardTop = cardInitialTopsRef.current.get(j) || getElementOffset(cardsRef.current[j]);
           const jTriggerStart = jCardTop - stackPositionPx - itemStackDistance * j;
           if (scrollTop >= jTriggerStart) {
             topCardIndex = j;
@@ -284,7 +285,11 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
 
     const transformsCache = lastTransformsRef.current;
 
+    // Cache initial card positions
     cards.forEach((card, i) => {
+      const cardTop = getElementOffset(card);
+      cardInitialTopsRef.current.set(i, cardTop);
+
       if (i < cards.length - 1) {
         card.style.marginBottom = `${itemDistance}px`;
       }
@@ -312,6 +317,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
       stackCompletedRef.current = false;
       cardsRef.current = [];
       transformsCache.clear();
+      cardInitialTopsRef.current.clear();
       isUpdatingRef.current = false;
     };
   }, [
@@ -327,7 +333,8 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
     useWindowScroll,
     onStackComplete,
     setupLenis,
-    updateCardTransforms
+    updateCardTransforms,
+    getElementOffset
   ]);
 
   return (
