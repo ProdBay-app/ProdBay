@@ -134,7 +134,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* User Portals Section */}
-        <div className="relative z-10 bg-gradient-to-b from-transparent via-purple-900/20 to-purple-900/40 py-20">
+        <div className="relative z-10 bg-gradient-to-b from-transparent via-purple-900/20 to-purple-900/40 pt-8 pb-20">
           <div className="max-w-7xl mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
               {/* Client Portal */}
