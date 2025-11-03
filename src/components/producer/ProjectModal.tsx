@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, Loader2, CheckCircle, XCircle, Sparkles, Download, ArrowLeft, ArrowRight } from 'lucide-react';
 import type { ProjectFormData } from '@/services/producerService';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import Stepper, { Step } from '@/components/ui/Stepper';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -47,18 +48,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  // Step management for wizard flow
-  const [currentStep, setCurrentStep] = useState<'step1' | 'step2'>('step1');
-  
   // Handle Escape key to close modal
   useEscapeKey(isOpen, onClose, isSubmitting || isAnalyzingBrief);
-  
-  // Reset to step 1 when modal opens for new projects
-  React.useEffect(() => {
-    if (isOpen && !isEditing) {
-      setCurrentStep('step1');
-    }
-  }, [isOpen, isEditing]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target as HTMLInputElement;
@@ -67,19 +58,33 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     );
   };
 
-  // Step transition handlers
-  const handleNextStep = async () => {
-    if (currentStep === 'step1' && onAnalyzeBrief) {
-      // Trigger AI analysis and move to step 2
+  // Stepper step change handler - trigger AI analysis when moving to step 2
+  const handleStepChange = async (step: number) => {
+    if (step === 2 && onAnalyzeBrief) {
+      // Trigger AI analysis when entering step 2
       await onAnalyzeBrief();
-      setCurrentStep('step2');
     }
   };
 
-  const handlePreviousStep = () => {
-    if (currentStep === 'step2') {
-      setCurrentStep('step1');
-    }
+  // Handle final step completion - create the project
+  const handleFinalStepCompleted = () => {
+    // Create a synthetic form event for submission
+    const form = document.createElement('form');
+    const syntheticEvent = {
+      preventDefault: () => {},
+      stopPropagation: () => {},
+      currentTarget: form,
+      target: form,
+      bubbles: false,
+      cancelable: false,
+      defaultPrevented: false,
+      eventPhase: 0,
+      isTrusted: false,
+      nativeEvent: new Event('submit'),
+      timeStamp: Date.now(),
+      type: 'submit'
+    } as React.FormEvent;
+    onSubmit(syntheticEvent);
   };
 
   // Configure dropzone for PDF uploads
@@ -97,53 +102,58 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     disabled: isUploadingPdf || !onPdfUpload
   });
 
-  // Step indicator component
-  const StepIndicator = () => (
-    <div className="flex items-center justify-center mb-6">
-      <div className="flex items-center space-x-4">
-        <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-          currentStep === 'step1' ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-600'
-        }`}>
-          1
-        </div>
-        <div className={`w-12 h-0.5 ${currentStep === 'step2' ? 'bg-teal-600' : 'bg-gray-200'}`}></div>
-        <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-          currentStep === 'step2' ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-600'
-        }`}>
-          2
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 sm:p-4">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         {/* Modal Header - Fixed */}
-        <div className="p-4 sm:p-6 pb-4 border-b border-gray-200 flex-shrink-0">
-          <h3 className="text-lg sm:text-xl font-semibold">
-            {isEditing ? 'Edit Project' : 'Create New Project'}
-          </h3>
-          <p className="text-gray-600 text-sm">
-            {isEditing ? 'Update project details and save changes.' : 'Upload your project brief to get started.'}
-          </p>
+        <div className="p-4 sm:p-6 pb-4 border-b border-gray-200 flex-shrink-0 flex items-start justify-between">
+          <div>
+            <h3 className="text-lg sm:text-xl font-semibold">
+              {isEditing ? 'Edit Project' : 'Create New Project'}
+            </h3>
+            <p className="text-gray-600 text-sm">
+              {isEditing ? 'Update project details and save changes.' : 'Upload your project brief to get started.'}
+            </p>
+          </div>
+          {!isEditing && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Modal Content - Scrollable */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-
-        {/* Step Indicator - only show for new projects */}
-        {!isEditing && <StepIndicator />}
-
-        {/* Step 1: Upload Brief */}
-        {currentStep === 'step1' && !isEditing && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h4 className="text-lg font-medium text-gray-900 mb-2">Upload Your Project Brief</h4>
-              <p className="text-gray-600 text-sm">
-                Upload a PDF brief or enter your project details manually. Our AI will analyze the content to extract key information.
-              </p>
-            </div>
+          {!isEditing ? (
+            <Stepper
+              initialStep={1}
+              onStepChange={handleStepChange}
+              onFinalStepCompleted={handleFinalStepCompleted}
+              backButtonText="Previous"
+              nextButtonText="Next"
+              stepCircleContainerClassName="border-0 shadow-none"
+              contentClassName="min-h-[400px]"
+              nextButtonProps={{
+                disabled: isAnalyzingBrief || !projectForm.brief_description || projectForm.brief_description.trim().length === 0 || isSubmitting,
+                className: 'disabled:opacity-50 disabled:cursor-not-allowed'
+              }}
+              completeButtonText={isSubmitting ? 'Creating...' : 'Create Project'}
+            >
+              {/* Step 1: Upload Brief */}
+              <Step>
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">Upload Your Project Brief</h4>
+                    <p className="text-gray-600 text-sm">
+                      Upload a PDF brief or enter your project details manually. Our AI will analyze the content to extract key information.
+                    </p>
+                  </div>
 
             {/* PDF Upload Dropzone */}
             {onPdfUpload && (
@@ -211,33 +221,33 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               </div>
             )}
 
-            {/* Manual Brief Entry */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Or enter your project brief manually
-              </label>
-              <textarea
-                name="brief_description"
-                value={projectForm.brief_description}
-                onChange={handleInputChange}
-                required
-                rows={6}
-                placeholder="Describe your project requirements, goals, and specifications..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-        )}
+                  {/* Manual Brief Entry */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Or enter your project brief manually
+                    </label>
+                    <textarea
+                      name="brief_description"
+                      value={projectForm.brief_description}
+                      onChange={handleInputChange}
+                      required
+                      rows={6}
+                      placeholder="Describe your project requirements, goals, and specifications..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </Step>
 
-        {/* Step 2: Confirm Details & Create */}
-        {currentStep === 'step2' && !isEditing && (
-          <div className="space-y-5">
-            <div className="text-center mb-6">
-              <h4 className="text-lg font-medium text-gray-900 mb-2">Confirm Project Details</h4>
-              <p className="text-gray-600 text-sm">
-                Review the information extracted by AI and make any necessary adjustments before creating your project.
-              </p>
-            </div>
+              {/* Step 2: Confirm Details & Create */}
+              <Step>
+                <div className="space-y-5">
+                  <div className="text-center mb-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">Confirm Project Details</h4>
+                    <p className="text-gray-600 text-sm">
+                      Review the information extracted by AI and make any necessary adjustments before creating your project.
+                    </p>
+                  </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -327,23 +337,24 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               </div>
             </div>
 
-            {/* AI Allocation Notice for New Projects */}
-            <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-5 h-5 text-purple-600" />
-                <span className="text-sm font-medium text-purple-800">AI-Powered Asset Allocation</span>
-              </div>
-              <p className="text-sm text-purple-700">
-                This project will use AI-powered allocation to automatically identify and create assets based on your brief. 
-                The AI will analyze your requirements and generate detailed asset specifications with confidence scores.
-              </p>
-            </div>
-          </div>
-        )}
+                  {/* AI Allocation Notice for New Projects */}
+                  <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-5 h-5 text-purple-600" />
+                      <span className="text-sm font-medium text-purple-800">AI-Powered Asset Allocation</span>
+                    </div>
+                    <p className="text-sm text-purple-700">
+                      This project will use AI-powered allocation to automatically identify and create assets based on your brief. 
+                      The AI will analyze your requirements and generate detailed asset specifications with confidence scores.
+                    </p>
+                  </div>
+                </div>
+              </Step>
+            </Stepper>
+          ) : (
 
-        {/* Edit Mode - Show original form */}
-        {isEditing && (
-          <form onSubmit={onSubmit} className="space-y-5">
+            {/* Edit Mode - Show original form */}
+            <form onSubmit={onSubmit} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
@@ -571,15 +582,14 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             )}
           </div>
 
-        </form>
-        )}
-
+            </form>
+          )}
         </div>
 
         {/* Modal Footer - Fixed */}
-        <div className="flex-shrink-0 border-t border-gray-200 p-4 sm:p-6">
-          {/* Edit Mode Buttons */}
-          {isEditing && (
+        {/* Note: Stepper component handles its own footer buttons for new projects */}
+        {isEditing && (
+          <div className="flex-shrink-0 border-t border-gray-200 p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
               <button
                 type="button"
@@ -597,62 +607,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
-          )}
-
-          {/* Step-based Action Buttons for New Projects */}
-          {!isEditing && (
-            <div className="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0">
-              {currentStep === 'step1' ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="w-full sm:w-auto px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleNextStep}
-                    disabled={isAnalyzingBrief || !projectForm.brief_description || projectForm.brief_description.trim().length === 0}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isAnalyzingBrief ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        Next
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={handlePreviousStep}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onSubmit}
-                    disabled={isSubmitting}
-                    className="w-full sm:w-auto px-6 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
-                  >
-                    {isSubmitting ? 'Creating...' : 'Create Project'}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
