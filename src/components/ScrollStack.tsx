@@ -219,9 +219,9 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
         touchMultiplier: 2,
         infinite: false,
         wheelMultiplier: 1,
-        lerp: 0.1,
+        lerp: 0.08,
         syncTouch: true,
-        syncTouchLerp: 0.075
+        syncTouchLerp: 0.1
       });
 
       lenis.on('scroll', handleScroll);
@@ -250,9 +250,9 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
         infinite: false,
         gestureOrientation: 'vertical',
         wheelMultiplier: 1,
-        lerp: 0.1,
+        lerp: 0.08,
         syncTouch: true,
-        syncTouchLerp: 0.075
+        syncTouchLerp: 0.1
       });
 
       lenis.on('scroll', handleScroll);
@@ -331,7 +331,7 @@ const ScrollStack: React.FC<ScrollStackProps> = ({
   ]);
 
   return (
-    <div className={`scroll-stack-scroller ${className}`.trim()} ref={scrollerRef}>
+    <div className={`scroll-stack-scroller ${useWindowScroll ? 'use-window-scroll' : ''} ${className}`.trim()} ref={scrollerRef}>
       <div className="scroll-stack-inner">
         {children}
         {/* Spacer so the last pin can release cleanly */}

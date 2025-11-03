@@ -82,10 +82,14 @@ const Home: React.FC = () => {
           <ScrollStack
             useWindowScroll={true}
             itemDistance={110}
+            itemScale={0.03}
             itemStackDistance={20}
+            stackPosition="20%"
+            scaleEndPosition="10%"
             baseScale={0.7}
-            blurAmount={1.5}
+            scaleDuration={0.5}
             rotationAmount={0}
+            blurAmount={1.5}
           >
             <ScrollStackItem itemClassName="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
               <div className="flex flex-col items-center justify-center h-full">

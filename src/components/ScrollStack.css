@@ -17,6 +17,12 @@
   min-height: 100vh;
 }
 
+/* Optimizations for window scroll */
+.scroll-stack-scroller.use-window-scroll {
+  overflow: visible;
+  height: auto;
+}
+
 .scroll-stack-card-wrapper {
   position: relative;
 }
