@@ -10,6 +10,7 @@ import {
   Clock
 } from 'lucide-react';
 import Footer from './Footer';
+import DarkVeil from './DarkVeil';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -19,29 +20,43 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div 
-            className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={handleLogoClick}
-            title="Go to Home"
-          >
-            <Package className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">ProdBay</h1>
+    <div className="min-h-screen relative">
+      {/* Dark Veil Background */}
+      <div className="fixed inset-0 w-full h-full z-0">
+        <DarkVeil
+          speed={0.4}
+          hueShift={0}
+          noiseIntensity={0.03}
+          scanlineFrequency={1.8}
+          scanlineIntensity={0.16}
+          warpAmount={5}
+        />
+      </div>
+      
+      {/* Content Layer */}
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="bg-white/90 backdrop-blur-sm shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div 
+              className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={handleLogoClick}
+              title="Go to Home"
+            >
+              <Package className="h-8 w-8 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900">ProdBay</h1>
+            </div>
           </div>
         </div>
-      </div>
 
       <div className="max-w-7xl mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h2 className="text-5xl font-bold text-gray-900 mb-6">
+          <h2 className="text-5xl font-bold text-white mb-6 drop-shadow-lg">
             Production Management
-            <span className="text-blue-600"> Simplified</span>
+            <span className="text-blue-300"> Simplified</span>
           </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto drop-shadow-md">
             Streamline your production workflow from initial brief to final delivery. 
             Connect clients, producers, and suppliers in one comprehensive platform.
           </p>
@@ -49,7 +64,7 @@ const Home: React.FC = () => {
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-          <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-6 text-center">
             <FileText className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Smart Brief Parsing</h3>
             <p className="text-gray-600 text-sm">
@@ -57,7 +72,7 @@ const Home: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-6 text-center">
             <Users className="h-12 w-12 text-teal-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Supplier Network</h3>
             <p className="text-gray-600 text-sm">
@@ -65,7 +80,7 @@ const Home: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-6 text-center">
             <DollarSign className="h-12 w-12 text-green-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Quote Management</h3>
             <p className="text-gray-600 text-sm">
@@ -73,7 +88,7 @@ const Home: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6 text-center">
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-6 text-center">
             <Clock className="h-12 w-12 text-orange-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Real-time Tracking</h3>
             <p className="text-gray-600 text-sm">
@@ -85,7 +100,7 @@ const Home: React.FC = () => {
         {/* User Portals */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
           {/* Client Portal */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
             <div className="bg-blue-600 text-white p-6">
               <Package className="h-12 w-12 mb-4" />
               <h3 className="text-2xl font-bold">Client Portal</h3>
@@ -119,7 +134,7 @@ const Home: React.FC = () => {
             </div>
           </div>
           {/* Producer Portal */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
             <div className="bg-teal-600 text-white p-6">
               <Package className="h-12 w-12 mb-4" />
               <h3 className="text-2xl font-bold">Producer Portal</h3>
@@ -154,7 +169,7 @@ const Home: React.FC = () => {
           </div>
 
           {/* Supplier Portal */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
             <div className="bg-orange-600 text-white p-6">
               <Users className="h-12 w-12 mb-4" />
               <h3 className="text-2xl font-bold">Supplier Portal</h3>
@@ -190,7 +205,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Workflow Section */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-16">
+        <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-8 mb-16">
           <h3 className="text-2xl font-bold text-center text-gray-900 mb-8">
             Automated Production Workflow
           </h3>
@@ -240,10 +255,10 @@ const Home: React.FC = () => {
 
         {/* CTA Section */}
         <div className="text-center">
-          <h3 className="text-3xl font-bold text-gray-900 mb-4">
+          <h3 className="text-3xl font-bold text-white mb-4 drop-shadow-lg">
             Ready to streamline your production process?
           </h3>
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg text-white/90 mb-8 drop-shadow-md">
             Get started with ProdBay and transform your production workflow today
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -255,13 +270,14 @@ const Home: React.FC = () => {
               <ArrowRight className="h-5 w-5 inline ml-2" />
             </Link>
           </div>
-          <p className="text-sm text-gray-500 mt-4">
+          <p className="text-sm text-white/80 mt-4 drop-shadow-sm">
             Secure login required to access your personalized dashboard
           </p>
         </div>
       </div>
       
       <Footer />
+      </div>
     </div>
   );
 };
