@@ -128,13 +128,22 @@ export default function Stepper({
               {currentStep !== 1 && (
                 <button
                   onClick={handleBack}
-                  className={`back-button ${currentStep === 1 ? 'inactive' : ''}`}
+                  className={`back-button ${currentStep === 1 ? 'inactive' : ''} ${backButtonProps?.className || ''}`}
                   {...backButtonProps}
                 >
                   {backButtonText}
                 </button>
               )}
-              <button onClick={isLastStep ? handleComplete : handleNext} className="next-button" {...nextButtonProps}>
+              <button 
+                {...nextButtonProps}
+                onClick={isLastStep ? handleComplete : handleNext} 
+                className={`next-button ${nextButtonProps?.className || ''}`.trim()}
+                style={{ 
+                  backgroundColor: '#0d9488',
+                  color: '#fff',
+                  ...nextButtonProps?.style 
+                }}
+              >
                 {isLastStep ? (
                   completeButtonText
                 ) : (
