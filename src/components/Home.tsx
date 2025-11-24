@@ -17,7 +17,7 @@ const Home: React.FC = () => {
     <div className="relative">
 
         {/* Hero Section - 95% of viewport */}
-        <div className="h-[95vh] flex items-center justify-center relative">
+        <div className="min-h-[95vh] flex items-center justify-center relative">
           <div className="text-center max-w-7xl mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 drop-shadow-lg">
               Production Management{' '}
