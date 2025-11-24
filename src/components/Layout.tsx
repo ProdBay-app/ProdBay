@@ -124,7 +124,7 @@ const Layout: React.FC = () => {
           </div>
         </nav>
 
-        <main className="flex-1 max-w-7xl mx-auto py-8 px-4 w-full">
+        <main className={`flex-1 max-w-7xl mx-auto w-full ${isLandingPage ? 'px-4' : 'py-8 px-4'}`}>
           <Outlet />
         </main>
 

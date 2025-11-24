@@ -40,13 +40,13 @@ const DashboardFilterControls: React.FC<DashboardFilterControlsProps> = ({
     <div className="mb-6">
       {/* Label */}
       <div className="mb-3">
-        <label className="text-sm font-medium text-gray-700">
+        <label className="text-sm font-medium text-white">
           Sort by
         </label>
       </div>
 
       {/* Segmented Control */}
-      <div className="inline-flex rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div className="inline-flex rounded-lg border border-white/20 bg-white/10 backdrop-blur-md shadow-sm">
         {sortOptions.map((option, index) => {
           const isActive = sortBy === option.value;
           const Icon = option.icon;
@@ -60,15 +60,15 @@ const DashboardFilterControls: React.FC<DashboardFilterControlsProps> = ({
                 text-sm font-medium transition-all duration-200
                 ${index === 0 ? 'rounded-l-lg' : ''}
                 ${index === sortOptions.length - 1 ? 'rounded-r-lg' : ''}
-                ${index > 0 ? 'border-l border-gray-200' : ''}
+                ${index > 0 ? 'border-l border-white/20' : ''}
                 ${isActive
                   ? 'bg-teal-600 text-white shadow-sm z-10'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-teal-600'
+                  : 'bg-transparent text-gray-200 hover:bg-white/10 hover:text-teal-300'
                 }
               `}
               title={option.description}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-300'}`} />
               <span>{option.label}</span>
               
               {/* Active indicator dot */}
@@ -81,7 +81,7 @@ const DashboardFilterControls: React.FC<DashboardFilterControlsProps> = ({
       </div>
 
       {/* Helper text showing active sort description */}
-      <p className="mt-2 text-xs text-gray-500">
+      <p className="mt-2 text-xs text-gray-300">
         {sortOptions.find(opt => opt.value === sortBy)?.description}
       </p>
     </div>
