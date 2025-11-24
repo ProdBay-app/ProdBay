@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Package, AlertCircle, Search, ArrowUpDown, X } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
@@ -8,7 +8,6 @@ import AssetDetailModal from './AssetDetailModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { getAvailableTagNames, getTagColor } from '@/utils/assetTags';
 import type { Asset } from '@/lib/supabase';
-import type { AssetStatus } from '@/types/database';
 
 interface AssetListProps {
   projectId: string;
@@ -27,12 +26,11 @@ interface AssetListProps {
 }
 
 /**
- * AssetList - Container component for displaying assets in a Kanban board layout
+ * AssetList - Container component for displaying assets in a grid layout
  * 
  * Features:
  * - Fetches assets for a specific project
- * - Groups assets by status into Kanban columns
- * - Horizontal scrolling layout with vertical status columns
+ * - Displays assets in a responsive grid
  * - Loading and error state handling
  * - Empty state when no assets exist
  * - Bi-directional hover linking with project brief (highlights assets when brief text hovered)
@@ -64,49 +62,15 @@ const AssetList: React.FC<AssetListProps> = ({
 
   // Search, filter, and sort state
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatuses, setSelectedStatuses] = useState<AssetStatus[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'name' | 'status' | 'date' | 'quantity'>('date');
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'quantity'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   // showFilters is now passed as a prop
-
-  // Scroll container ref for measuring
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Debug: Log sorting changes
   useEffect(() => {
     console.log('Sorting changed:', { sortBy, sortOrder });
   }, [sortBy, sortOrder]);
-
-  // Check if content can scroll horizontally
-  // Scroll functionality removed - no longer needed
-
-  // Define the status order for Kanban columns (workflow order)
-  const statusOrder: AssetStatus[] = [
-    'Pending',
-    'Quoting',
-    'Approved',
-    'In Production',
-    'Delivered'
-  ];
-
-  // Get display color for each status column header
-  const getStatusHeaderColor = (status: AssetStatus): string => {
-    switch (status) {
-      case 'Pending':
-        return 'text-slate-200 bg-slate-500/20 border-slate-400/50';
-      case 'Quoting':
-        return 'text-amber-200 bg-amber-500/20 border-amber-400/50';
-      case 'Approved':
-        return 'text-green-200 bg-green-500/20 border-green-400/50';
-      case 'In Production':
-        return 'text-blue-200 bg-blue-500/20 border-blue-400/50';
-      case 'Delivered':
-        return 'text-purple-200 bg-purple-500/20 border-purple-400/50';
-      default:
-        return 'text-gray-200 bg-white/20 border-white/30';
-    }
-  };
 
   // Fetch assets from the backend
   useEffect(() => {
@@ -258,8 +222,8 @@ const AssetList: React.FC<AssetListProps> = ({
     }
   };
 
-  // Filter assets
-  const filteredAssets = useMemo(() => {
+  // Filter and sort assets
+  const filteredAndSortedAssets = useMemo(() => {
     let filtered = assets;
 
     // Apply search filter
@@ -272,11 +236,6 @@ const AssetList: React.FC<AssetListProps> = ({
       );
     }
 
-    // Apply status filter
-    if (selectedStatuses.length > 0) {
-      filtered = filtered.filter(asset => selectedStatuses.includes(asset.status));
-    }
-
     // Apply tag filter
     if (selectedTags.length > 0) {
       filtered = filtered.filter(asset =>
@@ -284,36 +243,13 @@ const AssetList: React.FC<AssetListProps> = ({
       );
     }
 
-    return filtered;
-  }, [assets, searchTerm, selectedStatuses, selectedTags]);
-
-  // Group filtered assets by status and apply sorting within each group
-  const groupedAssets = useMemo(() => {
-    const groups: Record<AssetStatus, Asset[]> = {
-      'Pending': [],
-      'Quoting': [],
-      'Approved': [],
-      'In Production': [],
-      'Delivered': []
-    };
-
-    // Group assets by status
-    filteredAssets.forEach(asset => {
-      if (groups[asset.status]) {
-        groups[asset.status].push(asset);
-      }
-    });
-
-    // Apply sorting within each status group
+    // Apply sorting
     const sortFunction = (a: Asset, b: Asset) => {
       let comparison = 0;
       
       switch (sortBy) {
         case 'name':
           comparison = a.asset_name.localeCompare(b.asset_name);
-          break;
-        case 'status':
-          comparison = a.status.localeCompare(b.status);
           break;
         case 'date':
           comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
@@ -330,19 +266,8 @@ const AssetList: React.FC<AssetListProps> = ({
       return sortOrder === 'asc' ? comparison : -comparison;
     };
 
-    // Sort each group
-    Object.keys(groups).forEach(status => {
-      groups[status as AssetStatus].sort(sortFunction);
-    });
-
-    return groups;
-  }, [filteredAssets, sortBy, sortOrder]);
-
-  // For display purposes, get all filtered assets (used for count)
-  const filteredAndSortedAssets = useMemo(() => {
-    return Object.values(groupedAssets).flat();
-  }, [groupedAssets]);
-
+    return [...filtered].sort(sortFunction);
+  }, [assets, searchTerm, selectedTags, sortBy, sortOrder]);
 
   // Loading state
   if (loading) {
@@ -407,7 +332,6 @@ const AssetList: React.FC<AssetListProps> = ({
           <button
             onClick={() => {
               setSearchTerm('');
-              setSelectedStatuses([]);
               setSelectedTags([]);
             }}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -449,33 +373,7 @@ const AssetList: React.FC<AssetListProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Status Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">Status</label>
-              <div className="flex flex-wrap gap-2">
-                {statusOrder.map(status => (
-                  <button
-                    key={status}
-                    onClick={() => {
-                      setSelectedStatuses(prev =>
-                        prev.includes(status)
-                          ? prev.filter(s => s !== status)
-                          : [...prev, status]
-                      );
-                    }}
-                    className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-                      selectedStatuses.includes(status)
-                        ? `${getStatusHeaderColor(status)} border-current`
-                        : 'bg-white/10 border-white/20 text-gray-200 hover:bg-white/20'
-                    }`}
-                  >
-                    {status}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Tag Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-200 mb-2">Tags</label>
@@ -512,19 +410,17 @@ const AssetList: React.FC<AssetListProps> = ({
                 <span className="ml-2 text-xs text-purple-300 font-normal">
                   ({sortBy === 'date' ? 'Date Added' : 
                     sortBy === 'name' ? 'Name' : 
-                    sortBy === 'status' ? 'Status' : 
                     sortBy === 'quantity' ? 'Quantity' : 'Date Added'} - {sortOrder === 'asc' ? 'A→Z' : 'Z→A'})
                 </span>
               </label>
               <div className="flex items-center gap-2">
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
+                  onChange={(e) => setSortBy(e.target.value as 'name' | 'date' | 'quantity')}
                   className="flex-1 px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                 >
                   <option value="date">Date Added</option>
                   <option value="name">Name</option>
-                  <option value="status">Status</option>
                   <option value="quantity">Quantity</option>
                 </select>
                 <button
@@ -543,7 +439,7 @@ const AssetList: React.FC<AssetListProps> = ({
           </div>
 
           {/* Clear All Filters */}
-          {(selectedStatuses.length > 0 || selectedTags.length > 0 || searchTerm || sortBy !== 'date' || sortOrder !== 'desc') && (
+          {(selectedTags.length > 0 || searchTerm || sortBy !== 'date' || sortOrder !== 'desc') && (
             <div className="flex justify-between">
               <button
                 onClick={() => {
@@ -557,7 +453,6 @@ const AssetList: React.FC<AssetListProps> = ({
               <button
                 onClick={() => {
                   setSearchTerm('');
-                  setSelectedStatuses([]);
                   setSelectedTags([]);
                 }}
                 className="text-sm text-gray-300 hover:text-gray-200 underline transition-colors"
@@ -569,56 +464,20 @@ const AssetList: React.FC<AssetListProps> = ({
         </div>
       )}
 
-      {/* Kanban Board - Responsive Container with Conditional Scrolling */}
-      <div className="relative">
-        <div 
-          ref={scrollContainerRef}
-          className={`-mx-6 px-6 pb-4 ${
-            isBriefExpanded 
-              ? 'overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100' 
-              : 'overflow-x-visible'
-          }`}
-        >
-          <div className={`flex gap-4 ${isBriefExpanded ? 'min-w-max' : 'justify-start'}`}>
-          {/* Render each status column */}
-          {statusOrder.map((status) => {
-            const assetsInStatus = groupedAssets[status];
-            
-            return (
-              <div
-                key={status}
-                className={`flex-shrink-0 ${
-                  isBriefExpanded ? 'w-48' : 'w-40'
-                }`}
-              >
-                {/* Column Header */}
-                <div className={`rounded-lg border px-4 py-3 mb-4 ${getStatusHeaderColor(status)}`}>
-                  <h3 className="font-semibold text-sm">
-                    {status} ({assetsInStatus.length})
-                  </h3>
-                </div>
-
-                {/* Column Content - Vertical Stack of Asset Cards */}
-                <div className="space-y-2">
-                  {assetsInStatus.map((asset) => (
-                    <AssetCard 
-                      key={asset.id} 
-                      asset={asset} 
-                      onClick={handleViewAsset}
-                      onEdit={handleOpenEditModal}
-                      onDelete={handleOpenDeleteModal}
-                      isHighlighted={hoveredAssetId === asset.id}
-                      onMouseEnter={() => onAssetHover && onAssetHover(asset.id)}
-                      onMouseLeave={() => onAssetHover && onAssetHover(null)}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-          </div>
-        </div>
-        
+      {/* Asset Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {filteredAndSortedAssets.map((asset) => (
+          <AssetCard 
+            key={asset.id} 
+            asset={asset} 
+            onClick={handleViewAsset}
+            onEdit={handleOpenEditModal}
+            onDelete={handleOpenDeleteModal}
+            isHighlighted={hoveredAssetId === asset.id}
+            onMouseEnter={() => onAssetHover && onAssetHover(asset.id)}
+            onMouseLeave={() => onAssetHover && onAssetHover(null)}
+          />
+        ))}
       </div>
 
       {/* Add Asset Modal */}

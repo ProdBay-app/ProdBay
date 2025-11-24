@@ -3,14 +3,12 @@ import { createPortal } from 'react-dom';
 import { X, FileText, Calendar, Clock, Package, Hash, Tag, Copy, Edit2, Save } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
-import StatusSelect from '@/components/shared/StatusSelect';
 import QuotesList from './QuotesList';
 import AssetSubdivisionModal from './AssetSubdivisionModal';
 import AssetTimelineManager from './AssetTimelineManager';
 import SupplierStatusTracker from './SupplierStatusTracker';
 import { getTagColor } from '@/utils/assetTags';
 import type { Asset } from '@/lib/supabase';
-import type { AssetStatus } from '@/types/database';
 
 interface AssetDetailModalProps {
   isOpen: boolean;
@@ -25,14 +23,11 @@ interface AssetDetailModalProps {
  * Features:
  * - Large, focused modal for deep dive into asset information
  * - Displays all asset fields in an organized, readable format
- * - Interactive status dropdown for changing asset workflow state
- * - Color-coded status badges matching the card design
  * - Responsive layout (full-screen on mobile, large centered on desktop)
  * - Foundation for future interactive features (quotes, activity, etc.)
  */
 const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onClose, onAssetUpdate }) => {
   const { showSuccess, showError } = useNotification();
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubdivisionModalOpen, setIsSubdivisionModalOpen] = useState(false);
   
@@ -50,48 +45,15 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   // Don't render if modal is closed or no asset is selected
   if (!isOpen || !asset) return null;
 
-  // Handle status change
-  const handleStatusChange = async (newStatus: AssetStatus) => {
-    if (!asset || newStatus === asset.status) return;
-
-    setIsUpdatingStatus(true);
-    try {
-      // Call the service to update the asset
-      const updatedAsset = await ProducerService.updateAsset(asset.id, {
-        asset_name: asset.asset_name,
-        specifications: asset.specifications || '',
-        timeline: asset.timeline || '',
-        status: newStatus,
-        assigned_supplier_id: asset.assigned_supplier_id,
-        quantity: asset.quantity,
-        tags: asset.tags || []
-      });
-
-      // Notify parent component of the update
-      onAssetUpdate(updatedAsset);
-
-      // Show success notification
-      showSuccess(`Status updated to "${newStatus}"`);
-    } catch (err) {
-      console.error('Error updating status:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update status';
-      showError(errorMessage);
-    } finally {
-      setIsUpdatingStatus(false);
-    }
-  };
-
   // Handle field editing
   const handleFieldEdit = async () => {
     if (!asset) return;
 
-    setIsUpdatingStatus(true);
     try {
       const updatedAsset = await ProducerService.updateAsset(asset.id, {
         asset_name: editingData.asset_name,
         specifications: editingData.specifications,
         timeline: asset.timeline || '',
-        status: asset.status,
         assigned_supplier_id: asset.assigned_supplier_id,
         quantity: editingData.quantity,
         tags: editingData.tags
@@ -104,8 +66,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
       console.error('Error updating asset:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to update asset';
       showError(errorMessage);
-    } finally {
-      setIsUpdatingStatus(false);
     }
   };
 
@@ -140,24 +100,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     minute: '2-digit'
   });
 
-  // Get status badge color based on asset status
-  const getStatusColor = (): string => {
-    switch (asset.status) {
-      case 'Pending':
-        return 'bg-slate-100 text-slate-800 border-slate-300';
-      case 'Quoting':
-        return 'bg-amber-100 text-amber-800 border-amber-300';
-      case 'Approved':
-        return 'bg-green-100 text-green-800 border-green-300';
-      case 'In Production':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'Delivered':
-        return 'bg-purple-100 text-purple-800 border-purple-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-
   // Render modal using React Portal to escape parent container constraints
   const modalContent = (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:p-8">
@@ -183,11 +125,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     <h2 className="text-2xl font-bold text-white">
                       {asset.asset_name}
                     </h2>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border-2 ${getStatusColor()}`}>
-                      {asset.status}
-                    </span>
                   </div>
                 </div>
 
@@ -319,21 +256,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   </div>
 
                   {/* Status - Interactive Dropdown */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-200 mb-2">
-                      Status
-                      {isUpdatingStatus && (
-                        <span className="ml-2 text-xs text-purple-300 font-normal">
-                          Updating...
-                        </span>
-                      )}
-                    </label>
-                    <StatusSelect
-                      value={asset.status}
-                      onChange={handleStatusChange}
-                      disabled={isUpdatingStatus}
-                    />
-                  </div>
                 </div>
 
                 {/* Tags Section */}

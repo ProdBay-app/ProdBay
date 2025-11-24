@@ -353,8 +353,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
           {mode === 'create' && (
             <div className="bg-purple-500/20 border border-purple-400/30 rounded-lg p-4">
               <p className="text-sm text-purple-200">
-                <span className="font-semibold">Note:</span> New assets are created with a "Pending" status. 
-                You can update the status, timeline, and assign suppliers later.
+                <span className="font-semibold">Note:</span> New assets can be updated with timeline and supplier assignments later.
               </p>
             </div>
           )}
@@ -363,7 +362,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
             <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-4">
               <p className="text-sm text-blue-200">
                 <span className="font-semibold">Note:</span> This will update the asset's name and specifications. 
-                Status, timeline, and supplier assignments will remain unchanged.
+                Timeline and supplier assignments will remain unchanged.
               </p>
             </div>
           )}
