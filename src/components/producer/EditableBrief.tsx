@@ -347,8 +347,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
           className={`
             cursor-pointer transition-all duration-200 rounded px-1
             ${isHovered
-              ? 'bg-teal-300 border-b-2 border-teal-600 font-semibold'
-              : 'bg-yellow-100 hover:bg-yellow-200 border-b border-yellow-300'
+              ? 'bg-teal-500/30 border-b-2 border-teal-400 font-semibold'
+              : 'bg-yellow-500/30 hover:bg-yellow-500/40 border-b border-yellow-400/50'
             }
           `}
           title={`Click to view: ${highlight.asset.asset_name}`}
@@ -492,7 +492,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
 
   return (
     <div 
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ${
+      className={`bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 transition-all duration-300 ${
         isExpanded && maxHeight ? 'flex flex-col' : 'h-full flex flex-col'
       }`}
       style={isExpanded && maxHeight ? { height: `${maxHeight}px` } : {}}
@@ -502,11 +502,11 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
         <div className="p-6 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-gray-900">Brief</h2>
+              <h2 className="text-2xl font-bold text-white">Brief</h2>
               
               {/* Unsaved Changes Indicator */}
               {isDirty && (
-                <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-medium">
+                <span className="text-xs bg-amber-500/30 text-amber-200 px-2 py-1 rounded-full font-medium">
                   Unsaved Changes
                 </span>
               )}
@@ -538,14 +538,14 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
               {/* Expand/Collapse Button */}
               <button
                 onClick={onToggleExpand}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                 aria-label={isExpanded ? 'Collapse brief' : 'Expand brief'}
                 title={isExpanded ? 'Collapse' : 'Expand'}
               >
                 {isExpanded ? (
-                  <Minimize2 className="w-5 h-5 text-gray-600" />
+                  <Minimize2 className="w-5 h-5 text-gray-300" />
                 ) : (
-                  <Maximize2 className="w-5 h-5 text-gray-600" />
+                  <Maximize2 className="w-5 h-5 text-gray-300" />
                 )}
               </button>
             </div>
@@ -563,7 +563,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
               <div className="mb-6">
                 <label 
                   htmlFor="brief-description" 
-                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  className="block text-sm font-semibold text-gray-200 mb-2"
                 >
                   Description
                 </label>
@@ -575,8 +575,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                   placeholder="Enter project description..."
                   className="
                     w-full px-4 py-3 
-                    bg-gray-50 border border-gray-300 rounded-lg
-                    text-gray-900 leading-relaxed
+                    bg-black/20 border border-white/20 rounded-lg
+                    text-white placeholder-gray-400 leading-relaxed
                     focus:ring-2 focus:ring-purple-500 focus:border-transparent
                     resize-none overflow-hidden
                     transition-all duration-200
@@ -590,7 +590,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
               <div className="mb-6">
                 <label 
                   htmlFor="physical-parameters" 
-                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  className="block text-sm font-semibold text-gray-200 mb-2"
                 >
                   Physical Parameters
                 </label>
@@ -602,8 +602,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                   placeholder="Enter physical parameters..."
                   className="
                     w-full px-4 py-3 
-                    bg-gray-50 border border-gray-300 rounded-lg
-                    text-gray-900 leading-relaxed
+                    bg-black/20 border border-white/20 rounded-lg
+                    text-white placeholder-gray-400 leading-relaxed
                     focus:ring-2 focus:ring-purple-500 focus:border-transparent
                     resize-none overflow-hidden
                     transition-all duration-200
@@ -615,7 +615,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
 
               {/* Save Button - Only visible when dirty */}
               {isDirty && (
-                <div className="pt-4 border-t border-gray-200">
+                <div className="pt-4 border-t border-white/20">
                   <button
                     onClick={handleSave}
                     disabled={isSaving}
@@ -650,10 +650,10 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
             <>
               {/* Brief Description */}
               <div className="mb-6">
-                <h3 className="block text-sm font-semibold text-gray-700 mb-2">
+                <h3 className="block text-sm font-semibold text-gray-200 mb-2">
                   Description
                 </h3>
-                <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 leading-relaxed whitespace-pre-wrap">
+                <div className="px-4 py-3 bg-black/20 border border-white/20 rounded-lg text-gray-200 leading-relaxed whitespace-pre-wrap">
                   {renderInteractiveContent(briefDescription)}
                 </div>
               </div>
@@ -661,10 +661,10 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
               {/* Physical Parameters */}
               {physicalParameters && (
                 <div className="mb-6">
-                  <h3 className="block text-sm font-semibold text-gray-700 mb-2">
+                  <h3 className="block text-sm font-semibold text-gray-200 mb-2">
                     Physical Parameters
                   </h3>
-                  <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 leading-relaxed whitespace-pre-wrap">
+                  <div className="px-4 py-3 bg-black/20 border border-white/20 rounded-lg text-gray-200 leading-relaxed whitespace-pre-wrap">
                     {renderInteractiveContent(physicalParameters)}
                   </div>
                 </div>

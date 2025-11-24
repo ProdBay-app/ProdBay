@@ -94,17 +94,17 @@ const AssetList: React.FC<AssetListProps> = ({
   const getStatusHeaderColor = (status: AssetStatus): string => {
     switch (status) {
       case 'Pending':
-        return 'text-slate-700 bg-slate-50 border-slate-200';
+        return 'text-slate-200 bg-slate-500/20 border-slate-400/50';
       case 'Quoting':
-        return 'text-amber-700 bg-amber-50 border-amber-200';
+        return 'text-amber-200 bg-amber-500/20 border-amber-400/50';
       case 'Approved':
-        return 'text-green-700 bg-green-50 border-green-200';
+        return 'text-green-200 bg-green-500/20 border-green-400/50';
       case 'In Production':
-        return 'text-blue-700 bg-blue-50 border-blue-200';
+        return 'text-blue-200 bg-blue-500/20 border-blue-400/50';
       case 'Delivered':
-        return 'text-purple-700 bg-purple-50 border-purple-200';
+        return 'text-purple-200 bg-purple-500/20 border-purple-400/50';
       default:
-        return 'text-gray-700 bg-gray-50 border-gray-200';
+        return 'text-gray-200 bg-white/20 border-white/30';
     }
   };
 
@@ -347,12 +347,12 @@ const AssetList: React.FC<AssetListProps> = ({
   // Loading state
   if (loading) {
     return (
-      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Assets</h2>
+      <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
+        <h2 className="text-2xl font-bold text-white mb-6">Assets</h2>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading assets...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
+            <p className="text-gray-300">Loading assets...</p>
           </div>
         </div>
       </section>
@@ -362,15 +362,15 @@ const AssetList: React.FC<AssetListProps> = ({
   // Error state
   if (error) {
     return (
-      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Assets</h2>
+      <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
+        <h2 className="text-2xl font-bold text-white mb-6">Assets</h2>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="bg-red-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-600" />
+            <div className="bg-red-500/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-400" />
             </div>
-            <p className="text-red-600 font-semibold mb-2">Error loading assets</p>
-            <p className="text-gray-600 text-sm">{error}</p>
+            <p className="text-red-400 font-semibold mb-2">Error loading assets</p>
+            <p className="text-gray-300 text-sm">{error}</p>
           </div>
         </div>
       </section>
@@ -380,12 +380,12 @@ const AssetList: React.FC<AssetListProps> = ({
   // Empty state - no assets
   if (assets.length === 0) {
     return (
-      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Assets</h2>
-        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No assets yet</h3>
-          <p className="text-gray-600">
+      <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
+        <h2 className="text-2xl font-bold text-white mb-6">Assets</h2>
+        <div className="bg-white/5 border-2 border-dashed border-white/30 rounded-lg p-12 text-center">
+          <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">No assets yet</h3>
+          <p className="text-gray-300">
             Assets will appear here once they are created for this project.
           </p>
         </div>
@@ -396,12 +396,12 @@ const AssetList: React.FC<AssetListProps> = ({
   // Empty state - no assets match filters
   if (filteredAndSortedAssets.length === 0 && assets.length > 0) {
     return (
-      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Assets</h2>
-        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-          <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No assets match your filters</h3>
-          <p className="text-gray-600 mb-4">
+      <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
+        <h2 className="text-2xl font-bold text-white mb-6">Assets</h2>
+        <div className="bg-white/5 border-2 border-dashed border-white/30 rounded-lg p-12 text-center">
+          <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">No assets match your filters</h3>
+          <p className="text-gray-300 mb-4">
             Try adjusting your search terms or filters to see more results.
           </p>
           <button
@@ -421,30 +421,30 @@ const AssetList: React.FC<AssetListProps> = ({
 
   // Main Kanban board display
   return (
-    <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
       {/* Section Header removed - now handled in top row */}
 
       {/* Search and Filter Controls */}
       {showFilters && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 space-y-4">
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-4 mb-6 space-y-4">
           {/* Search Bar */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
+              <Search className="h-5 w-5 text-gray-300" />
             </div>
             <input
               type="text"
               placeholder="Search assets by name, specifications, or tags..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
-                <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                <X className="h-4 w-4 text-gray-300 hover:text-white transition-colors" />
               </button>
             )}
           </div>
@@ -452,7 +452,7 @@ const AssetList: React.FC<AssetListProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-gray-200 mb-2">Status</label>
               <div className="flex flex-wrap gap-2">
                 {statusOrder.map(status => (
                   <button
@@ -467,7 +467,7 @@ const AssetList: React.FC<AssetListProps> = ({
                     className={`px-3 py-1 rounded-full text-sm border transition-colors ${
                       selectedStatuses.includes(status)
                         ? `${getStatusHeaderColor(status)} border-current`
-                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        : 'bg-white/10 border-white/20 text-gray-200 hover:bg-white/20'
                     }`}
                   >
                     {status}
@@ -478,7 +478,7 @@ const AssetList: React.FC<AssetListProps> = ({
 
             {/* Tag Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+              <label className="block text-sm font-medium text-gray-200 mb-2">Tags</label>
               <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
                 {getAvailableTagNames().map(tagName => (
                   <button
@@ -493,7 +493,7 @@ const AssetList: React.FC<AssetListProps> = ({
                     className={`px-3 py-1 rounded-full text-sm border transition-colors ${
                       selectedTags.includes(tagName)
                         ? 'text-white border-transparent'
-                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                        : 'bg-white/10 border-white/20 text-gray-200 hover:bg-white/20'
                     }`}
                     style={{
                       backgroundColor: selectedTags.includes(tagName) ? getTagColor(tagName) : undefined
@@ -507,9 +507,9 @@ const AssetList: React.FC<AssetListProps> = ({
 
             {/* Sort Controls */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Sort By
-                <span className="ml-2 text-xs text-purple-600 font-normal">
+                <span className="ml-2 text-xs text-purple-300 font-normal">
                   ({sortBy === 'date' ? 'Date Added' : 
                     sortBy === 'name' ? 'Name' : 
                     sortBy === 'status' ? 'Status' : 
@@ -520,7 +520,7 @@ const AssetList: React.FC<AssetListProps> = ({
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  className="flex-1 px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                 >
                   <option value="date">Date Added</option>
                   <option value="name">Name</option>
@@ -531,12 +531,12 @@ const AssetList: React.FC<AssetListProps> = ({
                   onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
                   className={`p-2 border rounded-lg transition-colors ${
                     sortOrder === 'asc' 
-                      ? 'border-purple-300 bg-purple-50 text-purple-700' 
-                      : 'border-gray-300 hover:bg-gray-50'
+                      ? 'border-purple-400/50 bg-purple-500/20 text-purple-200' 
+                      : 'border-white/20 hover:bg-white/10'
                   }`}
                   title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
                 >
-                  <ArrowUpDown className={`w-4 h-4 transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
+                  <ArrowUpDown className={`w-4 h-4 transition-transform ${sortOrder === 'asc' ? 'rotate-180' : ''} text-gray-300`} />
                 </button>
               </div>
             </div>
@@ -550,7 +550,7 @@ const AssetList: React.FC<AssetListProps> = ({
                   setSortBy('date');
                   setSortOrder('desc');
                 }}
-                className="text-sm text-gray-600 hover:text-gray-800 underline"
+                className="text-sm text-gray-300 hover:text-gray-200 underline transition-colors"
               >
                 Reset sort
               </button>
@@ -560,7 +560,7 @@ const AssetList: React.FC<AssetListProps> = ({
                   setSelectedStatuses([]);
                   setSelectedTags([]);
                 }}
-                className="text-sm text-gray-600 hover:text-gray-800 underline"
+                className="text-sm text-gray-300 hover:text-gray-200 underline transition-colors"
               >
                 Clear all filters
               </button>
