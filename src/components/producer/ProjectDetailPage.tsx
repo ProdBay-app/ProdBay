@@ -1,36 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   Calendar, 
   User, 
   DollarSign, 
   Clock,
-  AlertCircle,
-  CheckSquare,
-  Users as UsersIcon
+  AlertCircle
 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
-import { ProjectSummaryService } from '@/services/projectSummaryService';
 import { useNotification } from '@/hooks/useNotification';
 import Button from '@/components/ui/Button';
 import AssetList from './AssetList';
 import EditableBrief from './EditableBrief';
-import BudgetTrackingBar from './widgets/BudgetTrackingBar';
-import TimelineWidget from './widgets/TimelineWidget';
-import ActionCounter from './widgets/ActionCounter';
 import ClientProjectsModal from './ClientProjectsModal';
-import BudgetAssetsModal from './BudgetAssetsModal';
-import MilestoneFormModal from './MilestoneFormModal';
 import AssetDetailModal from './AssetDetailModal';
 import AssetFormModal from './AssetFormModal';
-import ConfirmationModal from '@/components/shared/ConfirmationModal';
-import SummaryCard from '@/components/shared/SummaryCard';
-import DetailView from '@/components/shared/DetailView';
 import type { Project, Asset } from '@/lib/supabase';
-import type { ProjectTrackingSummary, ProjectMilestone } from '@/types/database';
-import type { MilestoneFormData } from './MilestoneFormModal';
 
 /**
  * ProjectDetailPage - Comprehensive page for displaying and managing project information
@@ -54,53 +40,11 @@ const ProjectDetailPage: React.FC = () => {
 
   // State management
   const [project, setProject] = useState<Project | null>(null);
-  const [trackingSummary, setTrackingSummary] = useState<ProjectTrackingSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingTracking, setLoadingTracking] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isBriefExpanded, setIsBriefExpanded] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
-
-  // Active section state for expandable card layout
-  type ActiveSection = 'Overview' | 'Budget' | 'Timeline' | 'Actions';
-  const [activeSection, setActiveSection] = useState<ActiveSection>('Overview');
   
-  // Mobile detection and touch gesture state
-  const [isMobile, setIsMobile] = useState(false);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  // Animation variants for staggered content animations - disabled for expanded sections
-  const containerVariants = {
-    hidden: { opacity: 1 },
-    visible: {
-      opacity: 1,
-      transition: { duration: 0 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: {
-      opacity: 1,
-      y: 0
-    },
-    visible: {
-      opacity: 1,
-      y: 0
-    }
-  };
-
-  // Milestone management state
-  const [isMilestoneFormOpen, setIsMilestoneFormOpen] = useState(false);
-  const [milestoneFormMode, setMilestoneFormMode] = useState<'create' | 'edit'>('create');
-  const [editingMilestone, setEditingMilestone] = useState<ProjectMilestone | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deletingMilestone, setDeletingMilestone] = useState<ProjectMilestone | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
   // Interactive brief state
   const [hoveredAssetId, setHoveredAssetId] = useState<string | null>(null);
   const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
@@ -113,61 +57,7 @@ const ProjectDetailPage: React.FC = () => {
   const assetsBlockRef = useRef<HTMLDivElement>(null);
   const [assetsBlockHeight, setAssetsBlockHeight] = useState<number>(0);
 
-  // Mobile detection and reduced motion preference
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    const checkReducedMotion = () => {
-      setPrefersReducedMotion(
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      );
-    };
-    
-    checkMobile();
-    checkReducedMotion();
-    
-    window.addEventListener('resize', checkMobile);
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    mediaQuery.addEventListener('change', checkReducedMotion);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-      mediaQuery.removeEventListener('change', checkReducedMotion);
-    };
-  }, []);
 
-  // Touch gesture handlers for mobile navigation
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isMobile) return;
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isMobile) return;
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!isMobile || !touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe || isRightSwipe) {
-      const sections: ActiveSection[] = ['Overview', 'Budget', 'Timeline', 'Actions'];
-      const currentIndex = sections.indexOf(activeSection);
-      
-      if (isLeftSwipe && currentIndex < sections.length - 1) {
-        setActiveSection(sections[currentIndex + 1]);
-      } else if (isRightSwipe && currentIndex > 0) {
-        setActiveSection(sections[currentIndex - 1]);
-      }
-    }
-  };
 
   // Fetch project data
   useEffect(() => {
@@ -202,30 +92,6 @@ const ProjectDetailPage: React.FC = () => {
     fetchProject();
   }, [projectId, showError]);
 
-  // Fetch tracking summary data
-  useEffect(() => {
-    const fetchTrackingSummary = async () => {
-      if (!projectId) {
-        setLoadingTracking(false);
-        return;
-      }
-
-      try {
-        setLoadingTracking(true);
-        const summary = await ProjectSummaryService.getProjectTrackingSummary(projectId);
-        setTrackingSummary(summary);
-      } catch (err) {
-        console.error('Error fetching tracking summary:', err);
-        // Don't show error to user - tracking widgets are non-critical
-        // Just fail silently and show empty state
-        setTrackingSummary(null);
-      } finally {
-        setLoadingTracking(false);
-      }
-    };
-
-    fetchTrackingSummary();
-  }, [projectId]);
 
   // Fetch assets for interactive brief
   useEffect(() => {
@@ -364,124 +230,6 @@ const ProjectDetailPage: React.FC = () => {
   // END INTERACTIVE BRIEF
   // ========================================
 
-  // ========================================
-  // MILESTONE MANAGEMENT FUNCTIONS
-  // ========================================
-
-  /**
-   * Refresh tracking summary data after milestone operations
-   * Re-fetches the entire tracking summary to ensure all widgets update
-   */
-  const refreshTrackingSummary = async () => {
-    if (!projectId) return;
-    
-    try {
-      const summary = await ProjectSummaryService.getProjectTrackingSummary(projectId);
-      setTrackingSummary(summary);
-    } catch (err) {
-      console.error('Error refreshing tracking summary:', err);
-      // Don't show error to user - it's a background refresh
-    }
-  };
-
-  /**
-   * Open milestone form modal in create mode
-   */
-  const handleAddMilestoneClick = () => {
-    setMilestoneFormMode('create');
-    setEditingMilestone(null);
-    setIsMilestoneFormOpen(true);
-  };
-
-  /**
-   * Open milestone form modal in edit mode with pre-populated data
-   */
-  const handleEditMilestoneClick = (milestone: ProjectMilestone) => {
-    setMilestoneFormMode('edit');
-    setEditingMilestone(milestone);
-    setIsMilestoneFormOpen(true);
-  };
-
-  /**
-   * Open delete confirmation modal
-   */
-  const handleDeleteMilestoneClick = (milestone: ProjectMilestone) => {
-    setDeletingMilestone(milestone);
-    setIsDeleteModalOpen(true);
-  };
-
-  /**
-   * Handle milestone form submission (create or update)
-   */
-  const handleMilestoneFormSubmit = async (formData: MilestoneFormData) => {
-    if (!projectId) return;
-
-    setIsSubmitting(true);
-    try {
-      if (milestoneFormMode === 'edit' && editingMilestone) {
-        // Update existing milestone
-        await ProjectSummaryService.updateMilestone(editingMilestone.id, {
-          name: formData.milestone_name,
-          date: formData.milestone_date,
-          description: formData.description,
-          status: formData.status
-        });
-        showSuccess(`Milestone "${formData.milestone_name}" updated successfully!`);
-      } else {
-        // Create new milestone
-        await ProjectSummaryService.createMilestone(projectId, {
-          name: formData.milestone_name,
-          date: formData.milestone_date,
-          description: formData.description
-        });
-        showSuccess(`Milestone "${formData.milestone_name}" created successfully!`);
-      }
-
-      // Refresh the timeline to show updated data
-      await refreshTrackingSummary();
-
-      // Close modal on success
-      setIsMilestoneFormOpen(false);
-      setEditingMilestone(null);
-    } catch (err) {
-      console.error('Error saving milestone:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save milestone';
-      showError(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  /**
-   * Handle delete confirmation
-   */
-  const handleConfirmDelete = async () => {
-    if (!deletingMilestone) return;
-
-    setIsDeleting(true);
-    try {
-      // Delete milestone from database
-      await ProjectSummaryService.deleteMilestone(deletingMilestone.id);
-
-      // Refresh the timeline to remove deleted milestone
-      await refreshTrackingSummary();
-
-      // Close modal and show success
-      setIsDeleteModalOpen(false);
-      showSuccess(`Milestone "${deletingMilestone.milestone_name}" deleted successfully!`);
-    } catch (err) {
-      console.error('Error deleting milestone:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete milestone';
-      showError(errorMessage);
-    } finally {
-      setIsDeleting(false);
-      setDeletingMilestone(null);
-    }
-  };
-
-  // ========================================
-  // END MILESTONE MANAGEMENT
-  // ========================================
 
   // Loading state
   if (loading) {
@@ -545,403 +293,69 @@ const ProjectDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Expandable Card Layout */}
+      {/* Overview Section - Full Width Glass Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Summary Cards Row */}
-        <div className={`grid gap-4 mb-8 ${
-          isMobile 
-            ? 'grid-cols-2 gap-3' 
-            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
-        }`}>
-          <SummaryCard
-            title="Overview"
-            isActive={activeSection === 'Overview'}
-            onClick={() => setActiveSection('Overview')}
-            isMobile={isMobile}
-            prefersReducedMotion={prefersReducedMotion}
-          >
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-purple-300" />
-                <span className="text-xs font-medium text-gray-200">{project.client_name}</span>
+        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg p-6 mb-8">
+          <h2 className="text-xl font-bold text-white mb-6">Overview</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Client Name */}
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-purple-500/20 rounded-lg">
+                <User className="w-5 h-5 text-purple-300" />
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-300" />
-                <span className="text-xs text-gray-300">
+              <div className="flex-1">
+                <p className="text-sm text-gray-300 mb-1">Client</p>
+                <button
+                  onClick={() => setIsClientModalOpen(true)}
+                  className="text-lg font-semibold text-teal-300 hover:text-teal-200 hover:underline transition-colors text-left"
+                  title={`View all projects for ${project.client_name}`}
+                >
+                  {project.client_name}
+                </button>
+              </div>
+            </div>
+
+            {/* Budget */}
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-green-500/20 rounded-lg">
+                <DollarSign className="w-5 h-5 text-green-300" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-300 mb-1">Budget</p>
+                <p className="text-lg font-semibold text-white">
+                  {formatCurrency(project.financial_parameters ?? 0)}
+                </p>
+              </div>
+            </div>
+
+            {/* Deadline */}
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <Calendar className="w-5 h-5 text-blue-300" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-300 mb-1">Deadline</p>
+                <p className="text-lg font-semibold text-white">
                   {formatDate(project.timeline_deadline ?? null)}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-green-300" />
-                <span className="text-xs text-gray-300">{formatCurrency(project.financial_parameters ?? 0)}</span>
+                </p>
               </div>
             </div>
-          </SummaryCard>
 
-          <SummaryCard
-            title="Budget"
-            isActive={activeSection === 'Budget'}
-            onClick={() => setActiveSection('Budget')}
-            isMobile={isMobile}
-            prefersReducedMotion={prefersReducedMotion}
-          >
-            <div className="space-y-3">
-              {/* Total Budget */}
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-green-600" />
-                <span className="text-xs font-medium">
-                  {trackingSummary ? formatCurrency(trackingSummary.budget.total) : 'Loading...'}
-                </span>
+            {/* Created Date */}
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-white/10 rounded-lg">
+                <Clock className="w-5 h-5 text-gray-300" />
               </div>
-              
-              {/* Progress Bar */}
-              {trackingSummary && (
-                <div className="w-full">
-                  <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-500 ease-out rounded-full ${
-                        trackingSummary.budget.percentageUsed >= 90
-                          ? 'bg-red-500'
-                          : trackingSummary.budget.percentageUsed >= 70
-                          ? 'bg-yellow-500'
-                          : 'bg-green-500'
-                      }`}
-                      style={{ width: `${Math.min(trackingSummary.budget.percentageUsed, 100)}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-xs text-gray-300">
-                      {trackingSummary.budget.percentageUsed.toFixed(1)}% used
-                    </span>
-                    <span className={`text-xs font-medium ${
-                      trackingSummary.budget.remaining < 0 ? 'text-red-400' : 'text-green-400'
-                    }`}>
-                      {formatCurrency(trackingSummary.budget.remaining)} remaining
-                    </span>
-                  </div>
-                </div>
-              )}
-              
-              {/* Loading State */}
-              {!trackingSummary && (
-                <div className="w-full bg-white/20 rounded-full h-2">
-                  <div className="h-full bg-white/30 rounded-full animate-pulse" style={{ width: '30%' }} />
-                </div>
-              )}
-            </div>
-          </SummaryCard>
-
-          <SummaryCard
-            title="Timeline"
-            isActive={activeSection === 'Timeline'}
-            onClick={() => setActiveSection('Timeline')}
-            isMobile={isMobile}
-            prefersReducedMotion={prefersReducedMotion}
-          >
-            <div className="space-y-2">
-              {/* Start Date */}
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-300" />
-                <span className="text-xs font-medium text-gray-200">Started</span>
-                <span className="text-xs text-gray-300">
+              <div className="flex-1">
+                <p className="text-sm text-gray-300 mb-1">Created</p>
+                <p className="text-lg font-semibold text-white">
                   {formatDate(project.created_at)}
-                </span>
-              </div>
-              
-              {/* Deadline */}
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-300" />
-                <span className="text-xs font-medium text-gray-200">Deadline</span>
-                <span className="text-xs text-gray-300">
-                  {formatDate(project.timeline_deadline ?? null)}
-                </span>
-              </div>
-              
-              {/* Days Remaining */}
-              {trackingSummary?.timeline.daysRemaining !== null && trackingSummary?.timeline.daysRemaining !== undefined && (
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-medium ${
-                    trackingSummary.timeline.daysRemaining < 0 
-                      ? 'text-red-400' 
-                      : trackingSummary.timeline.daysRemaining <= 7 
-                      ? 'text-orange-400' 
-                      : 'text-green-400'
-                  }`}>
-                    {trackingSummary.timeline.daysRemaining < 0 
-                      ? `${Math.abs(trackingSummary.timeline.daysRemaining)} days overdue`
-                      : `${trackingSummary.timeline.daysRemaining} days left`
-                    }
-                  </span>
-                </div>
-              )}
-              
-              {/* Milestone Count */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">
-                  {trackingSummary?.timeline.milestones.length || 0} milestones
-                </span>
+                </p>
               </div>
             </div>
-          </SummaryCard>
-
-          <SummaryCard
-            title="Actions"
-            isActive={activeSection === 'Actions'}
-            onClick={() => setActiveSection('Actions')}
-            isMobile={isMobile}
-            prefersReducedMotion={prefersReducedMotion}
-          >
-            <div className="space-y-2">
-              {/* Your Actions */}
-              <div className="flex items-center gap-2">
-                <CheckSquare className="w-4 h-4 text-blue-300" />
-                <span className="text-xs font-medium text-gray-200">Your Actions</span>
-                <span className={`text-xs font-bold ${
-                  trackingSummary && trackingSummary.actions.producerActions > 0 
-                    ? 'text-orange-400' 
-                    : 'text-gray-300'
-                }`}>
-                  {trackingSummary ? trackingSummary.actions.producerActions : '0'}
-                </span>
-              </div>
-              
-              {/* Their Actions */}
-              <div className="flex items-center gap-2">
-                <UsersIcon className="w-4 h-4 text-purple-300" />
-                <span className="text-xs font-medium text-gray-200">Their Actions</span>
-                <span className={`text-xs font-bold ${
-                  trackingSummary && trackingSummary.actions.supplierActions > 0 
-                    ? 'text-orange-400' 
-                    : 'text-gray-300'
-                }`}>
-                  {trackingSummary ? trackingSummary.actions.supplierActions : '0'}
-                </span>
-              </div>
-              
-              {/* Total Pending Actions */}
-              <div className="flex items-center gap-2 pt-1 border-t border-white/10">
-                <AlertCircle className="w-4 h-4 text-gray-400" />
-                <span className="text-xs font-medium text-gray-300">Total Pending</span>
-                <span className={`text-xs font-bold ${
-                  trackingSummary && (trackingSummary.actions.producerActions + trackingSummary.actions.supplierActions) > 0 
-                    ? 'text-orange-400' 
-                    : 'text-gray-300'
-                }`}>
-                  {trackingSummary 
-                    ? trackingSummary.actions.producerActions + trackingSummary.actions.supplierActions 
-                    : '0'
-                  }
-                </span>
-              </div>
-            </div>
-          </SummaryCard>
-        </div>
-
-        {/* Mobile Navigation Indicator */}
-        {isMobile && (
-          <div className="flex justify-center mb-4">
-            <div className="flex space-x-2">
-              {['Overview', 'Budget', 'Timeline', 'Actions'].map((section) => (
-                <div
-                  key={section}
-                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                    activeSection === section 
-                      ? 'bg-teal-500' 
-                      : 'bg-white/20'
-                  }`}
-                />
-              ))}
-            </div>
-            <p className="text-xs text-gray-300 ml-3 mt-0.5">Swipe to navigate</p>
           </div>
-        )}
-
-        {/* Detail View Area - Unified expanded block container */}
-        <div
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className="touch-pan-y"
-        >
-          {/* Single DetailView container - always rendered for consistent sizing */}
-          <DetailView isMobile={isMobile} prefersReducedMotion={true}>
-            <AnimatePresence mode="wait">
-              {activeSection === 'Overview' && (
-                <motion.div 
-                  key="overview"
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                >
-                  {/* Client Name */}
-                  <motion.div 
-                    className="flex items-start gap-3"
-                    variants={itemVariants}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  >
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                      <User className="w-5 h-5 text-purple-300" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-300 mb-1">Client</p>
-                      <button
-                        onClick={() => setIsClientModalOpen(true)}
-                        className="text-lg font-semibold text-teal-300 hover:text-teal-200 hover:underline transition-colors text-left"
-                        title={`View all projects for ${project.client_name}`}
-                      >
-                        {project.client_name}
-                      </button>
-                    </div>
-                  </motion.div>
-
-                  {/* Budget */}
-                  <motion.div 
-                    className="flex items-start gap-3"
-                    variants={itemVariants}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  >
-                    <div className="p-2 bg-green-500/20 rounded-lg">
-                      <DollarSign className="w-5 h-5 text-green-300" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-300 mb-1">Budget</p>
-                      <p className="text-lg font-semibold text-white">
-                        {formatCurrency(project.financial_parameters ?? 0)}
-                      </p>
-                    </div>
-                  </motion.div>
-
-                  {/* Deadline */}
-                  <motion.div 
-                    className="flex items-start gap-3"
-                    variants={itemVariants}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  >
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <Calendar className="w-5 h-5 text-blue-300" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-300 mb-1">Deadline</p>
-                      <p className="text-lg font-semibold text-white">
-                        {formatDate(project.timeline_deadline ?? null)}
-                      </p>
-                    </div>
-                  </motion.div>
-
-                  {/* Created Date */}
-                  <motion.div 
-                    className="flex items-start gap-3"
-                    variants={itemVariants}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  >
-                    <div className="p-2 bg-white/10 rounded-lg">
-                      <Clock className="w-5 h-5 text-gray-300" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-300 mb-1">Created</p>
-                      <p className="text-lg font-semibold text-white">
-                        {formatDate(project.created_at)}
-                      </p>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-
-              {activeSection === 'Budget' && (
-                <motion.div
-                  key="budget"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  {!loadingTracking && trackingSummary ? (
-                    <div className="space-y-6">
-                      <BudgetTrackingBar
-                        total={trackingSummary.budget.total}
-                        spent={trackingSummary.budget.spent}
-                        remaining={trackingSummary.budget.remaining}
-                        percentageUsed={trackingSummary.budget.percentageUsed}
-                        onClick={() => setIsBudgetModalOpen(true)}
-                      />
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-400 border-t-transparent mx-auto mb-4"></div>
-                      <p className="text-gray-300">Loading budget information...</p>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-
-              {activeSection === 'Timeline' && (
-                <motion.div
-                  key="timeline"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  {!loadingTracking && trackingSummary ? (
-                    <TimelineWidget
-                      deadline={trackingSummary.timeline.deadline}
-                      daysRemaining={trackingSummary.timeline.daysRemaining}
-                      milestones={trackingSummary.timeline.milestones}
-                      onAddMilestone={handleAddMilestoneClick}
-                      onEditMilestone={handleEditMilestoneClick}
-                      onDeleteMilestone={handleDeleteMilestoneClick}
-                    />
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-400 border-t-transparent mx-auto mb-4"></div>
-                      <p className="text-gray-300">Loading timeline information...</p>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-
-              {activeSection === 'Actions' && (
-                <motion.div
-                  key="actions"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  {!loadingTracking && trackingSummary ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <ActionCounter
-                        label="Your Actions"
-                        count={trackingSummary.actions.producerActions}
-                        icon={CheckSquare}
-                        iconColor="text-blue-300"
-                        bgColor="bg-blue-500/20"
-                        description="Tasks requiring your attention"
-                      />
-                      
-                      <ActionCounter
-                        label="Their Actions"
-                        count={trackingSummary.actions.supplierActions}
-                        icon={UsersIcon}
-                        iconColor="text-purple-300"
-                        bgColor="bg-purple-500/20"
-                        description="Pending supplier responses"
-                      />
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-400 border-t-transparent mx-auto mb-4"></div>
-                      <p className="text-gray-300">Loading action items...</p>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </DetailView>
         </div>
+
 
         {/* Assets and Brief Section - Layout matching reference image */}
         <div className="mt-8">
@@ -1064,34 +478,6 @@ const ProjectDetailPage: React.FC = () => {
         onClose={() => setIsClientModalOpen(false)}
         clientName={project.client_name}
         currentProjectId={project.id}
-      />
-
-      {/* Budget Assets Modal */}
-      <BudgetAssetsModal
-        isOpen={isBudgetModalOpen}
-        onClose={() => setIsBudgetModalOpen(false)}
-        projectId={project.id}
-      />
-
-      {/* Milestone Create/Edit Modal */}
-      <MilestoneFormModal
-        isOpen={isMilestoneFormOpen}
-        onClose={() => setIsMilestoneFormOpen(false)}
-        onSubmit={handleMilestoneFormSubmit}
-        isSubmitting={isSubmitting}
-        mode={milestoneFormMode}
-        milestoneToEdit={editingMilestone}
-      />
-
-      {/* Delete Milestone Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onCancel={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleConfirmDelete}
-        isConfirming={isDeleting}
-        title="Delete Milestone"
-        message={`Are you sure you want to permanently delete the milestone "${deletingMilestone?.milestone_name}"? This action cannot be undone.`}
-        variant="danger"
       />
 
       {/* Asset Detail Modal (for clicking highlighted brief text) */}
