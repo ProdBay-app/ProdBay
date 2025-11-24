@@ -128,7 +128,7 @@ const Layout: React.FC = () => {
           <Outlet />
         </main>
 
-        <Footer transparent={isLandingPage} />
+        <Footer />
       </div>
     </div>
   );

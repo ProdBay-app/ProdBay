@@ -56,7 +56,7 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
   return (
     <div className="space-y-0">
       {/* Filter Bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white/10 backdrop-blur-md border-b border-white/20 px-6 py-4">
         <div className="flex items-center space-x-3">
           <SearchBar
             searchTerm={filters.searchTerm}
