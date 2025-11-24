@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, FileText, Calendar, Clock, Package, Hash, Tag, Copy, Edit2, Save } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
@@ -157,25 +158,21 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     }
   };
 
-  return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}>
+  // Render modal using React Portal to escape parent container constraints
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 lg:p-8">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity z-[99]"
         onClick={onClose}
         aria-hidden="true"
-        style={{ zIndex: 99998 }}
       />
 
-      {/* Modal Container */}
-      <div className="fixed inset-0 overflow-y-auto" style={{ zIndex: 99999 }}>
-        <div className="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
-          {/* Modal Content */}
-          <div
-            className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-            style={{ zIndex: 100000 }}
-          >
+      {/* Modal Content */}
+      <div
+        className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto z-[101]"
+        onClick={(e) => e.stopPropagation()}
+      >
 
             {/* Header - Purple gradient matching brand */}
             <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
@@ -483,6 +480,9 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
       />
     </div>
   );
+
+  // Render modal via portal to document.body to escape parent container constraints
+  return createPortal(modalContent, document.body);
 };
 
 export default AssetDetailModal;
