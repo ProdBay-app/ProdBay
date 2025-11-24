@@ -468,8 +468,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
       {/* Asset Subdivision Modal */}
       <AssetSubdivisionModal
