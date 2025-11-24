@@ -1,7 +1,7 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
-  Package, 
+  Package,
   Users, 
   ArrowRight, 
   CheckCircle,
@@ -9,50 +9,15 @@ import {
   DollarSign,
   Clock
 } from 'lucide-react';
-import Footer from './Footer';
-import DarkVeil from './DarkVeil';
 import RotatingText from './RotatingText';
 import ScrollStack, { ScrollStackItem } from './ScrollStack';
 
 const Home: React.FC = () => {
-  const navigate = useNavigate();
-
-  const handleLogoClick = () => {
-    navigate('/');
-  };
-
   return (
     <div className="relative">
-      {/* Dark Veil Background */}
-      <div className="fixed inset-0 w-full h-full z-0">
-        <DarkVeil
-          speed={0.4}
-          hueShift={0}
-          noiseIntensity={0.03}
-          scanlineFrequency={1.8}
-          scanlineIntensity={0.16}
-          warpAmount={5}
-        />
-      </div>
-      
-      {/* Content Layer */}
-      <div className="relative z-10">
-        {/* Sticky Header */}
-        <div className="sticky top-0 bg-transparent backdrop-blur-sm shadow-sm z-50">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div 
-              className="flex items-center space-x-2 sm:space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={handleLogoClick}
-              title="Go to Home"
-            >
-              <Package className="h-6 w-6 sm:h-8 sm:w-8 text-blue-300 drop-shadow-lg" />
-              <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">ProdBay</h1>
-            </div>
-          </div>
-        </div>
 
         {/* Hero Section - 95% of viewport */}
-        <div className="h-[95vh] flex items-center justify-center relative">
+        <div className="min-h-[95vh] flex items-center justify-center relative">
           <div className="text-center max-w-7xl mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 drop-shadow-lg">
               Production Management{' '}
@@ -322,9 +287,6 @@ const Home: React.FC = () => {
             </div>
           </div>
         </div>
-      
-        <Footer transparent={true} />
-      </div>
     </div>
   );
 };

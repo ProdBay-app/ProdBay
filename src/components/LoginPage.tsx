@@ -38,18 +38,18 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+      {/* Fogged-out Header */}
+      <div className="sticky top-0 bg-transparent backdrop-blur-sm shadow-sm z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <div 
-            className="flex items-center justify-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center justify-center space-x-2 sm:space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={handleLogoClick}
             title="Go to Home"
           >
-            <Package className="h-10 w-10 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">ProdBay</h1>
+            <Package className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 drop-shadow-lg" />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 drop-shadow-lg">ProdBay</h1>
           </div>
-          <p className="text-center text-gray-600 mt-2">Production Management Platform</p>
+          <p className="text-center text-gray-600 mt-2 text-sm sm:text-base drop-shadow-md">Production Management Platform</p>
         </div>
       </div>
 

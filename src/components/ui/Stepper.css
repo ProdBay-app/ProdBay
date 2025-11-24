@@ -71,14 +71,14 @@
   transition: all 350ms;
   border-radius: 0.25rem;
   padding: 0.25rem 0.5rem;
-  color: #a3a3a3 !important;
+  color: #d1d5db !important;
   cursor: pointer;
   background: transparent !important;
   border: none;
 }
 
 .step-circle-container .back-button:hover {
-  color: #52525b !important;
+  color: #e5e7eb !important;
 }
 
 .step-circle-container .back-button.inactive {
@@ -152,7 +152,7 @@
   flex: 1;
   overflow: hidden;
   border-radius: 0.25rem;
-  background-color: #E5E7EB;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .step-connector-inner {

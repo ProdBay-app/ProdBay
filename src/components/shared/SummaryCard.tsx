@@ -55,8 +55,8 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
             : 'p-4 hover:shadow-md'
         } ${
           isActive 
-            ? 'bg-teal-50 border-teal-200 shadow-md' 
-            : 'bg-white border-gray-200 hover:border-gray-300'
+            ? 'bg-teal-500/20 border-teal-400/50 shadow-md backdrop-blur-md' 
+            : 'bg-white/10 backdrop-blur-md border-white/20 hover:border-white/30'
         }`}
         onClick={onClick}
         role="button"
@@ -100,10 +100,10 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
             isMobile 
               ? 'text-base mb-1' 
               : 'text-lg mb-2'
-          } text-gray-900`}>
+          } text-white`}>
             {title}
           </h3>
-          <div className={`text-gray-600 ${
+          <div className={`text-gray-300 ${
             isMobile ? 'text-xs space-y-1' : 'text-sm'
           }`}>
             {children}
@@ -116,8 +116,9 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
           style={{
             backfaceVisibility: 'hidden',
             transform: 'rotateX(180deg)',
-            background: 'rgba(240, 253, 250, 0.98)',
-            borderRadius: '0.5rem'
+            background: 'rgba(20, 184, 166, 0.2)',
+            borderRadius: '0.5rem',
+            backdropFilter: 'blur(8px)'
           }}
         >
           <h3 
@@ -125,7 +126,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
               isMobile 
                 ? 'text-2xl' 
                 : 'text-4xl'
-            } text-teal-700`}
+            } text-teal-200`}
           >
             {title}
           </h3>

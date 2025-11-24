@@ -258,16 +258,16 @@ function StepIndicator({ step, currentStep, onClickStep, disableStepIndicators }
   };
 
   return (
-    <motion.div onClick={handleClick} className="step-indicator" animate={status} initial={false}>
-      <motion.div
-        variants={{
-          inactive: { scale: 1, backgroundColor: '#E5E7EB', color: '#6B7280' },
-          active: { scale: 1, backgroundColor: '#0d9488', color: '#ffffff' },
-          complete: { scale: 1, backgroundColor: '#0d9488', color: '#ffffff' }
-        }}
-        transition={{ duration: 0.3 }}
-        className="step-indicator-inner"
-      >
+      <motion.div onClick={handleClick} className="step-indicator" animate={status} initial={false}>
+        <motion.div
+          variants={{
+            inactive: { scale: 1, backgroundColor: 'rgba(255, 255, 255, 0.2)', color: '#E5E7EB' },
+            active: { scale: 1, backgroundColor: '#0d9488', color: '#ffffff' },
+            complete: { scale: 1, backgroundColor: '#0d9488', color: '#ffffff' }
+          }}
+          transition={{ duration: 0.3 }}
+          className="step-indicator-inner"
+        >
         {status === 'complete' ? (
           <CheckIcon className="check-icon" />
         ) : status === 'active' ? (

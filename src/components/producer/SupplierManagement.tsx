@@ -53,7 +53,7 @@ const SupplierManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-400"></div>
       </div>
     );
   }
@@ -62,8 +62,8 @@ const SupplierManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Supplier Management</h1>
-          <p className="text-gray-600 mt-1">Manage your supplier network and categories</p>
+          <h1 className="text-3xl font-bold text-white">Supplier Management</h1>
+          <p className="text-gray-200 mt-1">Manage your supplier network and categories</p>
         </div>
         <button
           onClick={() => setShowAddForm(true)}
@@ -76,14 +76,14 @@ const SupplierManagement: React.FC = () => {
 
       {/* Add/Edit Supplier Form */}
       {showAddForm && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white/10 backdrop-blur-md rounded-lg shadow-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-xl font-semibold text-white">
               {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
             </h2>
             <button
               onClick={cancelEdit}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-300 hover:text-white transition-colors"
             >
               ×
             </button>
@@ -92,7 +92,7 @@ const SupplierManagement: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="supplier_name" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="supplier_name" className="block text-sm font-medium text-gray-200 mb-1">
                   Supplier Name *
                 </label>
                 <input
@@ -101,12 +101,12 @@ const SupplierManagement: React.FC = () => {
                   value={formData.supplier_name}
                   onChange={(e) => updateFormData('supplier_name', e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label htmlFor="contact_email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="contact_email" className="block text-sm font-medium text-gray-200 mb-1">
                   Contact Email *
                 </label>
                 <input
@@ -115,13 +115,13 @@ const SupplierManagement: React.FC = () => {
                   value={formData.contact_email}
                   onChange={(e) => updateFormData('contact_email', e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Service Categories
               </label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -132,8 +132,8 @@ const SupplierManagement: React.FC = () => {
                     onClick={() => handleCategoryToggle(category)}
                     className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
                       formData.service_categories.includes(category)
-                        ? 'bg-teal-100 border-teal-300 text-teal-700'
-                        : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                        ? 'bg-teal-500/30 border-teal-400/50 text-teal-200'
+                        : 'bg-white/10 border-white/20 text-gray-200 hover:bg-white/20'
                     }`}
                   >
                     {category}
@@ -144,13 +144,13 @@ const SupplierManagement: React.FC = () => {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-200">
                   Contact Person(s)
                 </label>
                 <button
                   type="button"
                   onClick={addContactPerson}
-                  className="flex items-center space-x-1 px-3 py-1 text-sm bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition-colors"
+                  className="flex items-center space-x-1 px-3 py-1 text-sm bg-teal-500/30 text-teal-200 rounded-lg hover:bg-teal-500/40 transition-colors"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Add Contact</span>
@@ -158,21 +158,21 @@ const SupplierManagement: React.FC = () => {
               </div>
               
               {formData.contact_persons.length === 0 ? (
-                <div className="text-center py-4 text-gray-500 text-sm">
+                <div className="text-center py-4 text-gray-300 text-sm">
                   No contact persons added yet. Click "Add Contact" to add one.
                 </div>
               ) : (
                 <div className="space-y-3">
                   {formData.contact_persons.map((person, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div key={index} className="border border-white/20 rounded-lg p-4 bg-white/5">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm font-medium text-gray-700">
+                          <User className="h-4 w-4 text-gray-300" />
+                          <span className="text-sm font-medium text-gray-200">
                             Contact Person {index + 1}
                           </span>
                           {person.is_primary && (
-                            <div className="flex items-center space-x-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">
+                            <div className="flex items-center space-x-1 px-2 py-1 bg-yellow-500/30 text-yellow-200 rounded-full text-xs">
                               <Star className="h-3 w-3" />
                               <span>Primary</span>
                             </div>
@@ -183,7 +183,7 @@ const SupplierManagement: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => setPrimaryContact(index)}
-                              className="text-xs text-blue-600 hover:text-blue-800"
+                              className="text-xs text-blue-300 hover:text-blue-200"
                             >
                               Set Primary
                             </button>
@@ -191,7 +191,7 @@ const SupplierManagement: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => removeContactPerson(index)}
-                            className="text-red-500 hover:text-red-700"
+                            className="text-red-400 hover:text-red-300"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -200,53 +200,53 @@ const SupplierManagement: React.FC = () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-300 mb-1">
                             Name *
                           </label>
                           <input
                             type="text"
                             value={person.name}
                             onChange={(e) => updateContactPerson(index, 'name', e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                             placeholder="Contact person name"
                           />
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-300 mb-1">
                             Email *
                           </label>
                           <input
                             type="email"
                             value={person.email}
                             onChange={(e) => updateContactPerson(index, 'email', e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                             placeholder="contact@supplier.com"
                           />
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-300 mb-1">
                             Role
                           </label>
                           <input
                             type="text"
                             value={person.role}
                             onChange={(e) => updateContactPerson(index, 'role', e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                             placeholder="e.g., Sales Manager, Project Coordinator"
                           />
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                          <label className="block text-xs font-medium text-gray-300 mb-1">
                             Phone
                           </label>
                           <input
                             type="tel"
                             value={person.phone || ''}
                             onChange={(e) => updateContactPerson(index, 'phone', e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                            className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                             placeholder="+1-555-0123"
                           />
                         </div>
@@ -257,17 +257,17 @@ const SupplierManagement: React.FC = () => {
               )}
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4 border-t">
+            <div className="flex justify-end space-x-3 pt-4 border-t border-white/20">
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-gray-200 border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
               >
                 {editingSupplier ? 'Update Supplier' : 'Add Supplier'}
               </button>
@@ -285,42 +285,42 @@ const SupplierManagement: React.FC = () => {
       />
 
       {/* Suppliers List */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-white/10 backdrop-blur-md rounded-lg shadow-lg">
+        <div className="p-6 border-b border-white/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Users className="h-6 w-6 text-teal-600" />
-              <h2 className="text-xl font-semibold">
+              <Users className="h-6 w-6 text-teal-300" />
+              <h2 className="text-xl font-semibold text-white">
                 Active Suppliers
                 {filterStats.isFiltered ? (
-                  <span className="text-gray-600 font-normal">
+                  <span className="text-gray-200 font-normal">
                     {' '}({filterStats.filteredCount} of {filterStats.totalSuppliers})
                   </span>
                 ) : (
-                  <span className="text-gray-600 font-normal">
+                  <span className="text-gray-200 font-normal">
                     {' '}({filterStats.totalSuppliers})
                   </span>
                 )}
               </h2>
             </div>
             {filterStats.isFiltered && (
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-300">
                 {filterStats.filteredCount === 0 ? 'No suppliers match your filters' : 'Filtered results'}
               </div>
             )}
           </div>
         </div>
 
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-white/10">
           {filteredSuppliers.map((supplier) => (
-            <div key={supplier.id} className="p-6">
+            <div key={supplier.id} className="p-6 hover:bg-white/20 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-medium text-gray-900">
+                    <h3 className="text-lg font-medium text-white">
                       {supplier.supplier_name}
                     </h3>
-                    <div className="flex items-center space-x-1 text-gray-500">
+                    <div className="flex items-center space-x-1 text-gray-300">
                       <Mail className="h-4 w-4" />
                       <span className="text-sm">{supplier.contact_email}</span>
                     </div>
@@ -330,27 +330,27 @@ const SupplierManagement: React.FC = () => {
                   {supplier.contact_persons && supplier.contact_persons.length > 0 && (
                     <div className="mb-3">
                       <div className="flex items-center space-x-2 mb-2">
-                        <Users className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700">Contact Persons:</span>
+                        <Users className="h-4 w-4 text-gray-300" />
+                        <span className="text-sm font-medium text-gray-200">Contact Persons:</span>
                       </div>
                       <div className="space-y-1">
                         {supplier.contact_persons.map((person, index) => (
                           <div key={index} className="flex items-center space-x-2 text-sm">
                             <div className="flex items-center space-x-1">
-                              <User className="h-3 w-3 text-gray-400" />
-                              <span className="text-gray-700">{person.name}</span>
+                              <User className="h-3 w-3 text-gray-300" />
+                              <span className="text-gray-200">{person.name}</span>
                               {person.role && (
-                                <span className="text-gray-500">({person.role})</span>
+                                <span className="text-gray-300">({person.role})</span>
                               )}
                               {person.is_primary && (
-                                <div className="flex items-center space-x-1 px-1 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">
+                                <div className="flex items-center space-x-1 px-1 py-0.5 bg-yellow-500/30 text-yellow-200 rounded text-xs">
                                   <Star className="h-2 w-2" />
                                   <span>Primary</span>
                                 </div>
                               )}
                             </div>
                             {person.phone && (
-                              <div className="flex items-center space-x-1 text-gray-500">
+                              <div className="flex items-center space-x-1 text-gray-300">
                                 <Phone className="h-3 w-3" />
                                 <span>{person.phone}</span>
                               </div>
@@ -362,12 +362,12 @@ const SupplierManagement: React.FC = () => {
                   )}
 
                   <div className="flex items-center space-x-2">
-                    <Tag className="h-4 w-4 text-gray-400" />
+                    <Tag className="h-4 w-4 text-gray-300" />
                     <div className="flex flex-wrap gap-1">
                       {supplier.service_categories.map((category) => (
                         <span
                           key={category}
-                          className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                          className="px-2 py-1 bg-white/20 text-gray-200 text-xs rounded-full"
                         >
                           {category}
                         </span>
@@ -379,14 +379,14 @@ const SupplierManagement: React.FC = () => {
                 <div className="flex items-center space-x-2 ml-4">
                   <button
                     onClick={() => handleEdit(supplier)}
-                    className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded"
+                    className="p-2 text-gray-300 hover:text-teal-300 hover:bg-teal-500/20 rounded transition-colors"
                     title="Edit Supplier"
                   >
                     <Edit className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(supplier.id)}
-                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
+                    className="p-2 text-gray-300 hover:text-red-400 hover:bg-red-500/20 rounded transition-colors"
                     title="Delete Supplier"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -399,27 +399,27 @@ const SupplierManagement: React.FC = () => {
 
         {filteredSuppliers.length === 0 && (
           <div className="p-8 text-center">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             {suppliers.length === 0 ? (
               <>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No suppliers yet</h3>
-                <p className="text-gray-600 mb-4">Add your first supplier to start managing your network</p>
+                <h3 className="text-lg font-medium text-white mb-2">No suppliers yet</h3>
+                <p className="text-gray-200 mb-4">Add your first supplier to start managing your network</p>
                 <button
                   onClick={() => setShowAddForm(true)}
-                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
                 >
                   Add First Supplier
                 </button>
               </>
             ) : (
               <>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No suppliers match your filters</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="text-lg font-medium text-white mb-2">No suppliers match your filters</h3>
+                <p className="text-gray-200 mb-4">
                   Try adjusting your search criteria or clearing some filters
                 </p>
                 <button
                   onClick={clearAllFilters}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   Clear All Filters
                 </button>

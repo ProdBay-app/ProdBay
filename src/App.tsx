@@ -29,8 +29,10 @@ function App() {
       <Router>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-        {/* Public landing page - outside of layout */}
-        <Route path="/" element={<Home />} />
+        {/* Public landing page - now wrapped in Layout for consistent background/header */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+        </Route>
         
         {/* Login page - outside of layout */}
         <Route path="/login" element={<LoginPage />} />

@@ -84,31 +84,31 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+        className="flex items-center space-x-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm transition-colors"
       >
-        <span className="text-gray-700">
+        <span className="text-gray-200">
           More
           {hasAdditionalFilters && (
-            <span className="ml-1 px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full text-xs">
+            <span className="ml-1 px-2 py-0.5 bg-teal-500/30 text-teal-200 rounded-full text-xs">
               {[hasContactPersons !== null, dateRange.start, dateRange.end].filter(Boolean).length}
             </span>
           )}
         </span>
-        <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 text-gray-300 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute top-full right-0 mt-1 w-80 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg z-50">
           <div className="p-4 space-y-4">
             {/* Clear All Filters */}
             {hasActiveFilters && (
-              <div className="pb-3 border-b border-gray-200">
+              <div className="pb-3 border-b border-white/20">
                 <button
                   onClick={() => {
                     onClearAll();
                     setIsOpen(false);
                   }}
-                  className="flex items-center space-x-2 text-sm text-red-600 hover:text-red-800"
+                  className="flex items-center space-x-2 text-sm text-red-400 hover:text-red-300 transition-colors"
                 >
                   <X className="h-4 w-4" />
                   <span>Clear All Filters</span>
@@ -118,7 +118,7 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
 
             {/* Has Contact Persons Filter */}
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center space-x-2">
+              <h4 className="text-sm font-medium text-white mb-2 flex items-center space-x-2">
                 <Users className="h-4 w-4" />
                 <span>Contact Information</span>
               </h4>
@@ -131,7 +131,7 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                     onChange={() => onHasContactPersonsChange(null)}
                     className="text-teal-600 focus:ring-teal-500"
                   />
-                  <span className="text-sm text-gray-700">All suppliers</span>
+                  <span className="text-sm text-gray-200">All suppliers</span>
                 </label>
                 <label className="flex items-center space-x-2">
                   <input
@@ -141,7 +141,7 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                     onChange={() => onHasContactPersonsChange(true)}
                     className="text-teal-600 focus:ring-teal-500"
                   />
-                  <span className="text-sm text-gray-700">With contact persons</span>
+                  <span className="text-sm text-gray-200">With contact persons</span>
                 </label>
                 <label className="flex items-center space-x-2">
                   <input
@@ -151,43 +151,43 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                     onChange={() => onHasContactPersonsChange(false)}
                     className="text-teal-600 focus:ring-teal-500"
                   />
-                  <span className="text-sm text-gray-700">Without contact persons</span>
+                  <span className="text-sm text-gray-200">Without contact persons</span>
                 </label>
               </div>
             </div>
 
             {/* Date Range Filter */}
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center space-x-2">
+              <h4 className="text-sm font-medium text-white mb-2 flex items-center space-x-2">
                 <Calendar className="h-4 w-4" />
                 <span>Added Date</span>
               </h4>
               
               {/* Preset Date Ranges */}
               <div className="space-y-2 mb-3">
-                <div className="text-xs text-gray-600 mb-2">Quick select:</div>
+                <div className="text-xs text-gray-300 mb-2">Quick select:</div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => handlePresetDateRange('last30days')}
-                    className="text-xs px-2 py-1 border border-gray-200 rounded hover:bg-gray-50"
+                    className="text-xs px-2 py-1 bg-white/10 border border-white/20 rounded hover:bg-white/20 text-gray-200 transition-colors"
                   >
                     Last 30 days
                   </button>
                   <button
                     onClick={() => handlePresetDateRange('last3months')}
-                    className="text-xs px-2 py-1 border border-gray-200 rounded hover:bg-gray-50"
+                    className="text-xs px-2 py-1 bg-white/10 border border-white/20 rounded hover:bg-white/20 text-gray-200 transition-colors"
                   >
                     Last 3 months
                   </button>
                   <button
                     onClick={() => handlePresetDateRange('last6months')}
-                    className="text-xs px-2 py-1 border border-gray-200 rounded hover:bg-gray-50"
+                    className="text-xs px-2 py-1 bg-white/10 border border-white/20 rounded hover:bg-white/20 text-gray-200 transition-colors"
                   >
                     Last 6 months
                   </button>
                   <button
                     onClick={() => handlePresetDateRange('thisyear')}
-                    className="text-xs px-2 py-1 border border-gray-200 rounded hover:bg-gray-50"
+                    className="text-xs px-2 py-1 bg-white/10 border border-white/20 rounded hover:bg-white/20 text-gray-200 transition-colors"
                   >
                     This year
                   </button>
@@ -196,10 +196,10 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
 
               {/* Custom Date Range */}
               <div className="space-y-2">
-                <div className="text-xs text-gray-600">Custom range:</div>
+                <div className="text-xs text-gray-300">Custom range:</div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">From</label>
+                    <label className="block text-xs text-gray-300 mb-1">From</label>
                     <input
                       type="date"
                       value={dateRange.start ? dateRange.start.toISOString().split('T')[0] : ''}
@@ -207,11 +207,11 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                         ...dateRange,
                         start: e.target.value ? new Date(e.target.value) : null
                       })}
-                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-2 py-1 text-xs bg-black/20 border border-white/20 rounded text-white focus:ring-1 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">To</label>
+                    <label className="block text-xs text-gray-300 mb-1">To</label>
                     <input
                       type="date"
                       value={dateRange.end ? dateRange.end.toISOString().split('T')[0] : ''}
@@ -219,18 +219,18 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                         ...dateRange,
                         end: e.target.value ? new Date(e.target.value) : null
                       })}
-                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-2 py-1 text-xs bg-black/20 border border-white/20 rounded text-white focus:ring-1 focus:ring-teal-500 focus:border-transparent"
                     />
                   </div>
                 </div>
                 {formatDateRange() && (
-                  <div className="text-xs text-gray-600">
+                  <div className="text-xs text-gray-300">
                     Selected: {formatDateRange()}
                   </div>
                 )}
                 <button
                   onClick={() => handlePresetDateRange('clear')}
-                  className="text-xs text-gray-500 hover:text-gray-700"
+                  className="text-xs text-gray-300 hover:text-gray-200 transition-colors"
                 >
                   Clear date range
                 </button>

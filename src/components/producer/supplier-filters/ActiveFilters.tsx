@@ -54,18 +54,18 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
   };
 
   return (
-    <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+    <div className="bg-white/5 border-b border-white/20 px-6 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">Active filters:</span>
+          <span className="text-sm text-gray-200">Active filters:</span>
           <div className="flex flex-wrap gap-2">
             {/* Search Term */}
             {searchTerm && (
-              <span className="inline-flex items-center px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-full">
+              <span className="inline-flex items-center px-2 py-1 bg-teal-500/30 text-teal-200 text-xs rounded-full">
                 Name: "{searchTerm}"
                 <button
                   onClick={onClearSearch}
-                  className="ml-1 text-teal-600 hover:text-teal-800"
+                  className="ml-1 text-teal-300 hover:text-teal-200 transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -74,11 +74,11 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 
             {/* Categories */}
             {selectedCategories.length > 0 && (
-              <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+              <span className="inline-flex items-center px-2 py-1 bg-blue-500/30 text-blue-200 text-xs rounded-full">
                 Categories: {selectedCategories.length}
                 <button
                   onClick={onClearCategories}
-                  className="ml-1 text-blue-600 hover:text-blue-800"
+                  className="ml-1 text-blue-300 hover:text-blue-200 transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -87,11 +87,11 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 
             {/* Roles */}
             {selectedRoles.length > 0 && (
-              <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+              <span className="inline-flex items-center px-2 py-1 bg-purple-500/30 text-purple-200 text-xs rounded-full">
                 Roles: {selectedRoles.length}
                 <button
                   onClick={onClearRoles}
-                  className="ml-1 text-purple-600 hover:text-purple-800"
+                  className="ml-1 text-purple-300 hover:text-purple-200 transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -100,11 +100,11 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 
             {/* Has Contact Persons */}
             {hasContactPersons !== null && (
-              <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+              <span className="inline-flex items-center px-2 py-1 bg-green-500/30 text-green-200 text-xs rounded-full">
                 {hasContactPersons ? 'With contacts' : 'Without contacts'}
                 <button
                   onClick={onClearContactPersons}
-                  className="ml-1 text-green-600 hover:text-green-800"
+                  className="ml-1 text-green-300 hover:text-green-200 transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -113,11 +113,11 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 
             {/* Date Range */}
             {formatDateRange() && (
-              <span className="inline-flex items-center px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
+              <span className="inline-flex items-center px-2 py-1 bg-orange-500/30 text-orange-200 text-xs rounded-full">
                 {formatDateRange()}
                 <button
                   onClick={onClearDateRange}
-                  className="ml-1 text-orange-600 hover:text-orange-800"
+                  className="ml-1 text-orange-300 hover:text-orange-200 transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -129,7 +129,7 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         {/* Clear All Button */}
         <button
           onClick={onClearAll}
-          className="text-sm text-gray-500 hover:text-gray-700 flex items-center space-x-1"
+          className="text-sm text-gray-300 hover:text-gray-200 flex items-center space-x-1 transition-colors"
         >
           <X className="h-4 w-4" />
           <span>Clear all</span>

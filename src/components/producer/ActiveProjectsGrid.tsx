@@ -639,8 +639,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading projects...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400 mx-auto mb-4"></div>
+          <p className="text-gray-200">Loading projects...</p>
         </div>
       </div>
     );
@@ -651,8 +651,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="text-red-600 text-lg font-semibold mb-2">Error Loading Projects</div>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <div className="text-red-400 text-lg font-semibold mb-2">Error Loading Projects</div>
+          <p className="text-gray-200 mb-4">{error}</p>
           <button
             onClick={loadProjects}
             className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
@@ -667,16 +667,16 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   return (
     <>
       <ProjectCreationLoadingOverlay isVisible={isCreatingProject} />
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-transparent">
       {/* Header Section */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-transparent border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-white">
                 {projectLimit ? 'Dashboard' : 'Projects'}
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-200 mt-1">
                 {projectLimit 
                   ? 'Your active projects at a glance'
                   : 'Manage and track all your production projects'
@@ -741,22 +741,22 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         {/* Active Projects Section */}
         <section className="mb-12">
           <div className="flex items-center gap-2 mb-6">
-            <FolderOpen className="w-6 h-6 text-purple-600" />
-            <h2 className="text-2xl font-bold text-gray-900">Active</h2>
-            <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">
+            <FolderOpen className="w-6 h-6 text-purple-300" />
+            <h2 className="text-2xl font-bold text-white">Active</h2>
+            <span className="ml-2 px-2 py-1 bg-purple-500/20 text-purple-200 text-sm font-semibold rounded-full backdrop-blur-sm border border-purple-400/30">
               {activeProjects.length}
             </span>
           </div>
 
           {activeProjects.length === 0 ? (
-            <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
-              <FolderOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <div className="bg-white/10 backdrop-blur-md rounded-lg border-2 border-dashed border-white/20 p-12 text-center">
+              <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               {searchQuery || selectedStatus !== 'all' ? (
                 <>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-white mb-2">
                     No active projects found
                   </h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-gray-200 mb-4">
                     {searchQuery && selectedStatus !== 'all' ? (
                       <>No active projects match "<span className="font-medium">{searchQuery}</span>" with status "<span className="font-medium">{selectedStatus}</span>"</>
                     ) : searchQuery ? (
@@ -777,8 +777,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                 </>
               ) : (
                 <>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No active projects</h3>
-                  <p className="text-gray-600 mb-4">Get started by creating your first project</p>
+                  <h3 className="text-lg font-semibold text-white mb-2">No active projects</h3>
+                  <p className="text-gray-200 mb-4">Get started by creating your first project</p>
                   <button
                     onClick={openCreateProject}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
@@ -806,7 +806,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                 <div className="mt-6 text-center">
                   <Link
                     to="/producer/projects"
-                    className="inline-flex items-center gap-2 px-4 py-2 text-teal-600 hover:text-teal-700 font-medium transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-teal-300 hover:text-teal-200 font-medium transition-colors"
                   >
                     View All {allActiveProjects.length} Active Projects
                     <ArrowRight className="w-4 h-4" />
@@ -821,20 +821,20 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         {(archivedProjects.length > 0 || (!projectLimit && (searchQuery || selectedStatus !== 'all'))) && (
           <section>
             <div className="flex items-center gap-2 mb-6">
-              <Archive className="w-6 h-6 text-gray-600" />
-              <h2 className="text-2xl font-bold text-gray-900">Archived</h2>
-              <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full">
+              <Archive className="w-6 h-6 text-gray-300" />
+              <h2 className="text-2xl font-bold text-white">Archived</h2>
+              <span className="ml-2 px-2 py-1 bg-gray-500/20 text-gray-200 text-sm font-semibold rounded-full backdrop-blur-sm border border-gray-400/30">
                 {archivedProjects.length}
               </span>
             </div>
 
             {archivedProjects.length === 0 && (searchQuery || selectedStatus !== 'all') ? (
-              <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center">
-                <Archive className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <div className="bg-white/10 backdrop-blur-md rounded-lg border-2 border-dashed border-white/20 p-12 text-center">
+                <Archive className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">
                   No archived projects found
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-200">
                   {searchQuery && selectedStatus !== 'all' ? (
                     <>No archived projects match "<span className="font-medium">{searchQuery}</span>" with status "<span className="font-medium">{selectedStatus}</span>"</>
                   ) : searchQuery ? (
@@ -861,7 +861,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                   <div className="mt-6 text-center">
                     <Link
                       to="/producer/projects"
-                      className="inline-flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-700 font-medium transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-gray-200 font-medium transition-colors"
                     >
                       View All {allArchivedProjects.length} Archived Projects
                       <ArrowRight className="w-4 h-4" />

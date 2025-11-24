@@ -51,24 +51,24 @@ const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
   const getStatusColor = (): { bg: string; text: string; bar: string; icon: string } => {
     if (percentageUsed >= 90) {
       return {
-        bg: 'bg-red-50',
-        text: 'text-red-700',
+        bg: 'bg-red-500/20',
+        text: 'text-red-200',
         bar: 'bg-red-500',
-        icon: 'text-red-600'
+        icon: 'text-red-400'
       };
     } else if (percentageUsed >= 70) {
       return {
-        bg: 'bg-yellow-50',
-        text: 'text-yellow-700',
+        bg: 'bg-yellow-500/20',
+        text: 'text-yellow-200',
         bar: 'bg-yellow-500',
-        icon: 'text-yellow-600'
+        icon: 'text-yellow-400'
       };
     } else {
       return {
-        bg: 'bg-green-50',
-        text: 'text-green-700',
+        bg: 'bg-green-500/20',
+        text: 'text-green-200',
         bar: 'bg-green-500',
-        icon: 'text-green-600'
+        icon: 'text-green-400'
       };
     }
   };
@@ -89,8 +89,8 @@ const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
 
   return (
     <div 
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all ${
-        isClickable ? 'cursor-pointer hover:shadow-lg hover:border-green-300' : ''
+      className={`bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6 transition-all ${
+        isClickable ? 'cursor-pointer hover:shadow-lg hover:border-green-400/50' : ''
       }`}
       onClick={onClick}
       role={isClickable ? 'button' : undefined}
@@ -104,8 +104,8 @@ const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
             <DollarSign className={`w-5 h-5 ${statusColors.icon}`} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Budget Tracking</h3>
-            <p className="text-sm text-gray-600">{statusMessage}</p>
+            <h3 className="text-lg font-semibold text-white">Budget Tracking</h3>
+            <p className="text-sm text-gray-300">{statusMessage}</p>
           </div>
         </div>
         
@@ -126,7 +126,7 @@ const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
 
       {/* Progress Bar */}
       <div className="mb-4">
-        <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+        <div className="w-full bg-white/20 rounded-full h-4 overflow-hidden">
           <div
             className={`h-full ${statusColors.bar} transition-all duration-500 ease-out rounded-full`}
             style={{ width: `${Math.min(percentageUsed, 100)}%` }}
@@ -137,18 +137,18 @@ const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
       {/* Budget Details */}
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <p className="text-xs text-gray-600 mb-1">Total Budget</p>
-          <p className="text-lg font-bold text-gray-900">{formatCurrency(total)}</p>
+          <p className="text-xs text-gray-300 mb-1">Total Budget</p>
+          <p className="text-lg font-bold text-white">{formatCurrency(total)}</p>
         </div>
         
         <div>
-          <p className="text-xs text-gray-600 mb-1">Spent</p>
-          <p className="text-lg font-bold text-blue-600">{formatCurrency(spent)}</p>
+          <p className="text-xs text-gray-300 mb-1">Spent</p>
+          <p className="text-lg font-bold text-blue-400">{formatCurrency(spent)}</p>
         </div>
         
         <div>
-          <p className="text-xs text-gray-600 mb-1">Remaining</p>
-          <p className={`text-lg font-bold ${remaining < 0 ? 'text-red-600' : 'text-green-600'}`}>
+          <p className="text-xs text-gray-300 mb-1">Remaining</p>
+          <p className={`text-lg font-bold ${remaining < 0 ? 'text-red-400' : 'text-green-400'}`}>
             {formatCurrency(remaining)}
           </p>
         </div>
@@ -156,11 +156,11 @@ const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
 
       {/* Over-budget warning */}
       {remaining < 0 && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <div className="mt-4 p-3 bg-red-500/20 border border-red-400/50 rounded-lg flex items-start gap-2">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-red-800">Budget Exceeded</p>
-            <p className="text-xs text-red-700">
+            <p className="text-sm font-semibold text-red-200">Budget Exceeded</p>
+            <p className="text-xs text-red-300">
               This project is over budget by {formatCurrency(Math.abs(remaining))}. 
               Review expenses and consider client consultation.
             </p>
@@ -170,8 +170,8 @@ const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
 
       {/* Click prompt (if clickable) */}
       {isClickable && (
-        <div className="mt-4 pt-3 border-t border-gray-100">
-          <p className="text-xs text-gray-500 font-medium text-center">
+        <div className="mt-4 pt-3 border-t border-white/10">
+          <p className="text-xs text-gray-300 font-medium text-center">
             Click to view spending breakdown →
           </p>
         </div>

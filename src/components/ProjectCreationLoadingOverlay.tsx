@@ -24,16 +24,16 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
 
   // 10 visual steps representing the project creation process
   const steps = [
-    { icon: Database, text: "Initializing project database", color: "text-blue-600", borderColor: "border-blue-600" },
-    { icon: FileText, text: "Processing project brief", color: "text-purple-600", borderColor: "border-purple-600" },
-    { icon: Cpu, text: "Running AI analysis", color: "text-indigo-600", borderColor: "border-indigo-600" },
-    { icon: Target, text: "Identifying key requirements", color: "text-pink-600", borderColor: "border-pink-600" },
-    { icon: Users, text: "Analyzing supplier capabilities", color: "text-green-600", borderColor: "border-green-600" },
-    { icon: Zap, text: "Generating asset recommendations", color: "text-yellow-600", borderColor: "border-yellow-600" },
-    { icon: Clock, text: "Calculating timelines", color: "text-orange-600", borderColor: "border-orange-600" },
-    { icon: Sparkles, text: "Optimizing resource allocation", color: "text-teal-600", borderColor: "border-teal-600" },
-    { icon: Rocket, text: "Finalizing project setup", color: "text-red-600", borderColor: "border-red-600" },
-    { icon: CheckCircle, text: "Project creation complete!", color: "text-emerald-600", borderColor: "border-emerald-600" }
+    { icon: Database, text: "Initializing project database", color: "text-blue-400", borderColor: "border-blue-400" },
+    { icon: FileText, text: "Processing project brief", color: "text-purple-400", borderColor: "border-purple-400" },
+    { icon: Cpu, text: "Running AI analysis", color: "text-indigo-400", borderColor: "border-indigo-400" },
+    { icon: Target, text: "Identifying key requirements", color: "text-pink-400", borderColor: "border-pink-400" },
+    { icon: Users, text: "Analyzing supplier capabilities", color: "text-green-400", borderColor: "border-green-400" },
+    { icon: Zap, text: "Generating asset recommendations", color: "text-yellow-400", borderColor: "border-yellow-400" },
+    { icon: Clock, text: "Calculating timelines", color: "text-orange-400", borderColor: "border-orange-400" },
+    { icon: Sparkles, text: "Optimizing resource allocation", color: "text-teal-400", borderColor: "border-teal-400" },
+    { icon: Rocket, text: "Finalizing project setup", color: "text-red-400", borderColor: "border-red-400" },
+    { icon: CheckCircle, text: "Project creation complete!", color: "text-emerald-400", borderColor: "border-emerald-400" }
   ];
 
 
@@ -74,10 +74,10 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
       aria-modal="true"
     >
       {/* Main loading container */}
-      <div className="flex flex-col items-center justify-center space-y-6 p-8 bg-white rounded-2xl shadow-2xl max-w-lg mx-4">
+      <div className="flex flex-col items-center justify-center space-y-6 p-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] max-w-lg mx-4">
         {/* Current step icon with animation */}
         <div className="relative">
-          <div className={`w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center transition-all duration-500 ${currentStepData.color}`}>
+          <div className={`w-20 h-20 rounded-full bg-white/10 flex items-center justify-center transition-all duration-500 ${currentStepData.color}`}>
             <CurrentIcon className="w-10 h-10" />
           </div>
           {/* Pulsing ring around the icon */}
@@ -86,13 +86,13 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
 
         {/* Step progress bar */}
         <div className="w-full max-w-xs">
-          <div className="flex justify-between text-xs text-gray-500 mb-2">
+          <div className="flex justify-between text-xs text-gray-300 mb-2">
             <span>Step {currentStep + 1} of {steps.length}</span>
             <span>{Math.round(progressPercentage)}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-white/20 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-teal-500 to-purple-500 h-2 rounded-full transition-all duration-1000 ease-out"
+              className="bg-gradient-to-r from-teal-400 to-emerald-400 h-2 rounded-full transition-all duration-1000 ease-out"
               style={{ width: `${progressPercentage}%` }}
             ></div>
           </div>
@@ -106,7 +106,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
         </div>
 
         {/* Subtle instruction */}
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-xs text-gray-300 text-center">
           {currentStep === steps.length - 1 
             ? "Almost done! Finalizing your project..." 
             : "This may take a few moments while we process your brief..."

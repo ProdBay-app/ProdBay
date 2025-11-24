@@ -145,10 +145,10 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
+      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -185,8 +185,8 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Asset Name */}
           <div>
-            <label htmlFor="asset_name" className="block text-sm font-semibold text-gray-700 mb-2">
-              Asset Name <span className="text-red-500">*</span>
+            <label htmlFor="asset_name" className="block text-sm font-semibold text-gray-200 mb-2">
+              Asset Name <span className="text-red-400">*</span>
             </label>
             <input
               id="asset_name"
@@ -196,18 +196,18 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
               onChange={handleInputChange}
               required
               disabled={isSubmitting}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500"
+              className="w-full px-4 py-3 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed"
               placeholder="e.g., Exhibition Booth Design, Marketing Brochure"
               autoFocus
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-300">
               Provide a clear, descriptive name for this asset
             </p>
           </div>
 
           {/* Specifications */}
           <div>
-            <label htmlFor="specifications" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="specifications" className="block text-sm font-semibold text-gray-200 mb-2">
               Specifications <span className="text-gray-400 font-normal">(Optional)</span>
             </label>
             <textarea
@@ -217,22 +217,22 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
               onChange={handleInputChange}
               disabled={isSubmitting}
               rows={5}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none disabled:bg-gray-50 disabled:text-gray-500"
+              className="w-full px-4 py-3 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed"
               placeholder="Describe the asset requirements, dimensions, materials, or any other specifications..."
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-300">
               Add detailed specifications to help guide production
             </p>
           </div>
 
           {/* Quantity */}
           <div>
-            <label htmlFor="quantity" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="quantity" className="block text-sm font-semibold text-gray-200 mb-2">
               Quantity <span className="text-gray-400 font-normal">(Optional)</span>
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Hash className="h-5 w-5 text-gray-400" />
+                <Hash className="h-5 w-5 text-gray-300" />
               </div>
               <input
                 id="quantity"
@@ -242,18 +242,18 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                 value={formData.quantity || ''}
                 onChange={handleInputChange}
                 disabled={isSubmitting}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500"
+                className="w-full pl-10 pr-4 py-3 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed"
                 placeholder="Enter quantity (e.g., 100)"
               />
             </div>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-300">
               Specify the quantity or amount needed for this asset
             </p>
           </div>
 
           {/* Tags */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-200 mb-2">
               Tags <span className="text-gray-400 font-normal">(Optional)</span>
             </label>
             
@@ -288,32 +288,32 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                 type="button"
                 onClick={() => setShowTagSelector(!showTagSelector)}
                 disabled={isSubmitting}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-50 disabled:text-gray-500 text-left flex items-center gap-2"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 text-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed text-left flex items-center gap-2"
               >
-                <Tag className="w-5 h-5 text-gray-400" />
-                <span className="text-gray-500">
+                <Tag className="w-5 h-5 text-gray-300" />
+                <span>
                   {formData.tags.length > 0 ? `${formData.tags.length} tag(s) selected` : 'Select tags...'}
                 </span>
               </button>
 
               {/* Tag Dropdown */}
               {showTagSelector && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-hidden">
+                <div className="absolute z-10 w-full mt-1 bg-gray-900 border border-white/20 rounded-lg shadow-lg max-h-60 overflow-hidden">
                   {/* Search */}
-                  <div className="p-3 border-b border-gray-200">
+                  <div className="p-3 border-b border-white/20">
                     <input
                       type="text"
                       placeholder="Search tags..."
                       value={tagSearchTerm}
                       onChange={(e) => setTagSearchTerm(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
                   </div>
 
                   {/* Tag List */}
                   <div className="max-h-48 overflow-y-auto">
                     {filteredTags.length === 0 ? (
-                      <div className="p-3 text-sm text-gray-500 text-center">
+                      <div className="p-3 text-sm text-gray-300 text-center">
                         No tags found
                       </div>
                     ) : (
@@ -322,8 +322,8 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                           key={tag.name}
                           type="button"
                           onClick={() => handleTagToggle(tag.name)}
-                          className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 ${
-                            formData.tags.includes(tag.name) ? 'bg-purple-50' : ''
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2 ${
+                            formData.tags.includes(tag.name) ? 'bg-purple-500/20' : ''
                           }`}
                         >
                           <div
@@ -331,11 +331,11 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                             style={{ backgroundColor: tag.color }}
                           />
                           <div className="flex-1">
-                            <div className="font-medium">{tag.name}</div>
-                            <div className="text-xs text-gray-500">{tag.description}</div>
+                            <div className="font-medium text-white">{tag.name}</div>
+                            <div className="text-xs text-gray-300">{tag.description}</div>
                           </div>
                           {formData.tags.includes(tag.name) && (
-                            <div className="text-purple-600">✓</div>
+                            <div className="text-purple-300">✓</div>
                           )}
                         </button>
                       ))
@@ -344,37 +344,36 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                 </div>
               )}
             </div>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-300">
               Categorize your asset with predefined tags for better organization
             </p>
           </div>
 
           {/* Info Box - Conditional based on mode */}
           {mode === 'create' && (
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-              <p className="text-sm text-purple-800">
-                <span className="font-semibold">Note:</span> New assets are created with a "Pending" status. 
-                You can update the status, timeline, and assign suppliers later.
+            <div className="bg-purple-500/20 border border-purple-400/30 rounded-lg p-4">
+              <p className="text-sm text-purple-200">
+                <span className="font-semibold">Note:</span> New assets can be updated with timeline and supplier assignments later.
               </p>
             </div>
           )}
 
           {mode === 'edit' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
+            <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-4">
+              <p className="text-sm text-blue-200">
                 <span className="font-semibold">Note:</span> This will update the asset's name and specifications. 
-                Status, timeline, and supplier assignments will remain unchanged.
+                Timeline and supplier assignments will remain unchanged.
               </p>
             </div>
           )}
 
           {/* Form Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/20">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 rounded-lg border border-white/20 text-gray-200 font-medium hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
