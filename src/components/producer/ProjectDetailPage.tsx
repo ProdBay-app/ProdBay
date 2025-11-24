@@ -278,17 +278,17 @@ const ProjectDetailPage: React.FC = () => {
   const getStatusBadgeColor = (status: Project['project_status']): string => {
     switch (status) {
       case 'New':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-500/30 text-blue-200 border-blue-400/50';
       case 'In Progress':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-purple-500/30 text-purple-200 border-purple-400/50';
       case 'Quoting':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-yellow-500/30 text-yellow-200 border-yellow-400/50';
       case 'Completed':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-500/30 text-green-200 border-green-400/50';
       case 'Cancelled':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-white/20 text-gray-200 border-white/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-white/20 text-gray-200 border-white/30';
     }
   };
 
@@ -486,10 +486,10 @@ const ProjectDetailPage: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading project details...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-400 mx-auto mb-4"></div>
+          <p className="text-gray-200 text-lg">Loading project details...</p>
         </div>
       </div>
     );
@@ -498,15 +498,15 @@ const ProjectDetailPage: React.FC = () => {
   // Error state
   if (error || !project) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center max-w-md">
-          <div className="bg-red-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-10 h-10 text-red-600" />
+          <div className="bg-red-500/20 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-10 h-10 text-red-400" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-2xl font-bold text-white mb-2">
             {error || 'Project Not Found'}
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-200 mb-6">
             The project you're looking for doesn't exist or has been removed.
           </p>
           <button
@@ -525,12 +525,12 @@ const ProjectDetailPage: React.FC = () => {
   return (
     <>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-transparent border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Page title */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-white">
                 {project.project_name}
               </h1>
             </div>
@@ -563,18 +563,18 @@ const ProjectDetailPage: React.FC = () => {
           >
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-purple-600" />
-                <span className="text-xs font-medium">{project.client_name}</span>
+                <User className="w-4 h-4 text-purple-300" />
+                <span className="text-xs font-medium text-gray-200">{project.client_name}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-600" />
-                <span className="text-xs">
+                <Calendar className="w-4 h-4 text-blue-300" />
+                <span className="text-xs text-gray-300">
                   {formatDate(project.timeline_deadline ?? null)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-green-600" />
-                <span className="text-xs">{formatCurrency(project.financial_parameters ?? 0)}</span>
+                <DollarSign className="w-4 h-4 text-green-300" />
+                <span className="text-xs text-gray-300">{formatCurrency(project.financial_parameters ?? 0)}</span>
               </div>
             </div>
           </SummaryCard>
@@ -598,7 +598,7 @@ const ProjectDetailPage: React.FC = () => {
               {/* Progress Bar */}
               {trackingSummary && (
                 <div className="w-full">
-                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
                     <div
                       className={`h-full transition-all duration-500 ease-out rounded-full ${
                         trackingSummary.budget.percentageUsed >= 90
@@ -611,11 +611,11 @@ const ProjectDetailPage: React.FC = () => {
                     />
                   </div>
                   <div className="flex justify-between items-center mt-1">
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-gray-300">
                       {trackingSummary.budget.percentageUsed.toFixed(1)}% used
                     </span>
                     <span className={`text-xs font-medium ${
-                      trackingSummary.budget.remaining < 0 ? 'text-red-600' : 'text-green-600'
+                      trackingSummary.budget.remaining < 0 ? 'text-red-400' : 'text-green-400'
                     }`}>
                       {formatCurrency(trackingSummary.budget.remaining)} remaining
                     </span>
@@ -625,8 +625,8 @@ const ProjectDetailPage: React.FC = () => {
               
               {/* Loading State */}
               {!trackingSummary && (
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="h-full bg-gray-300 rounded-full animate-pulse" style={{ width: '30%' }} />
+                <div className="w-full bg-white/20 rounded-full h-2">
+                  <div className="h-full bg-white/30 rounded-full animate-pulse" style={{ width: '30%' }} />
                 </div>
               )}
             </div>
@@ -642,18 +642,18 @@ const ProjectDetailPage: React.FC = () => {
             <div className="space-y-2">
               {/* Start Date */}
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-600" />
-                <span className="text-xs font-medium">Started</span>
-                <span className="text-xs text-gray-600">
+                <Clock className="w-4 h-4 text-gray-300" />
+                <span className="text-xs font-medium text-gray-200">Started</span>
+                <span className="text-xs text-gray-300">
                   {formatDate(project.created_at)}
                 </span>
               </div>
               
               {/* Deadline */}
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-medium">Deadline</span>
-                <span className="text-xs text-gray-600">
+                <Calendar className="w-4 h-4 text-blue-300" />
+                <span className="text-xs font-medium text-gray-200">Deadline</span>
+                <span className="text-xs text-gray-300">
                   {formatDate(project.timeline_deadline ?? null)}
                 </span>
               </div>
@@ -663,10 +663,10 @@ const ProjectDetailPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-medium ${
                     trackingSummary.timeline.daysRemaining < 0 
-                      ? 'text-red-600' 
+                      ? 'text-red-400' 
                       : trackingSummary.timeline.daysRemaining <= 7 
-                      ? 'text-orange-600' 
-                      : 'text-green-600'
+                      ? 'text-orange-400' 
+                      : 'text-green-400'
                   }`}>
                     {trackingSummary.timeline.daysRemaining < 0 
                       ? `${Math.abs(trackingSummary.timeline.daysRemaining)} days overdue`
@@ -678,7 +678,7 @@ const ProjectDetailPage: React.FC = () => {
               
               {/* Milestone Count */}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-400">
                   {trackingSummary?.timeline.milestones.length || 0} milestones
                 </span>
               </div>
@@ -695,12 +695,12 @@ const ProjectDetailPage: React.FC = () => {
             <div className="space-y-2">
               {/* Your Actions */}
               <div className="flex items-center gap-2">
-                <CheckSquare className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-medium">Your Actions</span>
+                <CheckSquare className="w-4 h-4 text-blue-300" />
+                <span className="text-xs font-medium text-gray-200">Your Actions</span>
                 <span className={`text-xs font-bold ${
                   trackingSummary && trackingSummary.actions.producerActions > 0 
-                    ? 'text-orange-600' 
-                    : 'text-gray-600'
+                    ? 'text-orange-400' 
+                    : 'text-gray-300'
                 }`}>
                   {trackingSummary ? trackingSummary.actions.producerActions : '0'}
                 </span>
@@ -708,25 +708,25 @@ const ProjectDetailPage: React.FC = () => {
               
               {/* Their Actions */}
               <div className="flex items-center gap-2">
-                <UsersIcon className="w-4 h-4 text-purple-600" />
-                <span className="text-xs font-medium">Their Actions</span>
+                <UsersIcon className="w-4 h-4 text-purple-300" />
+                <span className="text-xs font-medium text-gray-200">Their Actions</span>
                 <span className={`text-xs font-bold ${
                   trackingSummary && trackingSummary.actions.supplierActions > 0 
-                    ? 'text-orange-600' 
-                    : 'text-gray-600'
+                    ? 'text-orange-400' 
+                    : 'text-gray-300'
                 }`}>
                   {trackingSummary ? trackingSummary.actions.supplierActions : '0'}
                 </span>
               </div>
               
               {/* Total Pending Actions */}
-              <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
-                <AlertCircle className="w-4 h-4 text-gray-500" />
-                <span className="text-xs font-medium text-gray-600">Total Pending</span>
+              <div className="flex items-center gap-2 pt-1 border-t border-white/10">
+                <AlertCircle className="w-4 h-4 text-gray-400" />
+                <span className="text-xs font-medium text-gray-300">Total Pending</span>
                 <span className={`text-xs font-bold ${
                   trackingSummary && (trackingSummary.actions.producerActions + trackingSummary.actions.supplierActions) > 0 
-                    ? 'text-orange-600' 
-                    : 'text-gray-600'
+                    ? 'text-orange-400' 
+                    : 'text-gray-300'
                 }`}>
                   {trackingSummary 
                     ? trackingSummary.actions.producerActions + trackingSummary.actions.supplierActions 
@@ -748,12 +748,12 @@ const ProjectDetailPage: React.FC = () => {
                   className={`w-2 h-2 rounded-full transition-colors duration-200 ${
                     activeSection === section 
                       ? 'bg-teal-500' 
-                      : 'bg-gray-300'
+                      : 'bg-white/20'
                   }`}
                 />
               ))}
             </div>
-            <p className="text-xs text-gray-500 ml-3 mt-0.5">Swipe to navigate</p>
+            <p className="text-xs text-gray-300 ml-3 mt-0.5">Swipe to navigate</p>
           </div>
         )}
 
@@ -782,14 +782,14 @@ const ProjectDetailPage: React.FC = () => {
                     variants={itemVariants}
                     transition={{ duration: 0.3, ease: "easeOut" }}
                   >
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <User className="w-5 h-5 text-purple-600" />
+                    <div className="p-2 bg-purple-500/20 rounded-lg">
+                      <User className="w-5 h-5 text-purple-300" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-gray-600 mb-1">Client</p>
+                      <p className="text-sm text-gray-300 mb-1">Client</p>
                       <button
                         onClick={() => setIsClientModalOpen(true)}
-                        className="text-lg font-semibold text-teal-600 hover:text-teal-700 hover:underline transition-colors text-left"
+                        className="text-lg font-semibold text-teal-300 hover:text-teal-200 hover:underline transition-colors text-left"
                         title={`View all projects for ${project.client_name}`}
                       >
                         {project.client_name}
@@ -803,12 +803,12 @@ const ProjectDetailPage: React.FC = () => {
                     variants={itemVariants}
                     transition={{ duration: 0.3, ease: "easeOut" }}
                   >
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <DollarSign className="w-5 h-5 text-green-600" />
+                    <div className="p-2 bg-green-500/20 rounded-lg">
+                      <DollarSign className="w-5 h-5 text-green-300" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-gray-600 mb-1">Budget</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-sm text-gray-300 mb-1">Budget</p>
+                      <p className="text-lg font-semibold text-white">
                         {formatCurrency(project.financial_parameters ?? 0)}
                       </p>
                     </div>
@@ -820,12 +820,12 @@ const ProjectDetailPage: React.FC = () => {
                     variants={itemVariants}
                     transition={{ duration: 0.3, ease: "easeOut" }}
                   >
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Calendar className="w-5 h-5 text-blue-600" />
+                    <div className="p-2 bg-blue-500/20 rounded-lg">
+                      <Calendar className="w-5 h-5 text-blue-300" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-gray-600 mb-1">Deadline</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-sm text-gray-300 mb-1">Deadline</p>
+                      <p className="text-lg font-semibold text-white">
                         {formatDate(project.timeline_deadline ?? null)}
                       </p>
                     </div>
@@ -837,12 +837,12 @@ const ProjectDetailPage: React.FC = () => {
                     variants={itemVariants}
                     transition={{ duration: 0.3, ease: "easeOut" }}
                   >
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Clock className="w-5 h-5 text-gray-600" />
+                    <div className="p-2 bg-white/10 rounded-lg">
+                      <Clock className="w-5 h-5 text-gray-300" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-gray-600 mb-1">Created</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-sm text-gray-300 mb-1">Created</p>
+                      <p className="text-lg font-semibold text-white">
                         {formatDate(project.created_at)}
                       </p>
                     </div>
@@ -870,8 +870,8 @@ const ProjectDetailPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
-                      <p className="text-gray-600">Loading budget information...</p>
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-400 border-t-transparent mx-auto mb-4"></div>
+                      <p className="text-gray-300">Loading budget information...</p>
                     </div>
                   )}
                 </motion.div>
@@ -896,8 +896,8 @@ const ProjectDetailPage: React.FC = () => {
                     />
                   ) : (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
-                      <p className="text-gray-600">Loading timeline information...</p>
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-400 border-t-transparent mx-auto mb-4"></div>
+                      <p className="text-gray-300">Loading timeline information...</p>
                     </div>
                   )}
                 </motion.div>
@@ -917,8 +917,8 @@ const ProjectDetailPage: React.FC = () => {
                         label="Your Actions"
                         count={trackingSummary.actions.producerActions}
                         icon={CheckSquare}
-                        iconColor="text-blue-600"
-                        bgColor="bg-blue-100"
+                        iconColor="text-blue-300"
+                        bgColor="bg-blue-500/20"
                         description="Tasks requiring your attention"
                       />
                       
@@ -926,15 +926,15 @@ const ProjectDetailPage: React.FC = () => {
                         label="Their Actions"
                         count={trackingSummary.actions.supplierActions}
                         icon={UsersIcon}
-                        iconColor="text-purple-600"
-                        bgColor="bg-purple-100"
+                        iconColor="text-purple-300"
+                        bgColor="bg-purple-500/20"
                         description="Pending supplier responses"
                       />
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-500 border-t-transparent mx-auto mb-4"></div>
-                      <p className="text-gray-600">Loading action items...</p>
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-teal-400 border-t-transparent mx-auto mb-4"></div>
+                      <p className="text-gray-300">Loading action items...</p>
                     </div>
                   )}
                 </motion.div>
@@ -951,10 +951,10 @@ const ProjectDetailPage: React.FC = () => {
             
             {/* Asset Headers & Filters Section */}
             <div className="lg:col-span-2 h-full">
-              <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6 pb-4 h-full flex flex-col">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 shadow-sm rounded-lg p-6 pb-4 h-full flex flex-col">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Assets ({assets.length})</h3>
+                    <h3 className="text-2xl font-bold text-white">Assets ({assets.length})</h3>
                   </div>
                   
                   {/* Filters and Add Asset buttons moved here */}

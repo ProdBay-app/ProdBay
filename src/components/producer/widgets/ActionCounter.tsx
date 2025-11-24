@@ -28,8 +28,8 @@ const ActionCounter: React.FC<ActionCounterProps> = ({
   label,
   count,
   icon: Icon,
-  iconColor = 'text-blue-600',
-  bgColor = 'bg-blue-100',
+  iconColor = 'text-blue-300',
+  bgColor = 'bg-blue-500/20',
   description,
   onClick
 }) => {
@@ -39,8 +39,8 @@ const ActionCounter: React.FC<ActionCounterProps> = ({
 
   return (
     <div 
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all ${
-        isClickable ? 'cursor-pointer hover:shadow-md hover:border-gray-300' : ''
+      className={`bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6 transition-all ${
+        isClickable ? 'cursor-pointer hover:shadow-md hover:border-white/30' : ''
       }`}
       onClick={onClick}
       role={isClickable ? 'button' : undefined}
@@ -60,7 +60,7 @@ const ActionCounter: React.FC<ActionCounterProps> = ({
         
         {/* Warning badge if there are pending actions */}
         {hasActions && (
-          <div className="flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+          <div className="flex items-center gap-1 bg-orange-500/30 text-orange-200 px-2 py-1 rounded-full">
             <AlertCircle className="w-3 h-3" />
             <span className="text-xs font-semibold">Pending</span>
           </div>
@@ -70,26 +70,26 @@ const ActionCounter: React.FC<ActionCounterProps> = ({
       {/* Count and label */}
       <div className="mb-2">
         <p className={`text-4xl font-bold transition-colors ${
-          hasActions ? 'text-orange-600' : 'text-gray-900'
+          hasActions ? 'text-orange-400' : 'text-white'
         }`}>
           {count}
         </p>
-        <h3 className="text-lg font-semibold text-gray-900 mt-1">
+        <h3 className="text-lg font-semibold text-white mt-1">
           {label}
         </h3>
       </div>
 
       {/* Description */}
       {description && (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-300">
           {description}
         </p>
       )}
 
       {/* Action prompt (if clickable and has actions) */}
       {isClickable && hasActions && (
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          <p className="text-xs text-gray-500 font-medium">
+        <div className="mt-3 pt-3 border-t border-white/10">
+          <p className="text-xs text-gray-300 font-medium">
             Click to view details →
           </p>
         </div>
@@ -97,8 +97,8 @@ const ActionCounter: React.FC<ActionCounterProps> = ({
 
       {/* No actions message */}
       {!hasActions && (
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          <p className="text-xs text-gray-500">
+        <div className="mt-3 pt-3 border-t border-white/10">
+          <p className="text-xs text-gray-300">
             All caught up! 🎉
           </p>
         </div>

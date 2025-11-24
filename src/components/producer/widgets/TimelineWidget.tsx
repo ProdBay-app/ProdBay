@@ -42,7 +42,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
   const getDeadlineStatus = (): { color: string; icon: React.ReactNode; message: string } => {
     if (!daysRemaining) {
       return {
-        color: 'text-gray-600',
+        color: 'text-gray-300',
         icon: <Calendar className="w-5 h-5" />,
         message: 'No deadline set'
       };
@@ -50,19 +50,19 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
 
     if (daysRemaining < 0) {
       return {
-        color: 'text-red-600',
+        color: 'text-red-400',
         icon: <AlertTriangle className="w-5 h-5" />,
         message: `${Math.abs(daysRemaining)} days overdue`
       };
     } else if (daysRemaining <= 7) {
       return {
-        color: 'text-orange-600',
+        color: 'text-orange-400',
         icon: <Clock className="w-5 h-5" />,
         message: `${daysRemaining} days remaining`
       };
     } else {
       return {
-        color: 'text-green-600',
+        color: 'text-green-400',
         icon: <Calendar className="w-5 h-5" />,
         message: `${daysRemaining} days remaining`
       };
@@ -78,16 +78,16 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
   const totalCount = milestones.length;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Calendar className="w-5 h-5 text-blue-600" />
+          <div className="p-2 bg-blue-500/20 rounded-lg">
+            <Calendar className="w-5 h-5 text-blue-300" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Project Timeline</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-white">Project Timeline</h3>
+            <p className="text-sm text-gray-300">
               {totalCount > 0 
                 ? `${completedCount} of ${totalCount} milestones completed`
                 : 'No milestones set'}
@@ -126,7 +126,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
       {sortedMilestones.length > 0 ? (
         <div className="relative">
           {/* Timeline line */}
-          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
+          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-white/20" />
           
           {/* Milestones */}
           <div className="space-y-6">
@@ -150,7 +150,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
                       </div>
                     )}
                     {isPending && (
-                      <div className="bg-white border-2 border-gray-300 rounded-full p-1">
+                      <div className="bg-white/10 border-2 border-white/30 rounded-full p-1">
                         <Circle className="w-6 h-6 text-gray-300" />
                       </div>
                     )}
@@ -167,10 +167,10 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
                             e.stopPropagation();
                             onEditMilestone(milestone);
                           }}
-                          className="p-1.5 bg-white border border-gray-300 hover:bg-blue-50 hover:border-blue-500 rounded-lg transition-colors shadow-sm"
+                          className="p-1.5 bg-white/10 border border-white/30 hover:bg-blue-500/20 hover:border-blue-400/50 rounded-lg transition-colors shadow-sm"
                           aria-label="Edit milestone"
                         >
-                          <Edit className="w-4 h-4 text-gray-700 hover:text-blue-600" />
+                          <Edit className="w-4 h-4 text-gray-200 hover:text-blue-300" />
                         </button>
                       )}
                       
@@ -182,10 +182,10 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
                             e.stopPropagation();
                             onDeleteMilestone(milestone);
                           }}
-                          className="p-1.5 bg-white border border-gray-300 hover:bg-red-50 hover:border-red-500 rounded-lg transition-colors shadow-sm"
+                          className="p-1.5 bg-white/10 border border-white/30 hover:bg-red-500/20 hover:border-red-400/50 rounded-lg transition-colors shadow-sm"
                           aria-label="Delete milestone"
                         >
-                          <Trash2 className="w-4 h-4 text-gray-700 hover:text-red-600" />
+                          <Trash2 className="w-4 h-4 text-gray-200 hover:text-red-300" />
                         </button>
                       )}
                     </div>
@@ -196,22 +196,22 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
                     <div className="flex items-start justify-between">
                       <div>
                         <h4 className={`font-semibold ${
-                          isCompleted ? 'text-gray-900' : 
+                          isCompleted ? 'text-white' : 
                           isCancelled ? 'text-gray-400 line-through' : 
-                          'text-gray-700'
+                          'text-gray-200'
                         }`}>
                           {milestone.milestone_name}
                         </h4>
                         {milestone.description && (
-                          <p className="text-sm text-gray-600 mt-1">
+                          <p className="text-sm text-gray-300 mt-1">
                             {milestone.description}
                           </p>
                         )}
                       </div>
                       <span className={`text-xs font-medium px-2 py-1 rounded ${
-                        isCompleted ? 'bg-green-100 text-green-700' :
-                        isCancelled ? 'bg-gray-100 text-gray-500' :
-                        'bg-blue-100 text-blue-700'
+                        isCompleted ? 'bg-green-500/30 text-green-200' :
+                        isCancelled ? 'bg-white/20 text-gray-300' :
+                        'bg-blue-500/30 text-blue-200'
                       }`}>
                         {formatDate(milestone.milestone_date)}
                       </span>
@@ -224,7 +224,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
 
           {/* Final deadline marker */}
           {deadline && (
-            <div className="relative flex items-start gap-4 pl-10 mt-6 pt-6 border-t border-gray-200">
+            <div className="relative flex items-start gap-4 pl-10 mt-6 pt-6 border-t border-white/20">
               <div className="absolute left-0 z-10">
                 <div className={`rounded-full p-1 ${
                   daysRemaining && daysRemaining < 0 
@@ -240,17 +240,17 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
               <div className="flex-1">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="font-bold text-gray-900">Project Deadline</h4>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <h4 className="font-bold text-white">Project Deadline</h4>
+                    <p className="text-sm text-gray-300 mt-1">
                       Final delivery date
                     </p>
                   </div>
                   <span className={`text-xs font-medium px-2 py-1 rounded ${
                     daysRemaining && daysRemaining < 0 
-                      ? 'bg-red-100 text-red-700' 
+                      ? 'bg-red-500/30 text-red-200' 
                       : daysRemaining && daysRemaining <= 7 
-                      ? 'bg-orange-100 text-orange-700' 
-                      : 'bg-blue-100 text-blue-700'
+                      ? 'bg-orange-500/30 text-orange-200' 
+                      : 'bg-blue-500/30 text-blue-200'
                   }`}>
                     {formatDate(deadline)}
                   </span>
@@ -263,16 +263,16 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
         /* Empty state */
         <div className="text-center py-8">
           <Circle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-600 font-medium">No milestones yet</p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-gray-300 font-medium">No milestones yet</p>
+          <p className="text-sm text-gray-400 mt-1">
             Add milestones to track project progress
           </p>
           {deadline && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg inline-block">
-              <p className="text-sm text-gray-700">
+            <div className="mt-4 p-3 bg-blue-500/20 border border-blue-400/30 rounded-lg inline-block">
+              <p className="text-sm text-gray-200">
                 <span className="font-semibold">Deadline:</span> {formatDate(deadline)}
               </p>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-gray-300 mt-1">
                 {deadlineStatus.message}
               </p>
             </div>

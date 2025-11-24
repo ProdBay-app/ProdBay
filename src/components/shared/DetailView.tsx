@@ -28,7 +28,7 @@ interface DetailViewProps {
 const DetailView: React.FC<DetailViewProps> = ({ title, children, isMobile = false, prefersReducedMotion = false }) => {
   return (
     <motion.div 
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 ${
+      className={`bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 ${
         isMobile ? 'p-4' : 'p-6'
       } min-h-[400px]`}
       animate={{ opacity: 1 }}
@@ -39,7 +39,7 @@ const DetailView: React.FC<DetailViewProps> = ({ title, children, isMobile = fal
     >
       {/* Only render header if title is provided */}
       {title && (
-        <h2 className={`font-bold text-gray-900 ${
+        <h2 className={`font-bold text-white ${
           isMobile ? 'text-lg mb-4' : 'text-2xl mb-6'
         }`}>
           {title}
