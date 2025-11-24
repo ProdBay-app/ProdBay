@@ -170,7 +170,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
 
       {/* Modal Content */}
       <div
-        className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto z-[101]"
+        className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto z-[101]"
         onClick={(e) => e.stopPropagation()}
       >
 
@@ -229,15 +229,15 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
             <div className="p-6 space-y-6">
               {/* Overview Section */}
               <section>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-purple-600" />
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-purple-300" />
                   Overview
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Asset Name */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-200 mb-2">
                       Asset Name
                     </label>
                     {isEditing ? (
@@ -245,18 +245,18 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                         type="text"
                         value={editingData.asset_name}
                         onChange={(e) => setEditingData(prev => ({ ...prev, asset_name: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       />
                     ) : (
-                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <p className="text-gray-800 font-medium">{asset.asset_name}</p>
+                      <div className="bg-black/20 rounded-lg p-4 border border-white/20">
+                        <p className="text-white font-medium">{asset.asset_name}</p>
                       </div>
                     )}
                   </div>
 
                   {/* Specifications */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-200 mb-2">
                       Specifications
                     </label>
                     {isEditing ? (
@@ -264,17 +264,17 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                         value={editingData.specifications}
                         onChange={(e) => setEditingData(prev => ({ ...prev, specifications: e.target.value }))}
                         rows={4}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="Enter asset specifications"
                       />
                     ) : (
-                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <div className="bg-black/20 rounded-lg p-4 border border-white/20">
                         {asset.specifications ? (
-                          <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                          <p className="text-white whitespace-pre-wrap leading-relaxed">
                             {asset.specifications}
                           </p>
                         ) : (
-                          <p className="text-gray-400 italic">No specifications provided</p>
+                          <p className="text-gray-300 italic">No specifications provided</p>
                         )}
                       </div>
                     )}
@@ -282,19 +282,19 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
 
                   {/* Timeline */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <Calendar className="w-4 h-4 inline mr-1.5 text-purple-600" />
+                    <label className="block text-sm font-semibold text-gray-200 mb-2">
+                      <Calendar className="w-4 h-4 inline mr-1.5 text-purple-300" />
                       Timeline
                     </label>
-                    <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                      <p className="text-gray-800">{formattedTimeline}</p>
+                    <div className="bg-black/20 rounded-lg p-3 border border-white/20">
+                      <p className="text-white">{formattedTimeline}</p>
                     </div>
                   </div>
 
                   {/* Quantity */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <Hash className="w-4 h-4 inline mr-1.5 text-purple-600" />
+                    <label className="block text-sm font-semibold text-gray-200 mb-2">
+                      <Hash className="w-4 h-4 inline mr-1.5 text-purple-300" />
                       Quantity
                     </label>
                     {isEditing ? (
@@ -306,12 +306,12 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                           ...prev, 
                           quantity: e.target.value ? parseInt(e.target.value, 10) : undefined 
                         }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="Optional"
                       />
                     ) : (
-                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                        <p className="text-gray-800">
+                      <div className="bg-black/20 rounded-lg p-3 border border-white/20">
+                        <p className="text-white">
                           {asset.quantity ? asset.quantity.toLocaleString() : 'Not specified'}
                         </p>
                       </div>
@@ -320,10 +320,10 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
 
                   {/* Status - Interactive Dropdown */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-200 mb-2">
                       Status
                       {isUpdatingStatus && (
-                        <span className="ml-2 text-xs text-purple-600 font-normal">
+                        <span className="ml-2 text-xs text-purple-300 font-normal">
                           Updating...
                         </span>
                       )}
@@ -339,8 +339,8 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 {/* Tags Section */}
                 {asset.tags && asset.tags.length > 0 && (
                   <div className="mt-6">
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
-                      <Tag className="w-4 h-4 inline mr-1.5 text-purple-600" />
+                    <label className="block text-sm font-semibold text-gray-200 mb-3">
+                      <Tag className="w-4 h-4 inline mr-1.5 text-purple-300" />
                       Tags
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -403,61 +403,61 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
 
               {/* Metadata Section */}
               <section>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-purple-600" />
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-purple-300" />
                   Metadata
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  <div className="bg-black/20 rounded-lg p-4 border border-white/20">
+                    <label className="block text-sm font-semibold text-gray-200 mb-1">
                       Created
                     </label>
-                    <p className="text-gray-800">{formattedCreatedAt}</p>
+                    <p className="text-white">{formattedCreatedAt}</p>
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  <div className="bg-black/20 rounded-lg p-4 border border-white/20">
+                    <label className="block text-sm font-semibold text-gray-200 mb-1">
                       Last Updated
                     </label>
-                    <p className="text-gray-800">{formattedUpdatedAt}</p>
+                    <p className="text-white">{formattedUpdatedAt}</p>
                   </div>
                 </div>
               </section>
 
               {/* Future Features - Placeholders */}
-              <section className="border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <section className="border-t border-white/20 pt-6">
+                <h3 className="text-lg font-semibold text-white mb-4">
                   Coming Soon
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Quotes Placeholder */}
-                  <div className="bg-gray-50 rounded-lg p-5 border-2 border-dashed border-gray-300 text-center">
-                    <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 font-medium text-sm">Quotes Comparison</p>
-                    <p className="text-gray-500 text-xs mt-1">View and compare supplier quotes</p>
+                  <div className="bg-white/5 rounded-lg p-5 border-2 border-dashed border-white/30 text-center">
+                    <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-white font-medium text-sm">Quotes Comparison</p>
+                    <p className="text-gray-300 text-xs mt-1">View and compare supplier quotes</p>
                   </div>
 
                   {/* Activity Placeholder */}
-                  <div className="bg-gray-50 rounded-lg p-5 border-2 border-dashed border-gray-300 text-center">
-                    <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 font-medium text-sm">Activity Log</p>
-                    <p className="text-gray-500 text-xs mt-1">Track changes and updates</p>
+                  <div className="bg-white/5 rounded-lg p-5 border-2 border-dashed border-white/30 text-center">
+                    <Clock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-white font-medium text-sm">Activity Log</p>
+                    <p className="text-gray-300 text-xs mt-1">Track changes and updates</p>
                   </div>
 
                   {/* Documents Placeholder */}
-                  <div className="bg-gray-50 rounded-lg p-5 border-2 border-dashed border-gray-300 text-center">
-                    <Package className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 font-medium text-sm">Documents</p>
-                    <p className="text-gray-500 text-xs mt-1">Attach files and references</p>
+                  <div className="bg-white/5 rounded-lg p-5 border-2 border-dashed border-white/30 text-center">
+                    <Package className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-white font-medium text-sm">Documents</p>
+                    <p className="text-gray-300 text-xs mt-1">Attach files and references</p>
                   </div>
                 </div>
               </section>
             </div>
 
             {/* Footer - Optional action buttons area for future use */}
-            <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-xl">
+            <div className="sticky bottom-0 bg-white/10 backdrop-blur-md px-6 py-4 border-t border-white/20 rounded-b-xl">
               <div className="flex justify-end">
                 <button
                   onClick={onClose}
