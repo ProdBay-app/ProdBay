@@ -49,7 +49,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
         if (quote.supplier) {
           const status: 'Requested' | 'Quoted' | 'Assigned' = 
             asset.assigned_supplier_id === quote.supplier.id ? 'Assigned' :
-            quote.cost > 0 && quote.status === 'Submitted' ? 'Quoted' :
+            (quote.status === 'Submitted' && Number(quote.cost || 0) > 0) || quote.status === 'Accepted' ? 'Quoted' :
             'Requested';
           
           supplierMap.set(quote.supplier.id, {
