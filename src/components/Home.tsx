@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Package,
+  Package, 
   Users, 
   ArrowRight, 
   CheckCircle,
@@ -286,7 +286,7 @@ const Home: React.FC = () => {
               </p>
             </div>
           </div>
-        </div>
+      </div>
     </div>
   );
 };

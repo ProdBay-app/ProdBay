@@ -79,56 +79,56 @@ const Layout: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2 sm:space-x-3">
-                <Link 
-                  to="/" 
-                  className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
-                  title="Go to Home"
-                >
+              <Link 
+                to="/" 
+                className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
+                title="Go to Home"
+              >
                   <Package className="h-6 w-6 sm:h-8 sm:w-8 text-blue-300 drop-shadow-lg" />
                   <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">ProdBay</h1>
                   {!isLandingPage && (
                     <span className="text-sm opacity-75 text-white/90 drop-shadow-md">| {userTypeLabel}</span>
                   )}
-                </Link>
-                
+              </Link>
+              
                 {/* Navigation Links - only show on app pages */}
                 {showNavLinks && (
                   <div className="hidden md:flex space-x-4 ml-8">
                     {navLinks.map(({ to, label, icon: Icon }) => (
-                      <NavLink
-                        key={to}
-                        to={to}
-                        className={({ isActive }) =>
-                          `flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                            isActive
-                              ? 'bg-white/20 text-white'
-                              : 'text-white/80 hover:text-white hover:bg-white/10'
-                          }`
-                        }
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span>{label}</span>
-                      </NavLink>
-                    ))}
-                  </div>
-                )}
+                  <NavLink
+                    key={to}
+                    to={to}
+                    className={({ isActive }) =>
+                      `flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                      }`
+                    }
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{label}</span>
+                  </NavLink>
+                ))}
               </div>
+                )}
+            </div>
 
               {/* Subtitle - only show on app pages */}
               {!isLandingPage && (
                 <div className="text-sm opacity-75 text-white/90 drop-shadow-md hidden sm:block">
-                  Production Management System
-                </div>
-              )}
+              Production Management System
             </div>
+              )}
           </div>
-        </nav>
+        </div>
+      </nav>
 
         <main className={`flex-1 max-w-7xl mx-auto w-full ${isLandingPage ? 'px-4' : 'py-8 px-4'}`}>
-          <Outlet />
-        </main>
+        <Outlet />
+      </main>
 
-        <Footer />
+      <Footer />
       </div>
     </div>
   );

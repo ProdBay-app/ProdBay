@@ -58,7 +58,7 @@ function App() {
         {/* Producer routes */}
         <Route path="/producer" element={<Layout />}>
           <Route index element={<Navigate to="/producer/dashboard" replace />} />
-          <Route path="dashboard" element={<ActiveProjectsGrid projectLimit={6} showStats={true} />} />
+          <Route path="dashboard" element={<ActiveProjectsGrid projectLimit={6} />} />
           <Route path="projects" element={<AllProjectsPage />} />
           <Route path="projects/:projectId" element={<ProjectDetailPage />} />
           <Route path="suppliers" element={<SupplierManagement />} />

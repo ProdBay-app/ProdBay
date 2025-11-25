@@ -110,11 +110,11 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
         aria-hidden="true"
       />
 
-      {/* Modal Content */}
-      <div
+          {/* Modal Content */}
+          <div
         className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto z-[101]"
-        onClick={(e) => e.stopPropagation()}
-      >
+            onClick={(e) => e.stopPropagation()}
+          >
 
             {/* Header - Purple gradient matching brand */}
             <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
@@ -387,9 +387,9 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 >
                   Close
                 </button>
-              </div>
-            </div>
           </div>
+        </div>
+      </div>
 
       {/* Asset Subdivision Modal */}
       <AssetSubdivisionModal
