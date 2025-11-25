@@ -207,31 +207,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     // Total active projects (from full dataset)
     const totalActive = allActiveProjects.length;
 
-    // Projects awaiting quotes (from full dataset)
-    const awaitingQuote = allActiveProjects.filter(p => 
-      p.project_status === 'Quoting'
-    ).length;
-
-    // Projects nearing deadline (within 7 days, from full dataset)
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparison
-
-    const nearingDeadline = allActiveProjects.filter(p => {
-      if (!p.timeline_deadline) return false;
-      
-      const deadline = new Date(p.timeline_deadline);
-      deadline.setHours(0, 0, 0, 0); // Reset to start of day
-      
-      // Check if deadline is between today and 7 days from now
-      return deadline >= today && deadline <= sevenDaysFromNow;
-    }).length;
-
     return {
-      totalActive,
-      awaitingQuote,
-      nearingDeadline
+      totalActive
     };
   }, [allActiveProjects]);
 
