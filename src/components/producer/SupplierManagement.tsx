@@ -285,7 +285,7 @@ const SupplierManagement: React.FC = () => {
       />
 
       {/* Suppliers List */}
-      <div className="bg-white/10 backdrop-blur-md rounded-lg shadow-lg">
+      <div className="relative z-0 bg-white/10 backdrop-blur-md rounded-lg shadow-lg">
         <div className="p-6 border-b border-white/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
