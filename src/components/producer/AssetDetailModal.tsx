@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, FileText, Calendar, Clock, Package, Hash, Tag, Copy, Edit2, Save } from 'lucide-react';
+import { X, FileText, Clock, Package, Hash, Tag, Edit2, Save } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import QuotesList from './QuotesList';
-import AssetSubdivisionModal from './AssetSubdivisionModal';
-import AssetTimelineManager from './AssetTimelineManager';
 import SupplierStatusTracker from './SupplierStatusTracker';
 import { getTagColor } from '@/utils/assetTags';
 import type { Asset } from '@/lib/supabase';
@@ -24,12 +22,13 @@ interface AssetDetailModalProps {
  * - Large, focused modal for deep dive into asset information
  * - Displays all asset fields in an organized, readable format
  * - Responsive layout (full-screen on mobile, large centered on desktop)
- * - Foundation for future interactive features (quotes, activity, etc.)
+ * - Edit mode for updating asset details (name, specifications, quantity, tags)
+ * - Supplier status tracking and quotes management
  */
 const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onClose, onAssetUpdate }) => {
   const { showSuccess, showError } = useNotification();
   const [isEditing, setIsEditing] = useState(false);
-  const [isSubdivisionModalOpen, setIsSubdivisionModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Initialize editing data directly from asset (before early return)
   const [editingData, setEditingData] = useState({
@@ -39,8 +38,20 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     tags: asset?.tags || []
   });
 
+  // Sync editingData when asset changes
+  useEffect(() => {
+    if (asset) {
+      setEditingData({
+        asset_name: asset.asset_name || '',
+        specifications: asset.specifications || '',
+        quantity: asset.quantity,
+        tags: asset.tags || []
+      });
+    }
+  }, [asset]);
+
   // Debug logging
-  console.log('AssetDetailModal render:', { isOpen, asset: asset?.id, isSubdivisionModalOpen });
+  console.log('AssetDetailModal render:', { isOpen, asset: asset?.id });
 
   // Don't render if modal is closed or no asset is selected
   if (!isOpen || !asset) return null;
@@ -49,11 +60,13 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   const handleFieldEdit = async () => {
     if (!asset) return;
 
+    setIsSaving(true);
     try {
       const updatedAsset = await ProducerService.updateAsset(asset.id, {
         asset_name: editingData.asset_name,
         specifications: editingData.specifications,
         timeline: asset.timeline || '',
+        status: asset.status,
         assigned_supplier_id: asset.assigned_supplier_id,
         quantity: editingData.quantity,
         tags: editingData.tags
@@ -66,24 +79,12 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
       console.error('Error updating asset:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to update asset';
       showError(errorMessage);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Handle asset subdivision
-  const handleAssetsCreated = (newAssets: Asset[]) => {
-    showSuccess(`Successfully created ${newAssets.length} sub-asset${newAssets.length > 1 ? 's' : ''}`);
-    // Note: In a real implementation, you'd want to refresh the parent component's asset list
-  };
-
   // Format dates for display
-  const formattedTimeline = asset.timeline
-    ? new Date(asset.timeline).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      })
-    : 'Not set';
-
   const formattedCreatedAt = new Date(asset.created_at).toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
@@ -130,17 +131,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      console.log('Subdivide button clicked, setting isSubdivisionModalOpen to true');
-                      setIsSubdivisionModalOpen(true);
-                    }}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm font-medium"
-                    title="Subdivide this asset"
-                  >
-                    <Copy className="w-4 h-4" />
-                    Subdivide
-                  </button>
                   <button
                     onClick={() => setIsEditing(!isEditing)}
                     className="flex items-center gap-2 px-3 py-1.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm font-medium"
@@ -217,17 +207,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     )}
                   </div>
 
-                  {/* Timeline */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-200 mb-2">
-                      <Calendar className="w-4 h-4 inline mr-1.5 text-purple-300" />
-                      Timeline
-                    </label>
-                    <div className="bg-black/20 rounded-lg p-3 border border-white/20">
-                      <p className="text-white">{formattedTimeline}</p>
-                    </div>
-                  </div>
-
                   {/* Quantity */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-200 mb-2">
@@ -286,24 +265,14 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 <div className="flex justify-end">
                   <button
                     onClick={handleFieldEdit}
-                    disabled={isUpdatingStatus}
+                    disabled={isSaving}
                     className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50"
                   >
                     <Save className="w-4 h-4" />
-                    {isUpdatingStatus ? 'Saving...' : 'Save Changes'}
+                    {isSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               )}
-
-              {/* Timeline Management Section */}
-              <section>
-                <AssetTimelineManager 
-                  asset={asset}
-                  onTimelineUpdate={() => {
-                    // Refresh asset data if needed
-                  }}
-                />
-              </section>
 
               {/* Supplier Status Tracking Section */}
               <section>
@@ -390,14 +359,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
           </div>
         </div>
       </div>
-
-      {/* Asset Subdivision Modal */}
-      <AssetSubdivisionModal
-        isOpen={isSubdivisionModalOpen}
-        originalAsset={asset}
-        onClose={() => setIsSubdivisionModalOpen(false)}
-        onAssetsCreated={handleAssetsCreated}
-      />
     </div>
   );
 
