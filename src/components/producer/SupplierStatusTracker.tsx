@@ -109,30 +109,30 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       case 'Requested':
         return {
           icon: <Clock className="w-4 h-4" />,
-          color: 'text-amber-600',
-          bgColor: 'bg-amber-50',
-          borderColor: 'border-amber-200'
+          color: 'text-amber-300',
+          bgColor: 'bg-amber-500/20',
+          borderColor: 'border-amber-400/50'
         };
       case 'Quoted':
         return {
           icon: <CheckCircle className="w-4 h-4" />,
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-50',
-          borderColor: 'border-blue-200'
+          color: 'text-blue-300',
+          bgColor: 'bg-blue-500/20',
+          borderColor: 'border-blue-400/50'
         };
       case 'Assigned':
         return {
           icon: <CheckCircle className="w-4 h-4" />,
-          color: 'text-green-600',
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-200'
+          color: 'text-green-300',
+          bgColor: 'bg-green-500/20',
+          borderColor: 'border-green-400/50'
         };
       default:
         return {
           icon: <AlertCircle className="w-4 h-4" />,
-          color: 'text-gray-600',
-          bgColor: 'bg-gray-50',
-          borderColor: 'border-gray-200'
+          color: 'text-gray-300',
+          bgColor: 'bg-gray-500/20',
+          borderColor: 'border-gray-400/50'
         };
     }
   };
@@ -158,8 +158,8 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-        <span className="ml-2 text-gray-600">Loading supplier status...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
+        <span className="ml-2 text-gray-300">Loading supplier status...</span>
       </div>
     );
   }
@@ -169,16 +169,16 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-purple-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Supplier Status</h3>
-          <span className="px-2 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">
+          <Building2 className="w-5 h-5 text-purple-300" />
+          <h3 className="text-lg font-semibold text-white">Supplier Status</h3>
+          <span className="px-2 py-1 bg-purple-500/30 text-purple-200 text-sm font-semibold rounded-full">
             {suppliersWithStatus.length}
           </span>
         </div>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white/10 border border-white/20 text-gray-200 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           Refresh
@@ -199,12 +199,12 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                   <span className={statusInfo.color}>
                     {statusInfo.icon}
                   </span>
-                  <h4 className="font-semibold text-gray-900">{status}</h4>
-                  <span className="px-2 py-0.5 bg-white text-gray-600 text-xs font-medium rounded-full">
+                  <h4 className="font-semibold text-white">{status}</h4>
+                  <span className="px-2 py-0.5 bg-white/10 text-gray-200 text-xs font-medium rounded-full">
                     {suppliers.length}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-300">
                   {status === 'Requested' && 'Quote requests sent, awaiting response'}
                   {status === 'Quoted' && 'Quotes received, under review'}
                   {status === 'Assigned' && 'Supplier selected for this asset'}
@@ -214,28 +214,28 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
               {/* Suppliers List */}
               <div className="space-y-2">
                 {suppliers.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500">
-                    <Building2 className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                  <div className="text-center py-6 text-gray-300">
+                    <Building2 className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                     <p className="text-sm">No suppliers in this status</p>
                   </div>
                 ) : (
                   suppliers.map(({ supplier, quote, lastActivity }) => (
                     <div
                       key={supplier.id}
-                      className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow"
+                      className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 hover:bg-white/20 transition-colors"
                     >
                       {/* Supplier Info */}
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <h5 className="font-medium text-gray-900 text-sm">
+                          <h5 className="font-medium text-white text-sm">
                             {supplier.supplier_name}
                           </h5>
-                          <div className="flex items-center gap-1 text-xs text-gray-600 mt-0.5">
+                          <div className="flex items-center gap-1 text-xs text-gray-300 mt-0.5">
                             <Mail className="w-3 h-3" />
                             <span>{supplier.contact_email}</span>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-400">
                           {formatDate(lastActivity)}
                         </div>
                       </div>
@@ -244,13 +244,13 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                       {quote && quote.cost > 0 && (
                         <div className="mb-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-600">Quote:</span>
-                            <span className="text-sm font-semibold text-gray-900">
+                            <span className="text-xs text-gray-300">Quote:</span>
+                            <span className="text-sm font-semibold text-white">
                               {formatCost(quote.cost)}
                             </span>
                           </div>
                           {quote.notes_capacity && (
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                            <p className="text-xs text-gray-300 mt-1 line-clamp-2">
                               {quote.notes_capacity}
                             </p>
                           )}
@@ -263,13 +263,13 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                           {supplier.service_categories.slice(0, 3).map((category, idx) => (
                             <span
                               key={idx}
-                              className="px-1.5 py-0.5 text-xs bg-purple-50 text-purple-700 rounded border border-purple-200"
+                              className="px-1.5 py-0.5 text-xs bg-purple-500/20 text-purple-200 rounded border border-purple-400/50"
                             >
                               {category}
                             </span>
                           ))}
                           {supplier.service_categories.length > 3 && (
-                            <span className="px-1.5 py-0.5 text-xs text-gray-500">
+                            <span className="px-1.5 py-0.5 text-xs text-gray-400">
                               +{supplier.service_categories.length - 3} more
                             </span>
                           )}
@@ -287,9 +287,9 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       {/* Empty State */}
       {suppliersWithStatus.length === 0 && (
         <div className="text-center py-12">
-          <Building2 className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No suppliers contacted yet</h3>
-          <p className="text-gray-600 mb-4">
+          <Building2 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+          <h3 className="text-lg font-medium text-white mb-2">No suppliers contacted yet</h3>
+          <p className="text-gray-300 mb-4">
             Start by requesting quotes from relevant suppliers for this asset.
           </p>
         </div>
