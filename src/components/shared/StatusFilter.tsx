@@ -88,7 +88,7 @@ const StatusFilter: React.FC<StatusFilterProps> = ({
 
       {/* 3. DESKTOP ONLY: Custom Dropdown Menu */}
       {isOpen && (
-        <div className="hidden md:block absolute top-full left-0 mt-2 w-full bg-gray-900 border border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
+        <div className="hidden md:block absolute top-full left-0 mt-2 w-full bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
           {statusOptions.map((option) => (
             <button
               key={option.value}

@@ -80,7 +80,7 @@ const RoleFilter: React.FC<RoleFilterProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-gray-900 border border-white/20 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-2 w-64 bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
           <div className="p-4">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-medium text-white">Contact Roles</h4>
