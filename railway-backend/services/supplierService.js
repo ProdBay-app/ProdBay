@@ -1,4 +1,5 @@
 const { supabase } = require('../config/database');
+const emailService = require('./emailService');
 
 /**
  * Supplier Service
@@ -306,7 +307,7 @@ ${fromEmail}`;
             .insert({
               supplier_id: supplier.id,
               asset_id: assetId,
-              status: 'Submitted'
+              status: 'Pending'
             })
             .select()
             .single();
@@ -398,68 +399,51 @@ ${fromEmail}`;
    * @param {Object} supplier - Supplier details
    * @param {Object} asset - Asset details
    * @param {Object} quote - Quote record
-   * @param {Object} from - Sender information
+   * @param {Object} from - Sender information {name, email}
    * @param {Object} customizedEmail - Customized email content
    * @returns {Promise<Object>} Email send result
    */
   static async sendQuoteRequestEmail(supplier, asset, quote, from, customizedEmail = null) {
     try {
-      const fnUrl = process.env.EMAIL_FUNCTION_URL;
-      const fnKey = process.env.EMAIL_FUNCTION_KEY;
-
-      if (!fnUrl || !fnKey) {
-        return {
-          success: false,
-          error: 'Email function not configured'
-        };
-      }
+      // Get supplier contact email
+      const primaryContact = this.getPrimaryContact(supplier);
+      const supplierEmail = primaryContact?.email || supplier.contact_email;
+      
+      // Generate quote link
+      const quoteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/quote/${quote.quote_token}`;
 
       // Use customized email content if provided, otherwise generate default
-      let subject, body;
+      let subject, message;
       
       if (customizedEmail) {
         subject = customizedEmail.subject;
-        body = customizedEmail.body;
+        message = customizedEmail.body;
         
         // Add quote link to the body if not already present
-        const quoteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/quote/${quote.quote_token}`;
-        if (!body.includes(quoteLink)) {
-          body += `\n\nPlease provide your quote by visiting: ${quoteLink}`;
+        if (!message.includes(quoteLink)) {
+          message += `\n\nPlease provide your quote by visiting: ${quoteLink}`;
         }
       } else {
         // Generate default email content
-        const primaryContact = this.getPrimaryContact(supplier);
         const contactName = primaryContact?.name || supplier.supplier_name;
-        
         subject = `Quote Request: ${asset.asset_name}`;
-        body = this.generateEmailBody(asset, contactName, from);
+        message = this.generateEmailBody(asset, contactName, from);
         
         // Add quote link
-        body += `\n\nPlease provide your quote by visiting: ${process.env.FRONTEND_URL || 'http://localhost:5173'}/quote/${quote.quote_token}`;
+        message += `\n\nPlease provide your quote by visiting: ${quoteLink}`;
       }
 
-      const response = await fetch(fnUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${fnKey}`
-        },
-        body: JSON.stringify({
-          from: `${from.name} <${from.email}>`,
-          to: supplier.contact_email,
-          subject,
-          text: body
-        })
+      // Send email via Resend with Reply-To pattern
+      const emailResult = await emailService.sendQuoteRequest({
+        to: supplierEmail,
+        replyTo: from.email, // User's email for Reply-To header
+        assetName: asset.asset_name,
+        message: message,
+        quoteLink: quoteLink,
+        subject: subject
       });
 
-      if (!response.ok) {
-        throw new Error(`Email service returned ${response.status}: ${response.statusText}`);
-      }
-
-      return {
-        success: true,
-        error: null
-      };
+      return emailResult;
     } catch (error) {
       return {
         success: false,
