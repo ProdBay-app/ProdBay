@@ -499,25 +499,68 @@ ${fromEmail}`;
         throw new Error(`Asset not found: ${asset_id}`);
       }
 
-      // Create the quote
-      const { data: quote, error: quoteError } = await supabase
+      // Check if a quote already exists for this asset + supplier pair
+      const { data: existingQuote, error: findError } = await supabase
         .from('quotes')
-        .insert({
-          supplier_id,
-          asset_id,
-          cost,
-          notes_capacity: notes_capacity || '',
-          status: status || 'Submitted'
-        })
-        .select(`
-          *,
-          supplier:suppliers(*),
-          asset:assets(*)
-        `)
-        .single();
+        .select('id')
+        .eq('asset_id', asset_id)
+        .eq('supplier_id', supplier_id)
+        .maybeSingle();
 
-      if (quoteError) {
-        throw new Error(`Failed to create quote: ${quoteError.message}`);
+      if (findError) {
+        throw new Error(`Failed to check for existing quote: ${findError.message}`);
+      }
+
+      let quote;
+      let quoteError;
+
+      if (existingQuote) {
+        // Update existing quote
+        const { data: updatedQuote, error: updateError } = await supabase
+          .from('quotes')
+          .update({
+            cost,
+            notes_capacity: notes_capacity || '',
+            status: status || 'Submitted'
+          })
+          .eq('id', existingQuote.id)
+          .select(`
+            *,
+            supplier:suppliers(*),
+            asset:assets(*)
+          `)
+          .single();
+
+        quote = updatedQuote;
+        quoteError = updateError;
+
+        if (quoteError) {
+          throw new Error(`Failed to update quote: ${quoteError.message}`);
+        }
+      } else {
+        // Insert new quote (for unsolicited quotes)
+        const { data: newQuote, error: insertError } = await supabase
+          .from('quotes')
+          .insert({
+            supplier_id,
+            asset_id,
+            cost,
+            notes_capacity: notes_capacity || '',
+            status: status || 'Submitted'
+          })
+          .select(`
+            *,
+            supplier:suppliers(*),
+            asset:assets(*)
+          `)
+          .single();
+
+        quote = newQuote;
+        quoteError = insertError;
+
+        if (quoteError) {
+          throw new Error(`Failed to create quote: ${quoteError.message}`);
+        }
       }
 
       return {

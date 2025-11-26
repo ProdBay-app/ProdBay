@@ -104,19 +104,52 @@ const SupplierSubmitQuote: React.FC = () => {
     setSubmitting(true);
     try {
       const supabase = await getSupabase();
-      const { error } = await supabase
+      
+      // Check if a quote already exists for this asset + supplier pair
+      const { data: existingQuote, error: findError } = await supabase
         .from('quotes')
-        .insert({
-          supplier_id: impersonatedSupplier.id,
-          asset_id: formData.asset_id,
-          cost: formData.cost,
-          notes_capacity: formData.notes_capacity,
-          status: 'Submitted'
-        });
+        .select('id')
+        .eq('asset_id', formData.asset_id)
+        .eq('supplier_id', impersonatedSupplier.id)
+        .maybeSingle();
+
+      if (findError) {
+        throw new Error(`Failed to check for existing quote: ${findError.message}`);
+      }
+
+      let error;
+
+      if (existingQuote) {
+        // Update existing quote
+        const { error: updateError } = await supabase
+          .from('quotes')
+          .update({
+            cost: formData.cost,
+            notes_capacity: formData.notes_capacity,
+            status: 'Submitted'
+          })
+          .eq('id', existingQuote.id);
+
+        error = updateError;
+      } else {
+        // Insert new quote (for unsolicited quotes)
+        const { error: insertError } = await supabase
+          .from('quotes')
+          .insert({
+            supplier_id: impersonatedSupplier.id,
+            asset_id: formData.asset_id,
+            cost: formData.cost,
+            notes_capacity: formData.notes_capacity,
+            status: 'Submitted'
+          });
+
+        error = insertError;
+      }
 
       if (error) {
         // Handle specific RLS policy violations
-        if (error.message.includes('new row violates row-level security policy')) {
+        if (error.message.includes('new row violates row-level security policy') || 
+            error.message.includes('violates row-level security policy')) {
           throw new Error('You are not authorized to submit quotes for this asset. Please contact the administrator.');
         }
         throw error;
