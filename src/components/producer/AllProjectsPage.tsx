@@ -11,13 +11,11 @@ import ActiveProjectsGrid from './ActiveProjectsGrid';
  * Features:
  * - Shows all active projects (no limit)
  * - Shows all archived projects (no limit)
- * - Hides summary statistics (focus on browsing)
  * - Foundation for future search/filter features
  */
 const AllProjectsPage: React.FC = () => {
   return (
     <ActiveProjectsGrid 
-      showStats={false}
       // projectLimit is undefined, so all projects will be displayed
     />
   );

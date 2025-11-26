@@ -44,7 +44,7 @@ const ProjectDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isBriefExpanded, setIsBriefExpanded] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  
+
   // Interactive brief state
   const [hoveredAssetId, setHoveredAssetId] = useState<string | null>(null);
   const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
@@ -325,7 +325,7 @@ const ProjectDetailPage: React.FC = () => {
                 <p className="text-lg font-semibold text-white">
                   {formatCurrency(project.financial_parameters ?? 0)}
                 </p>
-              </div>
+                </div>
             </div>
 
             {/* Deadline */}
@@ -339,8 +339,8 @@ const ProjectDetailPage: React.FC = () => {
                   {formatDate(project.timeline_deadline ?? null)}
                 </p>
               </div>
-            </div>
-
+              </div>
+              
             {/* Created Date */}
             <div className="flex items-start gap-3">
               <div className="p-2 bg-white/10 rounded-lg">

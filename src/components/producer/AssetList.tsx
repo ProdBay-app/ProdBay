@@ -467,17 +467,17 @@ const AssetList: React.FC<AssetListProps> = ({
       {/* Asset Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredAndSortedAssets.map((asset) => (
-          <AssetCard 
-            key={asset.id} 
-            asset={asset} 
-            onClick={handleViewAsset}
-            onEdit={handleOpenEditModal}
-            onDelete={handleOpenDeleteModal}
-            isHighlighted={hoveredAssetId === asset.id}
-            onMouseEnter={() => onAssetHover && onAssetHover(asset.id)}
-            onMouseLeave={() => onAssetHover && onAssetHover(null)}
-          />
-        ))}
+                    <AssetCard 
+                      key={asset.id} 
+                      asset={asset} 
+                      onClick={handleViewAsset}
+                      onEdit={handleOpenEditModal}
+                      onDelete={handleOpenDeleteModal}
+                      isHighlighted={hoveredAssetId === asset.id}
+                      onMouseEnter={() => onAssetHover && onAssetHover(asset.id)}
+                      onMouseLeave={() => onAssetHover && onAssetHover(null)}
+                    />
+                  ))}
       </div>
 
       {/* Add Asset Modal */}

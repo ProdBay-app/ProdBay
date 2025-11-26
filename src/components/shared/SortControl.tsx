@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowUpDown } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ArrowUpDown, ChevronDown } from 'lucide-react';
 
 export type ProjectSortOption = 'mostRecent' | 'nearingDeadline';
 
@@ -13,6 +13,7 @@ interface SortControlProps {
  * SortControl - Reusable dropdown component for sorting projects
  * 
  * Features:
+ * - Hybrid mobile/desktop pattern: Native select on mobile, custom dropdown on desktop
  * - Compact dropdown design for space-efficient layouts
  * - Two sort options: Most Recent and Nearing Deadline
  * - Styled to match SearchBar and StatusFilter components
@@ -24,18 +25,35 @@ const SortControl: React.FC<SortControlProps> = ({
   onChange,
   className = ''
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const sortOptions: Array<{ value: ProjectSortOption; label: string }> = [
     { value: 'mostRecent', label: 'Most Recent' },
     { value: 'nearingDeadline', label: 'Nearing Deadline' }
   ];
 
+  const selectedOption = sortOptions.find(opt => opt.value === value) || sortOptions[0];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <div className={`relative flex items-center ${className}`}>
-      <ArrowUpDown className="absolute left-3 h-5 w-5 text-gray-400 pointer-events-none" />
+    <div className={`relative flex items-center ${className}`} ref={dropdownRef}>
+      {/* 1. MOBILE ONLY: Hidden Native Select Overlay */}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as ProjectSortOption)}
-        className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 appearance-none bg-white cursor-pointer"
+        className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer md:hidden"
         aria-label="Sort projects"
       >
         {sortOptions.map((option) => (
@@ -44,11 +62,43 @@ const SortControl: React.FC<SortControlProps> = ({
           </option>
         ))}
       </select>
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-        </svg>
-      </div>
+
+      {/* 2. VISUAL TRIGGER BUTTON (Shared Look) */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full pl-10 pr-10 py-2 bg-black/20 border border-white/20 rounded-lg text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors md:cursor-pointer"
+      >
+        <div className="flex items-center space-x-2 flex-1">
+          {/* Sort Icon */}
+          <ArrowUpDown className="h-5 w-5 text-gray-300 pointer-events-none" />
+          {/* Selected Label */}
+          <span className="text-sm">{selectedOption.label}</span>
+        </div>
+        {/* Chevron Icon */}
+        <ChevronDown className={`h-5 w-5 text-gray-300 transition-transform pointer-events-none ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {/* 3. DESKTOP ONLY: Custom Dropdown Menu */}
+      {isOpen && (
+        <div className="hidden md:block absolute top-full left-0 mt-2 w-full bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
+          {sortOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                option.value === value
+                  ? 'bg-teal-500/20 text-teal-200'
+                  : 'text-gray-300 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

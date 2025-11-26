@@ -5,7 +5,6 @@ import { ProducerService, type ProjectFormData } from '@/services/producerServic
 import { RailwayApiService } from '@/services/railwayApiService';
 import { useNotification } from '@/hooks/useNotification';
 import ProjectCard from './ProjectCard';
-import ProjectSummaryStats, { type ProjectStats } from './ProjectSummaryStats';
 import DashboardFilterControls, { type ProjectSortOption } from './DashboardFilterControls';
 import SearchBar from '@/components/shared/SearchBar';
 import StatusFilter from '@/components/shared/StatusFilter';
@@ -22,11 +21,6 @@ export interface ActiveProjectsGridProps {
    */
   projectLimit?: number;
   
-  /** 
-   * Whether to show the project summary statistics section.
-   * Default: true
-   */
-  showStats?: boolean;
 }
 
 /**
@@ -41,8 +35,7 @@ export interface ActiveProjectsGridProps {
  * - Supports limited view (dashboard) and full view (all projects)
  */
 const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({ 
-  projectLimit,
-  showStats = true 
+  projectLimit
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -201,39 +194,6 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
   // Track if there are more projects than displayed
   const hasMoreActive = projectLimit && sortedActiveProjects.length > projectLimit;
   const hasMoreArchived = projectLimit && sortedArchivedProjects.length > 3;
-
-  // Calculate project statistics (always use full dataset)
-  const projectStats: ProjectStats = useMemo(() => {
-    // Total active projects (from full dataset)
-    const totalActive = allActiveProjects.length;
-
-    // Projects awaiting quotes (from full dataset)
-    const awaitingQuote = allActiveProjects.filter(p => 
-      p.project_status === 'Quoting'
-    ).length;
-
-    // Projects nearing deadline (within 7 days, from full dataset)
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparison
-
-    const nearingDeadline = allActiveProjects.filter(p => {
-      if (!p.timeline_deadline) return false;
-      
-      const deadline = new Date(p.timeline_deadline);
-      deadline.setHours(0, 0, 0, 0); // Reset to start of day
-      
-      // Check if deadline is between today and 7 days from now
-      return deadline >= today && deadline <= sevenDaysFromNow;
-    }).length;
-
-    return {
-      totalActive,
-      awaitingQuote,
-      nearingDeadline
-    };
-  }, [allActiveProjects]);
 
   // Load projects from Supabase
   const loadProjects = useCallback(async () => {
@@ -726,9 +686,6 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Project Summary Statistics - only show if showStats is true */}
-        {showStats && <ProjectSummaryStats stats={projectStats} loading={loading} />}
         
         {/* Dashboard Filter Controls - only show on dashboard */}
         {projectLimit && (
