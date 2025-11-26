@@ -7,6 +7,7 @@ import { QuoteRequestService, type CustomizedEmail } from '@/services/quoteReque
 import { ProducerService, type ProjectFormData, type AssetFormData } from '@/services/producerService';
 import { RailwayApiService } from '@/services/railwayApiService';
 import { useNotification } from '@/hooks/useNotification';
+import { getSupabase } from '@/lib/supabase';
 import ProducerDashboard from './ProducerDashboard';
 import ProjectCreationLoadingOverlay from '@/components/ProjectCreationLoadingOverlay';
 import type { Project, Asset, Quote, Supplier } from '@/lib/supabase';
@@ -622,19 +623,25 @@ const ProducerDashboardContainer: React.FC = () => {
     if (!previewAsset || previewSupplierIds.length === 0) return;
     
     try {
-      // Get producer settings for email
-      const settings = await ProducerService.loadProducerSettings();
+      // Get authenticated user's email for Reply-To header
+      const supabase = await getSupabase();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-      const from = settings ? {
-        name: settings.from_name,
-        email: settings.from_email
-      } : undefined;
+      if (userError || !user || !user.email) {
+        throw new Error('User session not found. Please log in again.');
+      }
+
+      // Construct from object using authenticated user's email
+      const from = {
+        name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Producer',
+        email: user.email
+      };
 
       const result = await QuoteRequestService.sendQuoteRequests(
         previewAsset.id,
         previewSupplierIds,
         customizedEmails,
-        from ? { name: String(from.name), email: String(from.email) } : undefined
+        from
       );
 
       await loadProjectDetails(selectedProject!.id);
