@@ -16,7 +16,7 @@ class EmailService {
     }
     
     // Configure from email address
-    this.fromEmail = process.env.RESEND_FROM_EMAIL || 'ProdBay <requests@prodbay.com>';
+    this.fromEmail = process.env.RESEND_FROM_EMAIL || 'ProdBay <subs@ariasolves.com>';
   }
 
   /**
@@ -32,6 +32,12 @@ class EmailService {
    */
   async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null }) {
     try {
+      // Log entry point and parameters
+      console.log('[EmailService] Attempting to send quote request email');
+      console.log('[EmailService] To:', to);
+      console.log('[EmailService] Reply-To:', replyTo);
+      console.log('[EmailService] From:', this.fromEmail);
+      
       // Validate required parameters
       if (!to || !replyTo || !assetName) {
         throw new Error('Missing required parameters: to, replyTo, and assetName are required');
@@ -39,6 +45,7 @@ class EmailService {
 
       // Check if Resend is configured
       if (!this.resend) {
+        console.error('[EmailService] RESEND_API_KEY not configured. Email sending disabled.');
         return {
           success: false,
           error: 'Email service not configured. RESEND_API_KEY is missing.'
@@ -47,17 +54,26 @@ class EmailService {
 
       // Generate email subject if not provided
       const emailSubject = subject || `Quote Request: ${assetName}`;
+      console.log('[EmailService] Subject:', emailSubject);
 
-      // Build email body with quote link
-      let emailBody = message || `Dear Supplier,\n\nWe would like to request a quote for the following asset:\n\nAsset: ${assetName}\n\n`;
+      // Build email body
+      // Note: The message parameter already contains the quote link (added by supplierService)
+      // We only add it here if message is not provided (fallback case)
+      let emailBody = message;
       
-      if (quoteLink) {
-        emailBody += `Please provide your quote by visiting: ${quoteLink}\n\n`;
+      if (!emailBody) {
+        // Fallback: Generate default email body if message not provided
+        emailBody = `Dear Supplier,\n\nWe would like to request a quote for the following asset:\n\nAsset: ${assetName}\n\n`;
+        
+        if (quoteLink) {
+          emailBody += `Please provide your quote by visiting: ${quoteLink}\n\n`;
+        }
+        
+        emailBody += `Thank you for your time and we look forward to working with you.\n\nBest regards,\nProdBay Team`;
       }
-      
-      emailBody += `Thank you for your time and we look forward to working with you.\n\nBest regards,\nProdBay Team`;
 
       // Send email via Resend
+      console.log('[EmailService] Calling Resend API...');
       const { data, error } = await this.resend.emails.send({
         from: this.fromEmail,
         to: [to],
@@ -66,8 +82,17 @@ class EmailService {
         text: emailBody
       });
 
+      // Log Resend API response
+      console.log('[EmailService] Resend API call completed');
+      console.log('[EmailService] Success:', !error);
+      if (data) {
+        console.log('[EmailService] Message ID:', data.id);
+      }
       if (error) {
-        console.error('Resend API error:', error);
+        console.error('[EmailService] Resend API error:', JSON.stringify(error, null, 2));
+      }
+
+      if (error) {
         return {
           success: false,
           error: error.message || 'Failed to send email via Resend'

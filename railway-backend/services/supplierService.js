@@ -325,6 +325,10 @@ ${fromEmail}`;
           // Send email notification (if configured)
           if (from && from.name && from.email) {
             try {
+              // Log email sending attempt
+              const supplierEmail = supplier.contact_persons?.find(p => p.is_primary)?.email || supplier.contact_email;
+              console.log('[SupplierService] Sending email to:', supplierEmail);
+              
               // Find customized email content for this supplier
               const customizedEmail = customizedEmails?.find(email => email.supplierId === supplier.id);
               
