@@ -124,4 +124,61 @@ export class RailwayApiService {
       };
     }
   }
+
+  /**
+   * Generic POST method for Railway API endpoints
+   * @param endpoint - API endpoint path (e.g., '/api/suppliers/send-quote-requests')
+   * @param body - Request body to send
+   * @returns Promise with success status, data, message, or error (matches backend response format)
+   */
+  static async post<T = any>(
+    endpoint: string,
+    body?: any
+  ): Promise<{ success: boolean; data?: T; message?: string; error?: { code: string; message: string } }> {
+    if (!RAILWAY_API_URL) {
+      return {
+        success: false,
+        error: {
+          code: 'CONFIG_ERROR',
+          message: 'Railway API URL not configured. Please set VITE_RAILWAY_API_URL environment variable.'
+        }
+      };
+    }
+
+    try {
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Backend returns error in format: { success: false, error: { code, message } }
+        return {
+          success: false,
+          error: data.error || {
+            code: 'API_ERROR',
+            message: data.error?.message || `HTTP ${response.status}: ${response.statusText}`
+          }
+        };
+      }
+
+      // Backend returns success in format: { success: true, data: {...}, message: "..." }
+      // Return the full response object to match expected interface
+      return data;
+    } catch (error) {
+      console.error('Railway API POST error:', error);
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: error instanceof Error ? error.message : 'Unknown error occurred'
+        }
+      };
+    }
+  }
 }
