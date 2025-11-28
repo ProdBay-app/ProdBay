@@ -97,7 +97,7 @@ app.use('/api/quotes', quoteComparisonRoutes);
 app.use('/api', pdfExtractionRoutes);
 app.use('/api/project-summary', projectSummaryRoutes);
 app.use('/api/portal', portalRoutes);
-app.use('/api', producerMessageRoute);
+app.use('/api/messages', producerMessageRoute);
 
 // Root endpoint
 app.get('/', (req, res) => {

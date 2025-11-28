@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
   Package, 
-  Building2, 
   FileText, 
   Calendar, 
   DollarSign, 
@@ -237,41 +236,12 @@ const QuotePortal: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           Request for Quote: {asset.asset_name}
         </h1>
-        <p className="text-gray-600">
-          Project: {project.project_name} • Client: {project.client_name}
-        </p>
       </div>
 
       {/* Two-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Context */}
         <div className="lg:col-span-1 space-y-4">
-          {/* Project Details */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <Building2 className="h-5 w-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Project Details</h2>
-            </div>
-            <div className="space-y-3 text-sm">
-              <div>
-                <p className="text-gray-500">Project Name</p>
-                <p className="text-gray-900 font-medium">{project.project_name}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Client</p>
-                <p className="text-gray-900 font-medium">{project.client_name}</p>
-              </div>
-              {project.financial_parameters && (
-                <div>
-                  <p className="text-gray-500">Budget</p>
-                  <p className="text-gray-900 font-medium">
-                    ${project.financial_parameters.toLocaleString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Asset Specifications */}
           <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6">
             <div className="flex items-center space-x-2 mb-4">
@@ -288,25 +258,17 @@ const QuotePortal: React.FC = () => {
           </div>
 
           {/* Timeline */}
-          {(asset.timeline || project.timeline_deadline) && (
+          {asset.timeline && (
             <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Calendar className="h-5 w-5 text-blue-600" />
                 <h2 className="text-lg font-semibold text-gray-900">Timeline</h2>
               </div>
               <div className="space-y-2 text-sm">
-                {asset.timeline && (
-                  <div>
-                    <p className="text-gray-500">Asset Deadline</p>
-                    <p className="text-gray-900 font-medium">{formatDate(asset.timeline)}</p>
-                  </div>
-                )}
-                {project.timeline_deadline && (
-                  <div>
-                    <p className="text-gray-500">Project Deadline</p>
-                    <p className="text-gray-900 font-medium">{formatDate(project.timeline_deadline)}</p>
-                  </div>
-                )}
+                <div>
+                  <p className="text-gray-500">Deadline</p>
+                  <p className="text-gray-900 font-medium">{formatDate(asset.timeline)}</p>
+                </div>
               </div>
             </div>
           )}

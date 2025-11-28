@@ -627,19 +627,16 @@ const ProducerDashboardContainer: React.FC = () => {
       const supabase = await getSupabase();
       const { data: { user } } = await supabase.auth.getUser();
 
-      // Fallback user for development/testing
-      let from = { name: 'Dev Producer', email: 'clive@ariasolves.com' };
-
-      if (user && user.email) {
-        // Use real authenticated user
-        from = {
-          name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Producer',
-          email: user.email
-        };
-      } else {
-        // Use fallback for dev/testing
-        console.warn('⚠️ No auth session found. Using Dev Fallback identity.');
+      // Require authenticated user - no fallback for production safety
+      if (!user || !user.email) {
+        showError('Authentication required. Please log in to send quote requests.');
+        return;
       }
+
+      const from = {
+        name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Producer',
+        email: user.email
+      };
 
       const result = await QuoteRequestService.sendQuoteRequests(
         previewAsset.id,

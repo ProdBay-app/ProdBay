@@ -16,7 +16,14 @@ class EmailService {
     }
     
     // Configure from email address
-    this.fromEmail = process.env.RESEND_FROM_EMAIL || 'ProdBay <subs@ariasolves.com>';
+    // Require explicit configuration - no hardcoded fallback
+    const fromEmailEnv = process.env.RESEND_FROM_EMAIL;
+    if (!fromEmailEnv) {
+      console.warn('⚠️  RESEND_FROM_EMAIL not configured. Email sending may fail.');
+      this.fromEmail = 'ProdBay <noreply@prodbay.com>'; // Generic fallback only
+    } else {
+      this.fromEmail = fromEmailEnv;
+    }
   }
 
   /**
