@@ -265,6 +265,71 @@ class PortalService {
       throw error;
     }
   }
+
+  /**
+   * Get messages for a specific quote (for producer chat view)
+   * @param {string} quoteId - Quote ID
+   * @returns {Promise<Object>} Quote data with messages, asset, and supplier info
+   */
+  static async getQuoteMessages(quoteId) {
+    try {
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(quoteId)) {
+        throw new Error('Invalid quote ID format');
+      }
+
+      // Verify quote exists and get related data
+      const { data: quote, error: quoteError } = await supabase
+        .from('quotes')
+        .select(`
+          *,
+          supplier:suppliers(*),
+          asset:assets(
+            *,
+            project:projects(*)
+          )
+        `)
+        .eq('id', quoteId)
+        .single();
+
+      if (quoteError || !quote) {
+        throw new Error('Quote not found');
+      }
+
+      // Fetch all messages for this quote (ordered by created_at)
+      const { data: messages, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('quote_id', quoteId)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) {
+        console.error('Error fetching messages:', messagesError);
+        // Don't throw - return empty messages array if fetch fails
+      }
+
+      return {
+        quote: {
+          id: quote.id,
+          supplier_id: quote.supplier_id,
+          asset_id: quote.asset_id,
+          cost: quote.cost,
+          notes_capacity: quote.notes_capacity,
+          status: quote.status,
+          access_token: quote.access_token,
+          created_at: quote.created_at,
+          updated_at: quote.updated_at
+        },
+        asset: quote.asset,
+        project: quote.asset?.project,
+        supplier: quote.supplier,
+        messages: messages || []
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = PortalService;

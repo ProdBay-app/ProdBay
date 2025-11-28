@@ -27,6 +27,9 @@ const SupplierSubmitQuote = lazy(() => import('@/components/supplier/SupplierSub
 const GuestLayout = lazy(() => import('@/layouts/GuestLayout'));
 const QuotePortal = lazy(() => import('@/pages/portal/QuotePortal'));
 
+// Producer chat route
+const ProducerQuoteChat = lazy(() => import('@/pages/dashboard/ProducerQuoteChat'));
+
 function App() {
   return (
     <NotificationProvider>
@@ -66,6 +69,11 @@ function App() {
           <Route path="projects" element={<AllProjectsPage />} />
           <Route path="projects/:projectId" element={<ProjectDetailPage />} />
           <Route path="suppliers" element={<SupplierManagement />} />
+        </Route>
+        
+        {/* Dashboard routes (shared between producer and other roles) */}
+        <Route path="/dashboard" element={<Layout />}>
+          <Route path="quotes/:quoteId/chat" element={<ProducerQuoteChat />} />
         </Route>
         
         {/* Admin routes */}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Building2, Mail, DollarSign, Plus, Clock, AlertCircle, Loader2, BarChart3 } from 'lucide-react';
+import { FileText, Building2, Mail, DollarSign, Plus, Clock, AlertCircle, Loader2, BarChart3, MessageCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import EnhancedRequestQuoteFlow from './EnhancedRequestQuoteFlow';
@@ -276,9 +277,21 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
                     ) : null}
                   </div>
 
-                  {/* Created Date */}
-                  <div className="text-xs text-gray-400">
-                    Requested {formatDate(quote.created_at)}
+                  <div className="flex items-center gap-3">
+                    {/* Created Date */}
+                    <div className="text-xs text-gray-400">
+                      Requested {formatDate(quote.created_at)}
+                    </div>
+
+                    {/* Chat Button */}
+                    <Link
+                      to={`/dashboard/quotes/${quote.id}/chat`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                      title="Chat with supplier"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Chat</span>
+                    </Link>
                   </div>
                 </div>
 
