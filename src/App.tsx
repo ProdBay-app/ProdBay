@@ -23,6 +23,10 @@ const QuoteSubmission = lazy(() => import('@/components/supplier/QuoteSubmission
 const SupplierDashboard = lazy(() => import('@/components/supplier/SupplierDashboardContainer'));
 const SupplierSubmitQuote = lazy(() => import('@/components/supplier/SupplierSubmitQuote'));
 
+// Portal routes
+const GuestLayout = lazy(() => import('@/layouts/GuestLayout'));
+const QuotePortal = lazy(() => import('@/pages/portal/QuotePortal'));
+
 function App() {
   return (
     <NotificationProvider>
@@ -72,6 +76,11 @@ function App() {
         
         {/* Supplier quote route - outside of layout for public access */}
         <Route path="/quote/:token" element={<QuoteSubmission />} />
+        
+        {/* Portal routes - guest layout for supplier portal */}
+        <Route path="/portal" element={<GuestLayout />}>
+          <Route path="quote/:token" element={<QuotePortal />} />
+        </Route>
         
         {/* Catch all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />

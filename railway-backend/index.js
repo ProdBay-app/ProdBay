@@ -8,6 +8,7 @@ const aiAllocationRoutes = require('./routes/aiAllocation');
 const quoteComparisonRoutes = require('./routes/quoteComparison');
 const pdfExtractionRoutes = require('./routes/pdfExtraction');
 const projectSummaryRoutes = require('./routes/projectSummary');
+const { portalRoutes, producerMessageRoute } = require('./routes/portalRoutes');
 const { testConnection } = require('./config/database');
 
 const app = express();
@@ -95,6 +96,8 @@ app.use('/api', aiAllocationRoutes);
 app.use('/api/quotes', quoteComparisonRoutes);
 app.use('/api', pdfExtractionRoutes);
 app.use('/api/project-summary', projectSummaryRoutes);
+app.use('/api/portal', portalRoutes);
+app.use('/api', producerMessageRoute);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -124,7 +127,10 @@ app.get('/', (req, res) => {
       'PATCH /api/project-summary/milestones/:milestoneId': 'Update a milestone',
       'GET /api/project-summary/:projectId/actions': 'Get action items for a project',
       'POST /api/project-summary/actions': 'Create a new action item',
-      'PATCH /api/project-summary/actions/:actionId/complete': 'Complete an action item'
+      'PATCH /api/project-summary/actions/:actionId/complete': 'Complete an action item',
+      'GET /api/portal/session/:token': 'Get portal session data (quote, asset, messages)',
+      'POST /api/portal/messages': 'Send message from supplier via portal (requires token in body)',
+      'POST /api/messages': 'Send message from producer (requires JWT authentication)'
     }
   });
 });
