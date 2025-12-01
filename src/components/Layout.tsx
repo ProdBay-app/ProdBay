@@ -133,15 +133,14 @@ const Layout: React.FC = () => {
               )}
             </div>
 
-              {/* Subtitle - only show on app pages */}
-              {!isLandingPage && (
-                <div className="text-sm opacity-75 text-white/90 drop-shadow-md hidden sm:block">
-              Production Management System
-            </div>
-              )}
+            {/* Subtitle - only show on app pages */}
+            {!isLandingPage && (
+              <div className="text-sm opacity-75 text-white/90 drop-shadow-md hidden sm:block">
+                Production Management System
+              </div>
+            )}
           </div>
-        </div>
-      </nav>
+        </nav>
 
         <main className={`flex-1 max-w-7xl mx-auto w-full ${isLandingPage ? 'px-4' : 'py-8 px-4'}`}>
         <Outlet />
