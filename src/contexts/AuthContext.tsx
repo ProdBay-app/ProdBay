@@ -43,8 +43,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const maxRetries = 3;
     const retryDelay = 500; // milliseconds
 
+    console.log(`[fetchUserProfile] Starting profile fetch for user ${userId}`);
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
+        console.log(`[fetchUserProfile] Attempt ${attempt}/${maxRetries} for user ${userId}`);
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('id, role, full_name')
@@ -54,13 +58,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (error) {
           // If it's a "not found" error and we have retries left, wait and retry
           if (error.code === 'PGRST116' && attempt < maxRetries) {
-            console.log(`Profile not found for user ${userId}, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})...`);
+            console.log(`[fetchUserProfile] Profile not found for user ${userId}, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})...`);
+            // Correct Promise-based delay pattern
             await new Promise(resolve => setTimeout(resolve, retryDelay));
             continue;
           }
           
           // For other errors or final attempt, log and set null
-          console.error('Error fetching user profile:', error);
+          console.error('[fetchUserProfile] Error fetching user profile:', error);
           setRole(null);
           setProfile(null);
           return;
@@ -68,6 +73,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         if (data) {
           // Success - profile found
+          console.log(`[fetchUserProfile] Profile found for user ${userId}, role: ${data.role}`);
           setRole(data.role as UserRole);
           setProfile({
             id: data.id,
@@ -78,12 +84,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } else {
           // No data returned - retry if attempts remain
           if (attempt < maxRetries) {
-            console.log(`No profile data returned for user ${userId}, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})...`);
+            console.log(`[fetchUserProfile] No profile data returned for user ${userId}, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})...`);
+            // Correct Promise-based delay pattern
             await new Promise(resolve => setTimeout(resolve, retryDelay));
             continue;
           } else {
             // Final attempt failed
-            console.error('Profile not found after all retry attempts');
+            console.error('[fetchUserProfile] Profile not found after all retry attempts');
             setRole(null);
             setProfile(null);
             return;
@@ -92,12 +99,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch (error) {
         // Network or other errors - retry if attempts remain
         if (attempt < maxRetries) {
-          console.log(`Error fetching profile (attempt ${attempt}/${maxRetries}), retrying in ${retryDelay}ms...`, error);
+          console.log(`[fetchUserProfile] Error fetching profile (attempt ${attempt}/${maxRetries}), retrying in ${retryDelay}ms...`, error);
+          // Correct Promise-based delay pattern
           await new Promise(resolve => setTimeout(resolve, retryDelay));
           continue;
         } else {
           // Final attempt failed
-          console.error('Error fetching user profile after all retries:', error);
+          console.error('[fetchUserProfile] Error fetching user profile after all retries:', error);
           setRole(null);
           setProfile(null);
           return;
@@ -110,6 +118,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * Initialize auth state and set up listener
    */
   useEffect(() => {
+    console.log('Auth Init check...');
+    
+    // Safety valve: Force loading to false after 3 seconds to prevent infinite spinner
+    const safetyTimer = setTimeout(() => {
+      console.warn('Auth check timed out. Forcing UI load.');
+      setLoading(false);
+    }, 3000);
+
     // Get initial session
     supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
@@ -120,12 +136,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (session?.user) {
           // User is authenticated - fetch profile
           fetchUserProfile(session.user.id).finally(() => {
+            console.log('Loading set to false (after profile fetch)');
             setLoading(false);
+            clearTimeout(safetyTimer); // Clear safety timer since we completed normally
           });
         } else {
           // No session - user is not authenticated
           // Explicitly set loading to false
+          console.log('Loading set to false (no session)');
           setLoading(false);
+          clearTimeout(safetyTimer); // Clear safety timer since we completed normally
         }
       })
       .catch((error) => {
@@ -135,7 +155,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(null);
         setRole(null);
         setProfile(null);
+        console.log('Loading set to false (session error)');
         setLoading(false); // Ensure loading is set to false even on error
+        clearTimeout(safetyTimer); // Clear safety timer since we handled the error
       });
 
     // Listen for auth state changes
@@ -155,11 +177,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       // Always set loading to false after auth state change
+      console.log('Loading set to false (auth state change)');
       setLoading(false);
+      clearTimeout(safetyTimer); // Clear safety timer since state changed
     });
 
     return () => {
       subscription.unsubscribe();
+      clearTimeout(safetyTimer); // Cleanup safety timer on unmount
     };
   }, []);
 
