@@ -12,7 +12,7 @@ import Footer from './Footer';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn, session, role } = useAuth();
+  const { signIn, user, role } = useAuth();
   const { showError } = useNotification();
   
   const [email, setEmail] = useState('');
@@ -21,10 +21,15 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  // Redirect if already authenticated
+  /**
+   * Reactive navigation: Navigate when user and role are available
+   * This handles navigation after successful login when role is fetched asynchronously
+   */
   useEffect(() => {
-    if (session && role) {
-      // Redirect based on role
+    if (user && role) {
+      // User is logged in and role is loaded. Now we route.
+      setIsLoading(false); // Reset loading state when navigation happens
+      
       if (role === 'admin') {
         navigate('/admin/dashboard', { replace: true });
       } else {
@@ -32,7 +37,7 @@ const LoginPage: React.FC = () => {
         navigate('/producer/dashboard', { replace: true });
       }
     }
-  }, [session, role, navigate]);
+  }, [user, role, navigate]);
 
   const handleLogoClick = () => {
     navigate('/');
@@ -60,6 +65,7 @@ const LoginPage: React.FC = () => {
 
   /**
    * Handle form submission
+   * Only handles signIn - navigation is handled reactively via useEffect
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,8 +87,8 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      // Success - navigation will happen via useEffect when session/role updates
-      // Don't set isLoading to false here - let the redirect happen
+      // Success - navigation will happen reactively via useEffect when user and role are available
+      // The useEffect hook will handle navigation and reset isLoading
     } catch (error) {
       console.error('Login error:', error);
       showError('An unexpected error occurred. Please try again.');
