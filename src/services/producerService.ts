@@ -112,6 +112,15 @@ export class ProducerService {
    */
   static async createProject(projectData: ProjectFormData): Promise<Project> {
     const supabase = await getSupabase();
+    
+    // Get the current authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    // Guard clause: Ensure user is authenticated
+    if (userError || !user) {
+      throw new Error('You must be logged in to create a project');
+    }
+    
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .insert({
@@ -121,7 +130,8 @@ export class ProducerService {
         physical_parameters: projectData.physical_parameters,
         financial_parameters: projectData.financial_parameters ?? 0,
         timeline_deadline: projectData.timeline_deadline || null,
-        project_status: 'New'
+        project_status: 'New',
+        producer_id: user.id // Assign ownership to the current user
       })
       .select()
       .single();
