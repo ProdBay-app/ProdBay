@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Building2, Mail, Tag, Loader2, ChevronLeft, ChevronRight, User, Phone, Star, Send, Paperclip } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
-import { QuoteRequestEmailService } from '@/services/quoteRequestEmailService';
+import { QuoteRequestService } from '@/services/quoteRequestService';
+import { getSupabase } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import type { Supplier, Quote, ContactPerson, Asset } from '@/lib/supabase';
 
@@ -232,49 +233,71 @@ ${signature.phone}`;
   const handleSendAllRequests = async () => {
     setSubmitting(true);
     try {
-      const createdQuotes: Quote[] = [];
-      const emailConfigs: Array<{
-        quote: Quote;
-        to: string;
-        toName: string;
-        subject: string;
-        body: string;
-        ccEmails?: string;
-        bccEmails?: string;
-        attachments?: File[];
-      }> = [];
+      // Get authenticated user's email for Reply-To header
+      const supabase = await getSupabase();
+      const { data: { user } } = await supabase.auth.getUser();
 
-      // Step 1: Create quote records for each selected supplier
-      for (const emailConfig of customizedEmails) {
-        const newQuote = await ProducerService.requestQuote(assetId, emailConfig.supplierId);
-        createdQuotes.push(newQuote);
-
-        // Prepare email configuration
-        emailConfigs.push({
-          quote: newQuote,
-          to: emailConfig.contactEmail,
-          toName: emailConfig.contactName,
-          subject: emailConfig.subject,
-          body: emailConfig.body,
-          ccEmails: emailConfig.ccEmails,
-          bccEmails: emailConfig.bccEmails,
-          attachments: emailConfig.attachments
-        });
+      // Require authenticated user - no fallback for production safety
+      if (!user || !user.email) {
+        throw new Error('Authentication required. Please log in to send quote requests.');
       }
 
-      // Step 2: Send all emails in batch
-      const emailResults = await QuoteRequestEmailService.sendBatchQuoteRequestEmails(emailConfigs);
+      const from = {
+        name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Producer',
+        email: user.email
+      };
 
-      // Notify parent component of created quotes (optimistic update)
-      onQuotesRequested(createdQuotes);
+      // Extract supplier IDs from customized emails
+      const supplierIds = customizedEmails.map(email => email.supplierId);
 
-      // Show success message with details
-      if (emailResults.failed === 0) {
-        showSuccess(`Quote requests sent to ${emailResults.sent} supplier${emailResults.sent !== 1 ? 's' : ''}!`);
+      // Transform customizedEmails to backend format
+      const backendCustomizedEmails = customizedEmails.map(email => ({
+        supplierId: email.supplierId,
+        subject: email.subject,
+        body: email.body
+      }));
+
+      // Call backend API to create quotes and send emails
+      const result = await QuoteRequestService.sendQuoteRequests(
+        assetId,
+        supplierIds,
+        backendCustomizedEmails,
+        from
+      );
+
+      // Extract created quotes from backend response
+      // Backend returns results with quote_id for each supplier
+      // Fetch all quotes for this asset once, then match by quote_id
+      let allQuotes: Quote[] = [];
+      try {
+        allQuotes = await ProducerService.getQuotesForAsset(assetId);
+      } catch (err) {
+        console.warn('Could not fetch quotes after sending requests:', err);
+      }
+
+      const createdQuotes: Quote[] = [];
+      for (const resultItem of result.data.results) {
+        if (resultItem.email_sent && resultItem.quote_id) {
+          const matchingQuote = allQuotes.find(q => q.id === resultItem.quote_id);
+          if (matchingQuote) {
+            createdQuotes.push(matchingQuote);
+          }
+        }
+      }
+
+      // Notify parent component of created quotes
+      if (createdQuotes.length > 0) {
+        onQuotesRequested(createdQuotes);
+      }
+
+      // Show success message with details from backend
+      if (result.data.failed_requests === 0) {
+        showSuccess(`Quote requests sent to ${result.data.successful_requests} supplier${result.data.successful_requests !== 1 ? 's' : ''}!`);
       } else {
-        showError(`Sent ${emailResults.sent} email${emailResults.sent !== 1 ? 's' : ''}, but ${emailResults.failed} failed. Check console for details.`);
+        const failedDetails = result.data.errors.map(e => `${e.supplier_name}: ${e.error}`).join('; ');
+        showError(`Sent ${result.data.successful_requests} request${result.data.successful_requests !== 1 ? 's' : ''}, but ${result.data.failed_requests} failed. ${failedDetails}`);
         // Log errors for debugging
-        emailResults.errors.forEach(error => console.error(error));
+        result.data.errors.forEach(error => console.error(`Failed for ${error.supplier_name}:`, error.error));
       }
 
       // Close modal (auto-close on success or partial success)

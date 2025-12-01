@@ -23,6 +23,13 @@ const QuoteSubmission = lazy(() => import('@/components/supplier/QuoteSubmission
 const SupplierDashboard = lazy(() => import('@/components/supplier/SupplierDashboardContainer'));
 const SupplierSubmitQuote = lazy(() => import('@/components/supplier/SupplierSubmitQuote'));
 
+// Portal routes
+const GuestLayout = lazy(() => import('@/layouts/GuestLayout'));
+const QuotePortal = lazy(() => import('@/pages/portal/QuotePortal'));
+
+// Producer chat route
+const ProducerQuoteChat = lazy(() => import('@/pages/dashboard/ProducerQuoteChat'));
+
 function App() {
   return (
     <NotificationProvider>
@@ -64,6 +71,11 @@ function App() {
           <Route path="suppliers" element={<SupplierManagement />} />
         </Route>
         
+        {/* Dashboard routes (shared between producer and other roles) */}
+        <Route path="/dashboard" element={<Layout />}>
+          <Route path="quotes/:quoteId/chat" element={<ProducerQuoteChat />} />
+        </Route>
+        
         {/* Admin routes */}
         <Route path="/admin" element={<Layout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
@@ -72,6 +84,11 @@ function App() {
         
         {/* Supplier quote route - outside of layout for public access */}
         <Route path="/quote/:token" element={<QuoteSubmission />} />
+        
+        {/* Portal routes - guest layout for supplier portal */}
+        <Route path="/portal" element={<GuestLayout />}>
+          <Route path="quote/:token" element={<QuotePortal />} />
+        </Route>
         
         {/* Catch all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
