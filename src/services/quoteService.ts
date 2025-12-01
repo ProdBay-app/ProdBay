@@ -4,7 +4,7 @@
  * Includes message fetching and sending for producer chat interface
  */
 
-import { getSupabase } from '@/lib/supabase';
+import { getSyncSupabase } from '@/lib/supabase';
 
 const RAILWAY_API_URL = import.meta.env.VITE_RAILWAY_API_URL || '';
 
@@ -78,12 +78,28 @@ export interface SendMessageResponse {
 
 /**
  * Get JWT token from Supabase session
+ * Uses the synchronous client for immediate access to the session
  */
 async function getAuthToken(): Promise<string | null> {
   try {
-    const supabase = await getSupabase();
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token || null;
+    // Use synchronous client for immediate access
+    const supabase = getSyncSupabase();
+    
+    // Get the current session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('Error getting session:', sessionError);
+      return null;
+    }
+    
+    if (session?.access_token) {
+      return session.access_token;
+    }
+    
+    // If no session, the user might not be authenticated
+    console.warn('No active session found. User may need to log in.');
+    return null;
   } catch (error) {
     console.error('Error getting auth token:', error);
     return null;
