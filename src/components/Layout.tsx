@@ -112,6 +112,25 @@ const Layout: React.FC = () => {
                 ))}
               </div>
                 )}
+              </div>
+
+              {/* Auth Buttons - only show on landing page */}
+              {isLandingPage && (
+                <div className="flex items-center space-x-3">
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors rounded-lg shadow-md hover:shadow-lg"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
             </div>
 
               {/* Subtitle - only show on app pages */}

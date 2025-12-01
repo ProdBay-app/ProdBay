@@ -8,6 +8,7 @@ import LoadingFallback from '@/components/LoadingFallback';
 const Layout = lazy(() => import('@/components/Layout'));
 const Home = lazy(() => import('@/components/Home'));
 const LoginPage = lazy(() => import('@/components/LoginPage'));
+const SignUpPage = lazy(() => import('@/components/SignUpPage'));
 
 // Lazy-loaded dashboard routes to avoid eager initialization side-effects (e.g., Supabase client)
 const ClientDashboard = lazy(() => import('@/components/client/ClientDashboardContainer'));
@@ -43,6 +44,9 @@ function App() {
         
         {/* Login page - outside of layout */}
         <Route path="/login" element={<LoginPage />} />
+        
+        {/* Sign up page - outside of layout */}
+        <Route path="/signup" element={<SignUpPage />} />
         
         {/* Client routes */}
         <Route path="/client" element={<Layout />}>
