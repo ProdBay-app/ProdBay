@@ -21,7 +21,7 @@ const LoginPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loginAttempted, setLoginAttempted] = useState(false);
 
@@ -29,37 +29,42 @@ const LoginPage: React.FC = () => {
     navigate('/');
   };
 
-  // Redirect based on role after successful login
+  // Redirect based on role - works for both new logins and already-authenticated users
   useEffect(() => {
-    if (loginAttempted && !authLoading) {
-      if (role) {
-        // Role successfully fetched - redirect based on role
-        setIsLoading(false);
-        if (role === 'PRODUCER') {
-          navigate('/producer/dashboard', { replace: true });
-        } else if (role === 'SUPPLIER') {
-          navigate('/supplier/quotes', { replace: true });
-        } else if (role === 'ADMIN') {
-          navigate('/admin/dashboard', { replace: true });
-        } else {
-          // Unknown role - show error
-          setError('Unauthorized role. Please contact support.');
-          setIsLoading(false);
-        }
-      } else if (loginAttempted) {
-        // Login was attempted but role is still null after auth loading completes
-        // This could happen if profile fetch failed
-        setError('Failed to load user profile. Please try again or contact support.');
-        setIsLoading(false);
-        setLoginAttempted(false);
+    // Only redirect when auth loading is complete and we have a role
+    if (!authLoading && role) {
+      // Reset submitting state if a login was attempted
+      if (loginAttempted) {
+        setIsSubmitting(false);
       }
+      
+      // Redirect based on role
+      if (role === 'PRODUCER') {
+        navigate('/producer/dashboard', { replace: true });
+      } else if (role === 'SUPPLIER') {
+        navigate('/supplier/quotes', { replace: true });
+      } else if (role === 'ADMIN') {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        // Unknown role - only show error if login was attempted
+        if (loginAttempted) {
+          setError('Unauthorized role. Please contact support.');
+          setIsSubmitting(false);
+        }
+      }
+    } else if (!authLoading && loginAttempted && !role) {
+      // Login was attempted but role is still null after auth loading completes
+      // This could happen if profile fetch failed
+      setError('Failed to load user profile. Please try again or contact support.');
+      setIsSubmitting(false);
+      setLoginAttempted(false);
     }
   }, [role, authLoading, navigate, loginAttempted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
+    setIsSubmitting(true);
     setLoginAttempted(true);
 
     try {
@@ -67,14 +72,14 @@ const LoginPage: React.FC = () => {
         // Signup mode
         if (password !== confirmPassword) {
           setError('Passwords do not match. Please try again.');
-          setIsLoading(false);
+          setIsSubmitting(false);
           setLoginAttempted(false);
           return;
         }
 
         if (password.length < 6) {
           setError('Password must be at least 6 characters long.');
-          setIsLoading(false);
+          setIsSubmitting(false);
           setLoginAttempted(false);
           return;
         }
@@ -90,13 +95,13 @@ const LoginPage: React.FC = () => {
           } else {
             setError(signUpError.message || 'An error occurred during sign up. Please try again.');
           }
-          setIsLoading(false);
+          setIsSubmitting(false);
           setLoginAttempted(false);
           return;
         }
 
         // Success - wait for AuthContext to update role, then redirect via useEffect
-        // The useEffect will handle setting isLoading to false and redirecting
+        // The useEffect will handle setting isSubmitting to false and redirecting
       } else {
         // Login mode
         const { error: signInError } = await signIn(email, password);
@@ -110,21 +115,33 @@ const LoginPage: React.FC = () => {
           } else {
             setError(signInError.message || 'An error occurred during sign in. Please try again.');
           }
-          setIsLoading(false);
+          setIsSubmitting(false);
           setLoginAttempted(false);
           return;
         }
 
         // Success - wait for AuthContext to update role, then redirect via useEffect
-        // The useEffect will handle setting isLoading to false and redirecting
+        // The useEffect will handle setting isSubmitting to false and redirecting
       }
     } catch (err) {
       console.error('Auth error:', err);
       setError('An unexpected error occurred. Please try again.');
-      setIsLoading(false);
+      setIsSubmitting(false);
       setLoginAttempted(false);
     }
   };
+
+  // Show full-page loading spinner while checking initial session
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 text-teal-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50">
@@ -182,7 +199,7 @@ const LoginPage: React.FC = () => {
                   setError(null);
                 }}
                 required
-                disabled={isLoading || authLoading}
+                disabled={isSubmitting || authLoading}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Enter your email"
               />
@@ -203,14 +220,14 @@ const LoginPage: React.FC = () => {
                     setError(null);
                   }}
                   required
-                  disabled={isLoading || authLoading}
+                  disabled={isSubmitting || authLoading}
                   className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                   placeholder={isSignupMode ? "Create a password (min. 6 characters)" : "Enter your password"}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading || authLoading}
+                  disabled={isSubmitting || authLoading}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center disabled:cursor-not-allowed"
                 >
                   {showPassword ? (
@@ -238,14 +255,14 @@ const LoginPage: React.FC = () => {
                       setError(null);
                     }}
                     required
-                    disabled={isLoading || authLoading}
+                    disabled={isSubmitting || authLoading}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                     placeholder="Confirm your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    disabled={isLoading || authLoading}
+                    disabled={isSubmitting || authLoading}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center disabled:cursor-not-allowed"
                   >
                     {showConfirmPassword ? (
@@ -261,10 +278,10 @@ const LoginPage: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading || authLoading || !email || !password || (isSignupMode && !confirmPassword)}
+              disabled={isSubmitting || authLoading || !email || !password || (isSignupMode && !confirmPassword)}
               className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading || authLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>{isSignupMode ? 'Creating account...' : 'Signing in...'}</span>
