@@ -57,6 +57,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           .single();
 
         if (error) {
+          // Enhanced error logging for debugging
+          console.error('[fetchUserProfile] Supabase error details:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            userId: userId,
+            attempt: attempt
+          });
+
           // If it's a "not found" error
           if (error.code === 'PGRST116') {
             // If we have retries left, wait and retry (trigger might still be processing)
@@ -82,7 +92,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   .single();
 
                 if (insertError) {
-                  console.error('[fetchUserProfile] Error creating profile:', insertError);
+                  console.error('[fetchUserProfile] Error creating profile:', {
+                    code: insertError.code,
+                    message: insertError.message,
+                    details: insertError.details,
+                    hint: insertError.hint
+                  });
                   setRole(null);
                   setProfile(null);
                   return;
@@ -107,8 +122,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               }
             }
           } else {
-            // For other errors, log and set null
-            console.error('[fetchUserProfile] Error fetching user profile:', error);
+            // For other errors (including RLS/permission errors), log detailed info and set null
+            console.error('[fetchUserProfile] Error fetching user profile (non-PGRST116):', {
+              code: error.code,
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+              userId: userId
+            });
             setRole(null);
             setProfile(null);
             return;
@@ -177,12 +198,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch (error) {
         // Network or other errors - retry if attempts remain
         if (attempt < maxRetries) {
-          console.log(`[fetchUserProfile] Error fetching profile (attempt ${attempt}/${maxRetries}), retrying in ${retryDelay}ms...`, error);
+          console.log(`[fetchUserProfile] Exception caught (attempt ${attempt}/${maxRetries}), retrying in ${retryDelay}ms...`, {
+            error: error,
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+          });
           await new Promise(resolve => setTimeout(resolve, retryDelay));
           continue;
         } else {
           // Final attempt failed
-          console.error('[fetchUserProfile] Error fetching user profile after all retries:', error);
+          console.error('[fetchUserProfile] Exception after all retries:', {
+            error: error,
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            userId: userId
+          });
           setRole(null);
           setProfile(null);
           return;
