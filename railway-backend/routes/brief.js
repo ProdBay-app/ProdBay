@@ -1,12 +1,18 @@
 const express = require('express');
 const BriefProcessor = require('../services/briefProcessor');
+const { authenticateJWT, requireRole, verifyProjectOwnership } = require('../middleware/auth');
 const router = express.Router();
 
 /**
  * POST /api/process-brief
  * Process a project brief and create corresponding assets
+ * 
+ * Protected endpoint - requires:
+ * - JWT authentication
+ * - Producer role
+ * - Project ownership verification
  */
-router.post('/process-brief', async (req, res) => {
+router.post('/process-brief', authenticateJWT, requireRole('producer'), verifyProjectOwnership('body.projectId'), async (req, res) => {
   try {
     const { projectId, briefDescription, useAI, allocationMethod, projectContext } = req.body;
 

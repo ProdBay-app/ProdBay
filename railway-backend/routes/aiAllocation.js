@@ -2,6 +2,7 @@ const express = require('express');
 const AIAllocationService = require('../services/aiAllocationService');
 const BriefHighlightService = require('../services/briefHighlightService');
 const { supabase } = require('../config/database');
+const { authenticateJWT, requireRole, verifyProjectOwnership } = require('../middleware/auth');
 const router = express.Router();
 
 // Initialize AI services
@@ -85,8 +86,13 @@ router.post('/ai-allocate-assets', async (req, res) => {
 /**
  * POST /api/ai-create-assets
  * Create assets in database based on AI analysis
+ * 
+ * Protected endpoint - requires:
+ * - JWT authentication
+ * - Producer role
+ * - Project ownership verification
  */
-router.post('/ai-create-assets', async (req, res) => {
+router.post('/ai-create-assets', authenticateJWT, requireRole('producer'), verifyProjectOwnership('body.projectId'), async (req, res) => {
   try {
     const { projectId, assets } = req.body;
 

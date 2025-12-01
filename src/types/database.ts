@@ -11,6 +11,16 @@ export type ActionType = 'producer_review_quote' | 'producer_approve_asset' | 'p
 export type ActionStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
 export type ActionAssignee = 'producer' | 'supplier' | 'client';
 
+// User role type matching the database enum
+export type UserRole = 'producer' | 'admin';
+
+export interface UserProfile {
+  id: string;
+  role: UserRole;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Project {
   id: string;
   project_name: string;
@@ -20,6 +30,7 @@ export interface Project {
   financial_parameters: number;
   timeline_deadline: string | null;
   project_status: ProjectStatus;
+  producer_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -128,8 +139,15 @@ export type AssetInsert = Omit<Asset, 'id' | 'created_at' | 'updated_at'> & {
   updated_at?: string;
 };
 
+export type UserProfileInsert = Omit<UserProfile, 'id' | 'created_at' | 'updated_at'> & {
+  id: string; // Required - must match auth.users.id
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type ProjectInsert = Omit<Project, 'id' | 'created_at' | 'updated_at'> & {
   id?: string;
+  producer_id?: string | null; // Optional - will be set by RLS policy or application logic
   created_at?: string;
   updated_at?: string;
 };
@@ -153,6 +171,7 @@ export type ActionItemInsert = Omit<ActionItem, 'id' | 'created_at' | 'updated_a
 };
 
 // Update types (for updating existing records)
+export type UserProfileUpdate = Partial<Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>>;
 export type QuoteUpdate = Partial<Omit<Quote, 'id' | 'created_at' | 'updated_at'>>;
 export type AssetUpdate = Partial<Omit<Asset, 'id' | 'created_at' | 'updated_at'>>;
 export type ProjectUpdate = Partial<Omit<Project, 'id' | 'created_at' | 'updated_at'>>;

@@ -1,11 +1,14 @@
 import React from 'react';
-import { Outlet, NavLink, useLocation, Link } from 'react-router-dom';
-import { Users, Package, FileText, BarChart3 } from 'lucide-react';
+import { Outlet, NavLink, useLocation, Link, useNavigate } from 'react-router-dom';
+import { Users, Package, FileText, BarChart3, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import Footer from './Footer';
 import DarkVeil from './DarkVeil';
 
 const Layout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { session, user, signOut } = useAuth();
   const currentPath = location.pathname;
 
   // Determine if this is the landing page
@@ -18,6 +21,14 @@ const Layout: React.FC = () => {
   const isProducerPath = currentPath.startsWith('/producer');
   const isAdminPath = currentPath.startsWith('/admin');
   const isSupplierPath = currentPath.startsWith('/supplier') || currentPath.startsWith('/quote');
+
+  /**
+   * Handle sign out
+   */
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   const getNavLinks = () => {
     if (isClientPath) {
@@ -113,6 +124,23 @@ const Layout: React.FC = () => {
               </div>
                 )}
             </div>
+
+              {/* User Info and Sign Out - only show when authenticated */}
+              {session && user && !isLandingPage && (
+                <div className="flex items-center space-x-4">
+                  <div className="hidden sm:block text-sm text-white/90">
+                    <span className="opacity-75">{user.email}</span>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                    title="Sign out"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden sm:inline">Sign Out</span>
+                  </button>
+                </div>
+              )}
 
               {/* Subtitle - only show on app pages */}
               {!isLandingPage && (

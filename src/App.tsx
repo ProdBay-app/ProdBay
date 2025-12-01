@@ -1,13 +1,16 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { SupplierImpersonationProvider } from '@/contexts/SupplierImpersonationContext';
 import LoadingFallback from '@/components/LoadingFallback';
+import RequireAuth from '@/components/RequireAuth';
 
 // Lazy-loaded routes and layouts to reduce initial bundle size
 const Layout = lazy(() => import('@/components/Layout'));
 const Home = lazy(() => import('@/components/Home'));
 const LoginPage = lazy(() => import('@/components/LoginPage'));
+const SignUpPage = lazy(() => import('@/components/SignUpPage'));
 
 // Lazy-loaded dashboard routes to avoid eager initialization side-effects (e.g., Supabase client)
 const ClientDashboard = lazy(() => import('@/components/client/ClientDashboardContainer'));
@@ -33,16 +36,18 @@ const ProducerQuoteChat = lazy(() => import('@/pages/dashboard/ProducerQuoteChat
 function App() {
   return (
     <NotificationProvider>
-      <Router>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-        {/* Public landing page - now wrapped in Layout for consistent background/header */}
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-        </Route>
-        
-        {/* Login page - outside of layout */}
-        <Route path="/login" element={<LoginPage />} />
+      <AuthProvider>
+        <Router>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+          {/* Public landing page - now wrapped in Layout for consistent background/header */}
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+          </Route>
+          
+          {/* Authentication pages - outside of layout */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
         
         {/* Client routes */}
         <Route path="/client" element={<Layout />}>
@@ -62,8 +67,15 @@ function App() {
           <Route path="submit" element={<SupplierSubmitQuote />} />
         </Route>
         
-        {/* Producer routes */}
-        <Route path="/producer" element={<Layout />}>
+        {/* Producer routes - protected with authentication */}
+        <Route
+          path="/producer"
+          element={
+            <RequireAuth>
+              <Layout />
+            </RequireAuth>
+          }
+        >
           <Route index element={<Navigate to="/producer/dashboard" replace />} />
           <Route path="dashboard" element={<ActiveProjectsGrid projectLimit={6} />} />
           <Route path="projects" element={<AllProjectsPage />} />
@@ -71,13 +83,27 @@ function App() {
           <Route path="suppliers" element={<SupplierManagement />} />
         </Route>
         
-        {/* Dashboard routes (shared between producer and other roles) */}
-        <Route path="/dashboard" element={<Layout />}>
+        {/* Dashboard routes (shared between producer and other roles) - protected */}
+        <Route
+          path="/dashboard"
+          element={
+            <RequireAuth>
+              <Layout />
+            </RequireAuth>
+          }
+        >
           <Route path="quotes/:quoteId/chat" element={<ProducerQuoteChat />} />
         </Route>
         
-        {/* Admin routes */}
-        <Route path="/admin" element={<Layout />}>
+        {/* Admin routes - protected with admin role requirement */}
+        <Route
+          path="/admin"
+          element={
+            <RequireAuth requiredRole="admin">
+              <Layout />
+            </RequireAuth>
+          }
+        >
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
         </Route>
@@ -92,9 +118,10 @@ function App() {
         
         {/* Catch all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </Router>
+            </Routes>
+          </Suspense>
+        </Router>
+      </AuthProvider>
     </NotificationProvider>
   );
 }

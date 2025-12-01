@@ -1,13 +1,19 @@
 const express = require('express');
 const ProjectSummaryService = require('../services/projectSummaryService');
+const { authenticateJWT, requireRole, verifyProjectOwnership, verifyProjectOwnershipViaMilestone, verifyProjectOwnershipViaAction } = require('../middleware/auth');
 const router = express.Router();
 
 /**
  * GET /api/project-summary/:projectId
  * Get comprehensive project tracking summary
  * Includes budget, timeline, milestones, and action counts
+ * 
+ * Protected endpoint - requires:
+ * - JWT authentication
+ * - Producer role
+ * - Project ownership verification
  */
-router.get('/:projectId', async (req, res) => {
+router.get('/:projectId', authenticateJWT, requireRole('producer'), verifyProjectOwnership('params.projectId'), async (req, res) => {
   try {
     const { projectId } = req.params;
 
@@ -60,8 +66,13 @@ router.get('/:projectId', async (req, res) => {
 /**
  * GET /api/project-summary/:projectId/milestones
  * Get all milestones for a project
+ * 
+ * Protected endpoint - requires:
+ * - JWT authentication
+ * - Producer role
+ * - Project ownership verification
  */
-router.get('/:projectId/milestones', async (req, res) => {
+router.get('/:projectId/milestones', authenticateJWT, requireRole('producer'), verifyProjectOwnership('params.projectId'), async (req, res) => {
   try {
     const { projectId } = req.params;
 
@@ -99,8 +110,13 @@ router.get('/:projectId/milestones', async (req, res) => {
 /**
  * POST /api/project-summary/:projectId/milestones
  * Create a new milestone for a project
+ * 
+ * Protected endpoint - requires:
+ * - JWT authentication
+ * - Producer role
+ * - Project ownership verification
  */
-router.post('/:projectId/milestones', async (req, res) => {
+router.post('/:projectId/milestones', authenticateJWT, requireRole('producer'), verifyProjectOwnership('params.projectId'), async (req, res) => {
   try {
     const { projectId } = req.params;
     const { name, date, description } = req.body;
@@ -154,8 +170,13 @@ router.post('/:projectId/milestones', async (req, res) => {
 /**
  * PATCH /api/project-summary/milestones/:milestoneId
  * Update a milestone
+ * 
+ * Protected endpoint - requires:
+ * - JWT authentication
+ * - Producer role
+ * - Project ownership verification (via milestone lookup)
  */
-router.patch('/milestones/:milestoneId', async (req, res) => {
+router.patch('/milestones/:milestoneId', authenticateJWT, requireRole('producer'), verifyProjectOwnershipViaMilestone, async (req, res) => {
   try {
     const { milestoneId } = req.params;
     const updates = req.body;
@@ -204,8 +225,13 @@ router.patch('/milestones/:milestoneId', async (req, res) => {
 /**
  * DELETE /api/project-summary/milestones/:milestoneId
  * Delete a milestone
+ * 
+ * Protected endpoint - requires:
+ * - JWT authentication
+ * - Producer role
+ * - Project ownership verification (via milestone lookup)
  */
-router.delete('/milestones/:milestoneId', async (req, res) => {
+router.delete('/milestones/:milestoneId', authenticateJWT, requireRole('producer'), verifyProjectOwnershipViaMilestone, async (req, res) => {
   try {
     const { milestoneId } = req.params;
 
@@ -242,8 +268,13 @@ router.delete('/milestones/:milestoneId', async (req, res) => {
 /**
  * GET /api/project-summary/:projectId/actions
  * Get all action items for a project (with optional filters)
+ * 
+ * Protected endpoint - requires:
+ * - JWT authentication
+ * - Producer role
+ * - Project ownership verification
  */
-router.get('/:projectId/actions', async (req, res) => {
+router.get('/:projectId/actions', authenticateJWT, requireRole('producer'), verifyProjectOwnership('params.projectId'), async (req, res) => {
   try {
     const { projectId } = req.params;
     const { status, assignedTo } = req.query;
@@ -286,8 +317,13 @@ router.get('/:projectId/actions', async (req, res) => {
 /**
  * POST /api/project-summary/actions
  * Create a new action item
+ * 
+ * Protected endpoint - requires:
+ * - JWT authentication
+ * - Producer role
+ * - Project ownership verification
  */
-router.post('/actions', async (req, res) => {
+router.post('/actions', authenticateJWT, requireRole('producer'), verifyProjectOwnership('body.projectId'), async (req, res) => {
   try {
     const actionData = req.body;
 
@@ -326,8 +362,13 @@ router.post('/actions', async (req, res) => {
 /**
  * PATCH /api/project-summary/actions/:actionId/complete
  * Mark an action item as completed
+ * 
+ * Protected endpoint - requires:
+ * - JWT authentication
+ * - Producer role
+ * - Project ownership verification (via action item lookup)
  */
-router.patch('/actions/:actionId/complete', async (req, res) => {
+router.patch('/actions/:actionId/complete', authenticateJWT, requireRole('producer'), verifyProjectOwnershipViaAction, async (req, res) => {
   try {
     const { actionId } = req.params;
 
