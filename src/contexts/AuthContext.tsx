@@ -38,8 +38,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * Fetch user profile from profiles table to get role
    * Implements retry logic to handle race condition where profile might not exist yet
    * (e.g., immediately after signup before database trigger completes)
+   * Self-healing: If profile doesn't exist after retries, automatically creates it
    */
-  const fetchUserProfile = async (userId: string): Promise<void> => {
+  const fetchUserProfile = async (userId: string, userEmail?: string): Promise<void> => {
     const maxRetries = 3;
     const retryDelay = 500; // milliseconds
 
@@ -56,19 +57,62 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           .single();
 
         if (error) {
-          // If it's a "not found" error and we have retries left, wait and retry
-          if (error.code === 'PGRST116' && attempt < maxRetries) {
-            console.log(`[fetchUserProfile] Profile not found for user ${userId}, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})...`);
-            // Correct Promise-based delay pattern
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-            continue;
+          // If it's a "not found" error
+          if (error.code === 'PGRST116') {
+            // If we have retries left, wait and retry (trigger might still be processing)
+            if (attempt < maxRetries) {
+              console.log(`[fetchUserProfile] Profile not found for user ${userId}, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})...`);
+              await new Promise(resolve => setTimeout(resolve, retryDelay));
+              continue;
+            } else {
+              // Final attempt failed - profile doesn't exist, create it (self-healing)
+              console.warn(`[fetchUserProfile] Profile not found after all retries. Creating profile for user ${userId}...`);
+              
+              try {
+                const { data: newProfile, error: insertError } = await supabase
+                  .from('profiles')
+                  .insert([
+                    {
+                      id: userId,
+                      role: 'PRODUCER', // Default role
+                      full_name: userEmail || userId, // Use email as fallback for full_name
+                    }
+                  ])
+                  .select('id, role, full_name')
+                  .single();
+
+                if (insertError) {
+                  console.error('[fetchUserProfile] Error creating profile:', insertError);
+                  setRole(null);
+                  setProfile(null);
+                  return;
+                }
+
+                if (newProfile) {
+                  // Successfully created profile
+                  console.log(`[fetchUserProfile] Profile created successfully for user ${userId}, role: ${newProfile.role}`);
+                  setRole(newProfile.role as UserRole);
+                  setProfile({
+                    id: newProfile.id,
+                    role: newProfile.role as UserRole,
+                    full_name: newProfile.full_name
+                  });
+                  return; // Exit on success
+                }
+              } catch (createError) {
+                console.error('[fetchUserProfile] Exception while creating profile:', createError);
+                setRole(null);
+                setProfile(null);
+                return;
+              }
+            }
+          } else {
+            // For other errors, log and set null
+            console.error('[fetchUserProfile] Error fetching user profile:', error);
+            setRole(null);
+            setProfile(null);
+            return;
           }
-          
-          // For other errors or final attempt, log and set null
-          console.error('[fetchUserProfile] Error fetching user profile:', error);
-          setRole(null);
-          setProfile(null);
-          return;
         }
 
         if (data) {
@@ -85,22 +129,55 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           // No data returned - retry if attempts remain
           if (attempt < maxRetries) {
             console.log(`[fetchUserProfile] No profile data returned for user ${userId}, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})...`);
-            // Correct Promise-based delay pattern
             await new Promise(resolve => setTimeout(resolve, retryDelay));
             continue;
           } else {
-            // Final attempt failed
-            console.error('[fetchUserProfile] Profile not found after all retry attempts');
-            setRole(null);
-            setProfile(null);
-            return;
+            // Final attempt failed - try to create profile (self-healing)
+            console.warn(`[fetchUserProfile] No profile data after all retries. Creating profile for user ${userId}...`);
+            
+            try {
+              const { data: newProfile, error: insertError } = await supabase
+                .from('profiles')
+                .insert([
+                  {
+                    id: userId,
+                    role: 'PRODUCER', // Default role
+                    full_name: userEmail || userId, // Use email as fallback for full_name
+                  }
+                ])
+                .select('id, role, full_name')
+                .single();
+
+              if (insertError) {
+                console.error('[fetchUserProfile] Error creating profile:', insertError);
+                setRole(null);
+                setProfile(null);
+                return;
+              }
+
+              if (newProfile) {
+                // Successfully created profile
+                console.log(`[fetchUserProfile] Profile created successfully for user ${userId}, role: ${newProfile.role}`);
+                setRole(newProfile.role as UserRole);
+                setProfile({
+                  id: newProfile.id,
+                  role: newProfile.role as UserRole,
+                  full_name: newProfile.full_name
+                });
+                return; // Exit on success
+              }
+            } catch (createError) {
+              console.error('[fetchUserProfile] Exception while creating profile:', createError);
+              setRole(null);
+              setProfile(null);
+              return;
+            }
           }
         }
       } catch (error) {
         // Network or other errors - retry if attempts remain
         if (attempt < maxRetries) {
           console.log(`[fetchUserProfile] Error fetching profile (attempt ${attempt}/${maxRetries}), retrying in ${retryDelay}ms...`, error);
-          // Correct Promise-based delay pattern
           await new Promise(resolve => setTimeout(resolve, retryDelay));
           continue;
         } else {
@@ -135,7 +212,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         if (session?.user) {
           // User is authenticated - fetch profile
-          fetchUserProfile(session.user.id).finally(() => {
+          fetchUserProfile(session.user.id, session.user.email).finally(() => {
             console.log('Loading set to false (after profile fetch)');
             setLoading(false);
             clearTimeout(safetyTimer); // Clear safety timer since we completed normally
@@ -169,7 +246,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (session?.user) {
         // Fetch profile when user signs in
-        await fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user.id, session.user.email);
       } else {
         // Clear profile when user signs out or session is null
         setRole(null);
