@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { QuoteService, type Message } from '@/services/quoteService';
 import { useNotification } from '@/hooks/useNotification';
-import Layout from '@/components/Layout';
 
 /**
  * ProducerQuoteChat Component
@@ -163,16 +162,6 @@ const ProducerQuoteChat: React.FC = () => {
     });
   };
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
-    });
-  };
-
   // Load data on mount
   useEffect(() => {
     loadQuoteData();
@@ -197,8 +186,8 @@ const ProducerQuoteChat: React.FC = () => {
   }, [messages, scrollToBottom]);
 
   return (
-    <Layout>
-      <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="min-h-screen pt-20 pb-10 px-4">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header with Back Button */}
         <div className="flex items-center gap-4 mb-6">
           <button
@@ -330,7 +319,7 @@ const ProducerQuoteChat: React.FC = () => {
           </div>
         )}
       </div>
-    </Layout>
+    </div>
   );
 };
 
