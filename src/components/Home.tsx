@@ -36,9 +36,26 @@ const Home: React.FC = () => {
               />
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-3xl mx-auto drop-shadow-md px-2">
-              Streamline your production workflow from initial brief to final delivery. 
-              Connect clients, producers, and suppliers in one comprehensive platform.
+              Streamline your production workflow. Manage projects, coordinate suppliers, and track quotes all in one place.
             </p>
+            
+            {/* Producer Auth CTAs */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+              <Link
+                to="/login"
+                className="px-8 py-4 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-lg shadow-lg hover:shadow-xl flex items-center justify-center"
+              >
+                Producer Login
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Link>
+              <Link
+                to="/login?mode=signup"
+                className="px-8 py-4 bg-white text-teal-600 border-2 border-teal-600 rounded-lg font-semibold hover:bg-teal-50 transition-colors text-lg shadow-lg hover:shadow-xl flex items-center justify-center"
+              >
+                Producer Signup
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -98,46 +115,12 @@ const Home: React.FC = () => {
           </ScrollStack>
         </div>
 
-        {/* User Portals Section */}
+        {/* Producer Portal Section */}
         <div className="relative z-10 pt-4 sm:pt-8 pb-12 sm:pb-20">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-16">
-              {/* Client Portal */}
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
-                <div className="bg-blue-600 text-white p-4 sm:p-6">
-                  <Package className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
-                  <h3 className="text-xl sm:text-2xl font-bold">Client Portal</h3>
-                  <p className="opacity-90 mt-2 text-sm sm:text-base">Manage your projects</p>
-                </div>
-                <div className="p-4 sm:p-6">
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Project dashboard</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Create new projects</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Track project progress</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">View asset status</span>
-                    </li>
-                  </ul>
-                  <Link
-                    to="/client/dashboard"
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-center block"
-                  >
-                    Access Client Dashboard
-                  </Link>
-                </div>
-              </div>
+            <div className="flex justify-center mb-8 sm:mb-16">
               {/* Producer Portal */}
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
+              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden max-w-md">
                 <div className="bg-teal-600 text-white p-4 sm:p-6">
                   <Package className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
                   <h3 className="text-xl sm:text-2xl font-bold">Producer Portal</h3>
@@ -167,41 +150,6 @@ const Home: React.FC = () => {
                     className="w-full bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors text-center block"
                   >
                     Access Producer Dashboard
-                  </Link>
-                </div>
-              </div>
-
-              {/* Supplier Portal */}
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
-                <div className="bg-orange-600 text-white p-4 sm:p-6">
-                  <Users className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
-                  <h3 className="text-xl sm:text-2xl font-bold">Supplier Portal</h3>
-                  <p className="opacity-90 mt-2 text-sm sm:text-base">Receive and submit quotes</p>
-                </div>
-                <div className="p-4 sm:p-6">
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Email-based quote requests</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Simple quote submission</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">No login required</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Direct project access</span>
-                    </li>
-                  </ul>
-                  <Link
-                    to="/supplier/quotes"
-                    className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors text-center block"
-                  >
-                    Access Supplier Dashboard
                   </Link>
                 </div>
               </div>

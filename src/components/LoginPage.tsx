@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Package, 
   ArrowRight,
@@ -13,10 +13,14 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn, role, loading: authLoading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const isSignupMode = searchParams.get('mode') === 'signup';
+  const { signIn, signUp, role, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loginAttempted, setLoginAttempted] = useState(false);
@@ -59,26 +63,63 @@ const LoginPage: React.FC = () => {
     setLoginAttempted(true);
 
     try {
-      const { error: signInError } = await signIn(email, password);
-
-      if (signInError) {
-        // Handle specific error messages
-        if (signInError.message.includes('Invalid login credentials')) {
-          setError('Invalid email or password. Please try again.');
-        } else if (signInError.message.includes('Email not confirmed')) {
-          setError('Please verify your email address before signing in.');
-        } else {
-          setError(signInError.message || 'An error occurred during sign in. Please try again.');
+      if (isSignupMode) {
+        // Signup mode
+        if (password !== confirmPassword) {
+          setError('Passwords do not match. Please try again.');
+          setIsLoading(false);
+          setLoginAttempted(false);
+          return;
         }
-        setIsLoading(false);
-        setLoginAttempted(false);
-        return;
-      }
 
-      // Success - wait for AuthContext to update role, then redirect via useEffect
-      // The useEffect will handle setting isLoading to false and redirecting
+        if (password.length < 6) {
+          setError('Password must be at least 6 characters long.');
+          setIsLoading(false);
+          setLoginAttempted(false);
+          return;
+        }
+
+        const { error: signUpError } = await signUp(email, password);
+
+        if (signUpError) {
+          // Handle specific error messages
+          if (signUpError.message.includes('User already registered')) {
+            setError('An account with this email already exists. Please sign in instead.');
+          } else if (signUpError.message.includes('Password')) {
+            setError('Password does not meet requirements. Please try again.');
+          } else {
+            setError(signUpError.message || 'An error occurred during sign up. Please try again.');
+          }
+          setIsLoading(false);
+          setLoginAttempted(false);
+          return;
+        }
+
+        // Success - wait for AuthContext to update role, then redirect via useEffect
+        // The useEffect will handle setting isLoading to false and redirecting
+      } else {
+        // Login mode
+        const { error: signInError } = await signIn(email, password);
+
+        if (signInError) {
+          // Handle specific error messages
+          if (signInError.message.includes('Invalid login credentials')) {
+            setError('Invalid email or password. Please try again.');
+          } else if (signInError.message.includes('Email not confirmed')) {
+            setError('Please verify your email address before signing in.');
+          } else {
+            setError(signInError.message || 'An error occurred during sign in. Please try again.');
+          }
+          setIsLoading(false);
+          setLoginAttempted(false);
+          return;
+        }
+
+        // Success - wait for AuthContext to update role, then redirect via useEffect
+        // The useEffect will handle setting isLoading to false and redirecting
+      }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('Auth error:', err);
       setError('An unexpected error occurred. Please try again.');
       setIsLoading(false);
       setLoginAttempted(false);
@@ -107,10 +148,12 @@ const LoginPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Welcome Back
+              {isSignupMode ? 'Create Your Account' : 'Welcome Back'}
             </h2>
             <p className="text-gray-600">
-              Sign in to access your ProdBay dashboard
+              {isSignupMode 
+                ? 'Sign up to start managing your production workflow'
+                : 'Sign in to access your ProdBay dashboard'}
             </p>
           </div>
 
@@ -162,7 +205,7 @@ const LoginPage: React.FC = () => {
                   required
                   disabled={isLoading || authLoading}
                   className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  placeholder="Enter your password"
+                  placeholder={isSignupMode ? "Create a password (min. 6 characters)" : "Enter your password"}
                 />
                 <button
                   type="button"
@@ -179,24 +222,87 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Confirm Password Input (Signup mode only) */}
+            {isSignupMode && (
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setError(null);
+                    }}
+                    required
+                    disabled={isLoading || authLoading}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    placeholder="Confirm your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    disabled={isLoading || authLoading}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center disabled:cursor-not-allowed"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading || authLoading || !email || !password}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading || authLoading || !email || !password || (isSignupMode && !confirmPassword)}
+              className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading || authLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Signing in...</span>
+                  <span>{isSignupMode ? 'Creating account...' : 'Signing in...'}</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>{isSignupMode ? 'Sign Up' : 'Sign In'}</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </button>
+
+            {/* Toggle between Login and Signup */}
+            <div className="text-center text-sm">
+              {isSignupMode ? (
+                <p className="text-gray-600">
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/login')}
+                    className="text-teal-600 hover:text-teal-700 font-medium"
+                  >
+                    Sign in
+                  </button>
+                </p>
+              ) : (
+                <p className="text-gray-600">
+                  Don't have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/login?mode=signup')}
+                    className="text-teal-600 hover:text-teal-700 font-medium"
+                  >
+                    Sign up
+                  </button>
+                </p>
+              )}
+            </div>
           </form>
         </div>
       </div>

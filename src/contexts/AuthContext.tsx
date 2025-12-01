@@ -17,6 +17,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -130,6 +131,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   /**
+   * Sign up with email and password
+   * The database trigger will automatically create a profile with PRODUCER role
+   */
+  const signUp = async (email: string, password: string): Promise<{ error: Error | null }> => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { error };
+      }
+
+      // Profile will be created automatically by database trigger (handle_new_user)
+      // Profile will be fetched automatically by onAuthStateChange listener
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  /**
    * Sign out
    */
   const signOut = async (): Promise<void> => {
@@ -147,6 +171,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     profile,
     loading,
     signIn,
+    signUp,
     signOut,
   };
 
