@@ -36,34 +36,73 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   /**
    * Fetch user profile from profiles table to get role
+   * Implements retry logic to handle race condition where profile might not exist yet
+   * (e.g., immediately after signup before database trigger completes)
    */
   const fetchUserProfile = async (userId: string): Promise<void> => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, role, full_name')
-        .eq('id', userId)
-        .single();
+    const maxRetries = 3;
+    const retryDelay = 500; // milliseconds
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        setRole(null);
-        setProfile(null);
-        return;
-      }
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, role, full_name')
+          .eq('id', userId)
+          .single();
 
-      if (data) {
-        setRole(data.role as UserRole);
-        setProfile({
-          id: data.id,
-          role: data.role as UserRole,
-          full_name: data.full_name
-        });
+        if (error) {
+          // If it's a "not found" error and we have retries left, wait and retry
+          if (error.code === 'PGRST116' && attempt < maxRetries) {
+            console.log(`Profile not found for user ${userId}, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
+          }
+          
+          // For other errors or final attempt, log and set null
+          console.error('Error fetching user profile:', error);
+          setRole(null);
+          setProfile(null);
+          return;
+        }
+
+        if (data) {
+          // Success - profile found
+          setRole(data.role as UserRole);
+          setProfile({
+            id: data.id,
+            role: data.role as UserRole,
+            full_name: data.full_name
+          });
+          return; // Exit on success
+        } else {
+          // No data returned - retry if attempts remain
+          if (attempt < maxRetries) {
+            console.log(`No profile data returned for user ${userId}, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
+          } else {
+            // Final attempt failed
+            console.error('Profile not found after all retry attempts');
+            setRole(null);
+            setProfile(null);
+            return;
+          }
+        }
+      } catch (error) {
+        // Network or other errors - retry if attempts remain
+        if (attempt < maxRetries) {
+          console.log(`Error fetching profile (attempt ${attempt}/${maxRetries}), retrying in ${retryDelay}ms...`, error);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        } else {
+          // Final attempt failed
+          console.error('Error fetching user profile after all retries:', error);
+          setRole(null);
+          setProfile(null);
+          return;
+        }
       }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setRole(null);
-      setProfile(null);
     }
   };
 
@@ -136,9 +175,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    */
   const signUp = async (email: string, password: string): Promise<{ error: Error | null }> => {
     try {
+      // Get the current origin to ensure email redirects to the correct domain
+      const emailRedirectTo = typeof window !== 'undefined' 
+        ? `${window.location.origin}/login`
+        : undefined;
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo,
+        },
       });
 
       if (error) {
