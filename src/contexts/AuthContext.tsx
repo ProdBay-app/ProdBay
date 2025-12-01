@@ -111,18 +111,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    */
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id).finally(() => {
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        // Handle session data
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // User is authenticated - fetch profile
+          fetchUserProfile(session.user.id).finally(() => {
+            setLoading(false);
+          });
+        } else {
+          // No session - user is not authenticated
+          // Explicitly set loading to false
           setLoading(false);
-        });
-      } else {
-        setLoading(false);
-      }
-    });
+        }
+      })
+      .catch((error) => {
+        // Handle any errors during session fetch
+        console.error('Error getting session:', error);
+        setSession(null);
+        setUser(null);
+        setRole(null);
+        setProfile(null);
+        setLoading(false); // Ensure loading is set to false even on error
+      });
 
     // Listen for auth state changes
     const {
@@ -135,11 +149,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Fetch profile when user signs in
         await fetchUserProfile(session.user.id);
       } else {
-        // Clear profile when user signs out
+        // Clear profile when user signs out or session is null
         setRole(null);
         setProfile(null);
       }
 
+      // Always set loading to false after auth state change
       setLoading(false);
     });
 
