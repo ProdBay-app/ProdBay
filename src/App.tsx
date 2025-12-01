@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { SupplierImpersonationProvider } from '@/contexts/SupplierImpersonationContext';
 import LoadingFallback from '@/components/LoadingFallback';
@@ -32,10 +33,11 @@ const ProducerQuoteChat = lazy(() => import('@/pages/dashboard/ProducerQuoteChat
 
 function App() {
   return (
-    <NotificationProvider>
-      <Router>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
+    <AuthProvider>
+      <NotificationProvider>
+        <Router>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
         {/* Public landing page - now wrapped in Layout for consistent background/header */}
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
@@ -93,9 +95,10 @@ function App() {
         {/* Catch all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </Suspense>
-      </Router>
-    </NotificationProvider>
+          </Suspense>
+        </Router>
+      </NotificationProvider>
+    </AuthProvider>
   );
 }
 

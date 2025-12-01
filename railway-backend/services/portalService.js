@@ -190,7 +190,20 @@ class PortalService {
         throw new Error('Invalid quote ID format');
       }
 
-      // Verify quote exists and get related data
+      // Validate user parameter
+      if (!user || !user.id) {
+        throw new Error('User authentication required');
+      }
+
+      // Role Check: User must be a PRODUCER
+      if (user.role !== 'PRODUCER') {
+        const error = new Error('Access denied. Producer role required.');
+        error.statusCode = 403;
+        error.code = 'FORBIDDEN_ROLE';
+        throw error;
+      }
+
+      // Verify quote exists and get related data (including project with producer_id)
       const { data: quote, error: quoteError } = await supabase
         .from('quotes')
         .select(`
@@ -198,7 +211,10 @@ class PortalService {
           supplier:suppliers(*),
           asset:assets(
             *,
-            project:projects(*)
+            project:projects(
+              *,
+              producer_id
+            )
           )
         `)
         .eq('id', quoteId)
@@ -208,8 +224,27 @@ class PortalService {
         throw new Error('Quote not found');
       }
 
-      // TODO: Verify producer ownership of quote (when producer_id is added to projects)
-      // For now, we allow any authenticated user to send messages
+      // Ownership Check: Verify producer owns the project that contains this quote
+      const project = quote.asset?.project;
+      if (!project) {
+        throw new Error('Project not found for this quote');
+      }
+
+      if (!project.producer_id) {
+        // Legacy project without producer_id - deny access for security
+        const error = new Error('Access denied. This project does not have an assigned producer.');
+        error.statusCode = 403;
+        error.code = 'FORBIDDEN_NO_OWNER';
+        throw error;
+      }
+
+      if (project.producer_id !== user.id) {
+        // User is a PRODUCER but not the owner of this project
+        const error = new Error('Access denied. You do not have permission to send messages for this quote.');
+        error.statusCode = 403;
+        error.code = 'FORBIDDEN_NOT_OWNER';
+        throw error;
+      }
 
       // Insert message
       const { data: message, error: messageError } = await supabase
@@ -269,17 +304,32 @@ class PortalService {
   /**
    * Get messages for a specific quote (for producer chat view)
    * @param {string} quoteId - Quote ID
+   * @param {Object} user - Authenticated user object with role from JWT middleware
    * @returns {Promise<Object>} Quote data with messages, asset, and supplier info
+   * @throws {Error} Throws error with appropriate message if access is denied
    */
-  static async getQuoteMessages(quoteId) {
+  static async getQuoteMessages(quoteId, user) {
     try {
+      // Validate user parameter
+      if (!user || !user.id) {
+        throw new Error('User authentication required');
+      }
+
+      // Role Check: User must be a PRODUCER
+      if (user.role !== 'PRODUCER') {
+        const error = new Error('Access denied. Producer role required.');
+        error.statusCode = 403;
+        error.code = 'FORBIDDEN_ROLE';
+        throw error;
+      }
+
       // Validate UUID format
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(quoteId)) {
         throw new Error('Invalid quote ID format');
       }
 
-      // Verify quote exists and get related data
+      // Verify quote exists and get related data (including project with producer_id)
       const { data: quote, error: quoteError } = await supabase
         .from('quotes')
         .select(`
@@ -287,7 +337,10 @@ class PortalService {
           supplier:suppliers(*),
           asset:assets(
             *,
-            project:projects(*)
+            project:projects(
+              *,
+              producer_id
+            )
           )
         `)
         .eq('id', quoteId)
@@ -297,7 +350,30 @@ class PortalService {
         throw new Error('Quote not found');
       }
 
+      // Ownership Check: Verify producer owns the project that contains this quote
+      const project = quote.asset?.project;
+      if (!project) {
+        throw new Error('Project not found for this quote');
+      }
+
+      if (!project.producer_id) {
+        // Legacy project without producer_id - deny access for security
+        const error = new Error('Access denied. This project does not have an assigned producer.');
+        error.statusCode = 403;
+        error.code = 'FORBIDDEN_NO_OWNER';
+        throw error;
+      }
+
+      if (project.producer_id !== user.id) {
+        // User is a PRODUCER but not the owner of this project
+        const error = new Error('Access denied. You do not have permission to view messages for this quote.');
+        error.statusCode = 403;
+        error.code = 'FORBIDDEN_NOT_OWNER';
+        throw error;
+      }
+
       // Fetch all messages for this quote (ordered by created_at)
+      // RLS will also enforce this, but we check here for explicit error messages
       const { data: messages, error: messagesError } = await supabase
         .from('messages')
         .select('*')
@@ -306,7 +382,9 @@ class PortalService {
 
       if (messagesError) {
         console.error('Error fetching messages:', messagesError);
-        // Don't throw - return empty messages array if fetch fails
+        // If RLS blocks access, messagesError will contain the error
+        // Return empty array for now (RLS will handle the actual blocking)
+        // But we've already verified ownership above, so this should not happen
       }
 
       return {
@@ -322,7 +400,7 @@ class PortalService {
           updated_at: quote.updated_at
         },
         asset: quote.asset,
-        project: quote.asset?.project,
+        project: project,
         supplier: quote.supplier,
         messages: messages || []
       };

@@ -48,8 +48,31 @@ const authenticateJWT = async (req, res, next) => {
       });
     }
 
-    // Attach user to request object
-    req.user = user;
+    // Fetch user profile to get role
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, full_name')
+      .eq('id', user.id)
+      .single();
+
+    // Handle edge case: If no profile exists (rare due to trigger, but possible)
+    if (profileError || !profile) {
+      console.warn(`User ${user.id} does not have a profile. This should not happen due to auto-creation trigger.`);
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'PROFILE_NOT_FOUND',
+          message: 'User profile not found. Please contact support.'
+        }
+      });
+    }
+
+    // Attach user to request object with role from profile
+    req.user = {
+      ...user,
+      role: profile.role,
+      full_name: profile.full_name
+    };
     next();
 
   } catch (error) {

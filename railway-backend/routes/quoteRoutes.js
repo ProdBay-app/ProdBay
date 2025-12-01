@@ -37,8 +37,8 @@ quoteRouter.get('/:id/messages', authenticateJWT, async (req, res) => {
       });
     }
 
-    // Get messages for quote
-    const result = await PortalService.getQuoteMessages(id);
+    // Get messages for quote (pass user for role and ownership verification)
+    const result = await PortalService.getQuoteMessages(id, user);
 
     res.status(200).json({
       success: true,
@@ -49,8 +49,19 @@ quoteRouter.get('/:id/messages', authenticateJWT, async (req, res) => {
   } catch (error) {
     console.error('Get quote messages endpoint error:', error);
 
+    // Handle 403 Forbidden errors (role or ownership issues)
+    if (error.statusCode === 403 || error.code === 'FORBIDDEN_ROLE' || error.code === 'FORBIDDEN_NOT_OWNER' || error.code === 'FORBIDDEN_NO_OWNER') {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: error.code || 'FORBIDDEN',
+          message: error.message || 'Access denied'
+        }
+      });
+    }
+
     // Handle specific error types
-    if (error.message.includes('Quote not found')) {
+    if (error.message.includes('Quote not found') || error.message.includes('Project not found')) {
       return res.status(404).json({
         success: false,
         error: {

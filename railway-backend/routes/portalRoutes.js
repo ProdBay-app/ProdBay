@@ -205,8 +205,19 @@ producerMessageRouter.post('/', authenticateJWT, async (req, res) => {
   } catch (error) {
     console.error('Send producer message endpoint error:', error);
 
+    // Handle 403 Forbidden errors (role or ownership issues)
+    if (error.statusCode === 403 || error.code === 'FORBIDDEN_ROLE' || error.code === 'FORBIDDEN_NOT_OWNER' || error.code === 'FORBIDDEN_NO_OWNER') {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: error.code || 'FORBIDDEN',
+          message: error.message || 'Access denied'
+        }
+      });
+    }
+
     // Handle specific error types
-    if (error.message.includes('Quote not found') || error.message.includes('Invalid quote ID format')) {
+    if (error.message.includes('Quote not found') || error.message.includes('Project not found') || error.message.includes('Invalid quote ID format')) {
       return res.status(404).json({
         success: false,
         error: {
