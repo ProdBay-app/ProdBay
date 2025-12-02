@@ -281,7 +281,7 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
 
       // Build dashboard link for producer (link to quote chat page)
       const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL || 'http://localhost:5173');
-      portalLink = `${frontendUrl}/producer/quotes/${quote.id}/chat`;
+      portalLink = `${frontendUrl}/dashboard/quotes/${quote.id}/chat`;
     }
 
     // Validate recipient email exists

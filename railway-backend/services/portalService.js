@@ -175,7 +175,7 @@ class PortalService {
 
               // Generate portal link for producer (link to quote chat page)
               const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
-              const portalLink = `${frontendUrl}/producer/quotes/${quote.id}/chat`;
+              const portalLink = `${frontendUrl}/dashboard/quotes/${quote.id}/chat`;
 
               // Generate message preview (first 100 characters)
               const messagePreview = content.trim().length > 100 ? content.trim().substring(0, 100) : content.trim();
