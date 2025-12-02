@@ -92,7 +92,9 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
 
     console.log(`[Webhook] Processing new message notification: message_id=${messageId}, quote_id=${quote_id}, sender_type=${sender_type}`);
 
-    // Fetch quote with related data (supplier, asset, project, producer)
+    // ============================================
+    // QUERY 1: Fetch quote with supplier, asset, and project (2 levels max)
+    // ============================================
     const { data: quote, error: quoteError } = await supabase
       .from('quotes')
       .select(`
@@ -110,13 +112,7 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
           project:projects(
             id,
             project_name,
-            producer_id,
-            producer:producers(
-              id,
-              email,
-              full_name,
-              company_name
-            )
+            producer_id
           )
         )
       `)
@@ -124,7 +120,7 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
       .single();
 
     if (quoteError || !quote) {
-      console.error('[Webhook] Quote not found:', quoteError);
+      console.error('[Webhook] ❌ Quote not found:', quoteError);
       // Return 200 OK to prevent Supabase retry loop
       return res.status(200).json({
         success: false,
@@ -135,19 +131,96 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
       });
     }
 
+    console.log('[Webhook] ✅ Quote fetched:', { 
+      quote_id: quote.id, 
+      has_supplier: !!quote.supplier,
+      has_asset: !!quote.asset 
+    });
+
+    // ============================================
+    // Validate chain: Quote → Asset → Project
+    // ============================================
+    if (!quote.asset) {
+      console.error(`[Webhook] ❌ Broken Chain: Quote ${quote_id} has no Asset linked.`);
+      return res.status(200).json({
+        success: false,
+        error: {
+          code: 'ASSET_NOT_FOUND',
+          message: 'Asset not found for quote. Email notification skipped.'
+        }
+      });
+    }
+
+    console.log('[Webhook] ✅ Asset found:', { 
+      asset_id: quote.asset.id, 
+      asset_name: quote.asset.asset_name,
+      has_project: !!quote.asset.project 
+    });
+
+    if (!quote.asset.project) {
+      console.error(`[Webhook] ❌ Broken Chain: Quote ${quote_id} → Asset ${quote.asset.id} has no Project linked.`);
+      return res.status(200).json({
+        success: false,
+        error: {
+          code: 'PROJECT_NOT_FOUND',
+          message: 'Project not found for asset. Email notification skipped.'
+        }
+      });
+    }
+
+    console.log('[Webhook] ✅ Project found:', { 
+      project_id: quote.asset.project.id, 
+      project_name: quote.asset.project.project_name,
+      producer_id: quote.asset.project.producer_id 
+    });
+
+    // ============================================
+    // QUERY 2: Fetch producer separately (if needed)
+    // ============================================
+    let producer = null;
+    const producerId = quote.asset.project.producer_id;
+
+    if (producerId) {
+      const { data: producerData, error: producerError } = await supabase
+        .from('producers')
+        .select('id, email, full_name, company_name')
+        .eq('id', producerId)
+        .single();
+
+      if (producerError) {
+        console.error('[Webhook] ❌ Producer fetch failed:', {
+          producer_id: producerId,
+          error: producerError.message
+        });
+      } else if (producerData) {
+        producer = producerData;
+        console.log('[Webhook] ✅ Producer found:', { 
+          producer_id: producer.id, 
+          email: producer.email,
+          name: producer.full_name || producer.company_name 
+        });
+      } else {
+        console.error(`[Webhook] ❌ Broken Chain: Project ${quote.asset.project.id} has producer_id ${producerId} but Producer not found in database.`);
+      }
+    } else {
+      console.error(`[Webhook] ❌ Broken Chain: Project ${quote.asset.project.id} has no producer_id set.`);
+    }
+
+    // ============================================
     // Determine recipient based on sender_type
+    // ============================================
     let recipientEmail = null;
     let recipientName = null;
     let senderEmail = null;
     let senderName = null;
     let portalLink = null;
-    let quoteName = null;
+    let quoteName = quote.asset.asset_name || 'Quote';
 
     if (sender_type === 'PRODUCER') {
       // Producer sent message → Notify Supplier
       const supplier = quote.supplier;
       if (!supplier) {
-        console.error('[Webhook] Supplier not found for quote');
+        console.error('[Webhook] ❌ Supplier not found for quote');
         return res.status(200).json({
           success: false,
           error: {
@@ -163,8 +236,7 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
       recipientEmail = primaryContact?.email || supplier.contact_email;
       recipientName = primaryContact?.name || supplier.supplier_name;
 
-      // Get producer info for sender
-      const producer = quote.asset?.project?.producer;
+      // Get producer info for sender (use fetched producer or fallback)
       senderEmail = producer?.email || 'noreply@prodbay.com';
       senderName = producer?.full_name || producer?.company_name || 'Producer';
 
@@ -172,24 +244,33 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
       const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL || 'http://localhost:5173');
       portalLink = `${frontendUrl}/portal/quote/${quote.access_token}`;
 
-      quoteName = quote.asset?.asset_name || 'Quote';
-
     } else if (sender_type === 'SUPPLIER') {
       // Supplier sent message → Notify Producer
-      const producer = quote.asset?.project?.producer;
       if (!producer || !producer.email) {
-        console.error('[Webhook] Producer not found or missing email for quote');
+        console.error('[Webhook] ❌ Producer not found or missing email:', {
+          quote_id: quote_id,
+          asset_id: quote.asset.id,
+          project_id: quote.asset.project.id,
+          producer_id: producerId,
+          producer_data: producer
+        });
         return res.status(200).json({
           success: false,
           error: {
             code: 'PRODUCER_NOT_FOUND',
-            message: 'Producer not found or missing email. Email notification skipped.'
+            message: 'Producer not found or missing email. Email notification skipped.',
+            details: process.env.NODE_ENV === 'development' ? {
+              producer_id: producerId,
+              has_asset: !!quote.asset,
+              has_project: !!quote.asset.project
+            } : undefined
           }
         });
       }
 
       recipientEmail = producer.email;
       recipientName = producer.full_name || producer.company_name || 'Producer';
+      console.log(`[Webhook] ✅ Found Producer: Email ${producer.email}`);
 
       // Get supplier info for sender
       const supplier = quote.supplier;
@@ -201,8 +282,6 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
       // Build dashboard link for producer (link to quote chat page)
       const frontendUrl = normalizeFrontendUrl(process.env.FRONTEND_URL || 'http://localhost:5173');
       portalLink = `${frontendUrl}/producer/quotes/${quote.id}/chat`;
-
-      quoteName = quote.asset?.asset_name || 'Quote';
     }
 
     // Validate recipient email exists
@@ -217,11 +296,23 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
       });
     }
 
+    // Validate recipient email exists
+    if (!recipientEmail) {
+      console.error('[Webhook] ❌ Recipient email not found');
+      return res.status(200).json({
+        success: false,
+        error: {
+          code: 'RECIPIENT_EMAIL_NOT_FOUND',
+          message: 'Recipient email not found. Email notification skipped.'
+        }
+      });
+    }
+
     // Generate message preview (first 100 characters)
     const messagePreview = content.length > 100 ? content.substring(0, 100) : content;
 
     // Send email notification
-    console.log(`[Webhook] Sending email notification to ${recipientEmail} (${sender_type} → ${sender_type === 'PRODUCER' ? 'SUPPLIER' : 'PRODUCER'})`);
+    console.log(`[Webhook] 📧 Sending email notification to ${recipientEmail} (${sender_type} → ${sender_type === 'PRODUCER' ? 'SUPPLIER' : 'PRODUCER'})`);
     
     const emailResult = await emailService.sendNewMessageNotification({
       to: recipientEmail,
