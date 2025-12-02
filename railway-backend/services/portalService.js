@@ -27,7 +27,11 @@ class PortalService {
           supplier:suppliers(*),
           asset:assets(
             *,
-            project:projects(*)
+            project:projects(
+              id,
+              project_name,
+              producer_id
+            )
           )
         `)
         .eq('access_token', token)
@@ -123,37 +127,83 @@ class PortalService {
         throw new Error('Failed to create message');
       }
 
-      // Get producer email (from project or use a default)
-      // For now, we'll need to determine how to get producer email
-      // This might come from project settings or a producer table
-      // For MVP, we can use a default or environment variable
-      const producerEmail = process.env.PRODUCER_EMAIL || null;
-      const producerName = process.env.PRODUCER_NAME || 'Producer';
+      // ============================================
+      // Send email notification to Producer
+      // Using split query approach for reliability
+      // ============================================
+      try {
+        // Get asset and project info
+        const asset = quote.asset;
+        const project = quote.asset?.project;
+        const supplier = quote.supplier;
 
-      // Get asset and project info for email context
-      const asset = quote.asset;
-      const project = quote.asset?.project;
-      const supplier = quote.supplier;
+        // Validate chain: Quote → Asset → Project
+        if (!asset) {
+          console.error(`[PortalService] ❌ Broken Chain: Quote ${quote.id} has no Asset linked. Skipping email notification.`);
+        } else if (!project) {
+          console.error(`[PortalService] ❌ Broken Chain: Quote ${quote.id} → Asset ${asset.id} has no Project linked. Skipping email notification.`);
+        } else {
+          // Fetch producer separately using producer_id (split query approach)
+          const producerId = project.producer_id;
+          
+          if (!producerId) {
+            console.error(`[PortalService] ❌ Broken Chain: Project ${project.id} has no producer_id set. Skipping email notification.`);
+          } else {
+            // Query 2: Fetch producer separately
+            const { data: producer, error: producerError } = await supabase
+              .from('producers')
+              .select('id, email, full_name, company_name')
+              .eq('id', producerId)
+              .single();
 
-      // Generate portal link for producer (dashboard)
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-      const dashboardLink = `${frontendUrl}/dashboard/quotes`;
+            if (producerError) {
+              console.error('[PortalService] ❌ Producer fetch failed:', {
+                producer_id: producerId,
+                error: producerError.message
+              });
+            } else if (!producer || !producer.email) {
+              console.error(`[PortalService] ❌ Broken Chain: Project ${project.id} has producer_id ${producerId} but Producer not found or missing email. Skipping email notification.`);
+            } else {
+              // ✅ Producer found - send email notification
+              console.log(`[PortalService] ✅ Found Producer: Email ${producer.email}`);
 
-      // Send email notification to producer
-      if (producerEmail) {
-        try {
-          await emailService.sendNewMessageNotification({
-            to: producerEmail,
-            replyTo: supplier?.contact_email || 'noreply@prodbay.com',
-            senderName: supplier?.supplier_name || 'Supplier',
-            quoteName: asset?.asset_name || 'Quote',
-            portalLink: dashboardLink,
-            messagePreview: content.trim().substring(0, 100)
-          });
-        } catch (emailError) {
-          console.error('Failed to send email notification:', emailError);
-          // Don't throw - message was created successfully
+              // Get supplier info for sender
+              const primaryContact = supplier?.contact_persons?.find(cp => cp.is_primary) || 
+                                  (supplier?.contact_persons?.length > 0 ? supplier.contact_persons[0] : null);
+              const supplierEmail = primaryContact?.email || supplier?.contact_email || 'noreply@prodbay.com';
+              const supplierName = primaryContact?.name || supplier?.supplier_name || 'Supplier';
+
+              // Generate portal link for producer (link to quote chat page)
+              const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+              const portalLink = `${frontendUrl}/dashboard/quotes/${quote.id}/chat`;
+
+              // Generate message preview (first 100 characters)
+              const messagePreview = content.trim().length > 100 ? content.trim().substring(0, 100) : content.trim();
+
+              // Send email notification
+              console.log(`[PortalService] 📧 Sending email notification to ${producer.email} (SUPPLIER → PRODUCER)`);
+              
+              const emailResult = await emailService.sendNewMessageNotification({
+                to: producer.email,
+                replyTo: supplierEmail,
+                senderName: supplierName,
+                quoteName: asset?.asset_name || 'Quote',
+                portalLink: portalLink,
+                messagePreview: messagePreview
+              });
+
+              if (emailResult.success) {
+                console.log(`[PortalService] ✅ Email notification sent successfully to ${producer.email} (Message ID: ${emailResult.messageId})`);
+              } else {
+                console.error('[PortalService] ❌ Failed to send email notification:', emailResult.error);
+                // Don't throw - message was created successfully
+              }
+            }
+          }
         }
+      } catch (emailError) {
+        console.error('[PortalService] ❌ Error processing email notification:', emailError);
+        // Don't throw - message was created successfully
       }
 
       return message;
