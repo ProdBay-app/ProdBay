@@ -10,6 +10,7 @@ const pdfExtractionRoutes = require('./routes/pdfExtraction');
 const projectSummaryRoutes = require('./routes/projectSummary');
 const { portalRoutes, producerMessageRoute } = require('./routes/portalRoutes');
 const quoteRoutes = require('./routes/quoteRoutes');
+const webhookRoutes = require('./routes/webhookRoutes');
 const { testConnection } = require('./config/database');
 
 const app = express();
@@ -100,6 +101,7 @@ app.use('/api/project-summary', projectSummaryRoutes);
 app.use('/api/portal', portalRoutes);
 app.use('/api/messages', producerMessageRoute);
 app.use('/api/quotes', quoteRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -133,7 +135,8 @@ app.get('/', (req, res) => {
       'GET /api/portal/session/:token': 'Get portal session data (quote, asset, messages)',
       'POST /api/portal/messages': 'Send message from supplier via portal (requires token in body)',
       'POST /api/messages': 'Send message from producer (requires JWT authentication)',
-      'GET /api/quotes/:id/messages': 'Get all messages for a quote (requires JWT authentication)'
+      'GET /api/quotes/:id/messages': 'Get all messages for a quote (requires JWT authentication)',
+      'POST /api/webhooks/new-message': 'Webhook endpoint for new message notifications (requires X-Webhook-Secret header)'
     }
   });
 });
