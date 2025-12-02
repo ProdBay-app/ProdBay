@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Package, 
   ArrowRight,
   Eye,
   EyeOff,
-  Users,
-  Shield
+  Mail
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import Footer from './Footer';
 
 const LoginPage: React.FC = () => {
@@ -16,24 +16,40 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingRole, setLoadingRole] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogoClick = () => {
     navigate('/');
   };
 
-  const handleRoleLogin = async (role: string, route: string) => {
-    setLoadingRole(role);
-    setIsLoading(true);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     
-    // Mock authentication - simulate API call delay
-    setTimeout(() => {
-      // For demo purposes, navigate directly to the specified dashboard
-      // In a real app, this would validate credentials and redirect based on user role
-      navigate(route);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        setError(signInError.message || 'Invalid email or password. Please try again.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Success - redirect to producer dashboard
+      if (data.user) {
+        navigate('/producer/dashboard');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Sign in error:', err);
+    } finally {
       setIsLoading(false);
-      setLoadingRole(null);
-    }, 1000);
+    }
   };
 
   return (
@@ -65,125 +81,99 @@ const LoginPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="space-y-6">
-            {/* Demo Form Fields - Visual Only */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your email (demo mode)"
-              />
-            </div>
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-6">
+              {/* Email Field */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    placeholder="Enter your email"
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your password (demo mode)"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
-                </button>
+              {/* Password Field */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    placeholder="Enter your password"
+                    required
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Signing in...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+
+              {/* Link to Sign Up */}
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  Don't have an account?{' '}
+                  <Link
+                    to="/signup"
+                    className="text-teal-600 hover:text-teal-700 font-medium"
+                  >
+                    Sign up
+                  </Link>
+                </p>
               </div>
             </div>
-
-            {/* Role Selection Buttons */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-700 text-center mb-4">
-                Choose your role to access the dashboard:
-              </h3>
-              
-              {/* Producer Login */}
-              <button
-                onClick={() => handleRoleLogin('producer', '/producer/dashboard')}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading && loadingRole === 'producer' ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Signing in as Producer...</span>
-                  </>
-                ) : (
-                  <>
-                    <Package className="h-4 w-4" />
-                    <span>Log in as Producer</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-
-              {/* Supplier Login */}
-              <button
-                onClick={() => handleRoleLogin('supplier', '/supplier/quotes')}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading && loadingRole === 'supplier' ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Signing in as Supplier...</span>
-                  </>
-                ) : (
-                  <>
-                    <Users className="h-4 w-4" />
-                    <span>Log in as Supplier</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-
-              {/* Admin Login */}
-              <button
-                onClick={() => handleRoleLogin('admin', '/admin/dashboard')}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading && loadingRole === 'admin' ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Signing in as Admin...</span>
-                  </>
-                ) : (
-                  <>
-                    <Shield className="h-4 w-4" />
-                    <span>Log in as Admin</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Demo Information */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>Demo Mode:</strong> This is a demonstration version with role-based access. 
-              Click any role button above to access the corresponding dashboard. 
-              Form fields are for visual purposes only.
-            </p>
-          </div>
+          </form>
         </div>
       </div>
       

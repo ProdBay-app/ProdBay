@@ -85,6 +85,7 @@ export interface Project {
   timeline_deadline?: string;
   project_status: 'New' | 'In Progress' | 'Quoting' | 'Completed' | 'Cancelled';
   ai_allocation_completed_at?: string;
+  producer_id: string;
   created_at: string;
   updated_at: string;
 }

@@ -1,11 +1,14 @@
 import React from 'react';
-import { Outlet, NavLink, useLocation, Link } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, Link, useNavigate } from 'react-router-dom';
 import { Users, Package, FileText, BarChart3 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import Footer from './Footer';
 import DarkVeil from './DarkVeil';
 
 const Layout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const currentPath = location.pathname;
 
   // Determine if this is the landing page
@@ -13,6 +16,18 @@ const Layout: React.FC = () => {
 
   // Conditional animation speed: 0.4 for landing page, 0.04 (10%) for app pages
   const animationSpeed = isLandingPage ? 0.4 : 0.04;
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('[Layout] Error signing out:', error);
+      // Still redirect to home page even if signOut fails
+      navigate('/');
+    }
+  };
 
   const isClientPath = currentPath.startsWith('/client');
   const isProducerPath = currentPath.startsWith('/producer');
@@ -112,17 +127,50 @@ const Layout: React.FC = () => {
                 ))}
               </div>
                 )}
+              </div>
+
+              {/* Auth Buttons - show based on authentication status */}
+              {user ? (
+                <div className="flex items-center space-x-3">
+                  <Link
+                    to="/producer/dashboard"
+                    className="px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors rounded-lg shadow-md hover:shadow-lg"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors rounded-lg shadow-md hover:shadow-lg"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
             </div>
 
-              {/* Subtitle - only show on app pages */}
-              {!isLandingPage && (
-                <div className="text-sm opacity-75 text-white/90 drop-shadow-md hidden sm:block">
-              Production Management System
-            </div>
-              )}
+            {/* Subtitle - only show on app pages */}
+            {!isLandingPage && (
+              <div className="text-sm opacity-75 text-white/90 drop-shadow-md hidden sm:block">
+                Production Management System
+              </div>
+            )}
           </div>
-        </div>
-      </nav>
+        </nav>
 
         <main className={`flex-1 max-w-7xl mx-auto w-full ${isLandingPage ? 'px-4' : 'py-8 px-4'}`}>
         <Outlet />

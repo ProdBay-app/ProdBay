@@ -101,107 +101,38 @@ const Home: React.FC = () => {
         {/* User Portals Section */}
         <div className="relative z-10 pt-4 sm:pt-8 pb-12 sm:pb-20">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-16">
-              {/* Client Portal */}
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
-                <div className="bg-blue-600 text-white p-4 sm:p-6">
-                  <Package className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
-                  <h3 className="text-xl sm:text-2xl font-bold">Client Portal</h3>
-                  <p className="opacity-90 mt-2 text-sm sm:text-base">Manage your projects</p>
-                </div>
-                <div className="p-4 sm:p-6">
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Project dashboard</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Create new projects</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Track project progress</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">View asset status</span>
-                    </li>
-                  </ul>
-                  <Link
-                    to="/client/dashboard"
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-center block"
-                  >
-                    Access Client Dashboard
-                  </Link>
-                </div>
-              </div>
+            <div className="flex justify-center mb-8 sm:mb-16">
               {/* Producer Portal */}
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
-                <div className="bg-teal-600 text-white p-4 sm:p-6">
-                  <Package className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
-                  <h3 className="text-xl sm:text-2xl font-bold">Producer Portal</h3>
-                  <p className="opacity-90 mt-2 text-sm sm:text-base">Manage projects and suppliers</p>
+              <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm rounded-lg shadow-xl overflow-hidden transform transition-all hover:shadow-2xl">
+                <div className="bg-teal-600 text-white p-6 sm:p-8">
+                  <Package className="h-12 w-12 sm:h-16 sm:w-16 mb-4 sm:mb-5" />
+                  <h3 className="text-2xl sm:text-3xl font-bold">Producer Portal</h3>
+                  <p className="opacity-90 mt-2 text-base sm:text-lg">Manage projects and suppliers</p>
                 </div>
-                <div className="p-4 sm:p-6">
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Project oversight dashboard</span>
+                <div className="p-6 sm:p-8">
+                  <ul className="space-y-3 sm:space-y-4 mb-8">
+                    <li className="flex items-center space-x-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <span className="text-gray-700 text-base sm:text-lg">Project oversight dashboard</span>
                     </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Asset management</span>
+                    <li className="flex items-center space-x-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <span className="text-gray-700 text-base sm:text-lg">Asset management</span>
                     </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Supplier coordination</span>
+                    <li className="flex items-center space-x-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <span className="text-gray-700 text-base sm:text-lg">Supplier coordination</span>
                     </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Quote review and acceptance</span>
+                    <li className="flex items-center space-x-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      <span className="text-gray-700 text-base sm:text-lg">Quote review and acceptance</span>
                     </li>
                   </ul>
                   <Link
                     to="/producer/dashboard"
-                    className="w-full bg-teal-600 text-white py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors text-center block"
+                    className="w-full bg-teal-600 text-white py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors text-center block font-medium text-base sm:text-lg shadow-md hover:shadow-lg"
                   >
                     Access Producer Dashboard
-                  </Link>
-                </div>
-              </div>
-
-              {/* Supplier Portal */}
-              <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden">
-                <div className="bg-orange-600 text-white p-4 sm:p-6">
-                  <Users className="h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4" />
-                  <h3 className="text-xl sm:text-2xl font-bold">Supplier Portal</h3>
-                  <p className="opacity-90 mt-2 text-sm sm:text-base">Receive and submit quotes</p>
-                </div>
-                <div className="p-4 sm:p-6">
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Email-based quote requests</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Simple quote submission</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">No login required</span>
-                    </li>
-                    <li className="flex items-center space-x-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-gray-700">Direct project access</span>
-                    </li>
-                  </ul>
-                  <Link
-                    to="/supplier/quotes"
-                    className="w-full bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors text-center block"
-                  >
-                    Access Supplier Dashboard
                   </Link>
                 </div>
               </div>
