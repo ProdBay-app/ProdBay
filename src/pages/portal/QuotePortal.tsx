@@ -187,18 +187,6 @@ const QuotePortal: React.FC = () => {
     loadSession();
   }, [loadSession]);
 
-  // Check if quote is already submitted when session loads
-  useEffect(() => {
-    if (session?.quote) {
-      const isSubmitted = session.quote.status === 'Submitted' && session.quote.cost > 0;
-      setQuoteSubmitted(isSubmitted);
-      if (isSubmitted) {
-        setQuotePrice(session.quote.cost);
-        setQuoteNotes(session.quote.notes_capacity || '');
-      }
-    }
-  }, [session]);
-
   // Set up polling (every 8 seconds)
   useEffect(() => {
     if (session && !error) {
