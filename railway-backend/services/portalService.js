@@ -20,6 +20,7 @@ class PortalService {
       }
 
       // Find quote by access_token
+      // NOTE: financial_parameters is intentionally excluded from project selection
       const { data: quote, error: quoteError } = await supabase
         .from('quotes')
         .select(`
@@ -37,7 +38,6 @@ class PortalService {
               project_status,
               created_at,
               updated_at
-              -- NOTE: financial_parameters is intentionally excluded
             )
           )
         `)

@@ -57,7 +57,7 @@ const ProjectDetailPage: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  
+
   // Track current edited brief values for PDF download
   const [currentEditedBriefDescription, setCurrentEditedBriefDescription] = useState<string>('');
   const [currentEditedPhysicalParameters, setCurrentEditedPhysicalParameters] = useState<string>('');
