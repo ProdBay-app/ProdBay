@@ -25,6 +25,9 @@ interface EditableBriefProps {
   onDirtyChange?: (isDirty: boolean) => void;
   onSavingChange?: (isSaving: boolean) => void;
   
+  // Highlights toggle control
+  showHighlights?: boolean;
+  
   // Max height to match Assets block (deprecated, but kept for compatibility)
   maxHeight?: number;
 }
@@ -59,7 +62,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   mode: externalMode,
   onModeChange,
   onDirtyChange,
-  onSavingChange
+  onSavingChange,
+  showHighlights = true
 }) => {
   const { showSuccess, showError } = useNotification();
 
@@ -235,6 +239,11 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
    * @returns Array of React nodes (text strings and <mark> elements)
    */
   const renderInteractiveContent = (text: string): React.ReactNode[] => {
+    // If highlights are disabled, return plain text
+    if (!showHighlights) {
+      return [text];
+    }
+
     // If no assets provided or no interactive features enabled, return plain text
     if (!assets || !onAssetClick || !onAssetHover) {
       return [text];

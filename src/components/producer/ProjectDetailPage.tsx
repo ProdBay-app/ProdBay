@@ -9,7 +9,9 @@ import {
   AlertCircle,
   Download,
   Edit3,
-  Eye
+  Eye,
+  EyeOff,
+  Highlighter
 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
@@ -120,6 +122,14 @@ const ProjectDetailPage: React.FC = () => {
   const [briefMode, setBriefMode] = useState<'view' | 'edit'>('view');
   const [briefIsDirty, setBriefIsDirty] = useState(false);
   const [briefIsSaving, setBriefIsSaving] = useState(false);
+  const [showHighlights, setShowHighlights] = useState(true);
+
+  // Clear hover state when highlights are disabled
+  useEffect(() => {
+    if (!showHighlights) {
+      setHoveredAssetId(null);
+    }
+  }, [showHighlights]);
 
   // Format currency
   const formatCurrency = (amount: number): string => {
@@ -565,6 +575,18 @@ const ProjectDetailPage: React.FC = () => {
                         </span>
                       )}
 
+                      {/* Highlights Toggle - Only visible in view mode */}
+                      {briefMode === 'view' && (
+                        <Button
+                          onClick={() => setShowHighlights(prev => !prev)}
+                          variant={showHighlights ? 'secondary' : 'outline'}
+                          icon={showHighlights ? <Highlighter className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          title={showHighlights ? 'Hide asset highlights' : 'Show asset highlights'}
+                        >
+                          {showHighlights ? 'Highlights' : 'Hide'}
+                        </Button>
+                      )}
+
                       {/* Download PDF Button */}
                       <Button
                         onClick={handleBriefDownloadPdf}
@@ -621,13 +643,14 @@ const ProjectDetailPage: React.FC = () => {
                   } : null);
                 }}
                 assets={assets}
-                hoveredAssetId={hoveredAssetId}
-                onAssetHover={setHoveredAssetId}
+                hoveredAssetId={showHighlights ? hoveredAssetId : null}
+                onAssetHover={showHighlights ? setHoveredAssetId : undefined}
                 onAssetClick={handleAssetClick}
                 mode={briefMode}
                 onModeChange={setBriefMode}
                 onDirtyChange={setBriefIsDirty}
                 onSavingChange={setBriefIsSaving}
+                showHighlights={showHighlights}
               />
             )}
           </div>
