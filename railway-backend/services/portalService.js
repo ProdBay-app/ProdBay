@@ -16,7 +16,7 @@ class PortalService {
       // Validate UUID format
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(token)) {
-        throw new Error('Invalid access token format');
+        throw new Error('Invalid access token format. Access tokens must be valid UUIDs.');
       }
 
       // Find quote by access_token
@@ -44,8 +44,25 @@ class PortalService {
         .eq('access_token', token)
         .single();
 
-      if (quoteError || !quote) {
-        throw new Error('Quote not found for this access token');
+      if (quoteError) {
+        // Check if it's a "not found" error or a different error
+        if (quoteError.code === 'PGRST116') {
+          // No rows returned
+          throw new Error('Quote not found for this access token. The link may have expired or the quote may have been deleted. Please contact the producer for a new quote request link.');
+        }
+        // Other database errors
+        console.error('Database error validating access token:', quoteError);
+        throw new Error('Unable to validate access token. Please try again or contact support.');
+      }
+
+      if (!quote) {
+        throw new Error('Quote not found for this access token. The link may have expired or the quote may have been deleted. Please contact the producer for a new quote request link.');
+      }
+
+      // Additional check: verify access_token exists on the quote
+      if (!quote.access_token) {
+        console.error(`Quote ${quote.id} found but missing access_token. This may indicate a database migration issue.`);
+        throw new Error('Quote configuration error. Please contact the producer for a new quote request link.');
       }
 
       return quote;

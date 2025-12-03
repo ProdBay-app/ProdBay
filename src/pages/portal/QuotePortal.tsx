@@ -72,7 +72,9 @@ const QuotePortal: React.FC = () => {
       const response = await PortalService.getSession(token);
       
       if (!response.success || !response.data) {
-        setError(response.error?.message || 'Failed to load portal session');
+        // Use the error message from the backend, which now provides more helpful context
+        const errorMessage = response.error?.message || 'Failed to load portal session';
+        setError(errorMessage);
         setLoading(false);
         return;
       }
@@ -82,7 +84,8 @@ const QuotePortal: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error('Error loading session:', err);
-      setError('An unexpected error occurred');
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

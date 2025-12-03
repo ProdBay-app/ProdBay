@@ -1,8 +1,10 @@
 const { Resend } = require('resend');
+const { generateEmailHtml } = require('../utils/emailGenerator');
 
 /**
  * Email Service
  * Handles email sending via Resend with Reply-To pattern
+ * Uses branded HTML email templates
  */
 class EmailService {
   constructor() {
@@ -63,7 +65,7 @@ class EmailService {
       const emailSubject = subject || `Quote Request: ${assetName}`;
       console.log('[EmailService] Subject:', emailSubject);
 
-      // Build email body
+      // Build email body (plain text for fallback)
       // Note: The message parameter already contains the quote link (added by supplierService)
       // We only add it here if message is not provided (fallback case)
       let emailBody = message;
@@ -79,6 +81,46 @@ class EmailService {
         emailBody += `Thank you for your time and we look forward to working with you.\n\nBest regards,\nProdBay Team`;
       }
 
+      // Build HTML body
+      // Convert plain text message to HTML, preserving line breaks
+      let htmlBodyContent = '';
+      if (message) {
+        // Convert plain text to HTML paragraphs
+        const paragraphs = message.split('\n\n').filter(p => p.trim());
+        htmlBodyContent = paragraphs.map(para => {
+          // Replace single newlines with <br> within paragraphs
+          const formatted = para.split('\n').map(line => line.trim()).filter(line => line).join('<br>');
+          return `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">${escapeHtml(formatted)}</p>`;
+        }).join('');
+        
+        // Ensure quote link is clickable if present
+        if (quoteLink && htmlBodyContent.includes(quoteLink)) {
+          htmlBodyContent = htmlBodyContent.replace(
+            new RegExp(escapeHtml(quoteLink), 'g'),
+            `<a href="${quoteLink}" style="color: #7c3aed; text-decoration: underline;">${quoteLink}</a>`
+          );
+        }
+      } else {
+        // Fallback HTML
+        htmlBodyContent = `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">Dear Supplier,</p>`;
+        htmlBodyContent += `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">We would like to request a quote for the following asset:</p>`;
+        htmlBodyContent += `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;"><strong>Asset:</strong> ${escapeHtml(assetName)}</p>`;
+        if (quoteLink) {
+          htmlBodyContent += `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">Please provide your quote by visiting the link below.</p>`;
+        }
+        htmlBodyContent += `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">Thank you for your time and we look forward to working with you.</p>`;
+        htmlBodyContent += `<p style="margin: 0; color: #333333; font-size: 16px; line-height: 1.6;">Best regards,<br>ProdBay Team</p>`;
+      }
+
+      // Generate HTML email
+      const htmlBody = generateEmailHtml({
+        title: `Quote Request: ${assetName}`,
+        body: htmlBodyContent,
+        ctaLink: quoteLink,
+        ctaText: 'Submit Quote',
+        footerText: 'ProdBay - Production Management Platform'
+      });
+
       // Send email via Resend
       console.log('[EmailService] Calling Resend API...');
       const { data, error } = await this.resend.emails.send({
@@ -86,7 +128,8 @@ class EmailService {
         to: [to],
         reply_to: [replyTo],
         subject: emailSubject,
-        text: emailBody
+        text: emailBody,
+        html: htmlBody
       });
 
       // Log Resend API response
@@ -169,7 +212,7 @@ class EmailService {
         currency: 'USD'
       }).format(cost);
 
-      // Build email body
+      // Build email body (plain text for fallback)
       let emailBody = `Hello,\n\n`;
       emailBody += `You have received a new quote submission from ${supplierName}.\n\n`;
       
@@ -191,6 +234,34 @@ class EmailService {
       emailBody += `View and manage this quote in your dashboard:\n${dashboardLink}\n\n`;
       emailBody += `Best regards,\nProdBay Team`;
 
+      // Build HTML body with key-value pairs
+      const bodyData = [
+        { label: 'Project', value: projectName || 'N/A' },
+        { label: 'Asset', value: assetName },
+        { label: 'Supplier', value: supplierName },
+        { label: 'Quote Amount', value: formattedCost }
+      ];
+
+      if (notes && notes.trim()) {
+        bodyData.push({ label: 'Notes', value: notes });
+      }
+
+      if (documentUrl) {
+        bodyData.push({ 
+          label: 'Quote Document', 
+          value: `<a href="${documentUrl}" style="color: #7c3aed; text-decoration: underline;">View Document</a>` 
+        });
+      }
+
+      // Generate HTML email
+      const htmlBody = generateEmailHtml({
+        title: `New Quote Received: ${assetName}`,
+        body: bodyData,
+        ctaLink: dashboardLink,
+        ctaText: 'View in Dashboard',
+        footerText: 'ProdBay - Production Management Platform'
+      });
+
       // Send email via Resend
       console.log('[EmailService] Calling Resend API...');
       const { data, error } = await this.resend.emails.send({
@@ -198,7 +269,8 @@ class EmailService {
         to: [to],
         reply_to: [replyTo],
         subject: emailSubject,
-        text: emailBody
+        text: emailBody,
+        html: htmlBody
       });
 
       // Log Resend API response
@@ -272,7 +344,7 @@ class EmailService {
       const emailSubject = `New message about ${quoteName}`;
       console.log('[EmailService] Subject:', emailSubject);
 
-      // Build email body
+      // Build email body (plain text for fallback)
       let emailBody = `Hello,\n\n`;
       emailBody += `You have received a new message from ${senderName} regarding "${quoteName}".\n\n`;
       
@@ -283,6 +355,25 @@ class EmailService {
       emailBody += `View the full conversation and reply here:\n${portalLink}\n\n`;
       emailBody += `Best regards,\nProdBay Team`;
 
+      // Build HTML body
+      let htmlBodyContent = `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">You have received a new message from <strong>${senderName}</strong> regarding <strong>"${quoteName}"</strong>.</p>`;
+      
+      if (messagePreview) {
+        const previewText = messagePreview.length >= 100 ? messagePreview.substring(0, 100) + '...' : messagePreview;
+        htmlBodyContent += `<div style="background-color: #f5f5f5; border-left: 3px solid #7c3aed; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">`;
+        htmlBodyContent += `<p style="margin: 0; color: #666666; font-size: 14px; font-style: italic; line-height: 1.6;">"${previewText}"</p>`;
+        htmlBodyContent += `</div>`;
+      }
+
+      // Generate HTML email
+      const htmlBody = generateEmailHtml({
+        title: `New message about ${quoteName}`,
+        body: htmlBodyContent,
+        ctaLink: portalLink,
+        ctaText: 'View Conversation',
+        footerText: 'ProdBay - Production Management Platform'
+      });
+
       // Send email via Resend
       console.log('[EmailService] Calling Resend API...');
       const { data, error } = await this.resend.emails.send({
@@ -290,7 +381,8 @@ class EmailService {
         to: [to],
         reply_to: [replyTo],
         subject: emailSubject,
-        text: emailBody
+        text: emailBody,
+        html: htmlBody
       });
 
       // Log Resend API response
@@ -326,6 +418,27 @@ class EmailService {
       };
     }
   }
+}
+
+/**
+ * Escape HTML special characters (helper function)
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text
+ */
+function escapeHtml(text) {
+  if (typeof text !== 'string') {
+    return String(text);
+  }
+  
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  
+  return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 // Export singleton instance
