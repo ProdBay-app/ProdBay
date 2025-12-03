@@ -74,7 +74,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
       aria-modal="true"
     >
       {/* Main loading container */}
-      <div className="flex flex-col items-center justify-center space-y-6 p-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] max-w-lg mx-4 h-96">
+      <div className="flex flex-col items-center justify-center space-y-6 p-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] w-full max-w-lg mx-4 h-96">
         {/* Current step icon with animation */}
         <div className="relative">
           <div className={`w-20 h-20 rounded-full bg-white/10 flex items-center justify-center transition-all duration-500 ${currentStepData.color}`}>
