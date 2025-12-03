@@ -192,9 +192,9 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
           const statusInfo = getStatusInfo(status);
 
           return (
-            <div key={status} className="space-y-3">
+            <div key={status} className="flex flex-col space-y-3 h-full">
               {/* Status Header */}
-              <div className={`${statusInfo.bgColor} ${statusInfo.borderColor} border rounded-lg p-3`}>
+              <div className={`${statusInfo.bgColor} ${statusInfo.borderColor} border rounded-lg p-3 h-24 flex flex-col justify-center`}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className={statusInfo.color}>
                     {statusInfo.icon}
@@ -212,7 +212,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
               </div>
 
               {/* Suppliers List */}
-              <div className="space-y-2">
+              <div className="flex-1 space-y-2">
                 {suppliers.length === 0 ? (
                   <div className="text-center py-6 text-gray-300">
                     <Building2 className="w-8 h-8 mx-auto mb-2 text-gray-300" />
