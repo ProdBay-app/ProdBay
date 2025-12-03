@@ -7,6 +7,7 @@ import AssetFormModal from './AssetFormModal';
 import AssetDetailModal from './AssetDetailModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { getAvailableTagNames, getTagColor } from '@/utils/assetTags';
+import { toTitleCase } from '@/utils/textFormatters';
 import type { Asset } from '@/lib/supabase';
 
 interface AssetListProps {
@@ -98,9 +99,9 @@ const AssetList: React.FC<AssetListProps> = ({
   }) => {
     setIsSubmitting(true);
     try {
-      // Create asset with default values
+      // Create asset with default values (Title Case formatting applied)
       const newAsset = await ProducerService.createAsset(projectId, {
-        asset_name: assetData.asset_name,
+        asset_name: toTitleCase(assetData.asset_name),
         specifications: assetData.specifications,
         status: 'Pending',
         timeline: '',
@@ -143,9 +144,9 @@ const AssetList: React.FC<AssetListProps> = ({
 
     setIsSubmitting(true);
     try {
-      // Update asset while preserving other fields
+      // Update asset while preserving other fields (Title Case formatting applied)
       const updatedAsset = await ProducerService.updateAsset(editingAsset.id, {
-        asset_name: assetData.asset_name,
+        asset_name: toTitleCase(assetData.asset_name),
         specifications: assetData.specifications,
         status: editingAsset.status,
         timeline: editingAsset.timeline ?? '',

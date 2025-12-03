@@ -6,6 +6,7 @@ import { useNotification } from '@/hooks/useNotification';
 import QuotesList from './QuotesList';
 import SupplierStatusTracker from './SupplierStatusTracker';
 import { getTagColor } from '@/utils/assetTags';
+import { toTitleCase } from '@/utils/textFormatters';
 import type { Asset } from '@/lib/supabase';
 
 interface AssetDetailModalProps {
@@ -63,7 +64,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     setIsSaving(true);
     try {
       const updatedAsset = await ProducerService.updateAsset(asset.id, {
-        asset_name: editingData.asset_name,
+        asset_name: toTitleCase(editingData.asset_name),
         specifications: editingData.specifications,
         timeline: asset.timeline || '',
         status: asset.status,
@@ -124,7 +125,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   <div className="flex items-center gap-3 mb-2">
                     <Package className="w-6 h-6 text-white" />
                     <h2 className="text-2xl font-bold text-white">
-                      {asset.asset_name}
+                      {toTitleCase(asset.asset_name)}
                     </h2>
                   </div>
                 </div>
@@ -176,7 +177,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       />
                     ) : (
                       <div className="bg-black/20 rounded-lg p-4 border border-white/20">
-                        <p className="text-white font-medium">{asset.asset_name}</p>
+                        <p className="text-white font-medium">{toTitleCase(asset.asset_name)}</p>
                       </div>
                     )}
                   </div>
