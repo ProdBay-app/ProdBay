@@ -45,9 +45,9 @@ export interface Project {
   client_name: string;
   brief_description: string;
   physical_parameters?: string;
-  financial_parameters?: number;
-  timeline_deadline?: string;
+  timeline_deadline?: string;  // Date string
   project_status: string;
+  // financial_parameters is NOT included (intentionally excluded)
   created_at: string;
   updated_at: string;
 }

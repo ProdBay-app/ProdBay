@@ -30,7 +30,14 @@ class PortalService {
             project:projects(
               id,
               project_name,
-              producer_id
+              client_name,
+              brief_description,
+              physical_parameters,
+              timeline_deadline,
+              project_status,
+              created_at,
+              updated_at
+              -- NOTE: financial_parameters is intentionally excluded
             )
           )
         `)

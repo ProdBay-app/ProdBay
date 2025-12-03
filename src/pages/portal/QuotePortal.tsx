@@ -9,7 +9,9 @@ import {
   Upload,
   AlertCircle,
   User,
-  CheckCircle
+  CheckCircle,
+  Briefcase,
+  MapPin
 } from 'lucide-react';
 import { PortalService, type PortalSession, type Message } from '@/services/portalService';
 import { useNotification } from '@/hooks/useNotification';
@@ -328,18 +330,50 @@ const QuotePortal: React.FC = () => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  // Format date helper
+  const formatProjectDate = (dateString?: string): string => {
+    if (!dateString) return 'Not specified';
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Get status badge styling
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'New':
+        return 'bg-blue-500/30 text-blue-200 border-blue-400/50';
+      case 'In Progress':
+        return 'bg-yellow-500/30 text-yellow-200 border-yellow-400/50';
+      case 'Quoting':
+        return 'bg-purple-500/30 text-purple-200 border-purple-400/50';
+      case 'Completed':
+        return 'bg-green-500/30 text-green-200 border-green-400/50';
+      case 'Cancelled':
+        return 'bg-red-500/30 text-red-200 border-red-400/50';
+      default:
+        return 'bg-gray-500/30 text-gray-200 border-gray-400/50';
+    }
+  };
+
   // Error state
   if (error || (loading === false && !session)) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-4">
+        <div className="bg-white/5 border border-white/10 rounded-xl shadow-lg p-8 max-w-md w-full">
           <div className="text-center">
-            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Link Expired or Invalid</h2>
-            <p className="text-gray-600 mb-6">
+            <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2">Link Expired or Invalid</h2>
+            <p className="text-gray-300 mb-6">
               {error || 'The quote request link you\'re trying to access is no longer valid or has expired.'}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-400">
               Please contact the producer for a new quote request link.
             </p>
           </div>
@@ -351,9 +385,9 @@ const QuotePortal: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
           <p className="text-white">Loading quote request...</p>
         </div>
       </div>
@@ -362,64 +396,133 @@ const QuotePortal: React.FC = () => {
 
   if (!session) return null;
 
-  const { quote, asset } = session;
+  const { quote, asset, project } = session;
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-[#0A0A0A] text-white p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+      <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+        <h1 className="text-2xl font-bold text-white mb-2">
           Request for Quote: {asset.asset_name}
         </h1>
+        {project && (
+          <p className="text-gray-300 text-sm">
+            {project.project_name} • {project.client_name}
+          </p>
+        )}
       </div>
 
       {/* Two-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Context */}
         <div className="lg:col-span-1 space-y-4">
+          {/* Project Context */}
+          {project && (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Briefcase className="h-5 w-5 text-purple-300" />
+                <h2 className="text-lg font-semibold text-white">Project Context</h2>
+              </div>
+              <div className="space-y-4 text-sm">
+                {/* Project Name */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">Project</label>
+                  <p className="text-white">{project.project_name}</p>
+                </div>
+
+                {/* Client Name */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">Client</label>
+                  <p className="text-white">{project.client_name}</p>
+                </div>
+
+                {/* Project Description */}
+                {project.brief_description && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1">Description</label>
+                    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{project.brief_description}</p>
+                  </div>
+                )}
+
+                {/* Timeline/Deadline */}
+                {project.timeline_deadline && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1 flex items-center gap-1">
+                      <Calendar className="h-3.5 w-3.5" />
+                      Deadline
+                    </label>
+                    <p className="text-white">{formatProjectDate(project.timeline_deadline)}</p>
+                  </div>
+                )}
+
+                {/* Physical Parameters (may contain location/logistics) */}
+                {project.physical_parameters && project.physical_parameters.trim() && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1 flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5" />
+                      Location & Logistics
+                    </label>
+                    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{project.physical_parameters}</p>
+                  </div>
+                )}
+
+                {/* Project Status */}
+                {project.project_status && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1">Status</label>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(project.project_status)}`}>
+                      {project.project_status}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Asset Specifications */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
             <div className="flex items-center space-x-2 mb-4">
-              <FileText className="h-5 w-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Specifications</h2>
+              <FileText className="h-5 w-5 text-purple-300" />
+              <h2 className="text-lg font-semibold text-white">Specifications</h2>
             </div>
             {asset.specifications ? (
-              <div className="text-sm text-gray-700 whitespace-pre-wrap">
+              <div className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
                 {asset.specifications}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 italic">No specifications provided</p>
+              <p className="text-sm text-gray-400 italic">No specifications provided</p>
             )}
           </div>
 
           {/* Timeline */}
           {asset.timeline && (
-            <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
               <div className="flex items-center space-x-2 mb-4">
-                <Calendar className="h-5 w-5 text-blue-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Timeline</h2>
+                <Calendar className="h-5 w-5 text-purple-300" />
+                <h2 className="text-lg font-semibold text-white">Timeline</h2>
               </div>
               <div className="space-y-2 text-sm">
                 <div>
-                  <p className="text-gray-500">Deadline</p>
-                  <p className="text-gray-900 font-medium">{formatDate(asset.timeline)}</p>
+                  <p className="text-gray-400">Deadline</p>
+                  <p className="text-white font-medium">{formatDate(asset.timeline)}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Quote Status */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6">
             <div className="flex items-center space-x-2 mb-4">
-              <Package className="h-5 w-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Quote Status</h2>
+              <Package className="h-5 w-5 text-purple-300" />
+              <h2 className="text-lg font-semibold text-white">Quote Status</h2>
             </div>
             <div className="text-sm">
               <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                quote.status === 'Submitted' ? 'bg-green-100 text-green-800' :
-                quote.status === 'Accepted' ? 'bg-blue-100 text-blue-800' :
-                quote.status === 'Rejected' ? 'bg-red-100 text-red-800' :
-                'bg-gray-100 text-gray-800'
+                quote.status === 'Submitted' ? 'bg-green-500/30 text-green-200 border border-green-400/50' :
+                quote.status === 'Accepted' ? 'bg-blue-500/30 text-blue-200 border border-blue-400/50' :
+                quote.status === 'Rejected' ? 'bg-red-500/30 text-red-200 border border-red-400/50' :
+                'bg-gray-500/30 text-gray-200 border border-gray-400/50'
               }`}>
                 {quote.status}
               </span>
@@ -429,17 +532,17 @@ const QuotePortal: React.FC = () => {
 
         {/* Right Column: Conversation */}
         <div className="lg:col-span-2 flex flex-col">
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg flex flex-col h-[600px]">
+          <div className="bg-white/5 border border-white/10 rounded-xl flex flex-col h-[600px]">
             {/* Chat Header */}
-            <div className="border-b border-gray-200 p-4">
-              <h2 className="text-lg font-semibold text-gray-900">Conversation</h2>
-              <p className="text-sm text-gray-500">Chat with the producer about this quote</p>
+            <div className="border-b border-white/10 p-4 bg-white/5 rounded-t-xl">
+              <h2 className="text-lg font-semibold text-white">Conversation</h2>
+              <p className="text-sm text-gray-400">Chat with the producer about this quote</p>
             </div>
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="flex items-center justify-center h-full text-gray-400">
                   <p>No messages yet. Start the conversation!</p>
                 </div>
               ) : (
@@ -453,8 +556,8 @@ const QuotePortal: React.FC = () => {
                       <div
                         className={`max-w-[75%] rounded-lg p-3 ${
                           isSupplier
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-200 text-gray-900'
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-white/10 text-gray-100 border border-white/20'
                         }`}
                       >
                         <div className="flex items-center space-x-2 mb-1">
@@ -462,7 +565,7 @@ const QuotePortal: React.FC = () => {
                           <span className="text-xs font-medium">
                             {isSupplier ? 'Me' : 'Producer'}
                           </span>
-                          <span className={`text-xs ${isSupplier ? 'text-blue-100' : 'text-gray-500'}`}>
+                          <span className={`text-xs ${isSupplier ? 'text-purple-100' : 'text-gray-400'}`}>
                             {formatTime(message.created_at)}
                           </span>
                         </div>
@@ -476,21 +579,21 @@ const QuotePortal: React.FC = () => {
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-gray-200 p-4">
+            <div className="border-t border-white/10 p-4 bg-white/5 rounded-b-xl">
               <div className="flex space-x-2">
                 <textarea
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   onKeyPress={handleMessageKeyPress}
                   placeholder="Type your message..."
-                  className="flex-1 resize-none border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 resize-none bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   rows={2}
                   disabled={sendingMessage}
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!messageInput.trim() || sendingMessage}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                 >
                   <Send className="h-4 w-4" />
                   <span>Send</span>
@@ -502,33 +605,33 @@ const QuotePortal: React.FC = () => {
       </div>
 
       {/* Quote Submission Section */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 sticky bottom-0">
+      <div className="bg-white/5 border border-white/10 rounded-xl p-6 sticky bottom-0">
         {quoteSubmitted ? (
           // Success State
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/30 border border-green-400/50 mb-4">
+              <CheckCircle className="h-8 w-8 text-green-300" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Quote Submitted Successfully!</h2>
-            <p className="text-gray-600 mb-4">
+            <h2 className="text-2xl font-bold text-white mb-2">Quote Submitted Successfully!</h2>
+            <p className="text-gray-300 mb-4">
               Thank you for your quote. The producer will review your submission and contact you if your quote is selected.
             </p>
-            <div className="bg-gray-50 rounded-lg p-4 text-left">
-              <h3 className="font-semibold text-gray-900 mb-2">Your Quote Summary:</h3>
+            <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-left">
+              <h3 className="font-semibold text-white mb-2">Your Quote Summary:</h3>
               <div className="space-y-2 text-sm">
-                <p><span className="font-medium">Price:</span> {quoteCurrency} {quotePrice.toFixed(2)}</p>
-                <p><span className="font-medium">Asset:</span> {asset.asset_name}</p>
+                <p className="text-gray-300"><span className="font-medium text-white">Price:</span> {quoteCurrency} {quotePrice.toFixed(2)}</p>
+                <p className="text-gray-300"><span className="font-medium text-white">Asset:</span> {asset.asset_name}</p>
                 {quoteNotes && (
-                  <p><span className="font-medium">Notes:</span> <span className="whitespace-pre-wrap">{quoteNotes}</span></p>
+                  <p className="text-gray-300"><span className="font-medium text-white">Notes:</span> <span className="whitespace-pre-wrap">{quoteNotes}</span></p>
                 )}
                 {selectedFile && (
-                  <p>
-                    <span className="font-medium">Document:</span>{' '}
+                  <p className="text-gray-300">
+                    <span className="font-medium text-white">Document:</span>{' '}
                     <a
                       href={session?.quote.quote_document_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-700 underline"
+                      className="text-purple-300 hover:text-purple-200 underline"
                     >
                       {selectedFile.name}
                     </a>
@@ -540,11 +643,11 @@ const QuotePortal: React.FC = () => {
         ) : (
           // Submission Form
           <>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Submit Your Quote</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Submit Your Quote</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Price Input */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   <DollarSign className="h-4 w-4 inline mr-1" />
                   Price *
                 </label>
@@ -553,12 +656,12 @@ const QuotePortal: React.FC = () => {
                     value={quoteCurrency}
                     onChange={(e) => setQuoteCurrency(e.target.value)}
                     disabled={submittingQuote}
-                    className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed"
                   >
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="CAD">CAD</option>
+                    <option value="USD" className="bg-[#0A0A0A]">USD</option>
+                    <option value="EUR" className="bg-[#0A0A0A]">EUR</option>
+                    <option value="GBP" className="bg-[#0A0A0A]">GBP</option>
+                    <option value="CAD" className="bg-[#0A0A0A]">CAD</option>
                   </select>
                   <input
                     type="number"
@@ -569,14 +672,14 @@ const QuotePortal: React.FC = () => {
                     step="0.01"
                     disabled={submittingQuote}
                     required
-                    className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* File Upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   <Upload className="h-4 w-4 inline mr-1" />
                   Attach Quote Document (Optional)
                 </label>
@@ -592,15 +695,15 @@ const QuotePortal: React.FC = () => {
                   htmlFor="quote-file-upload"
                   className={`w-full border-2 border-dashed rounded-lg px-4 py-3 transition-colors flex items-center justify-center space-x-2 cursor-pointer ${
                     submittingQuote || uploadingFile || quoteSubmitted
-                      ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                      ? 'border-white/10 text-gray-500 cursor-not-allowed'
                       : selectedFile
-                      ? 'border-green-400 text-green-600 hover:border-green-500'
-                      : 'border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600'
+                      ? 'border-green-400/50 text-green-300 hover:border-green-400'
+                      : 'border-white/20 text-gray-300 hover:border-purple-400/50 hover:text-purple-300'
                   }`}
                 >
                   {uploadingFile ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-400"></div>
                       <span>Uploading...</span>
                     </>
                   ) : (
@@ -612,14 +715,14 @@ const QuotePortal: React.FC = () => {
                 </label>
                 {selectedFile && !uploadingFile && (
                   <div className="mt-2 flex items-center justify-between text-xs">
-                    <p className="text-green-600">
+                    <p className="text-green-300">
                       ✓ {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                     </p>
                     {!quoteSubmitted && (
                       <button
                         type="button"
                         onClick={() => setSelectedFile(null)}
-                        className="text-red-600 hover:text-red-700 underline"
+                        className="text-red-400 hover:text-red-300 underline"
                       >
                         Remove
                       </button>
@@ -627,14 +730,14 @@ const QuotePortal: React.FC = () => {
                   </div>
                 )}
                 {!selectedFile && (
-                  <p className="text-xs text-gray-500 mt-1">PDF files only, max 10MB</p>
+                  <p className="text-xs text-gray-400 mt-1">PDF files only, max 10MB</p>
                 )}
               </div>
             </div>
 
             {/* Notes */}
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Additional Notes (Optional)
               </label>
               <textarea
@@ -643,7 +746,7 @@ const QuotePortal: React.FC = () => {
                 placeholder="Add any additional information about your quote..."
                 rows={3}
                 disabled={submittingQuote}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -653,7 +756,7 @@ const QuotePortal: React.FC = () => {
                 type="button"
                 onClick={handleSubmitQuote}
                 disabled={submittingQuote || uploadingFile || quotePrice <= 0}
-                className="w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full bg-purple-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-600 disabled:cursor-not-allowed"
               >
                 {uploadingFile ? (
                   <>
@@ -675,6 +778,7 @@ const QuotePortal: React.FC = () => {
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   );
