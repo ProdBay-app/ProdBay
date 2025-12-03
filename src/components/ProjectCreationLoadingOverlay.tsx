@@ -26,7 +26,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
   const steps = [
     { icon: Database, text: "Initializing project database", color: "text-blue-400", borderColor: "border-blue-400" },
     { icon: FileText, text: "Processing project brief", color: "text-purple-400", borderColor: "border-purple-400" },
-    { icon: Cpu, text: "Running AI analysis", color: "text-indigo-400", borderColor: "border-indigo-400" },
+    { icon: Cpu, text: "Running analysis", color: "text-indigo-400", borderColor: "border-indigo-400" },
     { icon: Target, text: "Identifying key requirements", color: "text-pink-400", borderColor: "border-pink-400" },
     { icon: Users, text: "Analyzing supplier capabilities", color: "text-green-400", borderColor: "border-green-400" },
     { icon: Zap, text: "Generating asset recommendations", color: "text-yellow-400", borderColor: "border-yellow-400" },

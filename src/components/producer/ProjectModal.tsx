@@ -151,7 +151,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   <div className="text-center">
                     <h4 className="text-lg font-medium text-white mb-2">Upload Your Project Brief</h4>
                     <p className="text-gray-300 text-sm">
-                      Upload a PDF brief or enter your project details manually. Our AI will analyze the content to extract key information.
+                      Upload a PDF brief or enter your project details manually. The system will analyze the content to extract key information.
                     </p>
                   </div>
 
@@ -245,7 +245,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   <div className="text-center mb-6">
                     <h4 className="text-lg font-medium text-white mb-2">Confirm Project Details</h4>
                     <p className="text-gray-300 text-sm">
-                      Review the information extracted by AI and make any necessary adjustments before creating your project.
+                      Review the extracted information and make any necessary adjustments before creating your project.
                     </p>
                   </div>
 
@@ -341,11 +341,11 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   <div className="mt-4 p-4 bg-purple-500/20 border border-purple-400/30 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Sparkles className="w-5 h-5 text-purple-300" />
-                      <span className="text-sm font-medium text-purple-200">AI-Powered Asset Allocation</span>
+                      <span className="text-sm font-medium text-purple-200">Smart Asset Allocation</span>
                     </div>
                     <p className="text-sm text-purple-300">
-                      This project will use AI-powered allocation to automatically identify and create assets based on your brief. 
-                      The AI will analyze your requirements and generate detailed asset specifications with confidence scores.
+                      This project will use smart allocation to automatically identify and create assets based on your brief. 
+                      The system will analyze your requirements and generate detailed asset specifications with confidence scores.
                     </p>
                   </div>
                 </div>
@@ -482,12 +482,12 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      Analyze Brief with AI
+                      Analyze Brief
                     </>
                   )}
                 </button>
                 <p className="text-xs text-gray-300 mt-1">
-                  AI will extract project name, client name, budget, deadline, and other details
+                  Will extract project name, client name, budget, deadline, and other details
                 </p>
               </div>
             )}
@@ -574,8 +574,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   className="w-4 h-4 text-purple-600 focus:ring-purple-500 focus:ring-2"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-200">AI-Powered Allocation</span>
-                  <p className="text-xs text-gray-300">AI analyzes your brief to identify assets with detailed specifications</p>
+                  <span className="text-sm font-medium text-gray-200">Smart Allocation</span>
+                  <p className="text-xs text-gray-300">Automatically analyzes your brief to identify assets with detailed specifications</p>
                 </div>
               </label>
             </div>
@@ -583,7 +583,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             {allocationMethod === 'ai' && (
               <div className="mt-3 p-3 bg-purple-500/20 border border-purple-400/30 rounded-lg">
                 <p className="text-sm text-purple-200">
-                  ✨ AI will analyze your brief to identify assets, create detailed specifications, 
+                  ✨ The system will analyze your brief to identify assets, create detailed specifications, 
                   and suggest optimal supplier allocations with confidence scores.
                 </p>
               </div>
