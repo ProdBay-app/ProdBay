@@ -154,6 +154,7 @@ router.post('/ai-create-assets', async (req, res) => {
             asset_name: assetData.asset_name,
             specifications: assetData.specifications || `AI-generated requirements for ${assetData.asset_name}`,
             source_text: assetData.source_text || null,
+            tags: assetData.tags || [],
             status: 'Pending'
           })
           .select()

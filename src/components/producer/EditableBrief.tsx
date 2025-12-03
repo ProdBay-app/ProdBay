@@ -79,14 +79,14 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   const [internalIsSaving, setInternalIsSaving] = useState(false);
   
   // Expose dirty state to parent if callback provided
-  const isDirty = onDirtyChange !== undefined ? internalIsDirty : internalIsDirty;
+  const isDirty = internalIsDirty;
   const setIsDirty = (value: boolean) => {
     setInternalIsDirty(value);
     onDirtyChange?.(value);
   };
   
   // Expose saving state to parent if callback provided
-  const isSaving = onSavingChange !== undefined ? internalIsSaving : internalIsSaving;
+  const isSaving = internalIsSaving;
   const setIsSaving = (value: boolean) => {
     setInternalIsSaving(value);
     onSavingChange?.(value);
