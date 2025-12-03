@@ -295,6 +295,32 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
                   </div>
                 </div>
 
+                {/* Notes (for submitted quotes) */}
+                {quote.status === 'Submitted' && quote.notes_capacity && quote.notes_capacity.trim() && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <p className="text-sm font-semibold text-gray-300 mb-2">Notes:</p>
+                    <p className="text-white text-sm whitespace-pre-wrap leading-relaxed">
+                      {quote.notes_capacity}
+                    </p>
+                  </div>
+                )}
+
+                {/* PDF Document Link (for submitted quotes) */}
+                {quote.status === 'Submitted' && quote.quote_document_url && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <a
+                      href={quote.quote_document_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      title="View quote PDF document"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>View Quote PDF</span>
+                    </a>
+                  </div>
+                )}
+
                 {/* Service Categories (if available) */}
                 {quote.supplier?.service_categories && quote.supplier.service_categories.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-white/10">

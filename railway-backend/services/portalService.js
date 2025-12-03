@@ -376,6 +376,66 @@ class PortalService {
         throw new Error('Failed to update quote');
       }
 
+      // Send notification email to producer (non-blocking)
+      // Fetch producer email and quote relations for email
+      try {
+        const { data: producerSettings } = await supabase
+          .from('producer_settings')
+          .select('from_email, from_name')
+          .limit(1)
+          .single();
+
+        if (producerSettings?.from_email) {
+          // Fetch quote with relations for email content
+          const { data: quoteWithRelations } = await supabase
+            .from('quotes')
+            .select(`
+              *,
+              asset:assets(
+                asset_name,
+                project:projects(
+                  project_name
+                )
+              ),
+              supplier:suppliers(
+                supplier_name,
+                contact_email
+              )
+            `)
+            .eq('id', updatedQuote.id)
+            .single();
+
+          if (quoteWithRelations && quoteWithRelations.asset && quoteWithRelations.supplier) {
+            // Generate dashboard link
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            const normalizedFrontendUrl = frontendUrl.replace(/\/+$/, ''); // Remove trailing slashes
+            const dashboardLink = `${normalizedFrontendUrl}/dashboard`;
+
+            // Send notification email (non-blocking - errors logged but don't fail quote submission)
+            const emailService = require('./emailService');
+            emailService.sendQuoteReceivedNotification({
+              to: producerSettings.from_email,
+              replyTo: quoteWithRelations.supplier.contact_email || quoteWithRelations.supplier.supplier_name,
+              assetName: quoteWithRelations.asset.asset_name,
+              supplierName: quoteWithRelations.supplier.supplier_name,
+              cost: updatedQuote.cost,
+              notes: updatedQuote.notes_capacity || '',
+              documentUrl: updatedQuote.quote_document_url || null,
+              projectName: quoteWithRelations.asset.project?.project_name || null,
+              dashboardLink: dashboardLink
+            }).catch((emailError) => {
+              // Log error but don't fail the quote submission
+              console.error('[PortalService] Failed to send producer notification email:', emailError);
+            });
+          }
+        } else {
+          console.warn('[PortalService] Producer email not configured in producer_settings. Skipping notification.');
+        }
+      } catch (notificationError) {
+        // Log error but don't fail the quote submission
+        console.error('[PortalService] Error preparing producer notification:', notificationError);
+      }
+
       return updatedQuote;
     } catch (error) {
       throw error;

@@ -124,6 +124,118 @@ class EmailService {
   }
 
   /**
+   * Send quote received notification to producer
+   * @param {Object} params - Email parameters
+   * @param {string} params.to - Producer email address
+   * @param {string} params.replyTo - Supplier email (for Reply-To header)
+   * @param {string} params.assetName - Name of the asset
+   * @param {string} params.supplierName - Name of the supplier
+   * @param {number} params.cost - Quote cost
+   * @param {string} [params.notes] - Optional notes/capacity details
+   * @param {string} [params.documentUrl] - Optional PDF document URL
+   * @param {string} [params.projectName] - Optional project name
+   * @param {string} params.dashboardLink - Link to producer dashboard
+   * @returns {Promise<Object>} Result with success status and messageId or error
+   */
+  async sendQuoteReceivedNotification({ to, replyTo, assetName, supplierName, cost, notes, documentUrl, projectName, dashboardLink }) {
+    try {
+      // Log entry point and parameters
+      console.log('[EmailService] Attempting to send quote received notification');
+      console.log('[EmailService] To:', to);
+      console.log('[EmailService] Reply-To:', replyTo);
+      console.log('[EmailService] From:', this.fromEmail);
+      
+      // Validate required parameters
+      if (!to || !replyTo || !assetName || !supplierName || cost === undefined || !dashboardLink) {
+        throw new Error('Missing required parameters: to, replyTo, assetName, supplierName, cost, and dashboardLink are required');
+      }
+
+      // Check if Resend is configured
+      if (!this.resend) {
+        console.error('[EmailService] RESEND_API_KEY not configured. Email sending disabled.');
+        return {
+          success: false,
+          error: 'Email service not configured. RESEND_API_KEY is missing.'
+        };
+      }
+
+      // Generate email subject
+      const emailSubject = `New Quote Received: ${assetName}`;
+      console.log('[EmailService] Subject:', emailSubject);
+
+      // Format cost as currency
+      const formattedCost = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(cost);
+
+      // Build email body
+      let emailBody = `Hello,\n\n`;
+      emailBody += `You have received a new quote submission from ${supplierName}.\n\n`;
+      
+      if (projectName) {
+        emailBody += `Project: ${projectName}\n`;
+      }
+      emailBody += `Asset: ${assetName}\n`;
+      emailBody += `Supplier: ${supplierName}\n`;
+      emailBody += `Quote Amount: ${formattedCost}\n\n`;
+      
+      if (notes && notes.trim()) {
+        emailBody += `Notes:\n${notes}\n\n`;
+      }
+      
+      if (documentUrl) {
+        emailBody += `Quote Document: ${documentUrl}\n\n`;
+      }
+      
+      emailBody += `View and manage this quote in your dashboard:\n${dashboardLink}\n\n`;
+      emailBody += `Best regards,\nProdBay Team`;
+
+      // Send email via Resend
+      console.log('[EmailService] Calling Resend API...');
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [to],
+        reply_to: [replyTo],
+        subject: emailSubject,
+        text: emailBody
+      });
+
+      // Log Resend API response
+      console.log('[EmailService] Resend API call completed');
+      console.log('[EmailService] Success:', !error);
+      if (data) {
+        console.log('[EmailService] Message ID:', data.id);
+      }
+      if (error) {
+        console.error('[EmailService] Resend API error:', JSON.stringify(error, null, 2));
+      }
+
+      if (error) {
+        return {
+          success: false,
+          error: error.message || 'Failed to send email via Resend'
+        };
+      }
+
+      console.log(`✅ Quote received notification sent to ${to} (Message ID: ${data?.id || 'N/A'})`);
+      
+      return {
+        success: true,
+        messageId: data?.id,
+        error: null
+      };
+
+    } catch (error) {
+      console.error('Error in sendQuoteReceivedNotification:', error);
+      return {
+        success: false,
+        error: error.message || 'Unknown error occurred while sending email'
+      };
+    }
+  }
+
+  /**
    * Send new message notification email
    * @param {Object} params - Email parameters
    * @param {string} params.to - Recipient email address
