@@ -42,7 +42,7 @@ const ProjectDetailPage: React.FC = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isBriefExpanded, setIsBriefExpanded] = useState(false);
+  const [activeView, setActiveView] = useState<'assets' | 'brief'>('assets');
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
 
   // Interactive brief state
@@ -112,12 +112,22 @@ const ProjectDetailPage: React.FC = () => {
   }, [projectId]);
 
   // Measure Assets block height when brief is expanded
+  // TODO: Remove this useEffect in Step 2 when we migrate to tabs
   useEffect(() => {
-    if (isBriefExpanded && assetsBlockRef.current) {
+    if (assetsBlockRef.current) {
       const height = assetsBlockRef.current.offsetHeight;
       setAssetsBlockHeight(height);
     }
-  }, [isBriefExpanded, assets]);
+  }, [assets]);
+
+  // Log activeView changes for verification
+  useEffect(() => {
+    console.log('[ProjectDetailPage] activeView changed to:', activeView);
+  }, [activeView]);
+
+  // Temporary backward compatibility: derive isBriefExpanded from activeView
+  // TODO: Remove this in Step 2 when we migrate to conditional rendering
+  const isBriefExpanded = activeView === 'brief';
 
   // Format currency
   const formatCurrency = (amount: number): string => {
@@ -360,6 +370,43 @@ const ProjectDetailPage: React.FC = () => {
         {/* Assets and Brief Section - Layout matching reference image */}
         <div className="mt-8">
           
+          {/* Tab Switcher - New unified interface */}
+          <div className="mb-6">
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-sm p-1">
+              <div className="flex items-center gap-2">
+                {/* Assets Tab */}
+                <button
+                  onClick={() => setActiveView('assets')}
+                  className={`
+                    flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
+                    ${
+                      activeView === 'assets'
+                        ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }
+                  `}
+                >
+                  Assets ({assets.length})
+                </button>
+                
+                {/* Brief Tab */}
+                <button
+                  onClick={() => setActiveView('brief')}
+                  className={`
+                    flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
+                    ${
+                      activeView === 'brief'
+                        ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
+                        : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }
+                  `}
+                >
+                  Brief
+                </button>
+              </div>
+            </div>
+          </div>
+          
           {/* Top Row - Asset Headers & Filters + Brief Header (always visible) */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-stretch">
             
@@ -410,7 +457,7 @@ const ProjectDetailPage: React.FC = () => {
                 briefDescription={project.brief_description}
                 physicalParameters={project.physical_parameters ?? ''}
                 isExpanded={false} // Always show header only in top row
-                onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+                onToggleExpand={() => setActiveView(activeView === 'brief' ? 'assets' : 'brief')}
                 onBriefUpdate={(briefDesc, physicalParams) => {
                   // Optimistically update local project state
                   setProject(prev => prev ? {
@@ -451,7 +498,7 @@ const ProjectDetailPage: React.FC = () => {
                   briefDescription={project.brief_description}
                   physicalParameters={project.physical_parameters ?? ''}
                   isExpanded={true} // Always expanded in main content area
-                  onToggleExpand={() => setIsBriefExpanded(prev => !prev)}
+                  onToggleExpand={() => setActiveView(activeView === 'brief' ? 'assets' : 'brief')}
                   onBriefUpdate={(briefDesc, physicalParams) => {
                     // Optimistically update local project state
                     setProject(prev => prev ? {
