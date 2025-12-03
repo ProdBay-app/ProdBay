@@ -12,14 +12,11 @@ import type { Asset } from '@/lib/supabase';
 interface AssetListProps {
   projectId: string;
   
-  // NEW: Props for bi-directional hover linking with brief
+  // Props for bi-directional hover linking with brief
   hoveredAssetId?: string | null;
   onAssetHover?: (assetId: string | null) => void;
   
-  // NEW: Prop to know when brief panel is expanded for optimized scrolling
-  isBriefExpanded?: boolean;
-  
-  // NEW: Props for external button controls (handled by parent component)
+  // Props for external button controls (handled by parent component)
   onAddAsset?: () => void; // External add asset button handler
   onToggleFilters?: () => void; // External filter toggle handler
   showFilters?: boolean; // Filter visibility state
@@ -39,7 +36,6 @@ const AssetList: React.FC<AssetListProps> = ({
   projectId, 
   hoveredAssetId, 
   onAssetHover, 
-  isBriefExpanded = false,
   onAddAsset,
   onToggleFilters,
   showFilters = false

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -6,7 +6,10 @@ import {
   User, 
   DollarSign, 
   Clock,
-  AlertCircle
+  AlertCircle,
+  Download,
+  Edit3,
+  Eye
 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
@@ -52,10 +55,6 @@ const ProjectDetailPage: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  
-  // Ref for measuring Assets block height
-  const assetsBlockRef = useRef<HTMLDivElement>(null);
-  const [assetsBlockHeight, setAssetsBlockHeight] = useState<number>(0);
 
 
 
@@ -111,23 +110,16 @@ const ProjectDetailPage: React.FC = () => {
     fetchAssets();
   }, [projectId]);
 
-  // Measure Assets block height when brief is expanded
-  // TODO: Remove this useEffect in Step 2 when we migrate to tabs
-  useEffect(() => {
-    if (assetsBlockRef.current) {
-      const height = assetsBlockRef.current.offsetHeight;
-      setAssetsBlockHeight(height);
-    }
-  }, [assets]);
 
   // Log activeView changes for verification
   useEffect(() => {
     console.log('[ProjectDetailPage] activeView changed to:', activeView);
   }, [activeView]);
 
-  // Temporary backward compatibility: derive isBriefExpanded from activeView
-  // TODO: Remove this in Step 2 when we migrate to conditional rendering
-  const isBriefExpanded = activeView === 'brief';
+  // Brief mode state (view/edit)
+  const [briefMode, setBriefMode] = useState<'view' | 'edit'>('view');
+  const [briefIsDirty, setBriefIsDirty] = useState(false);
+  const [briefIsSaving, setBriefIsSaving] = useState(false);
 
   // Format currency
   const formatCurrency = (amount: number): string => {
@@ -233,6 +225,131 @@ const ProjectDetailPage: React.FC = () => {
     // Also update viewingAsset if it's the same asset
     if (viewingAsset?.id === updatedAsset.id) {
       setViewingAsset(updatedAsset);
+    }
+  };
+
+  // ========================================
+  // BRIEF ACTION HANDLERS
+  // ========================================
+  
+  /**
+   * Handle Brief PDF download
+   */
+  const handleBriefDownloadPdf = () => {
+    if (!project) return;
+    
+    try {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        showError('Unable to open print window. Please check your popup blocker.');
+        return;
+      }
+
+      const currentBriefDescription = briefMode === 'edit' 
+        ? project.brief_description 
+        : project.brief_description;
+      const currentPhysicalParameters = project.physical_parameters ?? '';
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Project Brief - ${project.id}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              border-bottom: 2px solid #e5e7eb;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: bold;
+              color: #1f2937;
+              margin-bottom: 10px;
+            }
+            .project-id {
+              color: #6b7280;
+              font-size: 14px;
+            }
+            .section {
+              margin-bottom: 30px;
+            }
+            .section-title {
+              font-size: 18px;
+              font-weight: 600;
+              color: #374151;
+              margin-bottom: 15px;
+              border-bottom: 1px solid #e5e7eb;
+              padding-bottom: 5px;
+            }
+            .content {
+              white-space: pre-wrap;
+              line-height: 1.7;
+            }
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #e5e7eb;
+              color: #6b7280;
+              font-size: 12px;
+              text-align: center;
+            }
+            @media print {
+              body { margin: 0; padding: 15px; }
+              .header { page-break-after: avoid; }
+              .section { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="title">Project Brief</div>
+            <div class="project-id">Project ID: ${project.id}</div>
+          </div>
+          
+          <div class="section">
+            <div class="section-title">Description</div>
+            <div class="content">${currentBriefDescription || 'No description provided.'}</div>
+          </div>
+          
+          ${currentPhysicalParameters ? `
+          <div class="section">
+            <div class="section-title">Physical Parameters</div>
+            <div class="content">${currentPhysicalParameters}</div>
+          </div>
+          ` : ''}
+          
+          <div class="footer">
+            Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          setTimeout(() => {
+            printWindow.close();
+          }, 1000);
+        }, 500);
+      };
+
+      showSuccess('PDF download initiated');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showError('Failed to generate PDF');
     }
   };
 
@@ -367,97 +484,134 @@ const ProjectDetailPage: React.FC = () => {
         </div>
 
 
-        {/* Assets and Brief Section - Layout matching reference image */}
+        {/* Assets and Brief Section - Unified Tabbed Interface */}
         <div className="mt-8">
           
-          {/* Tab Switcher - New unified interface */}
+          {/* Tab Header - Tabs on left, Actions on right */}
           <div className="mb-6">
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-sm p-1">
-              <div className="flex items-center gap-2">
-                {/* Assets Tab */}
-                <button
-                  onClick={() => setActiveView('assets')}
-                  className={`
-                    flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
-                    ${
-                      activeView === 'assets'
-                        ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
-                        : 'text-gray-300 hover:text-white hover:bg-white/5'
-                    }
-                  `}
-                >
-                  Assets ({assets.length})
-                </button>
-                
-                {/* Brief Tab */}
-                <button
-                  onClick={() => setActiveView('brief')}
-                  className={`
-                    flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
-                    ${
-                      activeView === 'brief'
-                        ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
-                        : 'text-gray-300 hover:text-white hover:bg-white/5'
-                    }
-                  `}
-                >
-                  Brief
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Top Row - Asset Headers & Filters + Brief Header (always visible) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-stretch">
-            
-            {/* Asset Headers & Filters Section */}
-            <div className="lg:col-span-2 h-full">
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 shadow-sm rounded-lg p-6 pb-4 h-full flex flex-col">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">Assets ({assets.length})</h3>
-                  </div>
+              <div className="flex items-center justify-between gap-4">
+                {/* Tabs Section */}
+                <div className="flex items-center gap-2 flex-1">
+                  {/* Assets Tab */}
+                  <button
+                    onClick={() => setActiveView('assets')}
+                    className={`
+                      flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
+                      ${
+                        activeView === 'assets'
+                          ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
+                          : 'text-gray-300 hover:text-white hover:bg-white/5'
+                      }
+                    `}
+                  >
+                    Assets ({assets.length})
+                  </button>
                   
-                  {/* Filters and Add Asset buttons moved here */}
-                  <div className="flex items-center gap-3">
-                    {/* Filter Toggle Button */}
-                    <Button
-                      onClick={handleToggleFilters}
-                      variant={showFilters ? 'secondary' : 'outline'}
-                      icon={
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                        </svg>
+                  {/* Brief Tab */}
+                  <button
+                    onClick={() => setActiveView('brief')}
+                    className={`
+                      flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
+                      ${
+                        activeView === 'brief'
+                          ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
+                          : 'text-gray-300 hover:text-white hover:bg-white/5'
                       }
-                    >
-                      Filters
-                    </Button>
+                    `}
+                  >
+                    Brief
+                  </button>
+                </div>
 
-                    {/* Add Asset Button */}
-                    <Button 
-                      onClick={handleAddAsset}
-                      variant="primary"
-                      icon={
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                      }
-                    >
-                      Add Asset
-                    </Button>
-                  </div>
+                {/* Actions Section - Show different actions based on active view */}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  {activeView === 'assets' && (
+                    <>
+                      {/* Filter Toggle Button */}
+                      <Button
+                        onClick={handleToggleFilters}
+                        variant={showFilters ? 'secondary' : 'outline'}
+                        icon={
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                          </svg>
+                        }
+                      >
+                        Filters
+                      </Button>
+
+                      {/* Add Asset Button */}
+                      <Button 
+                        onClick={handleAddAsset}
+                        variant="primary"
+                        icon={
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        }
+                      >
+                        Add Asset
+                      </Button>
+                    </>
+                  )}
+
+                  {activeView === 'brief' && (
+                    <>
+                      {/* Unsaved Changes Indicator */}
+                      {briefIsDirty && (
+                        <span className="text-xs bg-amber-500/30 text-amber-200 px-2 py-1 rounded-full font-medium">
+                          Unsaved Changes
+                        </span>
+                      )}
+
+                      {/* Download PDF Button */}
+                      <Button
+                        onClick={handleBriefDownloadPdf}
+                        variant="teal"
+                        icon={<Download className="w-4 h-4" />}
+                        title="Download brief as PDF"
+                      >
+                        Download PDF
+                      </Button>
+
+                      {/* Mode Toggle Button */}
+                      <Button
+                        onClick={() => setBriefMode(prev => prev === 'view' ? 'edit' : 'view')}
+                        disabled={briefIsSaving}
+                        variant="secondary"
+                        icon={briefMode === 'view' ? <Edit3 className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        title={briefMode === 'view' ? 'Switch to edit mode' : 'Switch to view mode'}
+                      >
+                        {briefMode === 'view' ? 'Edit' : 'View'}
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Brief Header - Always visible in top row */}
-            <div className="lg:col-span-1 h-full">
+          {/* Content Area - Conditional Rendering */}
+          <div className="w-full">
+            {activeView === 'assets' && (
+              <AssetList 
+                projectId={project.id}
+                hoveredAssetId={hoveredAssetId}
+                onAssetHover={setHoveredAssetId}
+                onAddAsset={handleAddAsset}
+                onToggleFilters={handleToggleFilters}
+                showFilters={showFilters}
+              />
+            )}
+
+            {activeView === 'brief' && (
               <EditableBrief
                 projectId={project.id}
                 briefDescription={project.brief_description}
                 physicalParameters={project.physical_parameters ?? ''}
-                isExpanded={false} // Always show header only in top row
-                onToggleExpand={() => setActiveView(activeView === 'brief' ? 'assets' : 'brief')}
+                isExpanded={true}
+                onToggleExpand={() => {}} // No-op since we're always expanded now
                 onBriefUpdate={(briefDesc, physicalParams) => {
                   // Optimistically update local project state
                   setProject(prev => prev ? {
@@ -470,50 +624,11 @@ const ProjectDetailPage: React.FC = () => {
                 hoveredAssetId={hoveredAssetId}
                 onAssetHover={setHoveredAssetId}
                 onAssetClick={handleAssetClick}
+                mode={briefMode}
+                onModeChange={setBriefMode}
+                onDirtyChange={setBriefIsDirty}
+                onSavingChange={setBriefIsSaving}
               />
-            </div>
-          </div>
-
-          {/* Main Content Area - Side by side layout when brief expanded */}
-          <div className={`grid gap-6 ${isBriefExpanded ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1'}`}>
-            
-            {/* Assets Section - 2/3 width when brief expanded, full width when collapsed */}
-            <div ref={assetsBlockRef} className={isBriefExpanded ? 'lg:col-span-2' : 'col-span-1'}>
-            <AssetList 
-              projectId={project.id}
-              hoveredAssetId={hoveredAssetId}
-              onAssetHover={setHoveredAssetId}
-              isBriefExpanded={isBriefExpanded}
-              onAddAsset={handleAddAsset}
-              onToggleFilters={handleToggleFilters}
-              showFilters={showFilters}
-            />
-            </div>
-            
-            {/* Brief Expanded Content - 1/3 width when expanded, hidden when collapsed */}
-            {isBriefExpanded && (
-              <div className="lg:col-span-1">
-                <EditableBrief
-                  projectId={project.id}
-                  briefDescription={project.brief_description}
-                  physicalParameters={project.physical_parameters ?? ''}
-                  isExpanded={true} // Always expanded in main content area
-                  onToggleExpand={() => setActiveView(activeView === 'brief' ? 'assets' : 'brief')}
-                  onBriefUpdate={(briefDesc, physicalParams) => {
-                    // Optimistically update local project state
-                    setProject(prev => prev ? {
-                      ...prev,
-                      brief_description: briefDesc,
-                      physical_parameters: physicalParams
-                    } : null);
-                  }}
-                  assets={assets}
-                  hoveredAssetId={hoveredAssetId}
-                  onAssetHover={setHoveredAssetId}
-                  onAssetClick={handleAssetClick}
-                  maxHeight={assetsBlockHeight}
-                />
-              </div>
             )}
           </div>
         </div>
