@@ -57,6 +57,10 @@ const ProjectDetailPage: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  // Track current edited brief values for PDF download
+  const [currentEditedBriefDescription, setCurrentEditedBriefDescription] = useState<string>('');
+  const [currentEditedPhysicalParameters, setCurrentEditedPhysicalParameters] = useState<string>('');
 
 
 
@@ -79,6 +83,9 @@ const ProjectDetailPage: React.FC = () => {
           showError('Project not found');
         } else {
           setProject(projectData);
+          // Initialize edited values with project data
+          setCurrentEditedBriefDescription(projectData.brief_description);
+          setCurrentEditedPhysicalParameters(projectData.physical_parameters ?? '');
         }
       } catch (err) {
         console.error('Error fetching project:', err);
@@ -255,10 +262,13 @@ const ProjectDetailPage: React.FC = () => {
         return;
       }
 
-      const currentBriefDescription = briefMode === 'edit' 
-        ? project.brief_description 
+      // Use edited values if in edit mode, otherwise use saved values
+      const currentBriefDescription = briefMode === 'edit' && currentEditedBriefDescription
+        ? currentEditedBriefDescription
         : project.brief_description;
-      const currentPhysicalParameters = project.physical_parameters ?? '';
+      const currentPhysicalParameters = briefMode === 'edit' && currentEditedPhysicalParameters !== undefined
+        ? currentEditedPhysicalParameters
+        : (project.physical_parameters ?? '');
 
       const htmlContent = `
         <!DOCTYPE html>
@@ -650,6 +660,11 @@ const ProjectDetailPage: React.FC = () => {
                 onModeChange={setBriefMode}
                 onDirtyChange={setBriefIsDirty}
                 onSavingChange={setBriefIsSaving}
+                onEditedValuesChange={(briefDesc, physicalParams) => {
+                  // Track current edited values for PDF download
+                  setCurrentEditedBriefDescription(briefDesc);
+                  setCurrentEditedPhysicalParameters(physicalParams);
+                }}
                 showHighlights={showHighlights}
               />
             )}

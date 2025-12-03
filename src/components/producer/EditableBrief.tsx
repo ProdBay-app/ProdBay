@@ -24,6 +24,7 @@ interface EditableBriefProps {
   onModeChange?: (mode: 'view' | 'edit') => void;
   onDirtyChange?: (isDirty: boolean) => void;
   onSavingChange?: (isSaving: boolean) => void;
+  onEditedValuesChange?: (briefDescription: string, physicalParameters: string) => void;
   
   // Highlights toggle control
   showHighlights?: boolean;
@@ -63,6 +64,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   onModeChange,
   onDirtyChange,
   onSavingChange,
+  onEditedValuesChange,
   showHighlights = true
 }) => {
   const { showSuccess, showError } = useNotification();
@@ -101,7 +103,9 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
     setEditedBriefDescription(briefDescription);
     setEditedPhysicalParameters(physicalParameters);
     setIsDirty(false);
-  }, [briefDescription, physicalParameters]);
+    // Notify parent of current values (in case they changed externally)
+    onEditedValuesChange?.(briefDescription, physicalParameters);
+  }, [briefDescription, physicalParameters, onEditedValuesChange]);
 
   // Auto-resize textareas to fit content
   const adjustTextareaHeight = (textarea: HTMLTextAreaElement | null) => {
@@ -130,6 +134,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
       newValue !== briefDescription || 
       editedPhysicalParameters !== physicalParameters
     );
+    // Notify parent of current edited values
+    onEditedValuesChange?.(newValue, editedPhysicalParameters);
   };
 
   // Handle physical parameters change
@@ -140,6 +146,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
       editedBriefDescription !== briefDescription || 
       newValue !== physicalParameters
     );
+    // Notify parent of current edited values
+    onEditedValuesChange?.(editedBriefDescription, newValue);
   };
 
   // Handle save
