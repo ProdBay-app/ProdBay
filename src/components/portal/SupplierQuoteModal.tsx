@@ -191,11 +191,11 @@ const SupplierQuoteModal: React.FC<SupplierQuoteModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity z-[99]"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity z-[99] flex items-center justify-center p-4"
       onClick={handleClose}
     >
       <div
-        className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto z-[101] mx-auto mt-8 mb-8"
+        className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto z-[101]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

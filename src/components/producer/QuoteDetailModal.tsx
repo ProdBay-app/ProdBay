@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, DollarSign, FileText, Building2, Mail, Clock, AlertCircle, Loader2 } from 'lucide-react';
+import { X, DollarSign, FileText, Building2, Mail, Clock, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import { QuoteService } from '@/services/quoteService';
+import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import QuoteChat from '@/components/shared/QuoteChat';
 import type { Quote } from '@/lib/supabase';
@@ -29,7 +30,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
   onClose,
   onQuoteUpdate
 }) => {
-  const { showError } = useNotification();
+  const { showError, showSuccess } = useNotification();
   const [quoteData, setQuoteData] = useState<{
     quote: any;
     asset: any;
@@ -37,6 +38,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [accepting, setAccepting] = useState(false);
 
   // Load quote data when modal opens
   useEffect(() => {
@@ -47,8 +49,32 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
       setQuoteData(null);
       setError(null);
       setLoading(false);
+      setAccepting(false);
     }
   }, [isOpen, quote?.id]);
+
+  // Handle accept quote
+  const handleAcceptQuote = async () => {
+    if (!quote || quote.status !== 'Submitted') return;
+
+    setAccepting(true);
+    try {
+      const result = await ProducerService.acceptQuote(quote.id);
+      
+      showSuccess('Quote accepted successfully! The asset has been updated and other quotes have been rejected.');
+      
+      // Reload quote data to reflect the new status
+      await loadQuoteData();
+      
+      // Notify parent component to refresh asset data
+      onQuoteUpdate?.();
+    } catch (error) {
+      console.error('Error accepting quote:', error);
+      showError(error instanceof Error ? error.message : 'Failed to accept quote. Please try again.');
+    } finally {
+      setAccepting(false);
+    }
+  };
 
   const loadQuoteData = async () => {
     if (!quote?.id) return;
@@ -320,6 +346,29 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                     </div>
                   </div>
                 </section>
+
+                {/* Accept Quote Button */}
+                {quote.status === 'Submitted' && (
+                  <section>
+                    <button
+                      onClick={handleAcceptQuote}
+                      disabled={accepting}
+                      className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg px-6 py-4 font-semibold hover:from-purple-700 hover:to-purple-800 transition-all flex items-center justify-center space-x-2 disabled:bg-gray-600 disabled:cursor-not-allowed shadow-lg"
+                    >
+                      {accepting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Accepting Quote...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-5 h-5" />
+                          <span>Accept Quote</span>
+                        </>
+                      )}
+                    </button>
+                  </section>
+                )}
               </div>
             ) : (
               <div className="text-center py-12 text-gray-300">
