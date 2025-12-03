@@ -5,9 +5,10 @@ import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import QuotesList from './QuotesList';
 import SupplierStatusTracker from './SupplierStatusTracker';
+import QuoteDetailModal from './QuoteDetailModal';
 import { getTagColor } from '@/utils/assetTags';
 import { toTitleCase } from '@/utils/textFormatters';
-import type { Asset } from '@/lib/supabase';
+import type { Asset, Quote } from '@/lib/supabase';
 
 interface AssetDetailModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   const { showSuccess, showError } = useNotification();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeQuote, setActiveQuote] = useState<Quote | null>(null);
   
   // Initialize editing data directly from asset (before early return)
   const [editingData, setEditingData] = useState({
@@ -282,6 +284,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   onStatusUpdate={() => {
                     // Refresh data if needed
                   }}
+                  onQuoteClick={(quote) => setActiveQuote(quote)}
                 />
               </section>
 
@@ -290,6 +293,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
           <QuotesList 
             assetId={asset.id} 
             assetName={asset.asset_name}
+            onQuoteClick={(quote) => setActiveQuote(quote)}
           />
         </section>
 
@@ -364,7 +368,19 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   );
 
   // Render modal via portal to document.body to escape parent container constraints
-  return createPortal(modalContent, document.body);
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      <QuoteDetailModal
+        isOpen={activeQuote !== null}
+        quote={activeQuote}
+        onClose={() => setActiveQuote(null)}
+        onQuoteUpdate={() => {
+          // Refresh quotes if needed
+        }}
+      />
+    </>
+  );
 };
 
 export default AssetDetailModal;

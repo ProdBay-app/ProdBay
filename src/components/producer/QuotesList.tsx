@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Building2, Mail, DollarSign, Plus, Clock, AlertCircle, Loader2, BarChart3, MessageCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import EnhancedRequestQuoteFlow from './EnhancedRequestQuoteFlow';
@@ -10,6 +9,7 @@ import type { Quote, Asset } from '@/lib/supabase';
 interface QuotesListProps {
   assetId: string;
   assetName: string;
+  onQuoteClick?: (quote: Quote) => void;
 }
 
 /**
@@ -24,7 +24,7 @@ interface QuotesListProps {
  * - Loading and error states
  * - Empty state when no quotes exist
  */
-const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
+const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClick }) => {
   const { showError } = useNotification();
   
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -283,15 +283,15 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
                       Requested {formatDate(quote.created_at)}
                     </div>
 
-                    {/* Chat Button */}
-                    <Link
-                      to={`/dashboard/quotes/${quote.id}/chat`}
+                    {/* View Details Button */}
+                    <button
+                      onClick={() => onQuoteClick?.(quote)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                      title="Chat with supplier"
+                      title="View quote details and chat"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      <span>Chat</span>
-                    </Link>
+                      <span>View Details</span>
+                    </button>
                   </div>
                 </div>
 

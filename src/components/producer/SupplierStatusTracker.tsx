@@ -7,6 +7,7 @@ import type { Asset, Quote, Supplier } from '@/lib/supabase';
 interface SupplierStatusTrackerProps {
   asset: Asset;
   onStatusUpdate?: () => void;
+  onQuoteClick?: (quote: Quote) => void;
 }
 
 interface SupplierWithStatus {
@@ -28,7 +29,8 @@ interface SupplierWithStatus {
  */
 const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   asset,
-  onStatusUpdate
+  onStatusUpdate,
+  onQuoteClick
 }) => {
   const { showError } = useNotification();
   const [suppliersWithStatus, setSuppliersWithStatus] = useState<SupplierWithStatus[]>([]);
@@ -211,10 +213,17 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                     <p className="text-sm">No suppliers in this status</p>
                   </div>
                 ) : (
-                  suppliers.map(({ supplier, lastActivity }) => (
+                  suppliers.map(({ supplier, quote, lastActivity }) => (
                     <div
                       key={supplier.id}
-                      className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 hover:bg-white/20 transition-colors"
+                      className={`bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 hover:bg-white/20 transition-colors ${
+                        quote ? 'cursor-pointer' : ''
+                      }`}
+                      onClick={() => {
+                        if (quote && onQuoteClick) {
+                          onQuoteClick(quote);
+                        }
+                      }}
                     >
                       {/* Supplier Info */}
                       <div className="flex items-start justify-between">
