@@ -55,6 +55,7 @@ export interface Quote {
   notes_capacity: string;
   status: QuoteStatus;
   quote_token: string;
+  quote_document_url?: string;
   created_at: string;
   updated_at: string;
 }

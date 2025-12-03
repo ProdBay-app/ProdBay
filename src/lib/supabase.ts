@@ -131,6 +131,7 @@ export interface Quote {
   notes_capacity?: string;
   status: 'Pending' | 'Submitted' | 'Accepted' | 'Rejected';
   quote_token: string;
+  quote_document_url?: string;
   cost_breakdown?: {
     labor: number;
     materials: number;

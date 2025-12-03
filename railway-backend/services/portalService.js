@@ -359,10 +359,9 @@ class PortalService {
         updated_at: new Date().toISOString()
       };
 
-      // Add file URL if provided (for future file upload support)
+      // Add file URL if provided
       if (fileUrl) {
-        // TODO: Add quote_document_url column to quotes table if needed
-        // updateData.quote_document_url = fileUrl;
+        updateData.quote_document_url = fileUrl;
       }
 
       // Update quote using Service Role (bypasses RLS)

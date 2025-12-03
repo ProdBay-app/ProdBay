@@ -23,6 +23,7 @@ export interface Quote {
   notes_capacity: string;
   status: 'Pending' | 'Submitted' | 'Accepted' | 'Rejected';
   access_token: string;
+  quote_document_url?: string;
   created_at: string;
   updated_at: string;
 }

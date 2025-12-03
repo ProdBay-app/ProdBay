@@ -8,12 +8,12 @@ import {
   Send, 
   Upload,
   AlertCircle,
-  Clock,
   User,
   CheckCircle
 } from 'lucide-react';
 import { PortalService, type PortalSession, type Message } from '@/services/portalService';
 import { useNotification } from '@/hooks/useNotification';
+import { getSupabase } from '@/lib/supabase';
 
 /**
  * QuotePortal Component
@@ -45,6 +45,10 @@ const QuotePortal: React.FC = () => {
   const [quoteNotes, setQuoteNotes] = useState<string>('');
   const [submittingQuote, setSubmittingQuote] = useState<boolean>(false);
   const [quoteSubmitted, setQuoteSubmitted] = useState<boolean>(false);
+  
+  // File upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = useState<boolean>(false);
 
   // Polling interval ref
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -173,6 +177,62 @@ const QuotePortal: React.FC = () => {
     });
   };
 
+  // Handle file selection
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      showError('Only PDF files are allowed');
+      e.target.value = ''; // Reset input
+      return;
+    }
+    
+    // Validate file size (10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      showError('File size must be less than 10MB');
+      e.target.value = ''; // Reset input
+      return;
+    }
+    
+    setSelectedFile(file);
+  }, [showError]);
+
+  // Upload file to Supabase Storage
+  const uploadFile = useCallback(async (file: File, quoteId: string): Promise<string> => {
+    const supabase = await getSupabase();
+    
+    // Generate unique filename: quote-{quoteId}-{timestamp}.pdf
+    const timestamp = Date.now();
+    const filename = `public/quote-${quoteId}-${timestamp}.pdf`;
+    
+    // Upload file
+    const { error } = await supabase.storage
+      .from('quote-attachments')
+      .upload(filename, file, {
+        contentType: 'application/pdf',
+        upsert: false
+      });
+    
+    if (error) {
+      console.error('Storage upload error:', error);
+      throw new Error(`Failed to upload file: ${error.message}`);
+    }
+    
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('quote-attachments')
+      .getPublicUrl(filename);
+    
+    if (!urlData?.publicUrl) {
+      throw new Error('Failed to get public URL for uploaded file');
+    }
+    
+    return urlData.publicUrl;
+  }, []);
+
   // Handle quote submission
   const handleSubmitQuote = useCallback(async () => {
     if (!token || !session) return;
@@ -184,12 +244,32 @@ const QuotePortal: React.FC = () => {
     }
 
     setSubmittingQuote(true);
+    let fileUrl: string | undefined = undefined;
 
     try {
+      // Upload file first if selected
+      if (selectedFile && session.quote.id) {
+        setUploadingFile(true);
+        try {
+          fileUrl = await uploadFile(selectedFile, session.quote.id);
+        } catch (uploadError) {
+          console.error('File upload error:', uploadError);
+          const errorMessage = uploadError instanceof Error ? uploadError.message : 'Failed to upload file';
+          showError(errorMessage);
+          setUploadingFile(false);
+          setSubmittingQuote(false);
+          return;
+        } finally {
+          setUploadingFile(false);
+        }
+      }
+
+      // Submit quote with file URL
       const response = await PortalService.submitQuote(
         token,
         quotePrice,
-        quoteNotes
+        quoteNotes,
+        fileUrl
       );
 
       if (!response.success || !response.data) {
@@ -211,7 +291,7 @@ const QuotePortal: React.FC = () => {
     } finally {
       setSubmittingQuote(false);
     }
-  }, [token, session, quotePrice, quoteNotes, showSuccess, showError]);
+  }, [token, session, quotePrice, quoteNotes, selectedFile, uploadFile, showSuccess, showError]);
 
   // Load session on mount
   useEffect(() => {
@@ -282,7 +362,7 @@ const QuotePortal: React.FC = () => {
 
   if (!session) return null;
 
-  const { quote, asset, project, supplier } = session;
+  const { quote, asset } = session;
 
   return (
     <div className="space-y-6">
@@ -441,6 +521,19 @@ const QuotePortal: React.FC = () => {
                 {quoteNotes && (
                   <p><span className="font-medium">Notes:</span> <span className="whitespace-pre-wrap">{quoteNotes}</span></p>
                 )}
+                {selectedFile && (
+                  <p>
+                    <span className="font-medium">Document:</span>{' '}
+                    <a
+                      href={session?.quote.quote_document_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 underline"
+                    >
+                      {selectedFile.name}
+                    </a>
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -487,15 +580,55 @@ const QuotePortal: React.FC = () => {
                   <Upload className="h-4 w-4 inline mr-1" />
                   Attach Quote Document (Optional)
                 </label>
-                <button
-                  type="button"
-                  disabled={submittingQuote}
-                  className="w-full border-2 border-dashed border-gray-300 rounded-lg px-4 py-3 text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                <input
+                  type="file"
+                  id="quote-file-upload"
+                  accept=".pdf,application/pdf"
+                  onChange={handleFileSelect}
+                  disabled={submittingQuote || uploadingFile || quoteSubmitted}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="quote-file-upload"
+                  className={`w-full border-2 border-dashed rounded-lg px-4 py-3 transition-colors flex items-center justify-center space-x-2 cursor-pointer ${
+                    submittingQuote || uploadingFile || quoteSubmitted
+                      ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                      : selectedFile
+                      ? 'border-green-400 text-green-600 hover:border-green-500'
+                      : 'border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600'
+                  }`}
                 >
-                  <Upload className="h-5 w-5" />
-                  <span>Choose File</span>
-                </button>
-                <p className="text-xs text-gray-500 mt-1">File upload coming soon</p>
+                  {uploadingFile ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-5 w-5" />
+                      <span>{selectedFile ? selectedFile.name : 'Choose File'}</span>
+                    </>
+                  )}
+                </label>
+                {selectedFile && !uploadingFile && (
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <p className="text-green-600">
+                      ✓ {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                    </p>
+                    {!quoteSubmitted && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedFile(null)}
+                        className="text-red-600 hover:text-red-700 underline"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                )}
+                {!selectedFile && (
+                  <p className="text-xs text-gray-500 mt-1">PDF files only, max 10MB</p>
+                )}
               </div>
             </div>
 
@@ -519,10 +652,15 @@ const QuotePortal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSubmitQuote}
-                disabled={submittingQuote || quotePrice <= 0}
+                disabled={submittingQuote || uploadingFile || quotePrice <= 0}
                 className="w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {submittingQuote ? (
+                {uploadingFile ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Uploading File...</span>
+                  </>
+                ) : submittingQuote ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     <span>Submitting...</span>
