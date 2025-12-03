@@ -7,6 +7,7 @@ import type { Asset, Quote, Supplier } from '@/lib/supabase';
 interface SupplierStatusTrackerProps {
   asset: Asset;
   onStatusUpdate?: () => void;
+  onQuoteClick?: (quote: Quote) => void;
 }
 
 interface SupplierWithStatus {
@@ -28,7 +29,8 @@ interface SupplierWithStatus {
  */
 const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   asset,
-  onStatusUpdate
+  onStatusUpdate,
+  onQuoteClick
 }) => {
   const { showError } = useNotification();
   const [suppliersWithStatus, setSuppliersWithStatus] = useState<SupplierWithStatus[]>([]);
@@ -147,14 +149,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
     });
   };
 
-  // Format cost as currency
-  const formatCost = (cost: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(cost);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -192,9 +186,9 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
           const statusInfo = getStatusInfo(status);
 
           return (
-            <div key={status} className="space-y-3">
+            <div key={status} className="flex flex-col space-y-3 h-full">
               {/* Status Header */}
-              <div className={`${statusInfo.bgColor} ${statusInfo.borderColor} border rounded-lg p-3`}>
+              <div className={`${statusInfo.bgColor} ${statusInfo.borderColor} border rounded-lg p-3 h-24 flex flex-col`}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className={statusInfo.color}>
                     {statusInfo.icon}
@@ -212,7 +206,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
               </div>
 
               {/* Suppliers List */}
-              <div className="space-y-2">
+              <div className="flex-1 space-y-2">
                 {suppliers.length === 0 ? (
                   <div className="text-center py-6 text-gray-300">
                     <Building2 className="w-8 h-8 mx-auto mb-2 text-gray-300" />
@@ -222,10 +216,17 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                   suppliers.map(({ supplier, quote, lastActivity }) => (
                     <div
                       key={supplier.id}
-                      className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 hover:bg-white/20 transition-colors"
+                      className={`bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 hover:bg-white/20 transition-colors ${
+                        quote ? 'cursor-pointer' : ''
+                      }`}
+                      onClick={() => {
+                        if (quote && onQuoteClick) {
+                          onQuoteClick(quote);
+                        }
+                      }}
                     >
                       {/* Supplier Info */}
-                      <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h5 className="font-medium text-white text-sm">
                             {supplier.supplier_name}
@@ -239,42 +240,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                           {formatDate(lastActivity)}
                         </div>
                       </div>
-
-                      {/* Quote Info (if available) */}
-                      {quote && quote.cost > 0 && (
-                        <div className="mb-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-300">Quote:</span>
-                            <span className="text-sm font-semibold text-white">
-                              {formatCost(quote.cost)}
-                            </span>
-                          </div>
-                          {quote.notes_capacity && (
-                            <p className="text-xs text-gray-300 mt-1 line-clamp-2">
-                              {quote.notes_capacity}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Service Categories */}
-                      {supplier.service_categories && supplier.service_categories.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {supplier.service_categories.slice(0, 3).map((category, idx) => (
-                            <span
-                              key={idx}
-                              className="px-1.5 py-0.5 text-xs bg-purple-500/20 text-purple-200 rounded border border-purple-400/50"
-                            >
-                              {category}
-                            </span>
-                          ))}
-                          {supplier.service_categories.length > 3 && (
-                            <span className="px-1.5 py-0.5 text-xs text-gray-400">
-                              +{supplier.service_categories.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </div>
                   ))
                 )}

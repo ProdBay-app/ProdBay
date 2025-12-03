@@ -399,7 +399,7 @@ const ProducerDashboardContainer: React.FC = () => {
               showWarning(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
             } else {
               console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
-              const methodText = allocationMethod === 'ai' ? 'AI-powered' : 'static';
+              const methodText = allocationMethod === 'ai' ? 'smart' : 'static';
               showSuccess(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated using ${methodText} allocation.`, { duration: 6000 });
             }
           } catch (briefError) {
@@ -716,11 +716,11 @@ const ProducerDashboardContainer: React.FC = () => {
           confidence: result.data.confidence || 0
         });
       } else {
-        showError(`AI analysis failed: ${result.error?.message || 'Unknown error'}`);
+        showError(`Analysis failed: ${result.error?.message || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('AI analysis error:', error);
-      showError('AI analysis failed. Please try again.');
+      showError('Analysis failed. Please try again.');
     } finally {
       setLoadingAI(false);
     }
@@ -743,10 +743,10 @@ const ProducerDashboardContainer: React.FC = () => {
       setShowAIAllocationModal(false);
       setAiSuggestions(null);
       setAiAllocationCompleted(true);
-      showSuccess('AI suggestions applied successfully! AI allocation is now complete.', { duration: 6000 });
+      showSuccess('Suggestions applied successfully! Smart allocation is now complete.', { duration: 6000 });
     } catch (error) {
       console.error('Error applying AI suggestions:', error);
-      showError('Failed to apply AI suggestions. Please try again.');
+      showError('Failed to apply suggestions. Please try again.');
     }
   }, [aiSuggestions, selectedProject, loadProjectDetails, showSuccess, showError]);
 

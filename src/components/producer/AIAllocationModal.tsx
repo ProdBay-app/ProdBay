@@ -36,7 +36,7 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
           <div className="flex items-center space-x-3 mb-2">
             <Brain className="h-6 w-6 text-purple-600" />
             <h3 className="text-xl font-semibold">
-              AI Asset Analysis
+              Asset Analysis
             </h3>
             <Sparkles className="h-5 w-5 text-purple-500" />
           </div>
@@ -50,7 +50,7 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
             {loading ? (
               <div className="flex flex-col items-center space-y-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                <p className="text-gray-600">AI is analyzing your project...</p>
+                <p className="text-gray-600">Analyzing your project...</p>
                 <p className="text-sm text-gray-500">This may take a few moments</p>
               </div>
             ) : (
@@ -58,14 +58,14 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
                 <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
                   <h4 className="font-semibold text-gray-900 mb-2">Ready to analyze</h4>
                   <p className="text-sm text-gray-600 mb-4">
-                    Click the button below to start AI analysis of your project.
+                    Click the button below to start analyzing your project.
                   </p>
                   <button
                     onClick={onAnalyze}
                     className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 mx-auto"
                   >
                     <Brain className="h-5 w-5" />
-                    <span>Start AI Analysis</span>
+                    <span>Start Analysis</span>
                     <Sparkles className="h-4 w-4" />
                   </button>
                 </div>
@@ -78,7 +78,7 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
             <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-semibold text-gray-900">AI Analysis Complete</h4>
+                  <h4 className="font-semibold text-gray-900">Analysis Complete</h4>
                   <p className="text-sm text-gray-600">
                     Confidence: {Math.round(aiSuggestions.confidence * 100)}%
                   </p>
@@ -92,7 +92,7 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
 
             {/* AI Reasoning */}
             <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-2">AI Reasoning</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">Analysis Reasoning</h4>
               <p className="text-sm text-gray-700">{aiSuggestions.reasoning}</p>
             </div>
 
@@ -144,7 +144,7 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
                 className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700"
               >
                 <Brain className="h-4 w-4" />
-                <span>Apply AI Suggestions</span>
+                <span>Apply Suggestions</span>
               </button>
             </div>
           </div>

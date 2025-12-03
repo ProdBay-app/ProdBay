@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Copy, Plus, Trash2, Save } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
+import { toTitleCase } from '@/utils/textFormatters';
 import type { Asset } from '@/lib/supabase';
 import type { AssetFormData } from '@/services/producerService';
 
@@ -107,7 +108,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
       
       for (const subAsset of subAssets) {
         const assetData: AssetFormData = {
-          asset_name: subAsset.asset_name.trim(),
+          asset_name: toTitleCase(subAsset.asset_name.trim()),
           specifications: subAsset.specifications,
           timeline: originalAsset.timeline || '',
           status: originalAsset.status,

@@ -26,7 +26,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
   const steps = [
     { icon: Database, text: "Initializing project database", color: "text-blue-400", borderColor: "border-blue-400" },
     { icon: FileText, text: "Processing project brief", color: "text-purple-400", borderColor: "border-purple-400" },
-    { icon: Cpu, text: "Running AI analysis", color: "text-indigo-400", borderColor: "border-indigo-400" },
+    { icon: Cpu, text: "Running analysis", color: "text-indigo-400", borderColor: "border-indigo-400" },
     { icon: Target, text: "Identifying key requirements", color: "text-pink-400", borderColor: "border-pink-400" },
     { icon: Users, text: "Analyzing supplier capabilities", color: "text-green-400", borderColor: "border-green-400" },
     { icon: Zap, text: "Generating asset recommendations", color: "text-yellow-400", borderColor: "border-yellow-400" },
@@ -74,7 +74,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
       aria-modal="true"
     >
       {/* Main loading container */}
-      <div className="flex flex-col items-center justify-center space-y-6 p-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] max-w-lg mx-4">
+      <div className="flex flex-col items-center justify-center space-y-6 p-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] w-full max-w-lg mx-4 h-96">
         {/* Current step icon with animation */}
         <div className="relative">
           <div className={`w-20 h-20 rounded-full bg-white/10 flex items-center justify-center transition-all duration-500 ${currentStepData.color}`}>

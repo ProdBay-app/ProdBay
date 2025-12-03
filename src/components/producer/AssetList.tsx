@@ -7,19 +7,17 @@ import AssetFormModal from './AssetFormModal';
 import AssetDetailModal from './AssetDetailModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { getAvailableTagNames, getTagColor } from '@/utils/assetTags';
+import { toTitleCase } from '@/utils/textFormatters';
 import type { Asset } from '@/lib/supabase';
 
 interface AssetListProps {
   projectId: string;
   
-  // NEW: Props for bi-directional hover linking with brief
+  // Props for bi-directional hover linking with brief
   hoveredAssetId?: string | null;
   onAssetHover?: (assetId: string | null) => void;
   
-  // NEW: Prop to know when brief panel is expanded for optimized scrolling
-  isBriefExpanded?: boolean;
-  
-  // NEW: Props for external button controls (handled by parent component)
+  // Props for external button controls (handled by parent component)
   onAddAsset?: () => void; // External add asset button handler
   onToggleFilters?: () => void; // External filter toggle handler
   showFilters?: boolean; // Filter visibility state
@@ -39,7 +37,6 @@ const AssetList: React.FC<AssetListProps> = ({
   projectId, 
   hoveredAssetId, 
   onAssetHover, 
-  isBriefExpanded = false,
   onAddAsset,
   onToggleFilters,
   showFilters = false
@@ -63,8 +60,8 @@ const AssetList: React.FC<AssetListProps> = ({
   // Search, filter, and sort state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'name' | 'date' | 'quantity'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'quantity'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   // showFilters is now passed as a prop
 
   // Debug: Log sorting changes
@@ -102,9 +99,9 @@ const AssetList: React.FC<AssetListProps> = ({
   }) => {
     setIsSubmitting(true);
     try {
-      // Create asset with default values
+      // Create asset with default values (Title Case formatting applied)
       const newAsset = await ProducerService.createAsset(projectId, {
-        asset_name: assetData.asset_name,
+        asset_name: toTitleCase(assetData.asset_name),
         specifications: assetData.specifications,
         status: 'Pending',
         timeline: '',
@@ -147,9 +144,9 @@ const AssetList: React.FC<AssetListProps> = ({
 
     setIsSubmitting(true);
     try {
-      // Update asset while preserving other fields
+      // Update asset while preserving other fields (Title Case formatting applied)
       const updatedAsset = await ProducerService.updateAsset(editingAsset.id, {
-        asset_name: assetData.asset_name,
+        asset_name: toTitleCase(assetData.asset_name),
         specifications: assetData.specifications,
         status: editingAsset.status,
         timeline: editingAsset.timeline ?? '',
@@ -439,12 +436,12 @@ const AssetList: React.FC<AssetListProps> = ({
           </div>
 
           {/* Clear All Filters */}
-          {(selectedTags.length > 0 || searchTerm || sortBy !== 'date' || sortOrder !== 'desc') && (
+          {(selectedTags.length > 0 || searchTerm || sortBy !== 'name' || sortOrder !== 'asc') && (
             <div className="flex justify-between">
               <button
                 onClick={() => {
-                  setSortBy('date');
-                  setSortOrder('desc');
+                  setSortBy('name');
+                  setSortOrder('asc');
                 }}
                 className="text-sm text-gray-300 hover:text-gray-200 underline transition-colors"
               >

@@ -156,6 +156,124 @@ portalRouter.post('/messages', async (req, res) => {
 });
 
 /**
+ * POST /api/portal/submit-quote
+ * Submit quote via portal (public endpoint using access_token)
+ * 
+ * Request body:
+ * {
+ *   "token": "uuid-access-token",
+ *   "cost": 1234.56,
+ *   "notes": "Optional notes and capacity details",
+ *   "fileUrl": "optional-file-url" (for future file upload support)
+ * }
+ */
+portalRouter.post('/submit-quote', async (req, res) => {
+  try {
+    const { token, cost, notes, fileUrl } = req.body;
+
+    // Validate request body
+    if (!token || cost === undefined || cost === null) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_REQUIRED_FIELDS',
+          message: 'token and cost are required'
+        }
+      });
+    }
+
+    // Validate data types
+    if (typeof token !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_DATA_TYPE',
+          message: 'token must be a string'
+        }
+      });
+    }
+
+    if (typeof cost !== 'number') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_DATA_TYPE',
+          message: 'cost must be a number'
+        }
+      });
+    }
+
+    if (cost < 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_COST',
+          message: 'cost cannot be negative'
+        }
+      });
+    }
+
+    // Submit quote
+    const updatedQuote = await PortalService.submitQuoteViaPortal(
+      token,
+      cost,
+      notes || '',
+      fileUrl || null
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedQuote,
+      message: 'Quote submitted successfully'
+    });
+
+  } catch (error) {
+    console.error('Submit quote endpoint error:', error);
+
+    // Handle specific error types
+    if (error.message.includes('Invalid access token format') || error.message.includes('Quote not found')) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'QUOTE_NOT_FOUND',
+          message: error.message
+        }
+      });
+    }
+
+    if (error.message.includes('already been submitted')) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'QUOTE_ALREADY_SUBMITTED',
+          message: error.message
+        }
+      });
+    }
+
+    if (error.message.includes('required') || error.message.includes('must be') || error.message.includes('cannot be negative')) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: error.message
+        }
+      });
+    }
+
+    // Generic server error
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while submitting quote',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }
+    });
+  }
+});
+
+/**
  * POST /api/messages
  * Send message from producer (authenticated)
  * Protected endpoint - requires JWT authentication

@@ -146,6 +146,7 @@ class BriefProcessor {
                 asset_name: aiAsset.asset_name,
                 specifications: aiAsset.specifications,
                 source_text: aiAsset.source_text || null,
+                tags: aiAsset.tags || [],
                 status: 'Pending'
               })
               .select()

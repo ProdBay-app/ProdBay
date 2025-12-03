@@ -153,11 +153,11 @@ const NewProject: React.FC = () => {
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
             <div className="flex items-center space-x-3 mb-3">
               <Brain className="h-6 w-6 text-purple-600" />
-              <h3 className="text-lg font-semibold text-gray-900">AI-Powered Asset Allocation</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Smart Asset Allocation</h3>
               <Sparkles className="h-5 w-5 text-purple-500" />
             </div>
             <p className="text-gray-600 mb-4">
-              Enable AI to intelligently analyze your brief and suggest optimal assets with detailed specifications.
+              Enable smart analysis to automatically identify assets and suggest detailed specifications from your brief.
             </p>
             <div className="space-y-3">
               <p className="text-sm font-medium text-gray-700">Asset Allocation Method:</p>
@@ -188,8 +188,8 @@ const NewProject: React.FC = () => {
                     className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2"
                   />
                   <div>
-                    <span className="text-sm font-medium text-gray-700">AI-Powered Allocation</span>
-                    <p className="text-xs text-gray-500">AI analyzes your brief to identify assets with detailed specifications</p>
+                    <span className="text-sm font-medium text-gray-700">Smart Allocation</span>
+                    <p className="text-xs text-gray-500">Automatically analyzes your brief to identify assets with detailed specifications</p>
                   </div>
                 </label>
               </div>
@@ -197,7 +197,7 @@ const NewProject: React.FC = () => {
               {allocationMethod === 'ai' && (
                 <div className="mt-3 p-3 bg-purple-100 rounded-lg">
                   <p className="text-sm text-purple-800">
-                    ✨ AI will analyze your brief to identify assets, create detailed specifications, 
+                    ✨ The system will analyze your brief to identify assets, create detailed specifications, 
                     and suggest optimal supplier allocations with confidence scores.
                   </p>
                 </div>
@@ -265,7 +265,7 @@ const NewProject: React.FC = () => {
               <Send className="h-4 w-4" />
               <span>
                 {submitStatus === 'creating-project' && 'Creating Project...'}
-                {submitStatus === 'processing-brief' && (allocationMethod === 'ai' ? 'AI Processing Brief...' : 'Processing Brief...')}
+                {submitStatus === 'processing-brief' && 'Processing Brief...'}
                 {submitStatus === 'success' && 'Project Created!'}
                 {submitStatus === 'error' && 'Failed - Try Again'}
                 {submitStatus === 'idle' && 'Create Project'}

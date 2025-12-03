@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Building2, Mail, DollarSign, Plus, Clock, AlertCircle, Loader2, BarChart3, MessageCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import EnhancedRequestQuoteFlow from './EnhancedRequestQuoteFlow';
@@ -10,6 +9,7 @@ import type { Quote, Asset } from '@/lib/supabase';
 interface QuotesListProps {
   assetId: string;
   assetName: string;
+  onQuoteClick?: (quote: Quote) => void;
 }
 
 /**
@@ -24,7 +24,7 @@ interface QuotesListProps {
  * - Loading and error states
  * - Empty state when no quotes exist
  */
-const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
+const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClick }) => {
   const { showError } = useNotification();
   
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -283,17 +283,43 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName }) => {
                       Requested {formatDate(quote.created_at)}
                     </div>
 
-                    {/* Chat Button */}
-                    <Link
-                      to={`/dashboard/quotes/${quote.id}/chat`}
+                    {/* View Details Button */}
+                    <button
+                      onClick={() => onQuoteClick?.(quote)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                      title="Chat with supplier"
+                      title="View quote details and chat"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      <span>Chat</span>
-                    </Link>
+                      <span>View Details</span>
+                    </button>
                   </div>
                 </div>
+
+                {/* Notes (for submitted quotes) */}
+                {quote.status === 'Submitted' && quote.notes_capacity && quote.notes_capacity.trim() && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <p className="text-sm font-semibold text-gray-300 mb-2">Notes:</p>
+                    <p className="text-white text-sm whitespace-pre-wrap leading-relaxed">
+                      {quote.notes_capacity}
+                    </p>
+                  </div>
+                )}
+
+                {/* PDF Document Link (for submitted quotes) */}
+                {quote.status === 'Submitted' && quote.quote_document_url && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <a
+                      href={quote.quote_document_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      title="View quote PDF document"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>View Quote PDF</span>
+                    </a>
+                  </div>
+                )}
 
                 {/* Service Categories (if available) */}
                 {quote.supplier?.service_categories && quote.supplier.service_categories.length > 0 && (

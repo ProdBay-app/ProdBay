@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Maximize2, Minimize2, Loader2, Edit3, Eye, Download } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import Button from '@/components/ui/Button';
@@ -9,17 +9,27 @@ interface EditableBriefProps {
   projectId: string;
   briefDescription: string;
   physicalParameters: string;
-  isExpanded: boolean;
-  onToggleExpand: () => void;
+  isExpanded: boolean; // Kept for backward compatibility, but always true now
+  onToggleExpand: () => void; // Kept for backward compatibility, but no-op now
   onBriefUpdate?: (briefDescription: string, physicalParameters: string) => void;
   
-  // NEW: Props for interactive asset tagging
+  // Props for interactive asset tagging
   assets?: Asset[];
   hoveredAssetId?: string | null;
   onAssetHover?: (assetId: string | null) => void;
   onAssetClick?: (asset: Asset) => void;
   
-  // NEW: Max height to match Assets block
+  // External mode control (when provided, uses external state)
+  mode?: 'view' | 'edit';
+  onModeChange?: (mode: 'view' | 'edit') => void;
+  onDirtyChange?: (isDirty: boolean) => void;
+  onSavingChange?: (isSaving: boolean) => void;
+  onEditedValuesChange?: (briefDescription: string, physicalParameters: string) => void;
+  
+  // Highlights toggle control
+  showHighlights?: boolean;
+  
+  // Max height to match Assets block (deprecated, but kept for compatibility)
   maxHeight?: number;
 }
 
@@ -41,25 +51,48 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   projectId,
   briefDescription,
   physicalParameters,
-  isExpanded,
-  onToggleExpand,
+  isExpanded = true, // Always true now
+  onToggleExpand = () => {}, // No-op now
   onBriefUpdate,
-  assets,              // Will be used for interactive highlighting in next step
-  hoveredAssetId,      // Will be used for interactive highlighting in next step
-  onAssetHover,        // Will be used for interactive highlighting in next step
-  onAssetClick,        // Will be used for interactive highlighting in next step
-  maxHeight            // Max height to match Assets block
+  assets,
+  hoveredAssetId,
+  onAssetHover,
+  onAssetClick,
+  maxHeight,
+  // External mode control props
+  mode: externalMode,
+  onModeChange,
+  onDirtyChange,
+  onSavingChange,
+  onEditedValuesChange,
+  showHighlights = true
 }) => {
   const { showSuccess, showError } = useNotification();
 
-  // Mode state: 'view' (default) or 'edit'
-  const [mode, setMode] = useState<'view' | 'edit'>('view');
+  // Use external mode if provided, otherwise use internal state
+  const [internalMode, setInternalMode] = useState<'view' | 'edit'>('view');
+  const mode = externalMode !== undefined ? externalMode : internalMode;
+  const setMode = onModeChange || setInternalMode;
 
   // Editing state
   const [editedBriefDescription, setEditedBriefDescription] = useState(briefDescription);
   const [editedPhysicalParameters, setEditedPhysicalParameters] = useState(physicalParameters);
-  const [isDirty, setIsDirty] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [internalIsDirty, setInternalIsDirty] = useState(false);
+  const [internalIsSaving, setInternalIsSaving] = useState(false);
+  
+  // Expose dirty state to parent if callback provided
+  const isDirty = internalIsDirty;
+  const setIsDirty = (value: boolean) => {
+    setInternalIsDirty(value);
+    onDirtyChange?.(value);
+  };
+  
+  // Expose saving state to parent if callback provided
+  const isSaving = internalIsSaving;
+  const setIsSaving = (value: boolean) => {
+    setInternalIsSaving(value);
+    onSavingChange?.(value);
+  };
 
   // Refs for textareas (for auto-resize)
   const briefTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -70,7 +103,9 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
     setEditedBriefDescription(briefDescription);
     setEditedPhysicalParameters(physicalParameters);
     setIsDirty(false);
-  }, [briefDescription, physicalParameters]);
+    // Notify parent of current values (in case they changed externally)
+    onEditedValuesChange?.(briefDescription, physicalParameters);
+  }, [briefDescription, physicalParameters, onEditedValuesChange]);
 
   // Auto-resize textareas to fit content
   const adjustTextareaHeight = (textarea: HTMLTextAreaElement | null) => {
@@ -99,6 +134,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
       newValue !== briefDescription || 
       editedPhysicalParameters !== physicalParameters
     );
+    // Notify parent of current edited values
+    onEditedValuesChange?.(newValue, editedPhysicalParameters);
   };
 
   // Handle physical parameters change
@@ -109,6 +146,8 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
       editedBriefDescription !== briefDescription || 
       newValue !== physicalParameters
     );
+    // Notify parent of current edited values
+    onEditedValuesChange?.(editedBriefDescription, newValue);
   };
 
   // Handle save
@@ -208,6 +247,11 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
    * @returns Array of React nodes (text strings and <mark> elements)
    */
   const renderInteractiveContent = (text: string): React.ReactNode[] => {
+    // If highlights are disabled, return plain text
+    if (!showHighlights) {
+      return [text];
+    }
+
     // If no assets provided or no interactive features enabled, return plain text
     if (!assets || !onAssetClick || !onAssetHover) {
       return [text];
@@ -369,193 +413,12 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
     return elements;
   };
 
-  // Handle PDF download - generates a PDF from the brief text
-  const handleDownloadPdf = () => {
-    try {
-      // Create a new window for PDF generation
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        showError('Unable to open print window. Please check your popup blocker.');
-        return;
-      }
-
-      // Get the current brief content (edited or original)
-      const currentBriefDescription = mode === 'edit' ? editedBriefDescription : briefDescription;
-      const currentPhysicalParameters = mode === 'edit' ? editedPhysicalParameters : physicalParameters;
-
-      // Create HTML content for the PDF
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Project Brief - ${projectId}</title>
-          <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              line-height: 1.6;
-              color: #333;
-              max-width: 800px;
-              margin: 0 auto;
-              padding: 20px;
-            }
-            .header {
-              border-bottom: 2px solid #e5e7eb;
-              padding-bottom: 20px;
-              margin-bottom: 30px;
-            }
-            .title {
-              font-size: 24px;
-              font-weight: bold;
-              color: #1f2937;
-              margin-bottom: 10px;
-            }
-            .project-id {
-              color: #6b7280;
-              font-size: 14px;
-            }
-            .section {
-              margin-bottom: 30px;
-            }
-            .section-title {
-              font-size: 18px;
-              font-weight: 600;
-              color: #374151;
-              margin-bottom: 15px;
-              border-bottom: 1px solid #e5e7eb;
-              padding-bottom: 5px;
-            }
-            .content {
-              white-space: pre-wrap;
-              line-height: 1.7;
-            }
-            .footer {
-              margin-top: 40px;
-              padding-top: 20px;
-              border-top: 1px solid #e5e7eb;
-              color: #6b7280;
-              font-size: 12px;
-              text-align: center;
-            }
-            @media print {
-              body { margin: 0; padding: 15px; }
-              .header { page-break-after: avoid; }
-              .section { page-break-inside: avoid; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="title">Project Brief</div>
-            <div class="project-id">Project ID: ${projectId}</div>
-          </div>
-          
-          <div class="section">
-            <div class="section-title">Description</div>
-            <div class="content">${currentBriefDescription || 'No description provided.'}</div>
-          </div>
-          
-          ${currentPhysicalParameters ? `
-          <div class="section">
-            <div class="section-title">Physical Parameters</div>
-            <div class="content">${currentPhysicalParameters}</div>
-          </div>
-          ` : ''}
-          
-          <div class="footer">
-            Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
-          </div>
-        </body>
-        </html>
-      `;
-
-      // Write content to the new window
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-
-      // Wait for content to load, then trigger print
-      printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print();
-          // Close the window after printing
-          setTimeout(() => {
-            printWindow.close();
-          }, 1000);
-        }, 500);
-      };
-
-      showSuccess('PDF download initiated');
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      showError('Failed to generate PDF');
-    }
-  };
-
   return (
     <div 
-      className={`bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 transition-all duration-300 ${
-        isExpanded && maxHeight ? 'flex flex-col' : 'h-full flex flex-col'
-      }`}
-      style={isExpanded && maxHeight ? { height: `${maxHeight}px` } : {}}
+      className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 transition-all duration-300 flex flex-col"
     >
-      {/* Header - Only show when collapsed */}
-      {!isExpanded && (
-        <div className="p-6 pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-white">Brief</h2>
-              
-              {/* Unsaved Changes Indicator */}
-              {isDirty && (
-                <span className="text-xs bg-amber-500/30 text-amber-200 px-2 py-1 rounded-full font-medium">
-                  Unsaved Changes
-                </span>
-              )}
-            </div>
-
-            {/* Right side controls */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Download PDF Button */}
-              <Button
-                onClick={handleDownloadPdf}
-                variant="teal"
-                icon={<Download className="w-4 h-4" />}
-                title="Download brief as PDF"
-              >
-                Download PDF
-              </Button>
-
-              {/* Mode Toggle Button */}
-              <Button
-                onClick={() => setMode(prev => prev === 'view' ? 'edit' : 'view')}
-                disabled={isSaving}
-                variant="secondary"
-                icon={mode === 'view' ? <Edit3 className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                title={mode === 'view' ? 'Switch to edit mode' : 'Switch to view mode'}
-              >
-                {mode === 'view' ? 'Edit' : 'View'}
-              </Button>
-
-              {/* Expand/Collapse Button */}
-              <button
-                onClick={onToggleExpand}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                aria-label={isExpanded ? 'Collapse brief' : 'Expand brief'}
-                title={isExpanded ? 'Collapse' : 'Expand'}
-              >
-                {isExpanded ? (
-                  <Minimize2 className="w-5 h-5 text-gray-300" />
-                ) : (
-                  <Maximize2 className="w-5 h-5 text-gray-300" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Content - Only show when expanded */}
-      {isExpanded && (
-        <div className="p-6 overflow-y-auto flex-1 min-h-0">
+      {/* Content - Always visible now */}
+      <div className="p-6 overflow-y-auto flex-1 min-h-0">
           {/* EDIT MODE - Textareas for editing */}
           {mode === 'edit' && (
             <>
@@ -671,8 +534,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
               )}
             </>
           )}
-        </div>
-      )}
+      </div>
     </div>
   );
 };

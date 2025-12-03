@@ -478,9 +478,9 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       
       // Show success message
       if (populatedCount > 0) {
-        showSuccess(`AI analysis complete! ${populatedCount} field${populatedCount !== 1 ? 's' : ''} auto-populated.`);
+        showSuccess(`Analysis complete! ${populatedCount} field${populatedCount !== 1 ? 's' : ''} auto-populated.`);
       } else {
-        showWarning('AI analysis complete, but no specific information could be extracted. Please fill in the fields manually.');
+        showWarning('Analysis complete, but no specific information could be extracted. Please fill in the fields manually.');
       }
       
     } catch (error) {

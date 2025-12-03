@@ -1,0 +1,49 @@
+feat(supplier): enable PDF file uploads for quotes
+
+Adds complete file upload functionality to the supplier quote portal,
+allowing suppliers to attach PDF documents when submitting quotes.
+
+Database Changes:
+- Add `quote_document_url` column to `quotes` table
+- Create `quote-attachments` public storage bucket (10MB limit, PDF only)
+- Configure RLS policies for public uploads, reads, updates, and deletes
+- Add index on `quote_document_url` for performance
+
+Backend Changes:
+- Update `submitQuoteViaPortal` to save `quote_document_url` when provided
+- Remove TODO comment and enable file URL persistence
+
+Frontend Changes:
+- Implement file selection with validation (PDF only, 10MB max)
+- Add `uploadFile` function using Supabase Storage client
+- Wire file upload into quote submission flow
+- Add file preview with remove option before submission
+- Display file link in success summary
+- Add upload progress indicators
+
+TypeScript Updates:
+- Add `quote_document_url?: string` to Quote interfaces in:
+  - src/lib/supabase.ts
+  - src/types/database.ts
+  - src/services/portalService.ts
+
+Storage Configuration:
+- Public bucket: `quote-attachments`
+- File path: `public/quote-{quoteId}-{timestamp}.pdf`
+- MIME type restriction: application/pdf
+- Size limit: 10MB
+
+Security:
+- Public bucket with path-based access control
+- RLS policies restrict uploads to `public/` folder
+- Anonymous users can upload/read via access_token validation
+
+Testing:
+- File validation (type and size)
+- Upload to Supabase Storage
+- URL generation and database persistence
+- Error handling for upload failures
+
+This completes the supplier portal quote submission flow, enabling
+suppliers to attach formal quote documents alongside price and notes.
+

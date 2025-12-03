@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Package, Edit, Tag, Hash } from 'lucide-react';
 import type { Asset } from '@/lib/supabase';
 import { PREDEFINED_ASSET_TAGS, getTagColor } from '@/utils/assetTags';
+import { toTitleCase } from '@/utils/textFormatters';
 
 interface AssetFormModalProps {
   isOpen: boolean;
@@ -114,8 +115,11 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
       return;
     }
     
-    // Submit the form data
-    onSubmit(formData);
+    // Submit the form data with Title Case formatting applied
+    onSubmit({
+      ...formData,
+      asset_name: toTitleCase(formData.asset_name)
+    });
   };
 
   // Handle backdrop click to close

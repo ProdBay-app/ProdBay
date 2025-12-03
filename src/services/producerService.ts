@@ -566,4 +566,54 @@ export class ProducerService {
       )
     ).sort();
   }
+
+  /**
+   * Accept a quote and enforce exclusivity
+   * - Sets the target quote status to 'Accepted'
+   * - Sets all other quotes for the same asset to 'Rejected'
+   * - Updates the asset with assigned_supplier_id and status 'Approved'
+   * 
+   * @param quoteId - UUID of the quote to accept
+   * @returns Promise with updated quote and asset data
+   */
+  static async acceptQuote(quoteId: string): Promise<{ quote: Quote; asset: Asset }> {
+    const supabase = await getSupabase();
+    
+    // Get JWT token from Supabase session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('Authentication required. Please log in.');
+    }
+
+    // Get Railway API URL
+    const RAILWAY_API_URL = import.meta.env.VITE_RAILWAY_API_URL || '';
+    if (!RAILWAY_API_URL) {
+      throw new Error('Railway API URL not configured. Please set VITE_RAILWAY_API_URL environment variable.');
+    }
+
+    try {
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/quotes/${quoteId}/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      if (!data.success || !data.data) {
+        throw new Error(data.error?.message || 'Invalid response from server');
+      }
+
+      return data.data;
+    } catch (error) {
+      console.error('Error accepting quote:', error);
+      throw error instanceof Error ? error : new Error('Failed to accept quote');
+    }
+  }
 }

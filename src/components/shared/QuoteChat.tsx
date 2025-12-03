@@ -1,0 +1,286 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MessageCircle, Send, User, Loader2 } from 'lucide-react';
+import { QuoteService, type Message } from '@/services/quoteService';
+import { useNotification } from '@/hooks/useNotification';
+
+interface QuoteChatProps {
+  quoteId: string;
+  supplierName: string;
+  assetName: string;
+  onMessageSent?: () => void;
+}
+
+/**
+ * QuoteChat - Reusable chat interface component
+ * 
+ * Features:
+ * - Chat interface with message history
+ * - Real-time message polling (every 8 seconds)
+ * - Optimistic UI for message sending
+ * - Auto-scroll to bottom
+ * - Loading and error states
+ */
+const QuoteChat: React.FC<QuoteChatProps> = ({
+  quoteId,
+  supplierName,
+  assetName,
+  onMessageSent
+}) => {
+  const { showSuccess, showError } = useNotification();
+
+  // Message state
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [messageInput, setMessageInput] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Polling interval ref
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Scroll to bottom of messages
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // Load messages
+  const loadMessages = useCallback(async () => {
+    if (!quoteId) {
+      setError('Quote ID is missing');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await QuoteService.getQuoteMessages(quoteId);
+      
+      if (!response.success || !response.data) {
+        setError(response.error?.message || 'Failed to load messages');
+        setLoading(false);
+        return;
+      }
+
+      setMessages(response.data.messages || []);
+      setError(null);
+    } catch (err) {
+      console.error('Error loading messages:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  }, [quoteId]);
+
+  // Poll for new messages
+  const pollMessages = useCallback(async () => {
+    if (!quoteId) return;
+
+    try {
+      const response = await QuoteService.getQuoteMessages(quoteId);
+      if (response.success && response.data) {
+        // Only update if messages have changed (avoid unnecessary re-renders)
+        const newMessages = response.data.messages || [];
+        if (JSON.stringify(newMessages) !== JSON.stringify(messages)) {
+          setMessages(newMessages);
+        }
+      }
+    } catch (err) {
+      console.error('Error polling messages:', err);
+      // Don't show error for polling failures - just log
+    }
+  }, [quoteId, messages]);
+
+  // Send message
+  const sendMessage = useCallback(async () => {
+    if (!quoteId || !messageInput.trim() || sendingMessage) return;
+
+    const content = messageInput.trim();
+    setMessageInput('');
+
+    // Optimistic UI: Add message immediately
+    const optimisticMessage: Message = {
+      id: `temp-${Date.now()}`,
+      quote_id: quoteId,
+      sender_type: 'PRODUCER',
+      content,
+      created_at: new Date().toISOString(),
+      is_read: false
+    };
+
+    setMessages(prev => [...prev, optimisticMessage]);
+    setSendingMessage(true);
+    scrollToBottom();
+
+    try {
+      const response = await QuoteService.sendProducerMessage(quoteId, content);
+      
+      if (!response.success || !response.data) {
+        // Remove optimistic message on error
+        setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+        showError(response.error?.message || 'Failed to send message');
+        return;
+      }
+
+      // Replace optimistic message with real one
+      setMessages(prev => 
+        prev.map(m => m.id === optimisticMessage.id ? response.data! : m)
+      );
+      
+      showSuccess('Message sent successfully');
+      onMessageSent?.();
+    } catch (err) {
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+      showError('Failed to send message');
+    } finally {
+      setSendingMessage(false);
+    }
+  }, [quoteId, messageInput, sendingMessage, scrollToBottom, showSuccess, showError, onMessageSent]);
+
+  // Handle Enter key in message input
+  const handleMessageKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  // Format time for display
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit' 
+    });
+  };
+
+  // Load messages on mount
+  useEffect(() => {
+    loadMessages();
+  }, [loadMessages]);
+
+  // Set up polling (every 8 seconds)
+  useEffect(() => {
+    if (!loading && !error) {
+      pollingIntervalRef.current = setInterval(pollMessages, 8000);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [loading, error, pollMessages]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  return (
+    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg flex flex-col h-full min-h-0 shadow-lg">
+      {/* Chat Header */}
+      <div className="border-b border-white/20 p-4 bg-white/5">
+        <div className="flex items-center gap-3">
+          <MessageCircle className="w-5 h-5 text-purple-300" />
+          <div>
+            <h2 className="text-lg font-semibold text-white">Conversation</h2>
+            <p className="text-sm text-gray-300">
+              {supplierName} • {assetName}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Loading state */}
+      {loading && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+            <p className="text-gray-300 text-sm">Loading messages...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && !loading && (
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 w-full">
+            <p className="text-red-300 text-sm">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Messages */}
+      {!loading && !error && (
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-gray-400">
+              <p>No messages yet. Start the conversation!</p>
+            </div>
+          ) : (
+            messages.map((message) => {
+              const isProducer = message.sender_type === 'PRODUCER';
+              return (
+                <div
+                  key={message.id}
+                  className={`flex ${isProducer ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[75%] rounded-lg p-3 ${
+                      isProducer
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2 mb-1">
+                      <User className="h-4 w-4" />
+                      <span className="text-xs font-medium">
+                        {isProducer ? 'Me' : supplierName}
+                      </span>
+                      <span className={`text-xs ${isProducer ? 'text-blue-100' : 'text-gray-400'}`}>
+                        {formatTime(message.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      )}
+
+      {/* Message Input */}
+      <div className="border-t border-white/20 p-4 bg-white/5">
+        <div className="flex space-x-2">
+          <textarea
+            value={messageInput}
+            onChange={(e) => setMessageInput(e.target.value)}
+            onKeyPress={handleMessageKeyPress}
+            placeholder="Type your message..."
+            className="flex-1 resize-none bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            rows={2}
+            disabled={sendingMessage || loading}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!messageInput.trim() || sendingMessage || loading}
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+          >
+            {sendingMessage ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+            <span>Send</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default QuoteChat;
+

@@ -102,17 +102,17 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
   const getStatusBadgeColor = (status: Project['project_status']): string => {
     switch (status) {
       case 'New':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-500/30 text-blue-200 border-blue-400/50';
       case 'In Progress':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-purple-500/30 text-purple-200 border-purple-400/50';
       case 'Quoting':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-yellow-500/30 text-yellow-200 border-yellow-400/50';
       case 'Completed':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-500/30 text-green-200 border-green-400/50';
       case 'Cancelled':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-white/20 text-gray-200 border-white/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-white/20 text-gray-200 border-white/30';
     }
   };
 
@@ -124,22 +124,22 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
+      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg w-full max-w-2xl overflow-hidden">
         {/* Header with close button */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/20">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-teal-100 rounded-lg">
-              <FolderOpen className="w-5 h-5 text-teal-600" />
+            <div className="p-2 bg-teal-500/20 rounded-lg">
+              <FolderOpen className="w-5 h-5 text-teal-300" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-gray-900">Client Projects</h3>
-              <p className="text-sm text-gray-600">{clientName}</p>
+              <h3 className="text-xl font-bold text-white">Client Projects</h3>
+              <p className="text-sm text-gray-300">{clientName}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-lg"
+            className="text-gray-300 hover:text-white transition-colors p-1 rounded-lg"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -151,20 +151,20 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
           {/* Loading State */}
           {loading && (
             <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-12 h-12 text-teal-600 animate-spin mb-4" />
-              <p className="text-gray-600 text-lg">Loading projects...</p>
-              <p className="text-gray-500 text-sm mt-2">Fetching all projects for {clientName}</p>
+              <Loader2 className="w-12 h-12 text-teal-400 animate-spin mb-4" />
+              <p className="text-gray-200 text-lg">Loading projects...</p>
+              <p className="text-gray-400 text-sm mt-2">Fetching all projects for {clientName}</p>
             </div>
           )}
 
           {/* Error State */}
           {error && !loading && (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="bg-red-50 rounded-full p-4 mb-4">
-                <AlertCircle className="w-10 h-10 text-red-600" />
+              <div className="bg-red-500/20 rounded-full p-4 mb-4">
+                <AlertCircle className="w-10 h-10 text-red-400" />
               </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Failed to Load Projects</h4>
-              <p className="text-gray-600 text-center mb-4">{error}</p>
+              <h4 className="text-lg font-semibold text-white mb-2">Failed to Load Projects</h4>
+              <p className="text-gray-300 text-center mb-4">{error}</p>
               <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
@@ -177,11 +177,11 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
           {/* Empty State */}
           {!loading && !error && projects.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="bg-gray-50 rounded-full p-4 mb-4">
+              <div className="bg-gray-500/20 rounded-full p-4 mb-4">
                 <FolderOpen className="w-10 h-10 text-gray-400" />
               </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">No Projects Found</h4>
-              <p className="text-gray-600 text-center">
+              <h4 className="text-lg font-semibold text-white mb-2">No Projects Found</h4>
+              <p className="text-gray-300 text-center">
                 No projects found for <span className="font-medium">{clientName}</span>
               </p>
             </div>
@@ -192,8 +192,8 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
             <div className="space-y-3">
               {/* Header info */}
               <div className="mb-4">
-                <p className="text-sm text-gray-600">
-                  Found <span className="font-semibold text-gray-900">{projects.length}</span> {projects.length === 1 ? 'project' : 'projects'}
+                <p className="text-sm text-gray-300">
+                  Found <span className="font-semibold text-white">{projects.length}</span> {projects.length === 1 ? 'project' : 'projects'}
                 </p>
               </div>
 
@@ -210,10 +210,10 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
                     className={`
                       relative rounded-lg border-2 p-4 transition-all text-left w-full
                       ${isCurrentProject 
-                        ? 'border-teal-500 bg-teal-50 shadow-md cursor-default' 
-                        : 'border-gray-200 bg-white hover:border-teal-300 hover:shadow-sm cursor-pointer'
+                        ? 'border-teal-400/50 bg-teal-500/10 shadow-md cursor-default' 
+                        : 'border-white/10 bg-white/5 hover:border-teal-400/50 hover:bg-white/10 cursor-pointer'
                       }
-                      ${!isCurrentProject && 'focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2'}
+                      ${!isCurrentProject && 'focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-gray-900'}
                     `}
                   >
                     {/* Current project badge */}
@@ -228,7 +228,7 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
 
                     {/* Project info */}
                     <div className="pr-20">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                      <h4 className="text-lg font-semibold text-white mb-2">
                         {project.project_name}
                       </h4>
                       
@@ -239,7 +239,7 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
                         </span>
 
                         {/* Created date */}
-                        <div className="flex items-center gap-1 text-gray-600">
+                        <div className="flex items-center gap-1 text-gray-300">
                           <Calendar className="w-4 h-4" />
                           <span>Created {formatDate(project.created_at)}</span>
                         </div>
@@ -247,7 +247,7 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
 
                       {/* Brief description preview (first 100 chars) */}
                       {project.brief_description && (
-                        <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+                        <p className="mt-2 text-sm text-gray-400 line-clamp-2">
                           {project.brief_description.length > 100 
                             ? project.brief_description.substring(0, 100) + '...' 
                             : project.brief_description
@@ -264,8 +264,8 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
 
         {/* Footer with info */}
         {!loading && !error && projects.length > 0 && (
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            <p className="text-xs text-gray-500 text-center">
+          <div className="px-6 py-4 border-t border-white/20 bg-black/10">
+            <p className="text-xs text-gray-400 text-center">
               Click on a project to view its details
             </p>
           </div>

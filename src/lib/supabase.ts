@@ -131,6 +131,8 @@ export interface Quote {
   notes_capacity?: string;
   status: 'Pending' | 'Submitted' | 'Accepted' | 'Rejected';
   quote_token: string;
+  access_token?: string; // UUID token for supplier portal access
+  quote_document_url?: string;
   cost_breakdown?: {
     labor: number;
     materials: number;

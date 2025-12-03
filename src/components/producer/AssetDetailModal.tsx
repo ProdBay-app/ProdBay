@@ -5,8 +5,10 @@ import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import QuotesList from './QuotesList';
 import SupplierStatusTracker from './SupplierStatusTracker';
+import QuoteDetailModal from './QuoteDetailModal';
 import { getTagColor } from '@/utils/assetTags';
-import type { Asset } from '@/lib/supabase';
+import { toTitleCase } from '@/utils/textFormatters';
+import type { Asset, Quote } from '@/lib/supabase';
 
 interface AssetDetailModalProps {
   isOpen: boolean;
@@ -29,6 +31,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   const { showSuccess, showError } = useNotification();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeQuote, setActiveQuote] = useState<Quote | null>(null);
   
   // Initialize editing data directly from asset (before early return)
   const [editingData, setEditingData] = useState({
@@ -63,7 +66,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     setIsSaving(true);
     try {
       const updatedAsset = await ProducerService.updateAsset(asset.id, {
-        asset_name: editingData.asset_name,
+        asset_name: toTitleCase(editingData.asset_name),
         specifications: editingData.specifications,
         timeline: asset.timeline || '',
         status: asset.status,
@@ -124,7 +127,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   <div className="flex items-center gap-3 mb-2">
                     <Package className="w-6 h-6 text-white" />
                     <h2 className="text-2xl font-bold text-white">
-                      {asset.asset_name}
+                      {toTitleCase(asset.asset_name)}
                     </h2>
                   </div>
                 </div>
@@ -176,7 +179,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       />
                     ) : (
                       <div className="bg-black/20 rounded-lg p-4 border border-white/20">
-                        <p className="text-white font-medium">{asset.asset_name}</p>
+                        <p className="text-white font-medium">{toTitleCase(asset.asset_name)}</p>
                       </div>
                     )}
                   </div>
@@ -281,6 +284,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   onStatusUpdate={() => {
                     // Refresh data if needed
                   }}
+                  onQuoteClick={(quote) => setActiveQuote(quote)}
                 />
               </section>
 
@@ -289,6 +293,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
           <QuotesList 
             assetId={asset.id} 
             assetName={asset.asset_name}
+            onQuoteClick={(quote) => setActiveQuote(quote)}
           />
         </section>
 
@@ -363,7 +368,19 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   );
 
   // Render modal via portal to document.body to escape parent container constraints
-  return createPortal(modalContent, document.body);
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      <QuoteDetailModal
+        isOpen={activeQuote !== null}
+        quote={activeQuote}
+        onClose={() => setActiveQuote(null)}
+        onQuoteUpdate={() => {
+          // Refresh quotes if needed
+        }}
+      />
+    </>
+  );
 };
 
 export default AssetDetailModal;

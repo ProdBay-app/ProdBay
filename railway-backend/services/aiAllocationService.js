@@ -150,7 +150,8 @@ class AIAllocationService {
                 specifications: asset.specifications,
                 priority: asset.priority || 'medium',
                 estimated_cost_range: asset.estimated_cost_range || 'medium',
-                source_text: asset.source_text || ''
+                source_text: asset.source_text || '',
+                tags: asset.tags || []
               });
             }
           } catch (parseError) {
@@ -178,7 +179,8 @@ class AIAllocationService {
                   specifications: asset.specifications,
                   priority: asset.priority || 'medium',
                   estimated_cost_range: asset.estimated_cost_range || 'medium',
-                  source_text: asset.source_text || ''
+                  source_text: asset.source_text || '',
+                  tags: asset.tags || []
                 });
               }
             } catch (parseError) {
@@ -278,9 +280,42 @@ class AIAllocationService {
 
 
   /**
+   * Get the comprehensive list of available asset tags for event production
+   */
+  getAvailableAssetTags() {
+    return [
+      // AUDIO & SOUND
+      'Audio Equipment', 'Microphones', 'Sound Reinforcement', 'Audio Recording', 
+      'Wireless Systems', 'Audio Visual', 'Backstage Audio',
+      // VISUAL & DISPLAYS
+      'LED Screens', 'Projection', 'Video Production', 'Photography', 
+      'Graphics & Banners', 'Signage', 'Digital Displays', 'Exhibition Displays',
+      // LIGHTING
+      'Stage Lighting', 'Atmospheric Lighting', 'LED Lighting', 'Special Effects',
+      'Power & Distribution', 'Lighting Design',
+      // STAGING & STRUCTURES
+      'Stages', 'Rigging', 'Scenic Elements', 'Platforms & Risers', 'Tents & Structures',
+      // CATERING & FOOD SERVICE
+      'Catering', 'Beverages', 'Tableware', 'Food Stations',
+      // STAFFING & SERVICES
+      'Event Staff', 'Security', 'Hospitality', 'Technical Staff', 'Medical Services',
+      // LOGISTICS & OPERATIONS
+      'Transportation', 'Loading & Setup', 'Storage', 'Permits & Licenses', 'Waste Management',
+      // BRANDING & MARKETING
+      'Branding', 'Print Materials', 'Promotional Items', 'Social Media',
+      // DECOR & FLORAL
+      'Floral', 'Decor', 'Furniture', 'Linens & Draping',
+      // DIGITAL & TECHNOLOGY
+      'Digital Assets', 'Technology Infrastructure'
+    ];
+  }
+
+  /**
    * Build prompt for asset analysis with industry-specific categories and examples
    */
   buildAssetAnalysisPrompt(briefDescription, projectContext) {
+    const availableTags = this.getAvailableAssetTags();
+    const tagsList = availableTags.map((tag, index) => `${index + 1}. ${tag}`).join('\n');
     return `
 You are a senior event production manager with 15+ years of experience specializing in:
 
@@ -323,6 +358,20 @@ Additional Context:
 
 CRITICAL REQUIREMENT: For each asset you identify, you MUST extract the exact text snippet from the brief that indicates this asset is needed. This will be used to create interactive links in the UI.
 
+AVAILABLE ASSET TAGS:
+You must assign 1-4 relevant tags to each asset from the following comprehensive list. Tags must match EXACTLY (case-sensitive):
+
+${tagsList}
+
+TAG SELECTION RULES:
+- Select 1-4 tags per asset that best categorize its purpose and function
+- Tags must match EXACTLY the names listed above (case-sensitive)
+- Consider the primary domain (Audio, Visual, Lighting, Staging, Catering, etc.)
+- Choose tags that help with organization, filtering, and categorization
+- Example: For "Main Stage Audio System" use tags: ["Audio Equipment", "Sound Reinforcement"]
+- Example: For "LED Video Wall" use tags: ["LED Screens", "Video Production"]
+- Example: For "Catering Service" use tags: ["Catering", "Event Staff"]
+
 Respond with ONLY a JSON object in this exact format (no markdown, no code blocks):
 {
   "assets": [
@@ -332,7 +381,7 @@ Respond with ONLY a JSON object in this exact format (no markdown, no code block
       "priority": "high|medium|low",
       "estimated_cost_range": "low|medium|high",
       "source_text": "The exact sentence or phrase from the brief that mentions this asset requirement",
-      "category": "staging|av|catering|marketing|logistics|security|transport|entertainment|floral|photography"
+      "tags": ["TagName1", "TagName2"]
     }
   ],
   "reasoning": "Explanation of why these assets were identified based on event type, scale, and venue requirements",
@@ -347,6 +396,8 @@ IMPORTANT GUIDELINES:
 - Be specific about quantities, dimensions, and technical requirements
 - Consider the event type and scale when identifying assets
 - Include both explicitly mentioned and industry-standard requirements
+- MANDATORY: Every asset MUST have at least 1 tag, and up to 4 tags maximum
+- Tag names must match EXACTLY from the available tags list (case-sensitive, no typos)
 
 FOCUS ON IDENTIFYING:
 - Production equipment (audio, lighting, staging, AV systems)
@@ -374,7 +425,8 @@ Be specific and practical in your asset identification, considering the event ty
       asset_name: name,
       specifications: `Requirements for ${name.toLowerCase()} based on project brief`,
       priority: 'medium',
-      estimated_cost_range: 'medium'
+      estimated_cost_range: 'medium',
+      tags: [] // Empty tags for fallback assets
     }));
   }
 
