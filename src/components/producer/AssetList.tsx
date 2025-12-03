@@ -59,8 +59,8 @@ const AssetList: React.FC<AssetListProps> = ({
   // Search, filter, and sort state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'name' | 'date' | 'quantity'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'quantity'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   // showFilters is now passed as a prop
 
   // Debug: Log sorting changes
@@ -435,12 +435,12 @@ const AssetList: React.FC<AssetListProps> = ({
           </div>
 
           {/* Clear All Filters */}
-          {(selectedTags.length > 0 || searchTerm || sortBy !== 'date' || sortOrder !== 'desc') && (
+          {(selectedTags.length > 0 || searchTerm || sortBy !== 'name' || sortOrder !== 'asc') && (
             <div className="flex justify-between">
               <button
                 onClick={() => {
-                  setSortBy('date');
-                  setSortOrder('desc');
+                  setSortBy('name');
+                  setSortOrder('asc');
                 }}
                 className="text-sm text-gray-300 hover:text-gray-200 underline transition-colors"
               >
