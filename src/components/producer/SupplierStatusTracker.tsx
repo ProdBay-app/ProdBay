@@ -194,7 +194,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
           return (
             <div key={status} className="flex flex-col space-y-3 h-full">
               {/* Status Header */}
-              <div className={`${statusInfo.bgColor} ${statusInfo.borderColor} border rounded-lg p-3 h-24 flex flex-col justify-center`}>
+              <div className={`${statusInfo.bgColor} ${statusInfo.borderColor} border rounded-lg p-3 h-24 flex flex-col`}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className={statusInfo.color}>
                     {statusInfo.icon}
