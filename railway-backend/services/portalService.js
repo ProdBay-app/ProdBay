@@ -317,6 +317,73 @@ class PortalService {
   }
 
   /**
+   * Submit quote via portal (public endpoint using access_token)
+   * @param {string} token - Access token
+   * @param {number} cost - Quote price
+   * @param {string} notes - Optional notes/capacity details
+   * @param {string} fileUrl - Optional file URL (for future file upload support)
+   * @returns {Promise<Object>} Updated quote object
+   */
+  static async submitQuoteViaPortal(token, cost, notes = '', fileUrl = null) {
+    try {
+      // Validate inputs
+      if (!token || typeof token !== 'string') {
+        throw new Error('Access token is required');
+      }
+
+      if (cost === undefined || cost === null || typeof cost !== 'number') {
+        throw new Error('Cost is required and must be a number');
+      }
+
+      if (cost < 0) {
+        throw new Error('Cost cannot be negative');
+      }
+
+      if (notes && typeof notes !== 'string') {
+        throw new Error('Notes must be a string');
+      }
+
+      // Validate token and get quote
+      const quote = await this.validateAccessToken(token);
+
+      // Check if quote is already submitted
+      if (quote.status === 'Submitted' && quote.cost > 0) {
+        throw new Error('Quote has already been submitted');
+      }
+
+      // Prepare update data
+      const updateData = {
+        cost: cost,
+        notes_capacity: notes || '',
+        status: 'Submitted',
+        updated_at: new Date().toISOString()
+      };
+
+      // Add file URL if provided (for future file upload support)
+      if (fileUrl) {
+        // TODO: Add quote_document_url column to quotes table if needed
+        // updateData.quote_document_url = fileUrl;
+      }
+
+      // Update quote using Service Role (bypasses RLS)
+      const { data: updatedQuote, error: updateError } = await supabase
+        .from('quotes')
+        .update(updateData)
+        .eq('id', quote.id)
+        .select()
+        .single();
+
+      if (updateError || !updatedQuote) {
+        throw new Error('Failed to update quote');
+      }
+
+      return updatedQuote;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Get messages for a specific quote (for producer chat view)
    * @param {string} quoteId - Quote ID
    * @returns {Promise<Object>} Quote data with messages, asset, and supplier info

@@ -9,7 +9,8 @@ import {
   Upload,
   AlertCircle,
   Clock,
-  User
+  User,
+  CheckCircle
 } from 'lucide-react';
 import { PortalService, type PortalSession, type Message } from '@/services/portalService';
 import { useNotification } from '@/hooks/useNotification';
@@ -42,6 +43,8 @@ const QuotePortal: React.FC = () => {
   const [quotePrice, setQuotePrice] = useState<number>(0);
   const [quoteCurrency, setQuoteCurrency] = useState<string>('USD');
   const [quoteNotes, setQuoteNotes] = useState<string>('');
+  const [submittingQuote, setSubmittingQuote] = useState<boolean>(false);
+  const [quoteSubmitted, setQuoteSubmitted] = useState<boolean>(false);
 
   // Polling interval ref
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -170,10 +173,62 @@ const QuotePortal: React.FC = () => {
     });
   };
 
+  // Handle quote submission
+  const handleSubmitQuote = useCallback(async () => {
+    if (!token || !session) return;
+
+    // Validate inputs
+    if (quotePrice <= 0) {
+      showError('Please enter a valid price greater than 0');
+      return;
+    }
+
+    setSubmittingQuote(true);
+
+    try {
+      const response = await PortalService.submitQuote(
+        token,
+        quotePrice,
+        quoteNotes
+      );
+
+      if (!response.success || !response.data) {
+        showError(response.error?.message || 'Failed to submit quote');
+        return;
+      }
+
+      // Update session with new quote data
+      setSession(prev => prev ? {
+        ...prev,
+        quote: response.data!
+      } : null);
+
+      setQuoteSubmitted(true);
+      showSuccess('Quote submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting quote:', error);
+      showError('Failed to submit quote. Please try again.');
+    } finally {
+      setSubmittingQuote(false);
+    }
+  }, [token, session, quotePrice, quoteNotes, showSuccess, showError]);
+
   // Load session on mount
   useEffect(() => {
     loadSession();
   }, [loadSession]);
+
+  // Check if quote is already submitted when session loads
+  useEffect(() => {
+    if (session?.quote) {
+      const isSubmitted = session.quote.status === 'Submitted' && session.quote.cost > 0;
+      setQuoteSubmitted(isSubmitted);
+      if (isSubmitted) {
+        setQuotePrice(session.quote.cost);
+        setQuoteNotes(session.quote.notes_capacity || '');
+      }
+    }
+  }, [session]);
 
   // Set up polling (every 8 seconds)
   useEffect(() => {
@@ -368,81 +423,120 @@ const QuotePortal: React.FC = () => {
 
       {/* Quote Submission Section */}
       <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 sticky bottom-0">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Submit Your Quote</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Price Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <DollarSign className="h-4 w-4 inline mr-1" />
-              Price
-            </label>
-            <div className="flex space-x-2">
-              <select
-                value={quoteCurrency}
-                onChange={(e) => setQuoteCurrency(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-                <option value="CAD">CAD</option>
-              </select>
-              <input
-                type="number"
-                value={quotePrice || ''}
-                onChange={(e) => setQuotePrice(parseFloat(e.target.value) || 0)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+        {quoteSubmitted ? (
+          // Success State
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Quote Submitted Successfully!</h2>
+            <p className="text-gray-600 mb-4">
+              Thank you for your quote. The producer will review your submission and contact you if your quote is selected.
+            </p>
+            <div className="bg-gray-50 rounded-lg p-4 text-left">
+              <h3 className="font-semibold text-gray-900 mb-2">Your Quote Summary:</h3>
+              <div className="space-y-2 text-sm">
+                <p><span className="font-medium">Price:</span> {quoteCurrency} {quotePrice.toFixed(2)}</p>
+                <p><span className="font-medium">Asset:</span> {asset.asset_name}</p>
+                {quoteNotes && (
+                  <p><span className="font-medium">Notes:</span> <span className="whitespace-pre-wrap">{quoteNotes}</span></p>
+                )}
+              </div>
             </div>
           </div>
+        ) : (
+          // Submission Form
+          <>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Submit Your Quote</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Price Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <DollarSign className="h-4 w-4 inline mr-1" />
+                  Price *
+                </label>
+                <div className="flex space-x-2">
+                  <select
+                    value={quoteCurrency}
+                    onChange={(e) => setQuoteCurrency(e.target.value)}
+                    disabled={submittingQuote}
+                    className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="CAD">CAD</option>
+                  </select>
+                  <input
+                    type="number"
+                    value={quotePrice || ''}
+                    onChange={(e) => setQuotePrice(parseFloat(e.target.value) || 0)}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    disabled={submittingQuote}
+                    required
+                    className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  />
+                </div>
+              </div>
 
-          {/* File Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Upload className="h-4 w-4 inline mr-1" />
-              Attach Quote Document (Optional)
-            </label>
-            <button
-              type="button"
-              className="w-full border-2 border-dashed border-gray-300 rounded-lg px-4 py-3 text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center space-x-2"
-            >
-              <Upload className="h-5 w-5" />
-              <span>Choose File</span>
-            </button>
-          </div>
-        </div>
+              {/* File Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Upload className="h-4 w-4 inline mr-1" />
+                  Attach Quote Document (Optional)
+                </label>
+                <button
+                  type="button"
+                  disabled={submittingQuote}
+                  className="w-full border-2 border-dashed border-gray-300 rounded-lg px-4 py-3 text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Upload className="h-5 w-5" />
+                  <span>Choose File</span>
+                </button>
+                <p className="text-xs text-gray-500 mt-1">File upload coming soon</p>
+              </div>
+            </div>
 
-        {/* Notes */}
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Additional Notes (Optional)
-          </label>
-          <textarea
-            value={quoteNotes}
-            onChange={(e) => setQuoteNotes(e.target.value)}
-            placeholder="Add any additional information about your quote..."
-            rows={3}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+            {/* Notes */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Additional Notes (Optional)
+              </label>
+              <textarea
+                value={quoteNotes}
+                onChange={(e) => setQuoteNotes(e.target.value)}
+                placeholder="Add any additional information about your quote..."
+                rows={3}
+                disabled={submittingQuote}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
 
-        {/* Submit Button */}
-        <div className="mt-6">
-          <button
-            type="button"
-            className="w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-            onClick={() => {
-              // Placeholder - will be wired up in future PR
-              showSuccess('Quote submission will be available soon');
-            }}
-          >
-            <Package className="h-5 w-5" />
-            <span>Submit Quote</span>
-          </button>
-        </div>
+            {/* Submit Button */}
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={handleSubmitQuote}
+                disabled={submittingQuote || quotePrice <= 0}
+                className="w-full bg-blue-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {submittingQuote ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Package className="h-5 w-5" />
+                    <span>Submit Quote</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

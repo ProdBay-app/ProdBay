@@ -89,6 +89,17 @@ export interface SendMessageResponse {
   };
 }
 
+export interface SubmitQuoteResponse {
+  success: boolean;
+  data?: Quote;
+  message?: string;
+  error?: {
+    code: string;
+    message: string;
+    details?: string;
+  };
+}
+
 export class PortalService {
   /**
    * Get portal session data (quote, asset, project, supplier, messages)
@@ -191,6 +202,91 @@ export class PortalService {
       });
 
       const data: SendMessageResponse = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: {
+            code: data.error?.code || 'API_ERROR',
+            message: data.error?.message || `HTTP ${response.status}: ${response.statusText}`,
+            details: data.error?.details
+          }
+        };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Portal service error:', error);
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: error instanceof Error ? error.message : 'Unknown error occurred',
+          details: error instanceof Error ? error.stack : undefined
+        }
+      };
+    }
+  }
+
+  /**
+   * Submit quote via portal
+   * @param token - Access token (UUID) from URL
+   * @param cost - Quote price
+   * @param notes - Optional notes/capacity details
+   * @param fileUrl - Optional file URL (for future file upload support)
+   * @returns Promise with updated quote data
+   */
+  static async submitQuote(
+    token: string,
+    cost: number,
+    notes: string = '',
+    fileUrl?: string
+  ): Promise<SubmitQuoteResponse> {
+    if (!RAILWAY_API_URL) {
+      return {
+        success: false,
+        error: {
+          code: 'CONFIG_ERROR',
+          message: 'Railway API URL not configured. Please set VITE_RAILWAY_API_URL environment variable.'
+        }
+      };
+    }
+
+    if (!token || cost === undefined || cost === null) {
+      return {
+        success: false,
+        error: {
+          code: 'MISSING_PARAMETERS',
+          message: 'Token and cost are required'
+        }
+      };
+    }
+
+    if (typeof cost !== 'number' || cost < 0) {
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_COST',
+          message: 'Cost must be a non-negative number'
+        }
+      };
+    }
+
+    try {
+      const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/portal/submit-quote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          cost,
+          notes: notes || '',
+          fileUrl: fileUrl || null
+        })
+      });
+
+      const data: SubmitQuoteResponse = await response.json();
 
       if (!response.ok) {
         return {
