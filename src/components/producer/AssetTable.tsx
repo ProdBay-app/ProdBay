@@ -52,35 +52,32 @@ const AssetTable: React.FC<AssetTableProps> = ({
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
 
-  // Format tags display (show first 2, with "+X more" if needed)
+  // Format tags display (show first tag only, with counter badge if more exist)
   const formatTags = (tags: string[] | undefined | null): React.ReactNode => {
     if (!tags || tags.length === 0) {
       return <span className="text-gray-400 text-sm">No tags</span>;
     }
 
-    const displayTags = tags.slice(0, 2);
-    const remainingCount = tags.length - 2;
+    const firstTag = tags[0];
+    const remainingCount = tags.length - 1;
+    const tagColor = getTagColor(firstTag);
 
     return (
-      <div className="flex flex-wrap gap-1 items-center">
-        {displayTags.map((tag, index) => {
-          const tagColor = getTagColor(tag);
-          return (
-            <span
-              key={index}
-              className="text-xs font-medium px-2 py-0.5 rounded-full backdrop-blur-sm border"
-              style={{
-                backgroundColor: hexToRgba(tagColor, 0.25),
-                color: '#FFFFFF',
-                borderColor: hexToRgba(tagColor, 0.5)
-              }}
-            >
-              {tag}
-            </span>
-          );
-        })}
+      <div className="flex items-center gap-1">
+        <span
+          className="text-xs font-medium px-2 py-0.5 rounded-full backdrop-blur-sm border whitespace-nowrap"
+          style={{
+            backgroundColor: hexToRgba(tagColor, 0.25),
+            color: '#FFFFFF',
+            borderColor: hexToRgba(tagColor, 0.5)
+          }}
+        >
+          {firstTag}
+        </span>
         {remainingCount > 0 && (
-          <span className="text-xs text-gray-400">+{remainingCount} more</span>
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-500/30 text-gray-300 border border-gray-400/30 whitespace-nowrap">
+            +{remainingCount}
+          </span>
         )}
       </div>
     );
@@ -139,8 +136,8 @@ const AssetTable: React.FC<AssetTableProps> = ({
       <table className="w-full border-collapse">
         {/* Table Header */}
         <thead className="sticky top-0 z-20">
-          <tr className="bg-[#0A0A0A] border-b border-white/20 backdrop-blur-xl">
-            <th className="px-4 py-3 text-left text-sm font-semibold text-white sticky left-0 bg-[#0A0A0A] backdrop-blur-xl z-30">
+          <tr className="bg-black/60 backdrop-blur-xl border-b border-white/20">
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white sticky left-0 bg-black/60 backdrop-blur-xl z-30">
               Name
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-white">
@@ -175,7 +172,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
               <tr
                 key={asset.id}
                 className={`
-                  bg-white/5 border-b border-white/10 
+                  h-[72px] bg-white/5 border-b border-white/10 
                   hover:bg-white/10 hover:border-purple-400/30 
                   transition-all duration-200 cursor-pointer
                   ${isHighlighted ? 'ring-2 ring-purple-400/50 bg-white/15' : ''}
@@ -185,12 +182,14 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 onMouseLeave={() => onAssetHover && onAssetHover(null)}
               >
                 {/* Name */}
-                <td className="px-4 py-3 text-gray-200 sticky left-0 bg-white/5 backdrop-blur-md z-10">
-                  <span className="font-medium capitalize">{asset.asset_name}</span>
+                <td className="px-4 py-3 text-gray-200 sticky left-0 bg-white/5 backdrop-blur-md z-10 whitespace-nowrap">
+                  <span className="font-medium capitalize block max-w-[250px] overflow-hidden text-ellipsis">
+                    {asset.asset_name}
+                  </span>
                 </td>
 
                 {/* Quantity */}
-                <td className="px-4 py-3 text-gray-200">
+                <td className="px-4 py-3 text-gray-200 whitespace-nowrap">
                   {asset.quantity !== null && asset.quantity !== undefined ? (
                     <span className="text-sm">{asset.quantity}</span>
                   ) : (
@@ -199,32 +198,32 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 </td>
 
                 {/* Tags */}
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   {formatTags(asset.tags)}
                 </td>
 
                 {/* Supplier Status */}
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   {getStatusBadge(asset.status)}
                 </td>
 
                 {/* # Quote Requests */}
-                <td className="px-4 py-3 text-gray-200">
+                <td className="px-4 py-3 text-gray-200 whitespace-nowrap">
                   <span className="text-sm">{asset.quote_count ?? 0}</span>
                 </td>
 
                 {/* # Quotes Received */}
-                <td className="px-4 py-3 text-gray-200">
+                <td className="px-4 py-3 text-gray-200 whitespace-nowrap">
                   <span className="text-sm">{asset.received_quote_count ?? 0}</span>
                 </td>
 
                 {/* Last Updated */}
-                <td className="px-4 py-3 text-gray-400">
+                <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
                   <span className="text-sm">{formatLastUpdated(asset.updated_at)}</span>
                 </td>
 
                 {/* Actions */}
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     {/* Edit Button */}
                     <button
