@@ -135,7 +135,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="h-[calc(100vh-14rem)] overflow-auto rounded-lg border border-white/20">
       <table className="w-full border-collapse">
         {/* Table Header */}
         <thead className="sticky top-0 z-20">
