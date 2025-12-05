@@ -140,94 +140,50 @@ const AssetTable: React.FC<AssetTableProps> = ({
   }
 
   return (
-    <div 
-      className="h-[calc(100vh-14rem)] overflow-auto rounded-lg border border-white/20"
-      style={{ contain: 'layout style paint' }}
-    >
+    <div className="h-[calc(100vh-14rem)] overflow-auto rounded-lg border border-white/20">
       <table className="w-full border-collapse">
         {/* Table Header */}
         <thead 
           className="sticky top-0 z-20"
           style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(40px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(40px) saturate(180%)',
             position: 'sticky',
             top: 0,
-            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+            zIndex: 20
           }}
         >
-          <tr className="border-b border-white/20">
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-white"
-              style={{
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)'
-              }}
-            >
+          <tr 
+            className="border-b border-white/20"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(80px)',
+              WebkitBackdropFilter: 'blur(80px)',
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Name
             </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-white"
-              style={{
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)'
-              }}
-            >
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Quantity
             </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-white"
-              style={{
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)'
-              }}
-            >
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Tags
             </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-white"
-              style={{
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)'
-              }}
-            >
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Supplier Status
             </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-white"
-              style={{
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)'
-              }}
-            >
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               # Quote Requests
             </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-white"
-              style={{
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)'
-              }}
-            >
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               # Quotes Received
             </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-white"
-              style={{
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)'
-              }}
-            >
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Last Updated
             </th>
-            <th 
-              className="px-4 py-3 text-left text-sm font-semibold text-white"
-              style={{
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)'
-              }}
-            >
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Actions
             </th>
           </tr>
