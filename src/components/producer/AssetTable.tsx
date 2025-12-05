@@ -22,6 +22,9 @@ interface AssetTableProps {
  * - Bi-directional hover linking with project brief
  * - Compact tag display with color coding
  * - Status badges with color coding
+ * 
+ * NOTE: Sticky positioning for the Name column has been removed.
+ * This will be addressed in a future update.
  */
 const AssetTable: React.FC<AssetTableProps> = ({
   assets,
@@ -142,7 +145,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
         {/* Table Header */}
         <thead className="sticky top-0 z-20">
           <tr className="bg-[#0A0A0A]/75 backdrop-blur-[80px] border-b border-white/20">
-            <th className="px-4 py-3 text-left text-sm font-semibold text-white sticky left-0 bg-[#0A0A0A]/75 backdrop-blur-[80px] z-30">
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Name
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-white">
@@ -187,7 +190,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 onMouseLeave={() => onAssetHover && onAssetHover(null)}
               >
                 {/* Name */}
-                <td className={`px-4 py-3 text-gray-200 sticky left-0 backdrop-blur-[80px] z-10 whitespace-nowrap ${isHighlighted ? 'bg-white/15' : 'bg-white/5'}`}>
+                <td className={`px-4 py-3 text-gray-200 whitespace-nowrap ${isHighlighted ? 'bg-white/15' : 'bg-white/5'}`}>
                   <span className="font-medium capitalize block max-w-[250px] overflow-hidden text-ellipsis">
                     {asset.asset_name}
                   </span>
