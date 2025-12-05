@@ -38,6 +38,11 @@ const AssetTable: React.FC<AssetTableProps> = ({
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
     
+    // Handle future dates (clock skew or timezone issues)
+    if (diffDays < 0) {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
@@ -182,7 +187,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 onMouseLeave={() => onAssetHover && onAssetHover(null)}
               >
                 {/* Name */}
-                <td className="px-4 py-3 text-gray-200 sticky left-0 bg-white/5 backdrop-blur-[80px] z-10 whitespace-nowrap">
+                <td className={`px-4 py-3 text-gray-200 sticky left-0 backdrop-blur-[80px] z-10 whitespace-nowrap ${isHighlighted ? 'bg-white/15' : 'bg-white/5'}`}>
                   <span className="font-medium capitalize block max-w-[250px] overflow-hidden text-ellipsis">
                     {asset.asset_name}
                   </span>
