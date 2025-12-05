@@ -143,7 +143,14 @@ const AssetTable: React.FC<AssetTableProps> = ({
     <div className="h-[calc(100vh-14rem)] overflow-auto rounded-lg border border-white/20">
       <table className="w-full border-collapse">
         {/* Table Header */}
-        <thead className="sticky top-0 z-20 bg-black/60 backdrop-blur-2xl shadow-sm">
+        <thead 
+          className="sticky top-0 z-20 shadow-sm"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)'
+          }}
+        >
           <tr className="border-b border-white/20">
             <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Name
