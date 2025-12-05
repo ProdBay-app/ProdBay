@@ -140,28 +140,34 @@ const AssetTable: React.FC<AssetTableProps> = ({
   }
 
   return (
-    <div className="h-[calc(100vh-14rem)] overflow-auto rounded-lg border border-white/20">
+    <div className="h-[calc(100vh-14rem)] overflow-auto rounded-lg border border-white/20 relative">
       <table className="w-full border-collapse">
-        {/* Table Header */}
+        {/* Blur overlay - positioned to cover header area */}
         <thead 
-          className="sticky top-0 z-20"
+          className="sticky top-0 z-10 pointer-events-none"
           style={{
             position: 'sticky',
-            top: 0,
-            zIndex: 20
+            top: 0
           }}
         >
-          <tr 
-            className="border-b border-white/20"
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.75)',
-              backdropFilter: 'blur(80px)',
-              WebkitBackdropFilter: 'blur(80px)',
-              transform: 'translateZ(0)',
-              willChange: 'transform',
-              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
-            }}
-          >
+          <tr>
+            <th
+              colSpan={8}
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                backdropFilter: 'blur(80px)',
+                WebkitBackdropFilter: 'blur(80px)',
+                height: '57px',
+                padding: 0,
+                margin: 0,
+                border: 'none'
+              }}
+            />
+          </tr>
+        </thead>
+        {/* Table Header with text */}
+        <thead className="sticky top-0 z-20">
+          <tr className="border-b border-white/20">
             <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Name
             </th>
