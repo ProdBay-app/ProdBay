@@ -136,8 +136,8 @@ const AssetTable: React.FC<AssetTableProps> = ({
       <table className="w-full border-collapse">
         {/* Table Header */}
         <thead className="sticky top-0 z-20">
-          <tr className="bg-[#0A0A0A]/75 backdrop-blur-[50px] border-b border-white/20">
-            <th className="px-4 py-3 text-left text-sm font-semibold text-white sticky left-0 bg-[#0A0A0A]/75 backdrop-blur-[50px] z-30">
+          <tr className="bg-[#0A0A0A]/90 backdrop-blur-[80px] border-b border-white/20">
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white sticky left-0 bg-[#0A0A0A]/90 backdrop-blur-[80px] z-30">
               Name
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-white">
