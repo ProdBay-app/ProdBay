@@ -136,8 +136,8 @@ const AssetTable: React.FC<AssetTableProps> = ({
       <table className="w-full border-collapse">
         {/* Table Header */}
         <thead className="sticky top-0 z-20">
-          <tr className="bg-black/60 backdrop-blur-xl border-b border-white/20">
-            <th className="px-4 py-3 text-left text-sm font-semibold text-white sticky left-0 bg-black/60 backdrop-blur-xl z-30">
+          <tr className="bg-black/60 backdrop-blur-[50px] border-b border-white/20">
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white sticky left-0 bg-black/60 backdrop-blur-[50px] z-30">
               Name
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-white">
@@ -182,7 +182,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 onMouseLeave={() => onAssetHover && onAssetHover(null)}
               >
                 {/* Name */}
-                <td className="px-4 py-3 text-gray-200 sticky left-0 bg-white/5 backdrop-blur-md z-10 whitespace-nowrap">
+                <td className="px-4 py-3 text-gray-200 sticky left-0 bg-black/40 backdrop-blur-md z-10 whitespace-nowrap">
                   <span className="font-medium capitalize block max-w-[250px] overflow-hidden text-ellipsis">
                     {asset.asset_name}
                   </span>
