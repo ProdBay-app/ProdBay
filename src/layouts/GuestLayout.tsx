@@ -17,7 +17,7 @@ const GuestLayout: React.FC = () => {
         <DarkVeil
           speed={0.04}
           hueShift={0}
-          noiseIntensity={0.03}
+          noiseIntensity={0}
           scanlineFrequency={1.8}
           scanlineIntensity={0.16}
           warpAmount={5}

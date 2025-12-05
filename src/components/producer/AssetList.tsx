@@ -3,6 +3,7 @@ import { Package, AlertCircle, Search, ArrowUpDown, X } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetCard from './AssetCard';
+import AssetTable from './AssetTable';
 import AssetFormModal from './AssetFormModal';
 import AssetDetailModal from './AssetDetailModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
@@ -461,21 +462,15 @@ const AssetList: React.FC<AssetListProps> = ({
         </div>
       )}
 
-      {/* Asset Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredAndSortedAssets.map((asset) => (
-                    <AssetCard 
-                      key={asset.id} 
-                      asset={asset} 
-                      onClick={handleViewAsset}
-                      onEdit={handleOpenEditModal}
-                      onDelete={handleOpenDeleteModal}
-                      isHighlighted={hoveredAssetId === asset.id}
-                      onMouseEnter={() => onAssetHover && onAssetHover(asset.id)}
-                      onMouseLeave={() => onAssetHover && onAssetHover(null)}
-                    />
-                  ))}
-      </div>
+      {/* Asset Table View */}
+      <AssetTable
+        assets={filteredAndSortedAssets}
+        onEdit={handleOpenEditModal}
+        onDelete={handleOpenDeleteModal}
+        onView={handleViewAsset}
+        hoveredAssetId={hoveredAssetId}
+        onAssetHover={onAssetHover}
+      />
 
       {/* Add Asset Modal */}
       <AssetFormModal
