@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, FileText, Clock, Package, Hash, Tag, Edit2, Save } from 'lucide-react';
+import { X, FileText, Clock, Package, Hash, Tag, Check, Loader2 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import QuotesList from './QuotesList';
 import SupplierStatusTracker from './SupplierStatusTracker';
 import QuoteDetailModal from './QuoteDetailModal';
@@ -24,14 +25,17 @@ interface AssetDetailModalProps {
  * - Large, focused modal for deep dive into asset information
  * - Displays all asset fields in an organized, readable format
  * - Responsive layout (full-screen on mobile, large centered on desktop)
- * - Edit mode for updating asset details (name, specifications, quantity, tags)
+ * - Autosave functionality: fields are always editable and save automatically
  * - Supplier status tracking and quotes management
  */
 const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onClose, onAssetUpdate }) => {
   const { showSuccess, showError } = useNotification();
-  const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [activeQuote, setActiveQuote] = useState<Quote | null>(null);
+  
+  // Track if this is the initial load (to prevent autosave on mount)
+  const isInitialMount = useRef(true);
   
   // Initialize editing data directly from asset (before early return)
   const [editingData, setEditingData] = useState({
@@ -41,17 +45,20 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     tags: asset?.tags || []
   });
 
-  // Sync editingData when asset changes
+  // Sync editingData when asset ID changes (switching to a different asset)
+  // This won't trigger on saves because the asset ID stays the same
   useEffect(() => {
-    if (asset) {
+    if (asset && !isSaving && saveStatus !== 'saving') {
       setEditingData({
         asset_name: asset.asset_name || '',
         specifications: asset.specifications || '',
         quantity: asset.quantity,
         tags: asset.tags || []
       });
+      setSaveStatus('idle');
+      isInitialMount.current = true;
     }
-  }, [asset]);
+  }, [asset?.id]); // Only sync when asset ID changes (switching assets), not on saves
 
   // Debug logging
   console.log('AssetDetailModal render:', { isOpen, asset: asset?.id });
@@ -59,11 +66,16 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   // Don't render if modal is closed or no asset is selected
   if (!isOpen || !asset) return null;
 
-  // Handle field editing
-  const handleFieldEdit = async () => {
-    if (!asset) return;
+  // Save function that will be debounced
+  const saveAsset = async () => {
+    if (!asset || isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
 
     setIsSaving(true);
+    setSaveStatus('saving');
+    
     try {
       const updatedAsset = await ProducerService.updateAsset(asset.id, {
         asset_name: toTitleCase(editingData.asset_name),
@@ -76,15 +88,43 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
       });
 
       onAssetUpdate(updatedAsset);
-      setIsEditing(false);
-      showSuccess('Asset updated successfully');
+      setSaveStatus('saved');
+      
+      // Reset saved status after 2 seconds
+      setTimeout(() => {
+        setSaveStatus('idle');
+      }, 2000);
     } catch (err) {
       console.error('Error updating asset:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to update asset';
+      setSaveStatus('error');
       showError(errorMessage);
+      
+      // Reset error status after 3 seconds
+      setTimeout(() => {
+        setSaveStatus('idle');
+      }, 3000);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Debounced save function (800ms delay)
+  const debouncedSave = useDebouncedCallback(saveAsset, 800);
+
+  // Immediate save on blur
+  const handleBlur = () => {
+    if (!isInitialMount.current) {
+      saveAsset();
+    }
+  };
+
+  // Handle field changes with debounced autosave
+  const handleFieldChange = (field: keyof typeof editingData, value: string | number | undefined | string[]) => {
+    setEditingData(prev => ({ ...prev, [field]: value }));
+    isInitialMount.current = false;
+    // Trigger debounced save
+    debouncedSave();
   };
 
   // Format dates for display
@@ -132,16 +172,26 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Save Status Indicator */}
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm font-medium"
-                    title={isEditing ? "Cancel editing" : "Edit asset details"}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                    {isEditing ? 'Cancel' : 'Edit'}
-                  </button>
+                  {saveStatus === 'saving' && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 text-white rounded-lg text-sm">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving...</span>
+                    </div>
+                  )}
+                  {saveStatus === 'saved' && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/20 text-green-200 rounded-lg text-sm">
+                      <Check className="w-4 h-4" />
+                      <span>Saved</span>
+                    </div>
+                  )}
+                  {saveStatus === 'error' && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 text-red-200 rounded-lg text-sm">
+                      <X className="w-4 h-4" />
+                      <span>Error</span>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Close Button */}
@@ -170,18 +220,15 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     <label className="block text-sm font-semibold text-gray-200 mb-2">
                       Asset Name
                     </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editingData.asset_name}
-                        onChange={(e) => setEditingData(prev => ({ ...prev, asset_name: e.target.value }))}
-                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <div className="bg-black/20 rounded-lg p-4 border border-white/20">
-                        <p className="text-white font-medium">{toTitleCase(asset.asset_name)}</p>
-                      </div>
-                    )}
+                    <input
+                      type="text"
+                      value={editingData.asset_name}
+                      onChange={(e) => handleFieldChange('asset_name', e.target.value)}
+                      onBlur={handleBlur}
+                      disabled={isSaving}
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="Enter asset name"
+                    />
                   </div>
 
                   {/* Specifications */}
@@ -189,25 +236,15 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     <label className="block text-sm font-semibold text-gray-200 mb-2">
                       Specifications
                     </label>
-                    {isEditing ? (
-                      <textarea
-                        value={editingData.specifications}
-                        onChange={(e) => setEditingData(prev => ({ ...prev, specifications: e.target.value }))}
-                        rows={4}
-                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Enter asset specifications"
-                      />
-                    ) : (
-                      <div className="bg-black/20 rounded-lg p-4 border border-white/20">
-                        {asset.specifications ? (
-                          <p className="text-white whitespace-pre-wrap leading-relaxed">
-                            {asset.specifications}
-                          </p>
-                        ) : (
-                          <p className="text-gray-300 italic">No specifications provided</p>
-                        )}
-                      </div>
-                    )}
+                    <textarea
+                      value={editingData.specifications}
+                      onChange={(e) => handleFieldChange('specifications', e.target.value)}
+                      onBlur={handleBlur}
+                      disabled={isSaving}
+                      rows={4}
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-y disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="Enter asset specifications"
+                    />
                   </div>
 
                   {/* Quantity */}
@@ -216,25 +253,16 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       <Hash className="w-4 h-4 inline mr-1.5 text-purple-300" />
                       Quantity
                     </label>
-                    {isEditing ? (
-                      <input
-                        type="number"
-                        min="1"
-                        value={editingData.quantity || ''}
-                        onChange={(e) => setEditingData(prev => ({ 
-                          ...prev, 
-                          quantity: e.target.value ? parseInt(e.target.value, 10) : undefined 
-                        }))}
-                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Optional"
-                      />
-                    ) : (
-                      <div className="bg-black/20 rounded-lg p-3 border border-white/20">
-                        <p className="text-white">
-                          {asset.quantity ? asset.quantity.toLocaleString() : 'Not specified'}
-                        </p>
-                      </div>
-                    )}
+                    <input
+                      type="number"
+                      min="1"
+                      value={editingData.quantity || ''}
+                      onChange={(e) => handleFieldChange('quantity', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                      onBlur={handleBlur}
+                      disabled={isSaving}
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="Optional"
+                    />
                   </div>
 
                   {/* Status - Interactive Dropdown */}
@@ -262,20 +290,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   </div>
                 )}
               </section>
-
-              {/* Save Button for Editing */}
-              {isEditing && (
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleFieldEdit}
-                    disabled={isSaving}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50"
-                  >
-                    <Save className="w-4 h-4" />
-                    {isSaving ? 'Saving...' : 'Save Changes'}
-                  </button>
-                </div>
-              )}
 
               {/* Supplier Status Tracking Section */}
               <section>
