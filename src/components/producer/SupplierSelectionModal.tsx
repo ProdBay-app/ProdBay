@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Package, Search, Filter, CheckSquare, Square, X } from 'lucide-react';
+import { Package, Search, Filter, CheckSquare, Square, X, Star } from 'lucide-react';
 import type { Asset, SuggestedSupplier } from '@/lib/supabase';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { getSupplierRelevanceMetadata } from '@/utils/supplierRelevance';
 
 interface SupplierSelectionModalProps {
   isOpen: boolean;
@@ -68,6 +69,23 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
 
     return filtered;
   }, [suggestedSuppliers, searchTerm, selectedCategories]);
+
+  // Calculate relevance metadata and split into recommended/other sections
+  const { recommendedSuppliers, otherSuppliers } = useMemo(() => {
+    const assetTags = asset?.tags || [];
+    
+    // Calculate relevance for each filtered supplier
+    const suppliersWithRelevance = filteredSuppliers.map(supplier => ({
+      ...supplier,
+      relevance: getSupplierRelevanceMetadata(supplier, assetTags)
+    }));
+    
+    // Split into recommended (score > 0) and other (score = 0)
+    const recommended = suppliersWithRelevance.filter(s => s.relevance.score > 0);
+    const other = suppliersWithRelevance.filter(s => s.relevance.score === 0);
+    
+    return { recommendedSuppliers: recommended, otherSuppliers: other };
+  }, [filteredSuppliers, asset?.tags]);
 
   // Smart select all - only selects visible suppliers after filtering
   const handleSelectAll = () => {
@@ -232,7 +250,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                 )}
               </div>
 
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-6 max-h-96 overflow-y-auto">
                 {filteredSuppliers.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Package className="h-12 w-12 mx-auto mb-2 text-gray-400" />
@@ -255,58 +273,154 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                     )}
                   </div>
                 ) : (
-                  filteredSuppliers.map((supplier) => {
-                    const isSelected = selectedSupplierIds.includes(supplier.id);
-                    const isAlreadyContacted = supplier.already_contacted;
-                    
-                    return (
-                      <div
-                        key={supplier.id}
-                        className={`border rounded-lg p-4 transition-colors ${
-                          isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-gray-300'
-                        } ${isAlreadyContacted ? 'opacity-75' : ''}`}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <input
-                            type="checkbox"
-                            id={`supplier-${supplier.id}`}
-                            checked={isSelected}
-                            onChange={() => onSupplierToggle(supplier.id)}
-                            disabled={isAlreadyContacted}
-                            className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2">
-                              <label
-                                htmlFor={`supplier-${supplier.id}`}
-                                className="font-medium text-gray-900 cursor-pointer"
+                  <>
+                    {/* Recommended Suppliers Section */}
+                    {recommendedSuppliers.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Star className="w-5 h-5 text-teal-600 fill-teal-600" />
+                          <h4 className="text-sm font-semibold text-gray-900">
+                            Recommended for this Asset ({recommendedSuppliers.length})
+                          </h4>
+                        </div>
+                        <div className="space-y-3">
+                          {recommendedSuppliers.map((supplier) => {
+                            const isSelected = selectedSupplierIds.includes(supplier.id);
+                            const isAlreadyContacted = supplier.already_contacted;
+                            const matchingCategories = supplier.relevance.matchingCategories;
+                            
+                            return (
+                              <div
+                                key={supplier.id}
+                                className={`border rounded-lg p-4 transition-colors ${
+                                  isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-gray-300'
+                                } ${isAlreadyContacted ? 'opacity-75' : ''}`}
                               >
-                                {supplier.supplier_name}
-                              </label>
-                              {isAlreadyContacted && (
-                                <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                                  Already Contacted
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600">{supplier.contact_email}</p>
-                            {supplier.service_categories && supplier.service_categories.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {supplier.service_categories.map((category, index) => (
-                                  <span
-                                    key={index}
-                                    className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded"
-                                  >
-                                    {category}
-                                  </span>
-                                ))}
+                                <div className="flex items-center space-x-3">
+                                  <input
+                                    type="checkbox"
+                                    id={`supplier-${supplier.id}`}
+                                    checked={isSelected}
+                                    onChange={() => onSupplierToggle(supplier.id)}
+                                    disabled={isAlreadyContacted}
+                                    className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                                  />
+                                  <div className="flex-1">
+                                    <div className="flex items-center space-x-2 flex-wrap">
+                                      <label
+                                        htmlFor={`supplier-${supplier.id}`}
+                                        className="font-medium text-gray-900 cursor-pointer"
+                                      >
+                                        {supplier.supplier_name}
+                                      </label>
+                                      <span className="px-2 py-0.5 text-xs bg-teal-100 text-teal-700 rounded-full font-medium flex items-center gap-1">
+                                        <Star className="w-3 h-3 fill-teal-700" />
+                                        Recommended
+                                      </span>
+                                      {isAlreadyContacted && (
+                                        <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                                          Already Contacted
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-gray-600">{supplier.contact_email}</p>
+                                    {supplier.service_categories && supplier.service_categories.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-2">
+                                        {supplier.service_categories.map((category, index) => {
+                                          const isMatching = matchingCategories.includes(category);
+                                          return (
+                                            <span
+                                              key={index}
+                                              className={`px-2 py-1 text-xs rounded ${
+                                                isMatching
+                                                  ? 'bg-teal-100 text-teal-800 font-semibold border border-teal-200'
+                                                  : 'bg-gray-100 text-gray-700'
+                                              }`}
+                                              aria-label={isMatching ? `Matching category: ${category}` : category}
+                                            >
+                                              {category}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                          </div>
+                            );
+                          })}
                         </div>
                       </div>
-                    );
-                  })
+                    )}
+
+                    {/* Other Suppliers Section */}
+                    {otherSuppliers.length > 0 && (
+                      <div>
+                        {recommendedSuppliers.length > 0 && (
+                          <div className="border-t border-gray-200 my-4"></div>
+                        )}
+                        <div className="flex items-center gap-2 mb-3">
+                          <h4 className="text-sm font-medium text-gray-600">
+                            Other Suppliers ({otherSuppliers.length})
+                          </h4>
+                        </div>
+                        <div className="space-y-3">
+                          {otherSuppliers.map((supplier) => {
+                            const isSelected = selectedSupplierIds.includes(supplier.id);
+                            const isAlreadyContacted = supplier.already_contacted;
+                            
+                            return (
+                              <div
+                                key={supplier.id}
+                                className={`border rounded-lg p-4 transition-colors ${
+                                  isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-gray-300'
+                                } ${isAlreadyContacted ? 'opacity-75' : ''}`}
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <input
+                                    type="checkbox"
+                                    id={`supplier-${supplier.id}`}
+                                    checked={isSelected}
+                                    onChange={() => onSupplierToggle(supplier.id)}
+                                    disabled={isAlreadyContacted}
+                                    className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                                  />
+                                  <div className="flex-1">
+                                    <div className="flex items-center space-x-2">
+                                      <label
+                                        htmlFor={`supplier-${supplier.id}`}
+                                        className="font-medium text-gray-900 cursor-pointer"
+                                      >
+                                        {supplier.supplier_name}
+                                      </label>
+                                      {isAlreadyContacted && (
+                                        <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                                          Already Contacted
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-gray-600">{supplier.contact_email}</p>
+                                    {supplier.service_categories && supplier.service_categories.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-2">
+                                        {supplier.service_categories.map((category, index) => (
+                                          <span
+                                            key={index}
+                                            className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded"
+                                          >
+                                            {category}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

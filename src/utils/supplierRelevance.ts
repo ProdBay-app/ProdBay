@@ -139,6 +139,73 @@ export const calculateSupplierRelevanceScore = (
 };
 
 /**
+ * Gets the specific categories that matched for a supplier
+ * 
+ * @param supplier - Supplier to check
+ * @param assetTags - Asset tags to match against
+ * @returns Array of matching category names (empty if no matches)
+ */
+export const getMatchingCategories = (
+  supplier: Supplier,
+  assetTags: string[]
+): string[] => {
+  // Handle edge cases
+  if (!supplier || !assetTags || assetTags.length === 0) {
+    return [];
+  }
+  
+  if (!supplier.service_categories || supplier.service_categories.length === 0) {
+    return [];
+  }
+  
+  // Map asset tags to relevant supplier categories
+  const relevantCategories = mapAssetTagsToSupplierCategories(assetTags);
+  
+  // If no relevant categories found, return empty array
+  if (relevantCategories.size === 0) {
+    return [];
+  }
+  
+  // Filter supplier's categories to only include matching ones
+  return supplier.service_categories.filter(category => 
+    relevantCategories.has(category)
+  );
+};
+
+/**
+ * Gets relevance metadata for a supplier
+ * 
+ * @param supplier - Supplier to analyze
+ * @param assetTags - Asset tags to match against
+ * @returns Object with score and matching categories
+ */
+export const getSupplierRelevanceMetadata = (
+  supplier: Supplier,
+  assetTags: string[]
+): { score: number; matchingCategories: string[] } => {
+  // Handle edge cases
+  if (!supplier || !assetTags || assetTags.length === 0) {
+    return { score: 0, matchingCategories: [] };
+  }
+  
+  // Map asset tags to relevant supplier categories
+  const relevantCategories = mapAssetTagsToSupplierCategories(assetTags);
+  
+  // If no relevant categories found, return zero score
+  if (relevantCategories.size === 0) {
+    return { score: 0, matchingCategories: [] };
+  }
+  
+  // Calculate score
+  const score = calculateSupplierRelevanceScore(supplier, relevantCategories);
+  
+  // Get matching categories
+  const matchingCategories = getMatchingCategories(supplier, assetTags);
+  
+  return { score, matchingCategories };
+};
+
+/**
  * Sorts suppliers by relevance to asset tags
  * 
  * Primary sort: High relevance score → Low relevance score
