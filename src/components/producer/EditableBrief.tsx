@@ -108,7 +108,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
       // Notify parent of current values (in case they changed externally)
       onEditedValuesChange?.(briefDescription, physicalParameters);
     }
-  }, [briefDescription, physicalParameters, onEditedValuesChange]);
+  }, [briefDescription, physicalParameters, onEditedValuesChange, isDirty]);
 
   // Auto-resize textareas to fit content
   const adjustTextareaHeight = (textarea: HTMLTextAreaElement | null) => {
