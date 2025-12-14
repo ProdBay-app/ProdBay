@@ -103,8 +103,9 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     }
   };
 
-  // Debounced save function (800ms delay) - MUST be called before early return to maintain hook order
-  const debouncedSave = useDebouncedCallback(saveAsset, 800);
+  // Debounced save function (2000ms delay) - MUST be called before early return to maintain hook order
+  // Note: onBlur provides immediate save when clicking away, so debounce acts as a safety net
+  const debouncedSave = useDebouncedCallback(saveAsset, 2000);
 
   // Debug logging
   console.log('AssetDetailModal render:', { isOpen, asset: asset?.id });
@@ -225,8 +226,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       value={editingData.asset_name}
                       onChange={(e) => handleFieldChange('asset_name', e.target.value)}
                       onBlur={handleBlur}
-                      disabled={isSaving}
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                       placeholder="Enter asset name"
                     />
                   </div>
@@ -240,9 +240,8 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       value={editingData.specifications}
                       onChange={(e) => handleFieldChange('specifications', e.target.value)}
                       onBlur={handleBlur}
-                      disabled={isSaving}
                       rows={4}
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-y disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-y"
                       placeholder="Enter asset specifications"
                     />
                   </div>
@@ -259,8 +258,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       value={editingData.quantity || ''}
                       onChange={(e) => handleFieldChange('quantity', e.target.value ? parseInt(e.target.value, 10) : undefined)}
                       onBlur={handleBlur}
-                      disabled={isSaving}
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                       placeholder="Optional"
                     />
                   </div>
