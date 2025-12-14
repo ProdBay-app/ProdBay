@@ -97,6 +97,9 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   // Refs for textareas (for auto-resize)
   const briefTextareaRef = useRef<HTMLTextAreaElement>(null);
   const physicalTextareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Bug 2 Fix: Store timeout ID for cleanup
+  const textareaResizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync local state when props change (e.g., after external update)
   // Only sync when not dirty to prevent overwriting user input during typing
@@ -127,12 +130,25 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   // Adjust heights when mode changes to edit (immediate layout stabilization)
   useEffect(() => {
     if (mode === 'edit') {
+      // Bug 2 Fix: Clear any existing timeout
+      if (textareaResizeTimeoutRef.current) {
+        clearTimeout(textareaResizeTimeoutRef.current);
+      }
       // Use setTimeout to ensure DOM has updated after mode change
-      setTimeout(() => {
+      textareaResizeTimeoutRef.current = setTimeout(() => {
         adjustTextareaHeight(briefTextareaRef.current);
         adjustTextareaHeight(physicalTextareaRef.current);
+        textareaResizeTimeoutRef.current = null;
       }, 0);
     }
+    
+    // Bug 2 Fix: Cleanup timeout on unmount or mode change
+    return () => {
+      if (textareaResizeTimeoutRef.current) {
+        clearTimeout(textareaResizeTimeoutRef.current);
+        textareaResizeTimeoutRef.current = null;
+      }
+    };
   }, [mode]);
 
   // Adjust heights when content changes

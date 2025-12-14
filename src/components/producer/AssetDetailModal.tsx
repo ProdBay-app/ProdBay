@@ -37,6 +37,15 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   // Track if this is the initial load (to prevent autosave on mount)
   const isInitialMount = useRef(true);
   
+  // Bug 1 Fix: Track the previous asset ID and its editing data to save before switching
+  const previousAssetIdRef = useRef<string | null>(null);
+  const previousEditingDataRef = useRef<typeof editingData | null>(null);
+  const pendingSaveAssetIdRef = useRef<string | null>(null);
+  
+  // Store timeout IDs for cleanup (for Bug 2 fix)
+  const saveStatusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const errorStatusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Initialize editing data directly from asset (before early return)
   const [editingData, setEditingData] = useState({
     asset_name: asset?.asset_name || '',
@@ -49,6 +58,42 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   // This won't trigger on saves because the asset ID stays the same
   useEffect(() => {
     if (asset && !isSaving && saveStatus !== 'saving') {
+      const currentAssetId = asset.id;
+      const previousAssetId = previousAssetIdRef.current;
+      
+      // Bug 1 Fix: If switching to a different asset, save the previous asset's changes first
+      if (previousAssetId && previousAssetId !== currentAssetId && previousEditingDataRef.current) {
+        // There are unsaved changes for the previous asset - save them immediately
+        const previousData = previousEditingDataRef.current;
+        const previousAssetIdToSave = previousAssetId;
+        
+        // Save the previous asset's changes asynchronously (don't block the UI)
+        // Use a separate async function to avoid issues with useEffect cleanup
+        (async () => {
+          try {
+            const previousAsset = await ProducerService.getAssetById(previousAssetIdToSave);
+            const updatedAsset = await ProducerService.updateAsset(previousAssetIdToSave, {
+              asset_name: toTitleCase(previousData.asset_name),
+              specifications: previousData.specifications,
+              timeline: previousAsset.timeline || '',
+              status: previousAsset.status,
+              assigned_supplier_id: previousAsset.assigned_supplier_id,
+              quantity: previousData.quantity,
+              tags: previousData.tags
+            });
+            // Notify parent of the update
+            onAssetUpdate(updatedAsset);
+          } catch (err) {
+            console.error('Error saving previous asset before switch:', err);
+            // Don't show error to user as they're switching assets - it's a background save
+          }
+        })();
+      }
+      
+      // Update tracking refs
+      previousAssetIdRef.current = currentAssetId;
+      previousEditingDataRef.current = null; // Clear previous data
+      
       setEditingData({
         asset_name: asset.asset_name || '',
         specifications: asset.specifications || '',
@@ -57,13 +102,21 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
       });
       setSaveStatus('idle');
       isInitialMount.current = true;
+      pendingSaveAssetIdRef.current = null; // Reset pending save tracking
     }
-  }, [asset?.id]); // Only sync when asset ID changes (switching assets), not on saves
+  }, [asset?.id, onAssetUpdate]); // Only sync when asset ID changes (switching assets), not on saves
 
   // Save function that will be debounced (defined before early return to maintain hook order)
   const saveAsset = async () => {
-    if (!asset || isInitialMount.current) {
+    const currentAssetId = asset?.id;
+    if (!currentAssetId || isInitialMount.current) {
       isInitialMount.current = false;
+      return;
+    }
+    
+    // Bug 1 Fix: If this save is for a different asset (user switched), abort
+    // The previous asset's changes should have been saved in the useEffect above
+    if (pendingSaveAssetIdRef.current && pendingSaveAssetIdRef.current !== currentAssetId) {
       return;
     }
 
@@ -83,20 +136,32 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
 
       onAssetUpdate(updatedAsset);
       setSaveStatus('saved');
+      pendingSaveAssetIdRef.current = null; // Clear pending save tracking
       
+      // Bug 2 Fix: Clear any existing timeout and store the new one
+      if (saveStatusTimeoutRef.current) {
+        clearTimeout(saveStatusTimeoutRef.current);
+      }
       // Reset saved status after 2 seconds
-      setTimeout(() => {
+      saveStatusTimeoutRef.current = setTimeout(() => {
         setSaveStatus('idle');
+        saveStatusTimeoutRef.current = null;
       }, 2000);
     } catch (err) {
       console.error('Error updating asset:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to update asset';
       setSaveStatus('error');
       showError(errorMessage);
+      pendingSaveAssetIdRef.current = null; // Clear pending save tracking
       
+      // Bug 2 Fix: Clear any existing timeout and store the new one
+      if (errorStatusTimeoutRef.current) {
+        clearTimeout(errorStatusTimeoutRef.current);
+      }
       // Reset error status after 3 seconds
-      setTimeout(() => {
+      errorStatusTimeoutRef.current = setTimeout(() => {
         setSaveStatus('idle');
+        errorStatusTimeoutRef.current = null;
       }, 3000);
     } finally {
       setIsSaving(false);
@@ -106,6 +171,18 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   // Debounced save function (2000ms delay) - MUST be called before early return to maintain hook order
   // Note: onBlur provides immediate save when clicking away, so debounce acts as a safety net
   const debouncedSave = useDebouncedCallback(saveAsset, 2000);
+  
+  // Bug 2 Fix: Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (saveStatusTimeoutRef.current) {
+        clearTimeout(saveStatusTimeoutRef.current);
+      }
+      if (errorStatusTimeoutRef.current) {
+        clearTimeout(errorStatusTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Debug logging
   console.log('AssetDetailModal render:', { isOpen, asset: asset?.id });
@@ -122,8 +199,19 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
 
   // Handle field changes with debounced autosave
   const handleFieldChange = (field: keyof typeof editingData, value: string | number | undefined | string[]) => {
-    setEditingData(prev => ({ ...prev, [field]: value }));
+    setEditingData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      // Bug 1 Fix: Store a snapshot of editing data for potential save before asset switch
+      if (asset?.id) {
+        previousEditingDataRef.current = updated;
+        pendingSaveAssetIdRef.current = asset.id;
+      }
+      
+      return updated;
+    });
     isInitialMount.current = false;
+    
     // Trigger debounced save
     debouncedSave();
   };
