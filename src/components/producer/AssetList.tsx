@@ -367,8 +367,8 @@ const AssetList: React.FC<AssetListProps> = ({
     <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
       {/* Section Header removed - now handled in top row */}
 
-      {/* Search and Filter Controls - Always visible when assets exist, or when filters are active but produce no results */}
-      {assets.length > 0 && (showFilters || (filteredAndSortedAssets.length === 0 && (searchTerm || selectedTags.length > 0 || selectedStatus))) && (
+      {/* Search and Filter Controls - Always visible when assets exist, when explicitly toggled, or when any filters are active */}
+      {assets.length > 0 && (showFilters || searchTerm || selectedTags.length > 0 || selectedStatus) && (
         <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-4 mb-6 space-y-4">
           {/* Search Bar */}
           <div className="relative">
