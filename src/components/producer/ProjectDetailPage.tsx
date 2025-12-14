@@ -306,13 +306,14 @@ const ProjectDetailPage: React.FC = () => {
               font-size: 18px;
               font-weight: 600;
               color: #374151;
-              margin-bottom: 15px;
+              margin-bottom: 20px;
               border-bottom: 1px solid #e5e7eb;
               padding-bottom: 5px;
             }
             .content {
               white-space: pre-wrap;
               line-height: 1.7;
+              margin-top: 10px;
             }
             .footer {
               margin-top: 40px;
@@ -326,6 +327,8 @@ const ProjectDetailPage: React.FC = () => {
               body { margin: 0; padding: 15px; }
               .header { page-break-after: avoid; }
               .section { page-break-inside: avoid; }
+              .section-title { margin-bottom: 25px; }
+              .content { margin-top: 12px; }
             }
           </style>
         </head>
