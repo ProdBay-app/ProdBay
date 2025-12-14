@@ -99,32 +99,54 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   const physicalTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Sync local state when props change (e.g., after external update)
+  // Only sync when not dirty to prevent overwriting user input during typing
   useEffect(() => {
-    setEditedBriefDescription(briefDescription);
-    setEditedPhysicalParameters(physicalParameters);
-    setIsDirty(false);
-    // Notify parent of current values (in case they changed externally)
-    onEditedValuesChange?.(briefDescription, physicalParameters);
-  }, [briefDescription, physicalParameters, onEditedValuesChange]);
+    if (!isDirty) {
+      setEditedBriefDescription(briefDescription);
+      setEditedPhysicalParameters(physicalParameters);
+      setIsDirty(false);
+      // Notify parent of current values (in case they changed externally)
+      onEditedValuesChange?.(briefDescription, physicalParameters);
+    }
+  }, [briefDescription, physicalParameters, onEditedValuesChange, isDirty]);
 
   // Auto-resize textareas to fit content
   const adjustTextareaHeight = (textarea: HTMLTextAreaElement | null) => {
     if (!textarea) return;
     
-    // Reset height to get accurate scrollHeight
-    textarea.style.height = 'auto';
-    // Set height to scrollHeight (content height)
-    textarea.style.height = `${textarea.scrollHeight}px`;
+    // Use requestAnimationFrame to ensure DOM has painted before measuring
+    requestAnimationFrame(() => {
+      // Reset height to get accurate scrollHeight
+      textarea.style.height = 'auto';
+      // Set height to scrollHeight (content height), with minimum of 120px
+      const minHeight = 120;
+      textarea.style.height = `${Math.max(textarea.scrollHeight, minHeight)}px`;
+    });
   };
+
+  // Adjust heights when mode changes to edit (immediate layout stabilization)
+  useEffect(() => {
+    if (mode === 'edit') {
+      // Use setTimeout to ensure DOM has updated after mode change
+      setTimeout(() => {
+        adjustTextareaHeight(briefTextareaRef.current);
+        adjustTextareaHeight(physicalTextareaRef.current);
+      }, 0);
+    }
+  }, [mode]);
 
   // Adjust heights when content changes
   useEffect(() => {
-    adjustTextareaHeight(briefTextareaRef.current);
-  }, [editedBriefDescription]);
+    if (mode === 'edit') {
+      adjustTextareaHeight(briefTextareaRef.current);
+    }
+  }, [editedBriefDescription, mode]);
 
   useEffect(() => {
-    adjustTextareaHeight(physicalTextareaRef.current);
-  }, [editedPhysicalParameters]);
+    if (mode === 'edit') {
+      adjustTextareaHeight(physicalTextareaRef.current);
+    }
+  }, [editedPhysicalParameters, mode]);
 
   // Handle description change
   const handleBriefDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -441,10 +463,10 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                     bg-black/20 border border-white/20 rounded-lg
                     text-white placeholder-gray-400 leading-relaxed
                     focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                    resize-none overflow-hidden
+                    resize-y overflow-hidden
                     transition-all duration-200
                   "
-                  style={{}}
+                  style={{ minHeight: '120px' }}
                   disabled={isSaving}
                 />
               </div>
@@ -468,10 +490,10 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                     bg-black/20 border border-white/20 rounded-lg
                     text-white placeholder-gray-400 leading-relaxed
                     focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                    resize-none overflow-hidden
+                    resize-y overflow-hidden
                     transition-all duration-200
                   "
-                  style={{}}
+                  style={{ minHeight: '120px' }}
                   disabled={isSaving}
                 />
               </div>
