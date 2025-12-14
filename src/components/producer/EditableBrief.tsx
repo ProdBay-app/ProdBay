@@ -197,6 +197,20 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   };
 
   /**
+   * Normalize quotes only (for quote-agnostic matching)
+   * Converts all quote variants to double quotes for consistent comparison
+   * 
+   * @param str - The text to normalize
+   * @returns Text with all quotes normalized to double quotes
+   */
+  const normalizeQuotes = (str: string): string => {
+    return str
+      .replace(/['']/g, "'")      // Normalize curly single quotes to straight
+      .replace(/[""]/g, '"')       // Normalize curly double quotes to straight
+      .replace(/'/g, '"');         // Convert all single quotes to double quotes
+  };
+
+  /**
    * Normalize text for robust matching
    * Handles whitespace, line breaks, case sensitivity, AND punctuation differences
    * 
@@ -295,6 +309,70 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
         // Pass 1: Try exact match (fastest, works if no differences)
         let matchIndex = text.indexOf(originalSourceText);
         let matchLength = originalSourceText.length;
+        
+        // Pass 1.5: Try quote-normalized exact match (handles quote type differences)
+        if (matchIndex === -1) {
+          const normalizedText = normalizeQuotes(text);
+          const normalizedSource = normalizeQuotes(originalSourceText);
+          const normalizedIndex = normalizedText.indexOf(normalizedSource);
+          
+          if (normalizedIndex !== -1) {
+            // Found match in normalized text, now find corresponding position in original
+            // Strategy: Map normalized index to original by character-by-character alignment
+            // Since quote normalization is 1:1 (each quote becomes one quote), we can align positions
+            
+            let normPos = 0;
+            let origPos = 0;
+            
+            // Advance through normalized text until we reach the match position
+            while (normPos < normalizedIndex && origPos < text.length) {
+              const origChar = text[origPos];
+              const normChar = normalizedText[normPos];
+              
+              // Check if characters match (accounting for quote normalization)
+              const origNormalized = normalizeQuotes(origChar);
+              if (origNormalized === normChar) {
+                normPos++;
+                origPos++;
+              } else {
+                // Characters don't align - this shouldn't happen if normalization is correct
+                // Skip ahead in original to try to realign
+                origPos++;
+              }
+            }
+            
+            // Now verify that we can match the source text starting at origPos
+            if (origPos < text.length) {
+              const remainingLength = Math.min(originalSourceText.length + 20, text.length - origPos);
+              const searchWindow = text.substring(origPos, origPos + remainingLength);
+              
+              // Try to find a quote-agnostic match in the search window
+              // Compare character by character, treating quotes as equivalent
+              for (let start = 0; start <= searchWindow.length - originalSourceText.length; start++) {
+                let matches = true;
+                for (let i = 0; i < originalSourceText.length; i++) {
+                  const windowChar = searchWindow[start + i];
+                  const sourceChar = originalSourceText[i];
+                  
+                  // Normalize quotes for comparison
+                  const windowNorm = normalizeQuotes(windowChar);
+                  const sourceNorm = normalizeQuotes(sourceChar);
+                  
+                  if (windowNorm !== sourceNorm) {
+                    matches = false;
+                    break;
+                  }
+                }
+                
+                if (matches) {
+                  matchIndex = origPos + start;
+                  matchLength = originalSourceText.length;
+                  break;
+                }
+              }
+            }
+          }
+        }
         
         // Pass 2: Try case-insensitive match (handles capitalization differences)
         if (matchIndex === -1) {
