@@ -50,7 +50,8 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
   const fetchSuppliers = async () => {
     setLoading(true);
     try {
-      const data = await ProducerService.loadSuppliers();
+      // Use relevance sorting based on asset tags
+      const data = await ProducerService.loadSuppliersForAsset(assetId);
       setSuppliers(data);
     } catch (err) {
       console.error('Error fetching suppliers:', err);

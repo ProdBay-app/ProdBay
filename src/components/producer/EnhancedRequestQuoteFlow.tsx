@@ -93,7 +93,10 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
   const fetchSuppliers = async () => {
     setLoading(true);
     try {
-      const data = await ProducerService.loadSuppliers();
+      // Use relevance sorting if assetId is available, otherwise fallback to alphabetical
+      const data = assetId
+        ? await ProducerService.loadSuppliersForAsset(assetId)
+        : await ProducerService.loadSuppliers();
       
       // Mark suppliers who already have quotes for this asset
       const suppliersWithStatus: SupplierWithDetails[] = data.map(supplier => ({
