@@ -6,7 +6,8 @@ import {
   ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP,
   mapAssetTagsToSupplierCategories,
   calculateSupplierRelevanceScore,
-  sortSuppliersByRelevance
+  sortSuppliersByRelevance,
+  getMatchingCategories
 } from '../supplierRelevance';
 import type { Supplier } from '@/lib/supabase';
 
@@ -23,9 +24,18 @@ describe('supplierRelevance', () => {
       expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Graphics & Banners']).toEqual(['Graphics', 'Banners']);
     });
 
-    it('should handle tags with no mapping', () => {
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Event Staff']).toEqual([]);
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Floral']).toEqual([]);
+    it('should map newly added categories correctly', () => {
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Event Staff']).toEqual(['Staffing']);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Floral']).toEqual(['Floral']);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Furniture']).toEqual(['Furniture']);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Hospitality']).toEqual(['Hospitality']);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Technical Staff']).toEqual(['Technical Services']);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Medical Services']).toEqual(['Medical']);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Technology Infrastructure']).toEqual(['IT Services']);
+    });
+
+    it('should keep Permits & Licenses unmapped (intentional)', () => {
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Permits & Licenses']).toEqual([]);
     });
   });
 
@@ -50,8 +60,14 @@ describe('supplierRelevance', () => {
       expect(categoryArray).toEqual(['Graphics', 'Video']);
     });
 
-    it('should return empty set for tags with no mapping', () => {
-      const categories = mapAssetTagsToSupplierCategories(['Event Staff', 'Floral']);
+    it('should map newly added categories', () => {
+      const categories = mapAssetTagsToSupplierCategories(['Event Staff', 'Floral', 'Furniture']);
+      const categoryArray = Array.from(categories).sort();
+      expect(categoryArray).toEqual(['Floral', 'Furniture', 'Staffing']);
+    });
+
+    it('should return empty set for intentionally unmapped tags', () => {
+      const categories = mapAssetTagsToSupplierCategories(['Permits & Licenses']);
       expect(categories.size).toBe(0);
     });
 
@@ -197,6 +213,54 @@ describe('supplierRelevance', () => {
       
       // Original array should be unchanged
       expect(suppliers.map(s => s.supplier_name)).toEqual(originalOrder);
+    });
+  });
+
+  describe('getMatchingCategories', () => {
+    const createSupplier = (categories: string[]): Supplier => ({
+      id: 'test-id',
+      supplier_name: 'Test Supplier',
+      contact_email: 'test@example.com',
+      service_categories: categories,
+      contact_persons: [],
+      created_at: new Date().toISOString()
+    });
+
+    it('should return matching categories for Furniture tag', () => {
+      const supplier = createSupplier(['Furniture', 'Catering']);
+      const matching = getMatchingCategories(supplier, ['Furniture']);
+      expect(matching).toEqual(['Furniture']);
+    });
+
+    it('should return matching categories for Floral tag', () => {
+      const supplier = createSupplier(['Floral', 'Design']);
+      const matching = getMatchingCategories(supplier, ['Floral']);
+      expect(matching).toEqual(['Floral']);
+    });
+
+    it('should return matching categories for Event Staff tag', () => {
+      const supplier = createSupplier(['Staffing', 'Security']);
+      const matching = getMatchingCategories(supplier, ['Event Staff']);
+      expect(matching).toEqual(['Staffing']);
+    });
+
+    it('should return matching categories for multiple new tags', () => {
+      const supplier = createSupplier(['Floral', 'Furniture', 'Staffing', 'IT Services']);
+      const matching = getMatchingCategories(supplier, ['Floral', 'Furniture', 'Event Staff', 'Technology Infrastructure']);
+      const categoryArray = matching.sort();
+      expect(categoryArray).toEqual(['Floral', 'Furniture', 'IT Services', 'Staffing']);
+    });
+
+    it('should return empty array for non-matching categories', () => {
+      const supplier = createSupplier(['Audio', 'Video']);
+      const matching = getMatchingCategories(supplier, ['Furniture', 'Floral']);
+      expect(matching).toEqual([]);
+    });
+
+    it('should return empty array for intentionally unmapped tags', () => {
+      const supplier = createSupplier(['Logistics', 'Transport']);
+      const matching = getMatchingCategories(supplier, ['Permits & Licenses']);
+      expect(matching).toEqual([]);
     });
   });
 });

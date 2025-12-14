@@ -20,7 +20,8 @@ import type { Supplier } from '@/lib/supabase';
  * Supplier Categories Available:
  * 'Printing', 'Graphics', 'Banners', 'Staging', 'Audio', 'Lighting',
  * 'Catering', 'Food', 'Beverages', 'Design', 'Branding', 'Marketing',
- * 'Transport', 'Logistics', 'Delivery', 'Photography', 'Video', 'Security'
+ * 'Transport', 'Logistics', 'Delivery', 'Photography', 'Video', 'Security',
+ * 'Staffing', 'Hospitality', 'Technical Services', 'Medical', 'Floral', 'Furniture', 'IT Services'
  */
 export const ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP: Record<string, string[]> = {
   // AUDIO & SOUND (7 tags)
@@ -64,19 +65,17 @@ export const ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP: Record<string, string[]> = {
   'Food Stations': ['Food', 'Catering'], // Multi-category: food and catering
 
   // STAFFING & SERVICES (5 tags)
-  // Note: Most staffing tags don't map to supplier categories
-  // as suppliers typically don't provide staffing services directly
-  'Event Staff': [], // No direct supplier category
+  'Event Staff': ['Staffing'],
   'Security': ['Security'],
-  'Hospitality': [], // No direct supplier category
-  'Technical Staff': [], // No direct supplier category
-  'Medical Services': [], // No direct supplier category
+  'Hospitality': ['Hospitality'],
+  'Technical Staff': ['Technical Services'],
+  'Medical Services': ['Medical'],
 
   // LOGISTICS & OPERATIONS (5 tags)
   'Transportation': ['Transport', 'Logistics'], // Multi-category: transport and logistics
   'Loading & Setup': ['Logistics', 'Delivery'], // Multi-category: logistics and delivery
   'Storage': ['Logistics'],
-  'Permits & Licenses': [], // No direct supplier category (legal/administrative)
+  'Permits & Licenses': [], // Intentionally unmapped - legal/administrative, not a supplier service
   'Waste Management': ['Logistics'],
 
   // BRANDING & MARKETING (4 tags)
@@ -86,14 +85,14 @@ export const ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP: Record<string, string[]> = {
   'Social Media': ['Marketing'],
 
   // DECOR & FLORAL (4 tags)
-  'Floral': [], // No direct supplier category (could add 'Floral' category later)
+  'Floral': ['Floral'],
   'Decor': ['Design'],
-  'Furniture': [], // No direct supplier category (could add 'Furniture' category later)
+  'Furniture': ['Furniture'],
   'Linens & Draping': ['Design'],
 
   // DIGITAL & TECHNOLOGY (2 tags)
   'Digital Assets': ['Design', 'Marketing'], // Multi-category: design and marketing
-  'Technology Infrastructure': [] // No direct supplier category (IT services)
+  'Technology Infrastructure': ['IT Services']
 };
 
 /**
