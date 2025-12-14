@@ -20,6 +20,13 @@ export const useDebouncedCallback = <T extends (...args: any[]) => void>(
   delay: number = 800
 ): T => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Store the latest callback in a ref to avoid stale closures
+  const callbackRef = useRef<T>(callback);
+
+  // Always update the ref to the latest callback
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -37,12 +44,12 @@ export const useDebouncedCallback = <T extends (...args: any[]) => void>(
         clearTimeout(timeoutRef.current);
       }
 
-      // Set new timeout
+      // Set new timeout - always use the latest callback from the ref
       timeoutRef.current = setTimeout(() => {
-        callback(...args);
+        callbackRef.current(...args);
       }, delay);
     },
-    [callback, delay]
+    [delay] // Only depend on delay, not callback (we use the ref instead)
   ) as T;
 
   return debouncedCallback;
