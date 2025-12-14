@@ -316,38 +316,13 @@ const AssetList: React.FC<AssetListProps> = ({
     );
   }
 
-  // Empty state - no assets match filters
-  if (filteredAndSortedAssets.length === 0 && assets.length > 0) {
-    return (
-      <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Assets</h2>
-        <div className="bg-white/5 border-2 border-dashed border-white/30 rounded-lg p-12 text-center">
-          <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">No assets match your filters</h3>
-          <p className="text-gray-300 mb-4">
-            Try adjusting your search terms or filters to see more results.
-          </p>
-          <button
-            onClick={() => {
-              setSearchTerm('');
-              setSelectedTags([]);
-            }}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            Clear all filters
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  // Main Kanban board display
+  // Main display - always show search/filter controls when there are assets
   return (
     <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
       {/* Section Header removed - now handled in top row */}
 
-      {/* Search and Filter Controls */}
-      {showFilters && (
+      {/* Search and Filter Controls - Always visible when assets exist */}
+      {assets.length > 0 && showFilters && (
         <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-4 mb-6 space-y-4">
           {/* Search Bar */}
           <div className="relative">
@@ -462,15 +437,36 @@ const AssetList: React.FC<AssetListProps> = ({
         </div>
       )}
 
-      {/* Asset Table View */}
-      <AssetTable
-        assets={filteredAndSortedAssets}
-        onEdit={handleOpenEditModal}
-        onDelete={handleOpenDeleteModal}
-        onView={handleViewAsset}
-        hoveredAssetId={hoveredAssetId}
-        onAssetHover={onAssetHover}
-      />
+      {/* Asset Table View or Empty State */}
+      {filteredAndSortedAssets.length === 0 && assets.length > 0 ? (
+        // Empty state - no assets match filters (but search/filter controls remain visible above)
+        <div className="bg-white/5 border-2 border-dashed border-white/30 rounded-lg p-12 text-center">
+          <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">No assets match your filters</h3>
+          <p className="text-gray-300 mb-4">
+            Try adjusting your search terms or filters to see more results.
+          </p>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedTags([]);
+            }}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Clear all filters
+          </button>
+        </div>
+      ) : (
+        // Asset Table View
+        <AssetTable
+          assets={filteredAndSortedAssets}
+          onEdit={handleOpenEditModal}
+          onDelete={handleOpenDeleteModal}
+          onView={handleViewAsset}
+          hoveredAssetId={hoveredAssetId}
+          onAssetHover={onAssetHover}
+        />
+      )}
 
       {/* Add Asset Modal */}
       <AssetFormModal
