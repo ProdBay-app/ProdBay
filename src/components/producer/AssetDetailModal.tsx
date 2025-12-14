@@ -60,13 +60,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     }
   }, [asset?.id]); // Only sync when asset ID changes (switching assets), not on saves
 
-  // Debug logging
-  console.log('AssetDetailModal render:', { isOpen, asset: asset?.id });
-
-  // Don't render if modal is closed or no asset is selected
-  if (!isOpen || !asset) return null;
-
-  // Save function that will be debounced
+  // Save function that will be debounced (defined before early return to maintain hook order)
   const saveAsset = async () => {
     if (!asset || isInitialMount.current) {
       isInitialMount.current = false;
@@ -109,8 +103,14 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     }
   };
 
-  // Debounced save function (800ms delay)
+  // Debounced save function (800ms delay) - MUST be called before early return to maintain hook order
   const debouncedSave = useDebouncedCallback(saveAsset, 800);
+
+  // Debug logging
+  console.log('AssetDetailModal render:', { isOpen, asset: asset?.id });
+
+  // Don't render if modal is closed or no asset is selected
+  if (!isOpen || !asset) return null;
 
   // Immediate save on blur
   const handleBlur = () => {
