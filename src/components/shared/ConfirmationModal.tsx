@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, X } from 'lucide-react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 
@@ -85,7 +86,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   // Don't render if not open
   if (!isOpen) return null;
 
-  return (
+  // Render modal content via portal to document.body for viewport-centered positioning
+  const modalContent = (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4"
       onClick={handleBackdropClick}
@@ -158,6 +160,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default ConfirmationModal;
