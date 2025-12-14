@@ -104,7 +104,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
     if (!isDirty) {
       setEditedBriefDescription(briefDescription);
       setEditedPhysicalParameters(physicalParameters);
-      setIsDirty(false);
+      // Note: No need to set isDirty(false) here since it's already false
       // Notify parent of current values (in case they changed externally)
       onEditedValuesChange?.(briefDescription, physicalParameters);
     }
@@ -199,15 +199,41 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   /**
    * Normalize quotes only (for quote-agnostic matching)
    * Converts all quote variants to double quotes for consistent comparison
+   * Preserves apostrophes in contractions (e.g., "don't", "it's")
    * 
    * @param str - The text to normalize
-   * @returns Text with all quotes normalized to double quotes
+   * @returns Text with all quotes normalized to double quotes (apostrophes preserved)
    */
   const normalizeQuotes = (str: string): string => {
-    return str
+    // First normalize curly quotes (these are always quotes, never apostrophes)
+    let result = str
       .replace(/['']/g, "'")      // Normalize curly single quotes to straight
-      .replace(/[""]/g, '"')       // Normalize curly double quotes to straight
-      .replace(/'/g, '"');         // Convert all single quotes to double quotes
+      .replace(/[""]/g, '"');     // Normalize curly double quotes to straight
+    
+    // Convert straight single quotes to double quotes, but preserve apostrophes
+    // Apostrophes are single quotes between word characters (letters/digits)
+    // Quotes are single quotes at word boundaries or with whitespace/punctuation
+    const isWordChar = (char: string) => /[a-zA-Z0-9]/.test(char);
+    let normalized = '';
+    for (let i = 0; i < result.length; i++) {
+      const char = result[i];
+      if (char === "'") {
+        const before = i > 0 ? result[i - 1] : '';
+        const after = i < result.length - 1 ? result[i + 1] : '';
+        // If surrounded by word characters, it's an apostrophe - preserve it
+        if (isWordChar(before) && isWordChar(after)) {
+          normalized += "'";
+        } else {
+          // Otherwise, it's a quote - convert to double quote
+          normalized += '"';
+        }
+      } else {
+        normalized += char;
+      }
+    }
+    result = normalized;
+    
+    return result;
   };
 
   /**
