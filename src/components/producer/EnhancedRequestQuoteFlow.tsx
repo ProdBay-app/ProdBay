@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Building2, Mail, Tag, Loader2, ChevronLeft, ChevronRight, User, Phone, Star, Send, Paperclip } from 'lucide-react';
+import { X, Building2, Mail, Tag, Loader2, ChevronLeft, ChevronRight, User, Phone, Star, Send, Paperclip, Trophy, CheckSquare, Square } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { QuoteRequestService } from '@/services/quoteRequestService';
 import { getSupabase } from '@/lib/supabase';
@@ -92,7 +92,7 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
   }, [isOpen]);
 
   // Calculate relevance metadata and split into recommended/other sections
-  const { recommendedSuppliers, otherSuppliers } = useMemo(() => {
+  const { recommendedSuppliers, otherSuppliers, maxScore } = useMemo(() => {
     const assetTags = asset?.tags || [];
     
     // Calculate relevance for each supplier
@@ -105,7 +105,12 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
     const recommended = suppliersWithRelevance.filter(s => s.relevance.score > 0);
     const other = suppliersWithRelevance.filter(s => s.relevance.score === 0);
     
-    return { recommendedSuppliers: recommended, otherSuppliers: other };
+    // Calculate max score among recommended suppliers
+    const max = recommended.length > 0
+      ? Math.max(...recommended.map(s => s.relevance.score))
+      : 0;
+    
+    return { recommendedSuppliers: recommended, otherSuppliers: other, maxScore: max };
   }, [suppliers, asset?.tags]);
 
   const fetchSuppliers = async () => {
@@ -142,6 +147,32 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
       }
     });
   };
+
+  // Select all recommended suppliers only
+  const handleSelectAllRecommended = () => {
+    const recommendedIds = recommendedSuppliers.map(s => s.id);
+    const allRecommendedSelected = recommendedIds.every(id => selectedSupplierIds.includes(id));
+    
+    if (allRecommendedSelected) {
+      // Deselect all recommended suppliers
+      recommendedIds.forEach(id => {
+        if (selectedSupplierIds.includes(id)) {
+          toggleSupplierSelection(id);
+        }
+      });
+    } else {
+      // Select all recommended suppliers
+      recommendedIds.forEach(id => {
+        if (!selectedSupplierIds.includes(id)) {
+          toggleSupplierSelection(id);
+        }
+      });
+    }
+  };
+
+  // Check if all recommended suppliers are selected
+  const allRecommendedSelected = recommendedSuppliers.length > 0 && 
+    recommendedSuppliers.every(s => selectedSupplierIds.includes(s.id));
 
   // Generate default email content for a supplier
   const generateDefaultEmail = (supplier: SupplierWithDetails): CustomizedEmail => {
@@ -403,11 +434,29 @@ ${signature.phone}`;
                       {/* Recommended Suppliers Section */}
                       {recommendedSuppliers.length > 0 && (
                         <div>
-                          <div className="flex items-center gap-2 mb-3">
-                            <Star className="w-5 h-5 text-purple-400 fill-purple-400" />
-                            <h4 className="text-sm font-semibold text-white">
-                              Recommended for this Asset ({recommendedSuppliers.length})
-                            </h4>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Star className="w-5 h-5 text-purple-400 fill-purple-400" />
+                              <h4 className="text-sm font-semibold text-white">
+                                Recommended for this Asset ({recommendedSuppliers.length})
+                              </h4>
+                            </div>
+                            <button
+                              onClick={handleSelectAllRecommended}
+                              className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-purple-500/30 text-purple-200 rounded-lg hover:bg-purple-500/40 transition-colors font-medium"
+                            >
+                              {allRecommendedSelected ? (
+                                <>
+                                  <CheckSquare className="w-3.5 h-3.5" />
+                                  Deselect All
+                                </>
+                              ) : (
+                                <>
+                                  <Square className="w-3.5 h-3.5" />
+                                  Select All
+                                </>
+                              )}
+                            </button>
                           </div>
                           <div className="space-y-3">
                             {recommendedSuppliers.map((supplier) => {
@@ -448,10 +497,12 @@ ${signature.phone}`;
                                         >
                                           {supplier.supplier_name}
                                         </label>
-                                        <span className="px-2 py-0.5 text-xs bg-purple-500/30 text-purple-200 rounded-full font-medium flex items-center gap-1">
-                                          <Star className="w-3 h-3 fill-purple-200" />
-                                          Recommended
-                                        </span>
+                                        {supplier.relevance.score === maxScore && maxScore > 0 && (
+                                          <span className="px-2 py-0.5 text-xs bg-purple-500/50 text-white rounded-full font-bold border border-purple-400 flex items-center gap-1">
+                                            <Trophy className="w-3 h-3 fill-white" />
+                                            Best Match
+                                          </span>
+                                        )}
                                         {isAlreadyContacted && (
                                           <span className="px-2 py-0.5 text-xs bg-amber-500/30 text-amber-200 rounded-full font-medium">
                                             Already Contacted

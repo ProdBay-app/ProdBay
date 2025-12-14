@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Package, Search, Filter, CheckSquare, Square, X, Star } from 'lucide-react';
+import { Package, Search, Filter, CheckSquare, Square, X, Star, Trophy } from 'lucide-react';
 import type { Asset, SuggestedSupplier } from '@/lib/supabase';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { getSupplierRelevanceMetadata } from '@/utils/supplierRelevance';
@@ -71,7 +71,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
   }, [suggestedSuppliers, searchTerm, selectedCategories]);
 
   // Calculate relevance metadata and split into recommended/other sections
-  const { recommendedSuppliers, otherSuppliers } = useMemo(() => {
+  const { recommendedSuppliers, otherSuppliers, maxScore } = useMemo(() => {
     const assetTags = asset?.tags || [];
     
     // Calculate relevance for each filtered supplier
@@ -84,7 +84,12 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
     const recommended = suppliersWithRelevance.filter(s => s.relevance.score > 0);
     const other = suppliersWithRelevance.filter(s => s.relevance.score === 0);
     
-    return { recommendedSuppliers: recommended, otherSuppliers: other };
+    // Calculate max score among recommended suppliers
+    const max = recommended.length > 0
+      ? Math.max(...recommended.map(s => s.relevance.score))
+      : 0;
+    
+    return { recommendedSuppliers: recommended, otherSuppliers: other, maxScore: max };
   }, [filteredSuppliers, asset?.tags]);
 
   // Smart select all - only selects visible suppliers after filtering
@@ -108,6 +113,32 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
       });
     }
   };
+
+  // Select all recommended suppliers only
+  const handleSelectAllRecommended = () => {
+    const recommendedIds = recommendedSuppliers.map(s => s.id);
+    const allRecommendedSelected = recommendedIds.every(id => selectedSupplierIds.includes(id));
+    
+    if (allRecommendedSelected) {
+      // Deselect all recommended suppliers
+      recommendedIds.forEach(id => {
+        if (selectedSupplierIds.includes(id)) {
+          onSupplierToggle(id);
+        }
+      });
+    } else {
+      // Select all recommended suppliers
+      recommendedIds.forEach(id => {
+        if (!selectedSupplierIds.includes(id)) {
+          onSupplierToggle(id);
+        }
+      });
+    }
+  };
+
+  // Check if all recommended suppliers are selected
+  const allRecommendedSelected = recommendedSuppliers.length > 0 && 
+    recommendedSuppliers.every(s => selectedSupplierIds.includes(s.id));
 
   // Check if all visible suppliers are selected
   const allVisibleSelected = filteredSuppliers.length > 0 && 
@@ -277,11 +308,29 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                     {/* Recommended Suppliers Section */}
                     {recommendedSuppliers.length > 0 && (
                       <div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Star className="w-5 h-5 text-teal-600 fill-teal-600" />
-                          <h4 className="text-sm font-semibold text-gray-900">
-                            Recommended for this Asset ({recommendedSuppliers.length})
-                          </h4>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Star className="w-5 h-5 text-teal-600 fill-teal-600" />
+                            <h4 className="text-sm font-semibold text-gray-900">
+                              Recommended for this Asset ({recommendedSuppliers.length})
+                            </h4>
+                          </div>
+                          <button
+                            onClick={handleSelectAllRecommended}
+                            className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-teal-50 text-teal-700 rounded-lg hover:bg-teal-100 transition-colors font-medium"
+                          >
+                            {allRecommendedSelected ? (
+                              <>
+                                <CheckSquare className="w-3.5 h-3.5" />
+                                Deselect All
+                              </>
+                            ) : (
+                              <>
+                                <Square className="w-3.5 h-3.5" />
+                                Select All
+                              </>
+                            )}
+                          </button>
                         </div>
                         <div className="space-y-3">
                           {recommendedSuppliers.map((supplier) => {
@@ -313,10 +362,12 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                                       >
                                         {supplier.supplier_name}
                                       </label>
-                                      <span className="px-2 py-0.5 text-xs bg-teal-100 text-teal-700 rounded-full font-medium flex items-center gap-1">
-                                        <Star className="w-3 h-3 fill-teal-700" />
-                                        Recommended
-                                      </span>
+                                      {supplier.relevance.score === maxScore && maxScore > 0 && (
+                                        <span className="px-2 py-0.5 text-xs bg-teal-200 text-teal-800 rounded-full font-bold border border-teal-300 flex items-center gap-1">
+                                          <Trophy className="w-3 h-3 fill-teal-800" />
+                                          Best Match
+                                        </span>
+                                      )}
                                       {isAlreadyContacted && (
                                         <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
                                           Already Contacted
