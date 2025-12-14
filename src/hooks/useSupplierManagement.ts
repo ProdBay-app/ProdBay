@@ -61,7 +61,8 @@ export interface UseSupplierManagementReturn {
 const AVAILABLE_CATEGORIES = [
   'Printing', 'Graphics', 'Banners', 'Staging', 'Audio', 'Lighting',
   'Catering', 'Food', 'Beverages', 'Design', 'Branding', 'Marketing',
-  'Transport', 'Logistics', 'Delivery', 'Photography', 'Video', 'Security'
+  'Transport', 'Logistics', 'Delivery', 'Photography', 'Video', 'Security',
+  'Staffing', 'Hospitality', 'Technical Services', 'Medical', 'Floral', 'Furniture', 'IT Services'
 ];
 
 const INITIAL_FORM_DATA: SupplierFormData = {

@@ -1,5 +1,6 @@
 import { getSupabase } from '@/lib/supabase';
 import type { Project, Asset, Quote, Supplier } from '@/lib/supabase';
+import { sortSuppliersByRelevance } from '@/utils/supplierRelevance';
 
 export interface ProjectFormData {
   project_name: string;
@@ -583,6 +584,28 @@ export class ProducerService {
 
     if (error) throw error;
     return (data || []) as unknown as Supplier[];
+  }
+
+  /**
+   * Load suppliers sorted by relevance to a specific asset
+   * 
+   * Fetches the asset to get its tags, then loads all suppliers and sorts them
+   * by relevance score (suppliers with matching service categories appear first).
+   * Falls back to alphabetical sorting if the asset has no tags.
+   * 
+   * @param assetId - UUID of the asset to match suppliers against
+   * @returns Promise with suppliers sorted by relevance (most relevant first)
+   */
+  static async loadSuppliersForAsset(assetId: string): Promise<Supplier[]> {
+    // Fetch the asset to get its tags
+    const asset = await this.getAssetById(assetId);
+    const assetTags = asset.tags || [];
+    
+    // Fetch all suppliers (alphabetically sorted from DB)
+    const suppliers = await this.loadSuppliers();
+    
+    // Apply relevance sorting based on asset tags
+    return sortSuppliersByRelevance(suppliers, assetTags);
   }
 
   /**

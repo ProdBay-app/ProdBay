@@ -7,7 +7,7 @@ import AssetTable from './AssetTable';
 import AssetFormModal from './AssetFormModal';
 import AssetDetailModal from './AssetDetailModal';
 import ConfirmationModal from '@/components/shared/ConfirmationModal';
-import { getAvailableTagNames, getTagColor } from '@/utils/assetTags';
+import { getTagColor } from '@/utils/assetTags';
 import { toTitleCase } from '@/utils/textFormatters';
 import type { Asset } from '@/lib/supabase';
 
@@ -61,6 +61,7 @@ const AssetList: React.FC<AssetListProps> = ({
   // Search, filter, and sort state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'quantity'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   // showFilters is now passed as a prop
@@ -241,6 +242,11 @@ const AssetList: React.FC<AssetListProps> = ({
       );
     }
 
+    // Apply status filter
+    if (selectedStatus) {
+      filtered = filtered.filter(asset => asset.status === selectedStatus);
+    }
+
     // Apply sorting
     const sortFunction = (a: Asset, b: Asset) => {
       let comparison = 0;
@@ -265,7 +271,47 @@ const AssetList: React.FC<AssetListProps> = ({
     };
 
     return [...filtered].sort(sortFunction);
-  }, [assets, searchTerm, selectedTags, sortBy, sortOrder]);
+  }, [assets, searchTerm, selectedTags, selectedStatus, sortBy, sortOrder]);
+
+  // Extract unique tags from the current project's assets (before filtering)
+  const availableTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    assets.forEach(asset => {
+      if (asset.tags && Array.isArray(asset.tags)) {
+        asset.tags.forEach(tag => {
+          if (tag && tag.trim()) {
+            tagSet.add(tag);
+          }
+        });
+      }
+    });
+    // Convert Set to sorted array for consistent display
+    return Array.from(tagSet).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  }, [assets]);
+
+  // Extract unique status values from the current project's assets (before filtering)
+  const availableStatuses = useMemo(() => {
+    const statusSet = new Set<string>();
+    assets.forEach(asset => {
+      if (asset.status) {
+        statusSet.add(asset.status);
+      }
+    });
+    // Convert Set to sorted array for consistent display
+    // Order: Pending, Quoting, Approved, In Production, Delivered
+    const statusOrder: Record<string, number> = {
+      'Pending': 1,
+      'Quoting': 2,
+      'Approved': 3,
+      'In Production': 4,
+      'Delivered': 5
+    };
+    return Array.from(statusSet).sort((a, b) => {
+      const orderA = statusOrder[a] || 999;
+      const orderB = statusOrder[b] || 999;
+      return orderA - orderB;
+    });
+  }, [assets]);
 
   // Loading state
   if (loading) {
@@ -316,38 +362,13 @@ const AssetList: React.FC<AssetListProps> = ({
     );
   }
 
-  // Empty state - no assets match filters
-  if (filteredAndSortedAssets.length === 0 && assets.length > 0) {
-    return (
-      <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Assets</h2>
-        <div className="bg-white/5 border-2 border-dashed border-white/30 rounded-lg p-12 text-center">
-          <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">No assets match your filters</h3>
-          <p className="text-gray-300 mb-4">
-            Try adjusting your search terms or filters to see more results.
-          </p>
-          <button
-            onClick={() => {
-              setSearchTerm('');
-              setSelectedTags([]);
-            }}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            Clear all filters
-          </button>
-        </div>
-      </section>
-    );
-  }
-
-  // Main Kanban board display
+  // Main display - always show search/filter controls when there are assets
   return (
     <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
       {/* Section Header removed - now handled in top row */}
 
-      {/* Search and Filter Controls */}
-      {showFilters && (
+      {/* Search and Filter Controls - Always visible when assets exist, when explicitly toggled, or when any filters are active */}
+      {assets.length > 0 && (showFilters || searchTerm || selectedTags.length > 0 || selectedStatus) && (
         <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-4 mb-6 space-y-4">
           {/* Search Bar */}
           <div className="relative">
@@ -371,12 +392,13 @@ const AssetList: React.FC<AssetListProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Tag Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-200 mb-2">Tags</label>
               <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
-                {getAvailableTagNames().map(tagName => (
+                {availableTags.length > 0 ? (
+                  availableTags.map(tagName => (
                   <button
                     key={tagName}
                     onClick={() => {
@@ -397,8 +419,28 @@ const AssetList: React.FC<AssetListProps> = ({
                   >
                     {tagName}
                   </button>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-400 italic">No tags used in this project</p>
+                )}
               </div>
+            </div>
+
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-200 mb-2">Status</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              >
+                <option value="">All Statuses</option>
+                {availableStatuses.map(status => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Sort Controls */}
@@ -437,7 +479,7 @@ const AssetList: React.FC<AssetListProps> = ({
           </div>
 
           {/* Clear All Filters */}
-          {(selectedTags.length > 0 || searchTerm || sortBy !== 'name' || sortOrder !== 'asc') && (
+          {(selectedTags.length > 0 || searchTerm || selectedStatus || sortBy !== 'name' || sortOrder !== 'asc') && (
             <div className="flex justify-between">
               <button
                 onClick={() => {
@@ -452,6 +494,7 @@ const AssetList: React.FC<AssetListProps> = ({
                 onClick={() => {
                   setSearchTerm('');
                   setSelectedTags([]);
+                  setSelectedStatus('');
                 }}
                 className="text-sm text-gray-300 hover:text-gray-200 underline transition-colors"
               >
@@ -462,15 +505,37 @@ const AssetList: React.FC<AssetListProps> = ({
         </div>
       )}
 
-      {/* Asset Table View */}
-      <AssetTable
-        assets={filteredAndSortedAssets}
-        onEdit={handleOpenEditModal}
-        onDelete={handleOpenDeleteModal}
-        onView={handleViewAsset}
-        hoveredAssetId={hoveredAssetId}
-        onAssetHover={onAssetHover}
-      />
+      {/* Asset Table View or Empty State */}
+      {filteredAndSortedAssets.length === 0 && assets.length > 0 ? (
+        // Empty state - no assets match filters (but search/filter controls remain visible above)
+        <div className="bg-white/5 border-2 border-dashed border-white/30 rounded-lg p-12 text-center">
+          <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">No assets match your filters</h3>
+          <p className="text-gray-300 mb-4">
+            Try adjusting your search terms or filters to see more results.
+          </p>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedTags([]);
+              setSelectedStatus('');
+            }}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Clear all filters
+          </button>
+        </div>
+      ) : (
+        // Asset Table View
+        <AssetTable
+          assets={filteredAndSortedAssets}
+          onEdit={handleOpenEditModal}
+          onDelete={handleOpenDeleteModal}
+          onView={handleViewAsset}
+          hoveredAssetId={hoveredAssetId}
+          onAssetHover={onAssetHover}
+        />
+      )}
 
       {/* Add Asset Modal */}
       <AssetFormModal

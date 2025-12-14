@@ -97,34 +97,72 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   // Refs for textareas (for auto-resize)
   const briefTextareaRef = useRef<HTMLTextAreaElement>(null);
   const physicalTextareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Bug 2 Fix: Store timeout ID for cleanup
+  const textareaResizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync local state when props change (e.g., after external update)
+  // Only sync when not dirty to prevent overwriting user input during typing
   useEffect(() => {
-    setEditedBriefDescription(briefDescription);
-    setEditedPhysicalParameters(physicalParameters);
-    setIsDirty(false);
-    // Notify parent of current values (in case they changed externally)
-    onEditedValuesChange?.(briefDescription, physicalParameters);
-  }, [briefDescription, physicalParameters, onEditedValuesChange]);
+    if (!isDirty) {
+      setEditedBriefDescription(briefDescription);
+      setEditedPhysicalParameters(physicalParameters);
+      // Note: No need to set isDirty(false) here since it's already false
+      // Notify parent of current values (in case they changed externally)
+      onEditedValuesChange?.(briefDescription, physicalParameters);
+    }
+  }, [briefDescription, physicalParameters, onEditedValuesChange, isDirty]);
 
   // Auto-resize textareas to fit content
   const adjustTextareaHeight = (textarea: HTMLTextAreaElement | null) => {
     if (!textarea) return;
     
-    // Reset height to get accurate scrollHeight
-    textarea.style.height = 'auto';
-    // Set height to scrollHeight (content height)
-    textarea.style.height = `${textarea.scrollHeight}px`;
+    // Use requestAnimationFrame to ensure DOM has painted before measuring
+    requestAnimationFrame(() => {
+      // Reset height to get accurate scrollHeight
+      textarea.style.height = 'auto';
+      // Set height to scrollHeight (content height), with minimum of 120px
+      const minHeight = 120;
+      textarea.style.height = `${Math.max(textarea.scrollHeight, minHeight)}px`;
+    });
   };
+
+  // Adjust heights when mode changes to edit (immediate layout stabilization)
+  useEffect(() => {
+    if (mode === 'edit') {
+      // Bug 2 Fix: Clear any existing timeout
+      if (textareaResizeTimeoutRef.current) {
+        clearTimeout(textareaResizeTimeoutRef.current);
+      }
+      // Use setTimeout to ensure DOM has updated after mode change
+      textareaResizeTimeoutRef.current = setTimeout(() => {
+        adjustTextareaHeight(briefTextareaRef.current);
+        adjustTextareaHeight(physicalTextareaRef.current);
+        textareaResizeTimeoutRef.current = null;
+      }, 0);
+    }
+    
+    // Bug 2 Fix: Cleanup timeout on unmount or mode change
+    return () => {
+      if (textareaResizeTimeoutRef.current) {
+        clearTimeout(textareaResizeTimeoutRef.current);
+        textareaResizeTimeoutRef.current = null;
+      }
+    };
+  }, [mode]);
 
   // Adjust heights when content changes
   useEffect(() => {
-    adjustTextareaHeight(briefTextareaRef.current);
-  }, [editedBriefDescription]);
+    if (mode === 'edit') {
+      adjustTextareaHeight(briefTextareaRef.current);
+    }
+  }, [editedBriefDescription, mode]);
 
   useEffect(() => {
-    adjustTextareaHeight(physicalTextareaRef.current);
-  }, [editedPhysicalParameters]);
+    if (mode === 'edit') {
+      adjustTextareaHeight(physicalTextareaRef.current);
+    }
+  }, [editedPhysicalParameters, mode]);
 
   // Handle description change
   const handleBriefDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -172,6 +210,46 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  /**
+   * Normalize quotes only (for quote-agnostic matching)
+   * Converts all quote variants to double quotes for consistent comparison
+   * Preserves apostrophes in contractions (e.g., "don't", "it's")
+   * 
+   * @param str - The text to normalize
+   * @returns Text with all quotes normalized to double quotes (apostrophes preserved)
+   */
+  const normalizeQuotes = (str: string): string => {
+    // First normalize curly quotes (these are always quotes, never apostrophes)
+    let result = str
+      .replace(/['']/g, "'")      // Normalize curly single quotes to straight
+      .replace(/[""]/g, '"');     // Normalize curly double quotes to straight
+    
+    // Convert straight single quotes to double quotes, but preserve apostrophes
+    // Apostrophes are single quotes between word characters (letters/digits)
+    // Quotes are single quotes at word boundaries or with whitespace/punctuation
+    const isWordChar = (char: string) => /[a-zA-Z0-9]/.test(char);
+    let normalized = '';
+    for (let i = 0; i < result.length; i++) {
+      const char = result[i];
+      if (char === "'") {
+        const before = i > 0 ? result[i - 1] : '';
+        const after = i < result.length - 1 ? result[i + 1] : '';
+        // If surrounded by word characters, it's an apostrophe - preserve it
+        if (isWordChar(before) && isWordChar(after)) {
+          normalized += "'";
+        } else {
+          // Otherwise, it's a quote - convert to double quote
+          normalized += '"';
+        }
+      } else {
+        normalized += char;
+      }
+    }
+    result = normalized;
+    
+    return result;
   };
 
   /**
@@ -273,6 +351,70 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
         // Pass 1: Try exact match (fastest, works if no differences)
         let matchIndex = text.indexOf(originalSourceText);
         let matchLength = originalSourceText.length;
+        
+        // Pass 1.5: Try quote-normalized exact match (handles quote type differences)
+        if (matchIndex === -1) {
+          const normalizedText = normalizeQuotes(text);
+          const normalizedSource = normalizeQuotes(originalSourceText);
+          const normalizedIndex = normalizedText.indexOf(normalizedSource);
+          
+          if (normalizedIndex !== -1) {
+            // Found match in normalized text, now find corresponding position in original
+            // Strategy: Map normalized index to original by character-by-character alignment
+            // Since quote normalization is 1:1 (each quote becomes one quote), we can align positions
+            
+            let normPos = 0;
+            let origPos = 0;
+            
+            // Advance through normalized text until we reach the match position
+            while (normPos < normalizedIndex && origPos < text.length) {
+              const origChar = text[origPos];
+              const normChar = normalizedText[normPos];
+              
+              // Check if characters match (accounting for quote normalization)
+              const origNormalized = normalizeQuotes(origChar);
+              if (origNormalized === normChar) {
+                normPos++;
+                origPos++;
+              } else {
+                // Characters don't align - this shouldn't happen if normalization is correct
+                // Skip ahead in original to try to realign
+                origPos++;
+              }
+            }
+            
+            // Now verify that we can match the source text starting at origPos
+            if (origPos < text.length) {
+              const remainingLength = Math.min(originalSourceText.length + 20, text.length - origPos);
+              const searchWindow = text.substring(origPos, origPos + remainingLength);
+              
+              // Try to find a quote-agnostic match in the search window
+              // Compare character by character, treating quotes as equivalent
+              for (let start = 0; start <= searchWindow.length - originalSourceText.length; start++) {
+                let matches = true;
+                for (let i = 0; i < originalSourceText.length; i++) {
+                  const windowChar = searchWindow[start + i];
+                  const sourceChar = originalSourceText[i];
+                  
+                  // Normalize quotes for comparison
+                  const windowNorm = normalizeQuotes(windowChar);
+                  const sourceNorm = normalizeQuotes(sourceChar);
+                  
+                  if (windowNorm !== sourceNorm) {
+                    matches = false;
+                    break;
+                  }
+                }
+                
+                if (matches) {
+                  matchIndex = origPos + start;
+                  matchLength = originalSourceText.length;
+                  break;
+                }
+              }
+            }
+          }
+        }
         
         // Pass 2: Try case-insensitive match (handles capitalization differences)
         if (matchIndex === -1) {
@@ -441,10 +583,10 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                     bg-black/20 border border-white/20 rounded-lg
                     text-white placeholder-gray-400 leading-relaxed
                     focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                    resize-none overflow-hidden
+                    resize-y overflow-hidden
                     transition-all duration-200
                   "
-                  style={{}}
+                  style={{ minHeight: '120px' }}
                   disabled={isSaving}
                 />
               </div>
@@ -468,10 +610,10 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                     bg-black/20 border border-white/20 rounded-lg
                     text-white placeholder-gray-400 leading-relaxed
                     focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                    resize-none overflow-hidden
+                    resize-y overflow-hidden
                     transition-all duration-200
                   "
-                  style={{}}
+                  style={{ minHeight: '120px' }}
                   disabled={isSaving}
                 />
               </div>

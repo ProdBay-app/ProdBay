@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Package, Edit, Tag, Hash } from 'lucide-react';
 import type { Asset } from '@/lib/supabase';
 import { PREDEFINED_ASSET_TAGS, getTagColor } from '@/utils/assetTags';
@@ -147,7 +148,8 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
   // Don't render if not open
   if (!isOpen) return null;
 
-  return (
+  // Render modal content via portal to document.body for viewport-centered positioning
+  const modalContent = (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={handleBackdropClick}
@@ -412,6 +414,8 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default AssetFormModal;

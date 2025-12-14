@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Building2, Mail, Tag, Loader2, ChevronLeft, ChevronRight, User, Phone, Star, Send, Paperclip } from 'lucide-react';
+import { X, Building2, Mail, Tag, Loader2, ChevronLeft, ChevronRight, User, Phone, Star, Send, Paperclip, Trophy, CheckSquare, Square } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { QuoteRequestService } from '@/services/quoteRequestService';
 import { getSupabase } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import type { Supplier, Quote, ContactPerson, Asset } from '@/lib/supabase';
+import { getSupplierRelevanceMetadata } from '@/utils/supplierRelevance';
 
 interface RequestQuoteFlowProps {
   isOpen: boolean;
@@ -90,10 +91,35 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
     }
   }, [isOpen]);
 
+  // Calculate relevance metadata and split into recommended/other sections
+  const { recommendedSuppliers, otherSuppliers, maxScore } = useMemo(() => {
+    const assetTags = asset?.tags || [];
+    
+    // Calculate relevance for each supplier
+    const suppliersWithRelevance = suppliers.map(supplier => ({
+      ...supplier,
+      relevance: getSupplierRelevanceMetadata(supplier, assetTags)
+    }));
+    
+    // Split into recommended (score > 0) and other (score = 0)
+    const recommended = suppliersWithRelevance.filter(s => s.relevance.score > 0);
+    const other = suppliersWithRelevance.filter(s => s.relevance.score === 0);
+    
+    // Calculate max score among recommended suppliers
+    const max = recommended.length > 0
+      ? Math.max(...recommended.map(s => s.relevance.score))
+      : 0;
+    
+    return { recommendedSuppliers: recommended, otherSuppliers: other, maxScore: max };
+  }, [suppliers, asset?.tags]);
+
   const fetchSuppliers = async () => {
     setLoading(true);
     try {
-      const data = await ProducerService.loadSuppliers();
+      // Use relevance sorting if assetId is available, otherwise fallback to alphabetical
+      const data = assetId
+        ? await ProducerService.loadSuppliersForAsset(assetId)
+        : await ProducerService.loadSuppliers();
       
       // Mark suppliers who already have quotes for this asset
       const suppliersWithStatus: SupplierWithDetails[] = data.map(supplier => ({
@@ -121,6 +147,32 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
       }
     });
   };
+
+  // Select all recommended suppliers only
+  const handleSelectAllRecommended = () => {
+    const recommendedIds = recommendedSuppliers.map(s => s.id);
+    const allRecommendedSelected = recommendedIds.every(id => selectedSupplierIds.includes(id));
+    
+    if (allRecommendedSelected) {
+      // Deselect all recommended suppliers
+      recommendedIds.forEach(id => {
+        if (selectedSupplierIds.includes(id)) {
+          toggleSupplierSelection(id);
+        }
+      });
+    } else {
+      // Select all recommended suppliers
+      recommendedIds.forEach(id => {
+        if (!selectedSupplierIds.includes(id)) {
+          toggleSupplierSelection(id);
+        }
+      });
+    }
+  };
+
+  // Check if all recommended suppliers are selected
+  const allRecommendedSelected = recommendedSuppliers.length > 0 && 
+    recommendedSuppliers.every(s => selectedSupplierIds.includes(s.id));
 
   // Generate default email content for a supplier
   const generateDefaultEmail = (supplier: SupplierWithDetails): CustomizedEmail => {
@@ -378,76 +430,207 @@ ${signature.phone}`;
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {suppliers.map((supplier) => {
-                        const isSelected = selectedSupplierIds.includes(supplier.id);
-                        const isAlreadyContacted = supplier.already_contacted;
+                    <div className="space-y-6">
+                      {/* Recommended Suppliers Section */}
+                      {recommendedSuppliers.length > 0 && (
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Star className="w-5 h-5 text-purple-400 fill-purple-400" />
+                              <h4 className="text-sm font-semibold text-white">
+                                Recommended for this Asset ({recommendedSuppliers.length})
+                              </h4>
+                            </div>
+                            <button
+                              onClick={handleSelectAllRecommended}
+                              className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-purple-500/30 text-purple-200 rounded-lg hover:bg-purple-500/40 transition-colors font-medium"
+                            >
+                              {allRecommendedSelected ? (
+                                <>
+                                  <CheckSquare className="w-3.5 h-3.5" />
+                                  Deselect All
+                                </>
+                              ) : (
+                                <>
+                                  <Square className="w-3.5 h-3.5" />
+                                  Select All
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <div className="space-y-3">
+                            {recommendedSuppliers.map((supplier) => {
+                              const isSelected = selectedSupplierIds.includes(supplier.id);
+                              const isAlreadyContacted = supplier.already_contacted;
+                              const matchingCategories = supplier.relevance.matchingCategories;
 
-                        return (
-                          <div
-                            key={supplier.id}
-                            className={`
-                              border rounded-lg p-4 transition-all duration-200
-                              ${isSelected ? 'border-purple-400/50 bg-purple-500/20 ring-2 ring-purple-400/50' : 'border-white/20'}
-                              ${isAlreadyContacted ? 'opacity-60' : 'hover:border-purple-400/50 cursor-pointer'}
-                            `}
-                            onClick={() => !isAlreadyContacted && toggleSupplierSelection(supplier.id)}
-                          >
-                            <div className="flex items-start gap-3">
-                              {/* Checkbox */}
-                              <div className="flex-shrink-0 mt-1">
-                                <input
-                                  type="checkbox"
-                                  id={`supplier-${supplier.id}`}
-                                  checked={isSelected}
-                                  onChange={() => toggleSupplierSelection(supplier.id)}
-                                  disabled={isAlreadyContacted}
-                                  className="w-4 h-4 accent-purple-600 focus:ring-purple-500 border-white/30 rounded cursor-pointer"
-                                />
-                              </div>
+                              return (
+                                <div
+                                  key={supplier.id}
+                                  className={`
+                                    border rounded-lg p-4 transition-all duration-200
+                                    ${isSelected ? 'border-purple-400/50 bg-purple-500/20 ring-2 ring-purple-400/50' : 'border-white/20'}
+                                    ${isAlreadyContacted ? 'opacity-60' : 'hover:border-purple-400/50 cursor-pointer'}
+                                  `}
+                                  onClick={() => !isAlreadyContacted && toggleSupplierSelection(supplier.id)}
+                                >
+                                  <div className="flex items-start gap-3">
+                                    {/* Checkbox */}
+                                    <div className="flex-shrink-0 mt-1">
+                                      <input
+                                        type="checkbox"
+                                        id={`supplier-${supplier.id}`}
+                                        checked={isSelected}
+                                        onChange={() => toggleSupplierSelection(supplier.id)}
+                                        disabled={isAlreadyContacted}
+                                        className="w-4 h-4 accent-purple-600 focus:ring-purple-500 border-white/30 rounded cursor-pointer"
+                                      />
+                                    </div>
 
-                              {/* Supplier Info */}
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Building2 className="w-4 h-4 text-purple-300" />
-                                  <label
-                                    htmlFor={`supplier-${supplier.id}`}
-                                    className="font-semibold text-white cursor-pointer"
-                                  >
-                                    {supplier.supplier_name}
-                                  </label>
-                                  {isAlreadyContacted && (
-                                    <span className="px-2 py-0.5 text-xs bg-amber-500/30 text-amber-200 rounded-full font-medium">
-                                      Already Contacted
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
-                                  <Mail className="w-3.5 h-3.5" />
-                                  <span>{supplier.contact_email}</span>
-                                </div>
-
-                                {supplier.service_categories && supplier.service_categories.length > 0 && (
-                                  <div className="flex items-start gap-1.5">
-                                    <Tag className="w-3.5 h-3.5 text-gray-300 mt-0.5" />
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {supplier.service_categories.map((category, idx) => (
-                                        <span
-                                          key={idx}
-                                          className="px-2 py-0.5 text-xs bg-white/10 text-gray-200 rounded"
+                                    {/* Supplier Info */}
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                        <Building2 className="w-4 h-4 text-purple-300" />
+                                        <label
+                                          htmlFor={`supplier-${supplier.id}`}
+                                          className="font-semibold text-white cursor-pointer"
                                         >
-                                          {category}
-                                        </span>
-                                      ))}
+                                          {supplier.supplier_name}
+                                        </label>
+                                        {supplier.relevance.score === maxScore && maxScore > 0 && (
+                                          <span className="px-2 py-0.5 text-xs bg-purple-500/50 text-white rounded-full font-bold border border-purple-400 flex items-center gap-1">
+                                            <Trophy className="w-3 h-3 fill-white" />
+                                            Best Match
+                                          </span>
+                                        )}
+                                        {isAlreadyContacted && (
+                                          <span className="px-2 py-0.5 text-xs bg-amber-500/30 text-amber-200 rounded-full font-medium">
+                                            Already Contacted
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
+                                        <Mail className="w-3.5 h-3.5" />
+                                        <span>{supplier.contact_email}</span>
+                                      </div>
+
+                                      {supplier.service_categories && supplier.service_categories.length > 0 && (
+                                        <div className="flex items-start gap-1.5">
+                                          <Tag className="w-3.5 h-3.5 text-gray-300 mt-0.5" />
+                                          <div className="flex flex-wrap gap-1.5">
+                                            {supplier.service_categories.map((category, idx) => {
+                                              const isMatching = matchingCategories.includes(category);
+                                              return (
+                                                <span
+                                                  key={idx}
+                                                  className={`px-2 py-0.5 text-xs rounded ${
+                                                    isMatching
+                                                      ? 'bg-purple-500/30 text-purple-200 font-semibold border border-purple-400/50'
+                                                      : 'bg-white/10 text-gray-200'
+                                                  }`}
+                                                  aria-label={isMatching ? `Matching category: ${category}` : category}
+                                                >
+                                                  {category}
+                                                </span>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
-                                )}
-                              </div>
-                            </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
+                        </div>
+                      )}
+
+                      {/* Other Suppliers Section */}
+                      {otherSuppliers.length > 0 && (
+                        <div>
+                          {recommendedSuppliers.length > 0 && (
+                            <div className="border-t border-white/20 my-4"></div>
+                          )}
+                          <div className="flex items-center gap-2 mb-3">
+                            <h4 className="text-sm font-medium text-gray-300">
+                              Other Suppliers ({otherSuppliers.length})
+                            </h4>
+                          </div>
+                          <div className="space-y-3">
+                            {otherSuppliers.map((supplier) => {
+                              const isSelected = selectedSupplierIds.includes(supplier.id);
+                              const isAlreadyContacted = supplier.already_contacted;
+
+                              return (
+                                <div
+                                  key={supplier.id}
+                                  className={`
+                                    border rounded-lg p-4 transition-all duration-200
+                                    ${isSelected ? 'border-purple-400/50 bg-purple-500/20 ring-2 ring-purple-400/50' : 'border-white/20'}
+                                    ${isAlreadyContacted ? 'opacity-60' : 'hover:border-purple-400/50 cursor-pointer'}
+                                  `}
+                                  onClick={() => !isAlreadyContacted && toggleSupplierSelection(supplier.id)}
+                                >
+                                  <div className="flex items-start gap-3">
+                                    {/* Checkbox */}
+                                    <div className="flex-shrink-0 mt-1">
+                                      <input
+                                        type="checkbox"
+                                        id={`supplier-${supplier.id}`}
+                                        checked={isSelected}
+                                        onChange={() => toggleSupplierSelection(supplier.id)}
+                                        disabled={isAlreadyContacted}
+                                        className="w-4 h-4 accent-purple-600 focus:ring-purple-500 border-white/30 rounded cursor-pointer"
+                                      />
+                                    </div>
+
+                                    {/* Supplier Info */}
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Building2 className="w-4 h-4 text-purple-300" />
+                                        <label
+                                          htmlFor={`supplier-${supplier.id}`}
+                                          className="font-semibold text-white cursor-pointer"
+                                        >
+                                          {supplier.supplier_name}
+                                        </label>
+                                        {isAlreadyContacted && (
+                                          <span className="px-2 py-0.5 text-xs bg-amber-500/30 text-amber-200 rounded-full font-medium">
+                                            Already Contacted
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
+                                        <Mail className="w-3.5 h-3.5" />
+                                        <span>{supplier.contact_email}</span>
+                                      </div>
+
+                                      {supplier.service_categories && supplier.service_categories.length > 0 && (
+                                        <div className="flex items-start gap-1.5">
+                                          <Tag className="w-3.5 h-3.5 text-gray-300 mt-0.5" />
+                                          <div className="flex flex-wrap gap-1.5">
+                                            {supplier.service_categories.map((category, idx) => (
+                                              <span
+                                                key={idx}
+                                                className="px-2 py-0.5 text-xs bg-white/10 text-gray-200 rounded"
+                                              >
+                                                {category}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

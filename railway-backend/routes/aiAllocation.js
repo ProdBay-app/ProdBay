@@ -4,7 +4,7 @@ const BriefHighlightService = require('../services/briefHighlightService');
 const { supabase } = require('../config/database');
 const router = express.Router();
 
-// Initialize AI services
+//  Initialize AI services
 const aiService = new AIAllocationService();
 const highlightService = new BriefHighlightService();
 

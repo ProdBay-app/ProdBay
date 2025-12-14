@@ -22,7 +22,9 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
     'Creative': ['Design', 'Branding', 'Marketing'],
     'Media': ['Photography', 'Video'],
     'Logistics': ['Transport', 'Logistics', 'Delivery'],
-    'Security': ['Security']
+    'Services': ['Staffing', 'Hospitality', 'Technical Services', 'Medical', 'Security'],
+    'Decor & Rentals': ['Floral', 'Furniture'],
+    'Technology': ['IT Services']
   };
 
   // Filter groups to only show categories that exist in availableCategories
