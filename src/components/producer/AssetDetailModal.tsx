@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, FileText, Clock, Package, Hash, Tag, Check, Loader2, Plus } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
@@ -7,6 +7,7 @@ import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import QuotesList from './QuotesList';
 import SupplierStatusTracker from './SupplierStatusTracker';
 import QuoteDetailModal from './QuoteDetailModal';
+import EnhancedRequestQuoteFlow from './EnhancedRequestQuoteFlow';
 import { getTagColor, PREDEFINED_ASSET_TAGS, filterTags } from '@/utils/assetTags';
 import { toTitleCase } from '@/utils/textFormatters';
 import type { Asset, Quote } from '@/lib/supabase';
@@ -35,6 +36,10 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   const [activeQuote, setActiveQuote] = useState<Quote | null>(null);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [tagSearchTerm, setTagSearchTerm] = useState('');
+  
+  // Request Quote Modal state (lifted from QuotesList to prevent unmounting)
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [existingQuotes, setExistingQuotes] = useState<Quote[]>([]);
   
   // Track if this is the initial load (to prevent autosave on mount)
   const isInitialMount = useRef(true);
@@ -225,6 +230,29 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showTagSelector]);
+
+  // Fetch existing quotes for the request modal (only when asset changes)
+  useEffect(() => {
+    if (asset?.id) {
+      ProducerService.getQuotesForAsset(asset.id)
+        .then(setExistingQuotes)
+        .catch((err) => {
+          console.error('Error fetching existing quotes:', err);
+          setExistingQuotes([]);
+        });
+    }
+  }, [asset?.id]);
+
+  // Handler to open request quote modal (passed to QuotesList)
+  const handleOpenRequestModal = useCallback(() => {
+    setIsRequestModalOpen(true);
+  }, []);
+
+  // Handler for when quotes are requested (optimistically update local state)
+  const handleQuotesRequested = useCallback((newQuotes: Quote[]) => {
+    setExistingQuotes(prev => [...newQuotes, ...prev]);
+    setIsRequestModalOpen(false);
+  }, []);
 
   // Debug logging
   console.log('AssetDetailModal render:', { isOpen, asset: asset?.id });
@@ -528,6 +556,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
             assetId={asset.id} 
             assetName={asset.asset_name}
             onQuoteClick={(quote) => setActiveQuote(quote)}
+            onOpenRequestModal={handleOpenRequestModal}
           />
         </section>
 
@@ -613,6 +642,18 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
           // Refresh quotes if needed
         }}
       />
+      {/* Enhanced Request Quote Flow - Rendered at AssetDetailModal level to prevent unmounting */}
+      {asset && (
+        <EnhancedRequestQuoteFlow
+          isOpen={isRequestModalOpen}
+          assetId={asset.id}
+          assetName={asset.asset_name}
+          asset={asset}
+          existingQuotes={existingQuotes}
+          onClose={() => setIsRequestModalOpen(false)}
+          onQuotesRequested={handleQuotesRequested}
+        />
+      )}
     </>
   );
 };
