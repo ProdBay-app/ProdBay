@@ -78,7 +78,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [asset.id, showError]);
+  }, [asset.id, asset.assigned_supplier_id, showError]);
 
   // Load suppliers and their status with auto-refresh polling
   useEffect(() => {
@@ -282,4 +282,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   );
 };
 
-export default SupplierStatusTracker;
+// Memoize component to prevent unnecessary re-renders when parent updates
+// Only re-render when props actually change (asset.id, onStatusUpdate reference, onQuoteClick reference)
+export default React.memo(SupplierStatusTracker);

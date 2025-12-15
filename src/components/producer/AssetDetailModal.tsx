@@ -254,6 +254,16 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     setIsRequestModalOpen(false);
   }, []);
 
+  // Memoized callback for quote click (shared between SupplierStatusTracker and QuotesList)
+  const handleQuoteClick = useCallback((quote: Quote) => {
+    setActiveQuote(quote);
+  }, []);
+
+  // Memoized callback for status update (no-op but stable reference for SupplierStatusTracker)
+  const handleStatusUpdate = useCallback(() => {
+    // Refresh data if needed - currently no-op but keeps reference stable
+  }, []);
+
   // Debug logging
   console.log('AssetDetailModal render:', { isOpen, asset: asset?.id });
 
@@ -543,10 +553,8 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
               <section>
                 <SupplierStatusTracker 
                   asset={asset}
-                  onStatusUpdate={() => {
-                    // Refresh data if needed
-                  }}
-                  onQuoteClick={(quote) => setActiveQuote(quote)}
+                  onStatusUpdate={handleStatusUpdate}
+                  onQuoteClick={handleQuoteClick}
                 />
               </section>
 
@@ -555,7 +563,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
           <QuotesList 
             assetId={asset.id} 
             assetName={asset.asset_name}
-            onQuoteClick={(quote) => setActiveQuote(quote)}
+            onQuoteClick={handleQuoteClick}
             onOpenRequestModal={handleOpenRequestModal}
           />
         </section>
