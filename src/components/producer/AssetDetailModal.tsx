@@ -124,12 +124,16 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     setSaveStatus('saving');
     
     try {
-      const updatedAsset = await ProducerService.updateAsset(asset.id, {
+      // Bug 1 Fix: Fetch fresh asset data to avoid using stale properties from closure
+      // The asset prop may have changed when the debounced callback executes asynchronously
+      const currentAsset = await ProducerService.getAssetById(currentAssetId);
+      
+      const updatedAsset = await ProducerService.updateAsset(currentAssetId, {
         asset_name: toTitleCase(editingData.asset_name),
         specifications: editingData.specifications,
-        timeline: asset.timeline || '',
-        status: asset.status,
-        assigned_supplier_id: asset.assigned_supplier_id,
+        timeline: currentAsset.timeline || '',
+        status: currentAsset.status,
+        assigned_supplier_id: currentAsset.assigned_supplier_id,
         quantity: editingData.quantity,
         tags: editingData.tags
       });

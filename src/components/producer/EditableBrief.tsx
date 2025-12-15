@@ -213,6 +213,38 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
   };
 
   /**
+   * Normalize a single character with context (for character-by-character alignment)
+   * This preserves apostrophes when they're between word characters
+   * 
+   * @param char - The character to normalize
+   * @param before - The character before (or empty string if at start)
+   * @param after - The character after (or empty string if at end)
+   * @returns Normalized character (apostrophes preserved, quotes converted to ")
+   */
+  const normalizeCharWithContext = (char: string, before: string, after: string): string => {
+    // First normalize curly quotes
+    if (char === "'" || char === "'") {
+      char = "'";
+    } else if (char === '"' || char === '"') {
+      return '"';
+    }
+    
+    // Handle straight single quotes
+    if (char === "'") {
+      const isWordChar = (c: string) => /[a-zA-Z0-9]/.test(c);
+      // If surrounded by word characters, it's an apostrophe - preserve it
+      if (isWordChar(before) && isWordChar(after)) {
+        return "'";
+      } else {
+        // Otherwise, it's a quote - convert to double quote
+        return '"';
+      }
+    }
+    
+    return char;
+  };
+
+  /**
    * Normalize quotes only (for quote-agnostic matching)
    * Converts all quote variants to double quotes for consistent comparison
    * Preserves apostrophes in contractions (e.g., "don't", "it's")
@@ -372,7 +404,10 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
               const normChar = normalizedText[normPos];
               
               // Check if characters match (accounting for quote normalization)
-              const origNormalized = normalizeQuotes(origChar);
+              // Use context-aware normalization to preserve apostrophes
+              const before = origPos > 0 ? text[origPos - 1] : '';
+              const after = origPos < text.length - 1 ? text[origPos + 1] : '';
+              const origNormalized = normalizeCharWithContext(origChar, before, after);
               if (origNormalized === normChar) {
                 normPos++;
                 origPos++;
@@ -396,9 +431,16 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                   const windowChar = searchWindow[start + i];
                   const sourceChar = originalSourceText[i];
                   
-                  // Normalize quotes for comparison
-                  const windowNorm = normalizeQuotes(windowChar);
-                  const sourceNorm = normalizeQuotes(sourceChar);
+                  // Normalize quotes for comparison using context-aware normalization
+                  // Get context for window character
+                  const windowBefore = start + i > 0 ? searchWindow[start + i - 1] : '';
+                  const windowAfter = start + i < searchWindow.length - 1 ? searchWindow[start + i + 1] : '';
+                  // Get context for source character
+                  const sourceBefore = i > 0 ? originalSourceText[i - 1] : '';
+                  const sourceAfter = i < originalSourceText.length - 1 ? originalSourceText[i + 1] : '';
+                  
+                  const windowNorm = normalizeCharWithContext(windowChar, windowBefore, windowAfter);
+                  const sourceNorm = normalizeCharWithContext(sourceChar, sourceBefore, sourceAfter);
                   
                   if (windowNorm !== sourceNorm) {
                     matches = false;
