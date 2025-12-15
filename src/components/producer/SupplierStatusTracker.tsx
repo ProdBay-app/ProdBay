@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Building2, Mail, Clock, CheckCircle, AlertCircle, RefreshCw, Radio } from 'lucide-react';
+import { Building2, Mail, Clock, CheckCircle, AlertCircle, Radio } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import type { Asset, Quote, Supplier } from '@/lib/supabase';
@@ -35,7 +35,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   const { showError } = useNotification();
   const [suppliersWithStatus, setSuppliersWithStatus] = useState<SupplierWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const loadingRef = useRef(loading);
 
@@ -110,14 +109,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       }
     };
   }, [loadSupplierStatus]); // Only restart when asset changes (via loadSupplierStatus dependency)
-
-  // Refresh supplier status
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadSupplierStatus();
-    setRefreshing(false);
-    onStatusUpdate?.();
-  };
 
   // Group suppliers by status
   const suppliersByStatus = useMemo(() => {
@@ -204,14 +195,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
             <Radio className="w-3 h-3 text-green-400" />
             <span>Auto-refresh active</span>
           </div>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white/10 border border-white/20 text-gray-200 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
         </div>
       </div>
 
