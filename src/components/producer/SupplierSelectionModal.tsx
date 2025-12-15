@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Package, Search, Filter, CheckSquare, Square, X, Star, Trophy } from 'lucide-react';
+import { Package, Search, CheckSquare, Square, X, Star, Trophy } from 'lucide-react';
 import type { Asset, SuggestedSupplier } from '@/lib/supabase';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { getSupplierRelevanceMetadata } from '@/utils/supplierRelevance';
@@ -27,7 +27,6 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
 
   // Handle Escape key to close modal
   useEscapeKey(isOpen, onClose, loading);
@@ -44,22 +43,29 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
   }, [suggestedSuppliers]);
 
   // Filter suppliers based on search and category filters
+  // Search prioritizes supplier name, with fallback to email and categories
   const filteredSuppliers = useMemo(() => {
     let filtered = suggestedSuppliers;
 
-    // Apply search filter
+    // Apply search filter - prioritize name matching
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(supplier =>
-        supplier.supplier_name.toLowerCase().includes(term) ||
-        supplier.contact_email.toLowerCase().includes(term) ||
-        (supplier.service_categories && supplier.service_categories.some(cat => 
-          cat.toLowerCase().includes(term)
-        ))
-      );
+      filtered = filtered.filter(supplier => {
+        // Primary: match supplier name
+        if (supplier.supplier_name.toLowerCase().includes(term)) {
+          return true;
+        }
+        // Fallback: match email or service categories
+        return (
+          supplier.contact_email.toLowerCase().includes(term) ||
+          (supplier.service_categories && supplier.service_categories.some(cat => 
+            cat.toLowerCase().includes(term)
+          ))
+        );
+      });
     }
 
-    // Apply category filter
+    // Apply category filter - show suppliers that have any selected category
     if (selectedCategories.length > 0) {
       filtered = filtered.filter(supplier =>
         supplier.service_categories && 
@@ -159,100 +165,90 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
     );
   };
 
+  // Check if any filters are active
+  const hasActiveFilters = searchTerm.trim().length > 0 || selectedCategories.length > 0;
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
-        <div className="mb-4">
-          <h3 className="text-xl font-semibold">Select Suppliers for Quote Requests</h3>
+        <div className="mb-6">
+          <h3 className="text-xl font-semibold mb-1">Select Suppliers for Quote Requests</h3>
           <p className="text-gray-600 text-sm">
             Choose which suppliers should receive quote requests for "{asset?.asset_name}".
           </p>
         </div>
 
-        {/* Search and Filter Controls */}
-        <div className="mb-4 space-y-3">
-          {/* Search Bar */}
+        {/* Prominent Search Bar */}
+        <div className="mb-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search suppliers by name, email, or service category..."
+              placeholder="Search suppliers by name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full pl-12 pr-12 py-3 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+              autoFocus
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Clear search"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
+        </div>
 
-          {/* Filter Toggle and Category Filters */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-              {(selectedCategories.length > 0) && (
-                <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
-                  {selectedCategories.length}
-                </span>
+        {/* Tag Toggles - Always Visible */}
+        {allCategories.length > 0 && (
+          <div className="mb-4 pb-4 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-gray-700">Filter by Service Category</h4>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="text-xs text-purple-600 hover:text-purple-700 font-medium transition-colors"
+                >
+                  Clear all filters
+                </button>
               )}
-            </button>
-
-            {/* Smart Select All */}
-            <button
-              onClick={handleSelectAll}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
-            >
-              {allVisibleSelected ? (
-                <CheckSquare className="w-4 h-4" />
-              ) : (
-                <Square className="w-4 h-4" />
-              )}
-              {allVisibleSelected ? 'Deselect All' : 'Select All'} ({filteredSuppliers.length})
-            </button>
-          </div>
-
-          {/* Category Filters */}
-          {showFilters && (
-            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-medium text-gray-700">Service Categories</h4>
-                {selectedCategories.length > 0 && (
-                  <button
-                    onClick={clearFilters}
-                    className="text-xs text-purple-600 hover:text-purple-700"
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {allCategories.map(category => (
-                  <button
-                    key={category}
-                    onClick={() => toggleCategory(category)}
-                    className={`px-2 py-1 text-xs rounded-full border transition-colors ${
-                      selectedCategories.includes(category)
-                        ? 'bg-purple-100 text-purple-700 border-purple-300'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
             </div>
-          )}
+            <div className="flex flex-wrap gap-2">
+              {allCategories.map(category => (
+                <button
+                  key={category}
+                  onClick={() => toggleCategory(category)}
+                  className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                    selectedCategories.includes(category)
+                      ? 'bg-purple-100 text-purple-700 border-purple-300 font-medium shadow-sm'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Select All Button */}
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={handleSelectAll}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-medium"
+          >
+            {allVisibleSelected ? (
+              <CheckSquare className="w-4 h-4" />
+            ) : (
+              <Square className="w-4 h-4" />
+            )}
+            {allVisibleSelected ? 'Deselect All' : 'Select All'} ({filteredSuppliers.length})
+          </button>
         </div>
 
         {loading ? (
