@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Building2, Mail, Tag, Loader2, ChevronLeft, ChevronRight, User, Phone, Star, Send, Paperclip, Trophy, CheckSquare, Square } from 'lucide-react';
+import { X, Building2, Mail, Tag, Loader2, ChevronLeft, ChevronRight, User, Phone, Star, Send, Paperclip, Trophy, CheckSquare, Square, Search } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { QuoteRequestService } from '@/services/quoteRequestService';
 import { getSupabase } from '@/lib/supabase';
@@ -66,6 +66,10 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
   const [suppliers, setSuppliers] = useState<SupplierWithDetails[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
+  
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   // Email customization
   const [customizedEmails, setCustomizedEmails] = useState<CustomizedEmail[]>([]);
@@ -88,15 +92,61 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
       setSelectedSupplierIds([]);
       setCustomizedEmails([]);
       setCurrentSupplierIndex(0);
+      setSearchTerm('');
+      setSelectedCategories([]);
     }
   }, [isOpen]);
+
+  // Get all unique service categories from suppliers
+  const allCategories = useMemo(() => {
+    const categories = new Set<string>();
+    suppliers.forEach(supplier => {
+      if (supplier.service_categories) {
+        supplier.service_categories.forEach(category => categories.add(category));
+      }
+    });
+    return Array.from(categories).sort();
+  }, [suppliers]);
+
+  // Filter suppliers based on search and category filters
+  const filteredSuppliers = useMemo(() => {
+    let filtered = suppliers;
+
+    // Apply search filter - prioritize name matching
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(supplier => {
+        // Primary: match supplier name
+        if (supplier.supplier_name.toLowerCase().includes(term)) {
+          return true;
+        }
+        // Fallback: match email or service categories
+        return (
+          supplier.contact_email.toLowerCase().includes(term) ||
+          (supplier.service_categories && supplier.service_categories.some(cat => 
+            cat.toLowerCase().includes(term)
+          ))
+        );
+      });
+    }
+
+    // Apply category filter - show suppliers that have any selected category
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(supplier =>
+        supplier.service_categories && 
+        supplier.service_categories.some(cat => selectedCategories.includes(cat))
+      );
+    }
+
+    return filtered;
+  }, [suppliers, searchTerm, selectedCategories]);
 
   // Calculate relevance metadata and split into recommended/other sections
   const { recommendedSuppliers, otherSuppliers, maxScore } = useMemo(() => {
     const assetTags = asset?.tags || [];
     
-    // Calculate relevance for each supplier
-    const suppliersWithRelevance = suppliers.map(supplier => ({
+    // Calculate relevance for each filtered supplier
+    const suppliersWithRelevance = filteredSuppliers.map(supplier => ({
       ...supplier,
       relevance: getSupplierRelevanceMetadata(supplier, assetTags)
     }));
@@ -111,7 +161,7 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
       : 0;
     
     return { recommendedSuppliers: recommended, otherSuppliers: other, maxScore: max };
-  }, [suppliers, asset?.tags]);
+  }, [filteredSuppliers, asset?.tags]);
 
   const fetchSuppliers = async () => {
     setLoading(true);
@@ -146,6 +196,21 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
         return [...prev, supplierId];
       }
     });
+  };
+
+  // Toggle category filter
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev =>
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCategories([]);
   };
 
   // Select all recommended suppliers only
@@ -430,9 +495,66 @@ ${signature.phone}`;
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-6">
-                      {/* Recommended Suppliers Section */}
-                      {recommendedSuppliers.length > 0 && (
+                    <>
+                      {/* Prominent Search Bar - At the very top */}
+                      <div className="mb-4">
+                        <div className="relative">
+                          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300" />
+                          <input
+                            type="text"
+                            placeholder="Search suppliers by name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-12 pr-12 py-3 text-base bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                            autoFocus
+                          />
+                          {searchTerm && (
+                            <button
+                              onClick={() => setSearchTerm('')}
+                              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-white transition-colors"
+                              aria-label="Clear search"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Tag Toggles - Always Visible, Below Search */}
+                      {allCategories.length > 0 && (
+                        <div className="mb-4 pb-4 border-b border-white/20">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-sm font-semibold text-gray-200">Filter by Service Category</h4>
+                            {(searchTerm.trim().length > 0 || selectedCategories.length > 0) && (
+                              <button
+                                onClick={clearFilters}
+                                className="text-xs text-purple-300 hover:text-purple-200 font-medium transition-colors"
+                              >
+                                Clear all filters
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {allCategories.map(category => (
+                              <button
+                                key={category}
+                                onClick={() => toggleCategory(category)}
+                                className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                                  selectedCategories.includes(category)
+                                    ? 'bg-purple-500/30 text-purple-200 border-purple-400/50 font-medium shadow-sm'
+                                    : 'bg-white/5 text-gray-300 border-white/20 hover:bg-white/10 hover:border-white/30'
+                                }`}
+                              >
+                                {category}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-6">
+                        {/* Recommended Suppliers Section */}
+                        {recommendedSuppliers.length > 0 && (
                         <div>
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
@@ -631,7 +753,8 @@ ${signature.phone}`;
                           </div>
                         </div>
                       )}
-                    </div>
+                      </div>
+                    </>
                   )}
                 </div>
               ) : currentEmail && currentSupplier ? (
