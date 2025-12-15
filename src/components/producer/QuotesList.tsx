@@ -96,16 +96,6 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
     };
   }, [fetchQuotes]);
 
-  const fetchAsset = async () => {
-    try {
-      const assetData = await ProducerService.getAssetById(assetId);
-      setAsset(assetData);
-    } catch (err) {
-      console.error('Error fetching asset:', err);
-      // Non-critical, just won't have full asset details
-    }
-  };
-
   // Handle new quote requests (now supports multiple quotes)
   const handleQuotesRequested = (newQuotes: Quote[]) => {
     // Add new quotes to the list (optimistic update)
