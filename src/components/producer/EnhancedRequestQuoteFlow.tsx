@@ -445,11 +445,36 @@ ${signature.phone}`;
       {/* Modal Container */}
       <div className="fixed inset-0 z-[110] overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
-          {/* Modal Content */}
-          <div
-            className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
+          {/* Wrapper for Modal and External Arrows */}
+          <div className="relative w-full max-w-4xl">
+            {/* Floating Navigation Arrows - Outside Modal (only in preview step) */}
+            {currentStep === 'preview' && customizedEmails.length > 1 && (
+              <>
+                {/* Previous Arrow - Left Side */}
+                <button
+                  onClick={prevSupplier}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full z-20 p-3 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm border border-white/20 text-white transition-all duration-200 hover:scale-110 ml-2"
+                  aria-label="Previous supplier"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                
+                {/* Next Arrow - Right Side */}
+                <button
+                  onClick={nextSupplier}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full z-20 p-3 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm border border-white/20 text-white transition-all duration-200 hover:scale-110 mr-2"
+                  aria-label="Next supplier"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              </>
+            )}
+
+            {/* Modal Content */}
+            <div
+              className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5">
               <div className="flex items-start justify-between">
@@ -760,33 +785,15 @@ ${signature.phone}`;
               ) : currentEmail && currentSupplier ? (
                 /* STEP 2: Email Preview & Customization */
                 <div className="flex flex-col h-full">
-                  {/* Supplier Navigation */}
+                  {/* Supplier Header - No Navigation Arrows */}
                   <div className="flex items-center justify-between px-6 py-4 border-b border-white/20 bg-white/10">
-                    <div className="flex items-center gap-4">
-                      <button
-                        onClick={prevSupplier}
-                        className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                        disabled={customizedEmails.length <= 1}
-                      >
-                        <ChevronLeft className="h-5 w-5" />
-                      </button>
-                      
-                      <div className="text-center">
-                        <div className="text-sm font-medium text-white">
-                          {currentSupplier.supplier_name}
-                        </div>
-                        <div className="text-xs text-gray-300">
-                          {currentSupplierIndex + 1} of {customizedEmails.length}
-                        </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-white">
+                        {currentSupplier.supplier_name}
                       </div>
-                      
-                      <button
-                        onClick={nextSupplier}
-                        className="p-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                        disabled={customizedEmails.length <= 1}
-                      >
-                        <ChevronRight className="h-5 w-5" />
-                      </button>
+                      <div className="text-xs text-gray-300">
+                        {currentSupplierIndex + 1} of {customizedEmails.length}
+                      </div>
                     </div>
 
                     {/* Contact Info */}
@@ -811,8 +818,8 @@ ${signature.phone}`;
                     </div>
                   </div>
 
-                  {/* Email Editor */}
-                  <div className="flex-1 p-6 overflow-y-auto space-y-6">
+                  {/* Email Editor - With Horizontal Padding for Arrows */}
+                  <div className="flex-1 px-12 py-6 overflow-y-auto space-y-6">
                     {/* Subject */}
                     <div>
                       <label className="block text-sm font-medium text-gray-200 mb-2">
@@ -1014,6 +1021,9 @@ ${signature.phone}`;
               </div>
             </div>
           </div>
+          {/* End Modal Content */}
+          </div>
+          {/* End Wrapper */}
         </div>
       </div>
     </>
