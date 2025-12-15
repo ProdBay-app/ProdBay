@@ -190,10 +190,47 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     };
   }, []);
 
+  // Get available tags (predefined tags not already added)
+  // Moved before early return to maintain hook order
+  const getAvailableTags = () => {
+    const currentTagsLower = editingData.tags.map(tag => tag.toLowerCase());
+    return PREDEFINED_ASSET_TAGS.filter(
+      tag => !currentTagsLower.includes(tag.name.toLowerCase())
+    );
+  };
+
+  // Filter available tags based on search
+  // Moved before early return to maintain hook order
+  const filteredAvailableTags = useMemo(() => {
+    const available = getAvailableTags();
+    if (!tagSearchTerm.trim()) return available;
+    return filterTags(tagSearchTerm).filter(tag => 
+      available.some(availableTag => availableTag.name === tag.name)
+    );
+  }, [tagSearchTerm, editingData.tags]);
+
+  // Close tag selector when clicking outside
+  // Moved before early return to maintain hook order
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showTagSelector) {
+        const target = event.target as Element;
+        if (!target.closest('.tag-selector-container')) {
+          setShowTagSelector(false);
+          setTagSearchTerm('');
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTagSelector]);
+
   // Debug logging
   console.log('AssetDetailModal render:', { isOpen, asset: asset?.id });
 
   // Don't render if modal is closed or no asset is selected
+  // IMPORTANT: All hooks must be declared BEFORE this early return
   if (!isOpen || !asset) return null;
 
   // Immediate save on blur
@@ -244,39 +281,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     setShowTagSelector(false);
     setTagSearchTerm('');
   };
-
-  // Get available tags (predefined tags not already added)
-  const getAvailableTags = () => {
-    const currentTagsLower = editingData.tags.map(tag => tag.toLowerCase());
-    return PREDEFINED_ASSET_TAGS.filter(
-      tag => !currentTagsLower.includes(tag.name.toLowerCase())
-    );
-  };
-
-  // Filter available tags based on search
-  const filteredAvailableTags = useMemo(() => {
-    const available = getAvailableTags();
-    if (!tagSearchTerm.trim()) return available;
-    return filterTags(tagSearchTerm).filter(tag => 
-      available.some(availableTag => availableTag.name === tag.name)
-    );
-  }, [tagSearchTerm, editingData.tags]);
-
-  // Close tag selector when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (showTagSelector) {
-        const target = event.target as Element;
-        if (!target.closest('.tag-selector-container')) {
-          setShowTagSelector(false);
-          setTagSearchTerm('');
-        }
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showTagSelector]);
 
   // Format dates for display
   const formattedCreatedAt = new Date(asset.created_at).toLocaleDateString('en-US', {
