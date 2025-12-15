@@ -171,149 +171,163 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
-        <div className="mb-6">
-          <h3 className="text-xl font-semibold mb-1">Select Suppliers for Quote Requests</h3>
-          <p className="text-gray-600 text-sm">
-            Choose which suppliers should receive quote requests for "{asset?.asset_name}".
-          </p>
-        </div>
-
-        {/* Prominent Search Bar */}
-        <div className="mb-4">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search suppliers by name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-12 py-3 text-base border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-              autoFocus
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Clear search"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header - Purple gradient matching other modals */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 pr-4">
+              <h3 className="text-2xl font-bold text-white mb-1">Select Suppliers</h3>
+              <p className="text-purple-100 text-sm">
+                Choose suppliers to request quotes for "{asset?.asset_name}"
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 p-2 hover:bg-white/20 rounded-lg transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
           </div>
         </div>
 
-        {/* Tag Toggles - Always Visible */}
-        {allCategories.length > 0 && (
-          <div className="mb-4 pb-4 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-gray-700">Filter by Service Category</h4>
-              {hasActiveFilters && (
+        {/* Body - Scrollable content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {/* Prominent Search Bar - At the very top */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300" />
+              <input
+                type="text"
+                placeholder="Search suppliers by name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-12 py-3 text-base bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                autoFocus
+              />
+              {searchTerm && (
                 <button
-                  onClick={clearFilters}
-                  className="text-xs text-purple-600 hover:text-purple-700 font-medium transition-colors"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-300 hover:text-white transition-colors"
+                  aria-label="Clear search"
                 >
-                  Clear all filters
+                  <X className="w-5 h-5" />
                 </button>
               )}
             </div>
-            <div className="flex flex-wrap gap-2">
-              {allCategories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => toggleCategory(category)}
-                  className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
-                    selectedCategories.includes(category)
-                      ? 'bg-purple-100 text-purple-700 border-purple-300 font-medium shadow-sm'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
           </div>
-        )}
 
-        {/* Select All Button */}
-        <div className="mb-4 flex justify-end">
-          <button
-            onClick={handleSelectAll}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-medium"
-          >
-            {allVisibleSelected ? (
-              <CheckSquare className="w-4 h-4" />
-            ) : (
-              <Square className="w-4 h-4" />
-            )}
-            {allVisibleSelected ? 'Deselect All' : 'Select All'} ({filteredSuppliers.length})
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
-            <span className="ml-2 text-gray-600">Loading suppliers...</span>
-          </div>
-        ) : (
-          <>
-            <div className="mb-4">
-              {/* Results Summary */}
+          {/* Tag Toggles - Always Visible, Below Search */}
+          {allCategories.length > 0 && (
+            <div className="mb-4 pb-4 border-b border-white/20">
               <div className="flex items-center justify-between mb-3">
-                <div className="text-sm text-gray-600">
-                  {filteredSuppliers.length === suggestedSuppliers.length ? (
-                    <span>{suggestedSuppliers.length} supplier{suggestedSuppliers.length !== 1 ? 's' : ''} available</span>
-                  ) : (
-                    <span>
-                      {filteredSuppliers.length} of {suggestedSuppliers.length} supplier{filteredSuppliers.length !== 1 ? 's' : ''} shown
-                    </span>
-                  )}
-                </div>
-                {selectedSupplierIds.length > 0 && (
-                  <div className="text-sm text-purple-600 font-medium">
-                    {selectedSupplierIds.length} selected
-                  </div>
+                <h4 className="text-sm font-semibold text-gray-200">Filter by Service Category</h4>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-purple-300 hover:text-purple-200 font-medium transition-colors"
+                  >
+                    Clear all filters
+                  </button>
                 )}
               </div>
+              <div className="flex flex-wrap gap-2">
+                {allCategories.map(category => (
+                  <button
+                    key={category}
+                    onClick={() => toggleCategory(category)}
+                    className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
+                      selectedCategories.includes(category)
+                        ? 'bg-purple-500/30 text-purple-200 border-purple-400/50 font-medium shadow-sm'
+                        : 'bg-white/5 text-gray-300 border-white/20 hover:bg-white/10 hover:border-white/30'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
-              <div className="space-y-6 max-h-96 overflow-y-auto">
-                {filteredSuppliers.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Package className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                    {suggestedSuppliers.length === 0 ? (
-                      <>
-                        <p>No relevant suppliers found for this asset.</p>
-                        <p className="text-sm">Try adding more suppliers or check the asset specifications.</p>
-                      </>
+          {/* Select All Button */}
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={handleSelectAll}
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-500/20 text-purple-200 border border-purple-400/50 rounded-lg hover:bg-purple-500/30 transition-colors font-medium"
+            >
+              {allVisibleSelected ? (
+                <CheckSquare className="w-4 h-4" />
+              ) : (
+                <Square className="w-4 h-4" />
+              )}
+              {allVisibleSelected ? 'Deselect All' : 'Select All'} ({filteredSuppliers.length})
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
+              <span className="ml-2 text-gray-300">Loading suppliers...</span>
+            </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                {/* Results Summary */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-sm text-gray-300">
+                    {filteredSuppliers.length === suggestedSuppliers.length ? (
+                      <span>{suggestedSuppliers.length} supplier{suggestedSuppliers.length !== 1 ? 's' : ''} available</span>
                     ) : (
-                      <>
-                        <p>No suppliers match your current filters.</p>
-                        <p className="text-sm">Try adjusting your search or filter criteria.</p>
-                        <button
-                          onClick={clearFilters}
-                          className="mt-2 px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
-                        >
-                          Clear Filters
-                        </button>
-                      </>
+                      <span>
+                        {filteredSuppliers.length} of {suggestedSuppliers.length} supplier{filteredSuppliers.length !== 1 ? 's' : ''} shown
+                      </span>
                     )}
                   </div>
-                ) : (
+                  {selectedSupplierIds.length > 0 && (
+                    <div className="text-sm text-purple-300 font-medium">
+                      {selectedSupplierIds.length} selected
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-6 max-h-96 overflow-y-auto">
+                  {filteredSuppliers.length === 0 ? (
+                    <div className="text-center py-8 text-gray-300">
+                      <Package className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                      {suggestedSuppliers.length === 0 ? (
+                        <>
+                          <p>No relevant suppliers found for this asset.</p>
+                          <p className="text-sm text-gray-400">Try adding more suppliers or check the asset specifications.</p>
+                        </>
+                      ) : (
+                        <>
+                          <p>No suppliers match your current filters.</p>
+                          <p className="text-sm text-gray-400">Try adjusting your search or filter criteria.</p>
+                          <button
+                            onClick={clearFilters}
+                            className="mt-2 px-3 py-1 text-sm bg-purple-500/20 text-purple-200 border border-purple-400/50 rounded-lg hover:bg-purple-500/30 transition-colors"
+                          >
+                            Clear Filters
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ) : (
                   <>
                     {/* Recommended Suppliers Section */}
                     {recommendedSuppliers.length > 0 && (
                       <div>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <Star className="w-5 h-5 text-teal-600 fill-teal-600" />
-                            <h4 className="text-sm font-semibold text-gray-900">
+                            <Star className="w-5 h-5 text-teal-400 fill-teal-400" />
+                            <h4 className="text-sm font-semibold text-white">
                               Recommended for this Asset ({recommendedSuppliers.length})
                             </h4>
                           </div>
                           <button
                             onClick={handleSelectAllRecommended}
-                            className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-teal-50 text-teal-700 rounded-lg hover:bg-teal-100 transition-colors font-medium"
+                            className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-teal-500/20 text-teal-200 border border-teal-400/50 rounded-lg hover:bg-teal-500/30 transition-colors font-medium"
                           >
                             {allRecommendedSelected ? (
                               <>
@@ -338,7 +352,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                               <div
                                 key={supplier.id}
                                 className={`border rounded-lg p-4 transition-colors ${
-                                  isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-gray-300'
+                                  isSelected ? 'border-teal-400 bg-teal-500/20' : 'border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/30'
                                 } ${isAlreadyContacted ? 'opacity-75' : ''}`}
                               >
                                 <div className="flex items-center space-x-3">
@@ -348,29 +362,29 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                                     checked={isSelected}
                                     onChange={() => onSupplierToggle(supplier.id)}
                                     disabled={isAlreadyContacted}
-                                    className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-teal-400 focus:ring-teal-400 border-white/30 rounded bg-black/20"
                                   />
                                   <div className="flex-1">
                                     <div className="flex items-center space-x-2 flex-wrap">
                                       <label
                                         htmlFor={`supplier-${supplier.id}`}
-                                        className="font-medium text-gray-900 cursor-pointer"
+                                        className="font-medium text-white cursor-pointer"
                                       >
                                         {supplier.supplier_name}
                                       </label>
                                       {supplier.relevance.score === maxScore && maxScore > 0 && (
-                                        <span className="px-2 py-0.5 text-xs bg-teal-200 text-teal-800 rounded-full font-bold border border-teal-300 flex items-center gap-1">
-                                          <Trophy className="w-3 h-3 fill-teal-800" />
+                                        <span className="px-2 py-0.5 text-xs bg-teal-500/30 text-teal-200 rounded-full font-bold border border-teal-400/50 flex items-center gap-1">
+                                          <Trophy className="w-3 h-3 fill-teal-200" />
                                           Best Match
                                         </span>
                                       )}
                                       {isAlreadyContacted && (
-                                        <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                                        <span className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-200 border border-yellow-400/50 rounded-full">
                                           Already Contacted
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-sm text-gray-600">{supplier.contact_email}</p>
+                                    <p className="text-sm text-gray-300">{supplier.contact_email}</p>
                                     {supplier.service_categories && supplier.service_categories.length > 0 && (
                                       <div className="flex flex-wrap gap-1 mt-2">
                                         {supplier.service_categories.map((category, index) => {
@@ -380,8 +394,8 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                                               key={index}
                                               className={`px-2 py-1 text-xs rounded ${
                                                 isMatching
-                                                  ? 'bg-teal-100 text-teal-800 font-semibold border border-teal-200'
-                                                  : 'bg-gray-100 text-gray-700'
+                                                  ? 'bg-teal-500/30 text-teal-200 font-semibold border border-teal-400/50'
+                                                  : 'bg-white/5 text-gray-300 border border-white/10'
                                               }`}
                                               aria-label={isMatching ? `Matching category: ${category}` : category}
                                             >
@@ -404,10 +418,10 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                     {otherSuppliers.length > 0 && (
                       <div>
                         {recommendedSuppliers.length > 0 && (
-                          <div className="border-t border-gray-200 my-4"></div>
+                          <div className="border-t border-white/20 my-4"></div>
                         )}
                         <div className="flex items-center gap-2 mb-3">
-                          <h4 className="text-sm font-medium text-gray-600">
+                          <h4 className="text-sm font-medium text-gray-300">
                             Other Suppliers ({otherSuppliers.length})
                           </h4>
                         </div>
@@ -420,7 +434,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                               <div
                                 key={supplier.id}
                                 className={`border rounded-lg p-4 transition-colors ${
-                                  isSelected ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-gray-300'
+                                  isSelected ? 'border-teal-400 bg-teal-500/20' : 'border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/30'
                                 } ${isAlreadyContacted ? 'opacity-75' : ''}`}
                               >
                                 <div className="flex items-center space-x-3">
@@ -430,29 +444,29 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                                     checked={isSelected}
                                     onChange={() => onSupplierToggle(supplier.id)}
                                     disabled={isAlreadyContacted}
-                                    className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-teal-400 focus:ring-teal-400 border-white/30 rounded bg-black/20"
                                   />
                                   <div className="flex-1">
                                     <div className="flex items-center space-x-2">
                                       <label
                                         htmlFor={`supplier-${supplier.id}`}
-                                        className="font-medium text-gray-900 cursor-pointer"
+                                        className="font-medium text-white cursor-pointer"
                                       >
                                         {supplier.supplier_name}
                                       </label>
                                       {isAlreadyContacted && (
-                                        <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                                        <span className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-200 border border-yellow-400/50 rounded-full">
                                           Already Contacted
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-sm text-gray-600">{supplier.contact_email}</p>
+                                    <p className="text-sm text-gray-300">{supplier.contact_email}</p>
                                     {supplier.service_categories && supplier.service_categories.length > 0 && (
                                       <div className="flex flex-wrap gap-1 mt-2">
                                         {supplier.service_categories.map((category, index) => (
                                           <span
                                             key={index}
-                                            className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded"
+                                            className="px-2 py-1 text-xs bg-white/5 text-gray-300 border border-white/10 rounded"
                                           >
                                             {category}
                                           </span>
@@ -470,40 +484,43 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                   </>
                 )}
               </div>
-            </div>
+            </>
+          )}
+        </div>
 
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="text-sm text-gray-600">
-                {selectedSupplierIds.length > 0 && (
-                  <span>
-                    {selectedSupplierIds.length} supplier{selectedSupplierIds.length !== 1 ? 's' : ''} selected
-                  </span>
-                )}
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={onConfirm}
-                  disabled={selectedSupplierIds.length === 0}
-                  className={`px-4 py-2 rounded text-white ${
-                    selectedSupplierIds.length === 0
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-teal-600 hover:bg-teal-700'
-                  }`}
-                >
-                  Send Quote Requests{selectedSupplierIds.length > 0 ? ` (${selectedSupplierIds.length})` : ''}
-                </button>
-              </div>
+        {/* Footer - Sticky at bottom */}
+        <div className="sticky bottom-0 border-t border-white/20 bg-white/5 backdrop-blur-sm px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-300">
+              {selectedSupplierIds.length > 0 && (
+                <span>
+                  {selectedSupplierIds.length} supplier{selectedSupplierIds.length !== 1 ? 's' : ''} selected
+                </span>
+              )}
             </div>
-          </>
-        )}
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded border border-white/20 text-gray-200 hover:bg-white/10 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={onConfirm}
+                disabled={selectedSupplierIds.length === 0}
+                className={`px-4 py-2 rounded text-white transition-colors ${
+                  selectedSupplierIds.length === 0
+                    ? 'bg-gray-500/50 cursor-not-allowed'
+                    : 'bg-teal-600 hover:bg-teal-700'
+                }`}
+              >
+                Send Quote Requests{selectedSupplierIds.length > 0 ? ` (${selectedSupplierIds.length})` : ''}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
