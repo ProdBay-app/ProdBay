@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Building2, Mail, Clock, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Building2, Mail, Clock, CheckCircle, AlertCircle, Radio } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import type { Asset, Quote, Supplier } from '@/lib/supabase';
@@ -35,9 +35,11 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   const { showError } = useNotification();
   const [suppliersWithStatus, setSuppliersWithStatus] = useState<SupplierWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingRef = useRef(loading);
 
   const loadSupplierStatus = useCallback(async () => {
+    loadingRef.current = true;
     setLoading(true);
     try {
       // Get all quotes for this asset
@@ -73,22 +75,40 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       console.error('Error loading supplier status:', err);
       showError('Failed to load supplier status');
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }, [asset.id, showError]);
+  }, [asset.id, asset.assigned_supplier_id, showError]);
 
-  // Load suppliers and their status
+  // Load suppliers and their status with auto-refresh polling
   useEffect(() => {
-    loadSupplierStatus();
-  }, [loadSupplierStatus]);
+    // Update loading ref when loading state changes
+    loadingRef.current = loading;
+  }, [loading]);
 
-  // Refresh supplier status
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadSupplierStatus();
-    setRefreshing(false);
-    onStatusUpdate?.();
-  };
+  // Set up polling interval (runs independently of loading state)
+  useEffect(() => {
+    // Initial load
+    loadSupplierStatus();
+
+    // Set up polling interval (20 seconds)
+    // Note: Using loadingRef to check current loading state without causing
+    // interval restarts when loading changes (creates consistent 20s interval)
+    intervalRef.current = setInterval(() => {
+      // Only poll if not currently loading to prevent overlapping requests
+      if (!loadingRef.current) {
+        loadSupplierStatus();
+      }
+    }, 20000); // 20 seconds
+
+    // Cleanup: clear interval on unmount or when asset changes
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [loadSupplierStatus]); // Only restart when asset changes (via loadSupplierStatus dependency)
 
   // Group suppliers by status
   const suppliersByStatus = useMemo(() => {
@@ -169,14 +189,13 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
             {suppliersWithStatus.length}
           </span>
         </div>
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm bg-white/10 border border-white/20 text-gray-200 rounded-lg hover:bg-white/20 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Auto-refresh indicator */}
+          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+            <Radio className="w-3 h-3 text-green-400" />
+            <span>Auto-refresh active</span>
+          </div>
+        </div>
       </div>
 
       {/* Status Columns */}
@@ -263,4 +282,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   );
 };
 
-export default SupplierStatusTracker;
+// Memoize component to prevent unnecessary re-renders when parent updates
+// Only re-render when props actually change (asset.id, onStatusUpdate reference, onQuoteClick reference)
+export default React.memo(SupplierStatusTracker);

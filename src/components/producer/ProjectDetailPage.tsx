@@ -43,7 +43,7 @@ const ProjectDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
 
-  // State management
+  // State management - ALL hooks must be declared before any conditional returns
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +61,12 @@ const ProjectDetailPage: React.FC = () => {
   // Track current edited brief values for PDF download
   const [currentEditedBriefDescription, setCurrentEditedBriefDescription] = useState<string>('');
   const [currentEditedPhysicalParameters, setCurrentEditedPhysicalParameters] = useState<string>('');
+
+  // Brief mode state (view/edit) - MOVED UP to ensure hooks are called before early returns
+  const [briefMode, setBriefMode] = useState<'view' | 'edit'>('view');
+  const [briefIsDirty, setBriefIsDirty] = useState(false);
+  const [briefIsSaving, setBriefIsSaving] = useState(false);
+  const [showHighlights, setShowHighlights] = useState(true);
 
 
 
@@ -124,12 +130,6 @@ const ProjectDetailPage: React.FC = () => {
   useEffect(() => {
     console.log('[ProjectDetailPage] activeView changed to:', activeView);
   }, [activeView]);
-
-  // Brief mode state (view/edit)
-  const [briefMode, setBriefMode] = useState<'view' | 'edit'>('view');
-  const [briefIsDirty, setBriefIsDirty] = useState(false);
-  const [briefIsSaving, setBriefIsSaving] = useState(false);
-  const [showHighlights, setShowHighlights] = useState(true);
 
   // Clear hover state when highlights are disabled
   useEffect(() => {

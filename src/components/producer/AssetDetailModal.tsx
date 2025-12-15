@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, FileText, Clock, Package, Hash, Tag, Check, Loader2 } from 'lucide-react';
+import { X, FileText, Clock, Package, Hash, Tag, Check, Loader2, Plus } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 import QuotesList from './QuotesList';
 import SupplierStatusTracker from './SupplierStatusTracker';
 import QuoteDetailModal from './QuoteDetailModal';
-import { getTagColor } from '@/utils/assetTags';
+import EnhancedRequestQuoteFlow from './EnhancedRequestQuoteFlow';
+import { getTagColor, PREDEFINED_ASSET_TAGS, filterTags } from '@/utils/assetTags';
 import { toTitleCase } from '@/utils/textFormatters';
 import type { Asset, Quote } from '@/lib/supabase';
 
@@ -29,10 +30,16 @@ interface AssetDetailModalProps {
  * - Supplier status tracking and quotes management
  */
 const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onClose, onAssetUpdate }) => {
-  const { showSuccess, showError } = useNotification();
+  const { showError } = useNotification();
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [activeQuote, setActiveQuote] = useState<Quote | null>(null);
+  const [showTagSelector, setShowTagSelector] = useState(false);
+  const [tagSearchTerm, setTagSearchTerm] = useState('');
+  
+  // Request Quote Modal state (lifted from QuotesList to prevent unmounting)
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [existingQuotes, setExistingQuotes] = useState<Quote[]>([]);
   
   // Track if this is the initial load (to prevent autosave on mount)
   const isInitialMount = useRef(true);
@@ -188,10 +195,80 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     };
   }, []);
 
+  // Get available tags (predefined tags not already added)
+  // Moved before early return to maintain hook order
+  const getAvailableTags = () => {
+    const currentTagsLower = editingData.tags.map(tag => tag.toLowerCase());
+    return PREDEFINED_ASSET_TAGS.filter(
+      tag => !currentTagsLower.includes(tag.name.toLowerCase())
+    );
+  };
+
+  // Filter available tags based on search
+  // Moved before early return to maintain hook order
+  const filteredAvailableTags = useMemo(() => {
+    const available = getAvailableTags();
+    if (!tagSearchTerm.trim()) return available;
+    return filterTags(tagSearchTerm).filter(tag => 
+      available.some(availableTag => availableTag.name === tag.name)
+    );
+  }, [tagSearchTerm, editingData.tags]);
+
+  // Close tag selector when clicking outside
+  // Moved before early return to maintain hook order
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showTagSelector) {
+        const target = event.target as Element;
+        if (!target.closest('.tag-selector-container')) {
+          setShowTagSelector(false);
+          setTagSearchTerm('');
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTagSelector]);
+
+  // Fetch existing quotes for the request modal (only when asset changes)
+  useEffect(() => {
+    if (asset?.id) {
+      ProducerService.getQuotesForAsset(asset.id)
+        .then(setExistingQuotes)
+        .catch((err) => {
+          console.error('Error fetching existing quotes:', err);
+          setExistingQuotes([]);
+        });
+    }
+  }, [asset?.id]);
+
+  // Handler to open request quote modal (passed to QuotesList)
+  const handleOpenRequestModal = useCallback(() => {
+    setIsRequestModalOpen(true);
+  }, []);
+
+  // Handler for when quotes are requested (optimistically update local state)
+  const handleQuotesRequested = useCallback((newQuotes: Quote[]) => {
+    setExistingQuotes(prev => [...newQuotes, ...prev]);
+    setIsRequestModalOpen(false);
+  }, []);
+
+  // Memoized callback for quote click (shared between SupplierStatusTracker and QuotesList)
+  const handleQuoteClick = useCallback((quote: Quote) => {
+    setActiveQuote(quote);
+  }, []);
+
+  // Memoized callback for status update (no-op but stable reference for SupplierStatusTracker)
+  const handleStatusUpdate = useCallback(() => {
+    // Refresh data if needed - currently no-op but keeps reference stable
+  }, []);
+
   // Debug logging
   console.log('AssetDetailModal render:', { isOpen, asset: asset?.id });
 
   // Don't render if modal is closed or no asset is selected
+  // IMPORTANT: All hooks must be declared BEFORE this early return
   if (!isOpen || !asset) return null;
 
   // Immediate save on blur
@@ -218,6 +295,29 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     
     // Trigger debounced save
     debouncedSave();
+  };
+
+  // Handle tag removal
+  const handleRemoveTag = (tagName: string) => {
+    const updatedTags = editingData.tags.filter(tag => tag !== tagName);
+    handleFieldChange('tags', updatedTags);
+  };
+
+  // Handle tag addition (only from predefined list)
+  const handleAddTag = (tagName: string) => {
+    // Prevent duplicates (case-insensitive check)
+    const tagExists = editingData.tags.some(
+      tag => tag.toLowerCase() === tagName.toLowerCase()
+    );
+    
+    if (!tagExists) {
+      const updatedTags = [...editingData.tags, tagName];
+      handleFieldChange('tags', updatedTags);
+    }
+    
+    // Close selector and reset search
+    setShowTagSelector(false);
+    setTagSearchTerm('');
   };
 
   // Format dates for display
@@ -359,14 +459,16 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 </div>
 
                 {/* Tags Section */}
-                {asset.tags && asset.tags.length > 0 && (
-                  <div className="mt-6">
-                    <label className="block text-sm font-semibold text-gray-200 mb-3">
-                      <Tag className="w-4 h-4 inline mr-1.5 text-purple-300" />
-                      Tags
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {asset.tags.map(tagName => (
+                <div className="mt-6">
+                  <label className="block text-sm font-semibold text-gray-200 mb-3">
+                    <Tag className="w-4 h-4 inline mr-1.5 text-purple-300" />
+                    Tags
+                  </label>
+                  
+                  {/* Existing Tags with Remove Buttons */}
+                  {editingData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {editingData.tags.map(tagName => (
                         <span
                           key={tagName}
                           className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-white"
@@ -374,21 +476,85 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                         >
                           <Tag className="w-3 h-3" />
                           {tagName}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tagName)}
+                            className="ml-1 hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                            aria-label={`Remove ${tagName} tag`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
                         </span>
                       ))}
                     </div>
+                  )}
+
+                  {/* Add Tag Selector */}
+                  <div className="relative tag-selector-container">
+                    <button
+                      type="button"
+                      onClick={() => setShowTagSelector(!showTagSelector)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-gray-200 rounded-lg hover:bg-white/20 transition-colors text-sm font-medium"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Tag
+                    </button>
+
+                    {/* Tag Dropdown */}
+                    {showTagSelector && (
+                      <div className="absolute z-50 mt-2 w-80 bg-gray-900 border border-white/20 rounded-lg shadow-xl max-h-96 overflow-hidden">
+                        {/* Search */}
+                        <div className="p-3 border-b border-white/20">
+                          <input
+                            type="text"
+                            placeholder="Search predefined tags..."
+                            value={tagSearchTerm}
+                            onChange={(e) => setTagSearchTerm(e.target.value)}
+                            className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            autoFocus
+                          />
+                        </div>
+
+                        {/* Tag List */}
+                        <div className="max-h-80 overflow-y-auto">
+                          {filteredAvailableTags.length === 0 ? (
+                            <div className="p-3 text-sm text-gray-300 text-center">
+                              {tagSearchTerm.trim() 
+                                ? 'No matching tags found' 
+                                : 'All available tags have been added'}
+                            </div>
+                          ) : (
+                            filteredAvailableTags.map((tag: { name: string; color: string; description: string }) => (
+                              <button
+                                key={tag.name}
+                                type="button"
+                                onClick={() => handleAddTag(tag.name)}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2 transition-colors"
+                              >
+                                <div
+                                  className="w-3 h-3 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: tag.color }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-white truncate">{tag.name}</div>
+                                  <div className="text-xs text-gray-300 truncate">{tag.description}</div>
+                                </div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </section>
 
               {/* Supplier Status Tracking Section */}
               <section>
                 <SupplierStatusTracker 
                   asset={asset}
-                  onStatusUpdate={() => {
-                    // Refresh data if needed
-                  }}
-                  onQuoteClick={(quote) => setActiveQuote(quote)}
+                  onStatusUpdate={handleStatusUpdate}
+                  onQuoteClick={handleQuoteClick}
                 />
               </section>
 
@@ -397,7 +563,8 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
           <QuotesList 
             assetId={asset.id} 
             assetName={asset.asset_name}
-            onQuoteClick={(quote) => setActiveQuote(quote)}
+            onQuoteClick={handleQuoteClick}
+            onOpenRequestModal={handleOpenRequestModal}
           />
         </section>
 
@@ -483,6 +650,18 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
           // Refresh quotes if needed
         }}
       />
+      {/* Enhanced Request Quote Flow - Rendered at AssetDetailModal level to prevent unmounting */}
+      {asset && (
+        <EnhancedRequestQuoteFlow
+          isOpen={isRequestModalOpen}
+          assetId={asset.id}
+          assetName={asset.asset_name}
+          asset={asset}
+          existingQuotes={existingQuotes}
+          onClose={() => setIsRequestModalOpen(false)}
+          onQuotesRequested={handleQuotesRequested}
+        />
+      )}
     </>
   );
 };

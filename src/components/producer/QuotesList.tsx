@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FileText, Building2, Mail, DollarSign, Plus, Clock, AlertCircle, Loader2, BarChart3, MessageCircle } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
-import EnhancedRequestQuoteFlow from './EnhancedRequestQuoteFlow';
 import QuoteComparisonModal from './QuoteComparisonModal';
-import type { Quote, Asset } from '@/lib/supabase';
+import type { Quote } from '@/lib/supabase';
 
 interface QuotesListProps {
   assetId: string;
   assetName: string;
   onQuoteClick?: (quote: Quote) => void;
+  onOpenRequestModal: () => void;
 }
 
 /**
@@ -24,23 +24,21 @@ interface QuotesListProps {
  * - Loading and error states
  * - Empty state when no quotes exist
  */
-const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClick }) => {
+const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClick, onOpenRequestModal }) => {
   const { showError } = useNotification();
   
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
-  const [asset, setAsset] = useState<Asset | null>(null);
+  
+  // Polling refs
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingRef = useRef(loading);
 
-  // Fetch quotes and asset on component mount
-  useEffect(() => {
-    fetchQuotes();
-    fetchAsset();
-  }, [assetId]);
-
-  const fetchQuotes = async () => {
+  // Fetch quotes with polling support
+  const fetchQuotes = useCallback(async () => {
+    loadingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -52,25 +50,37 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
       setError(errorMessage);
       showError(errorMessage);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  };
+  }, [assetId, showError]);
 
-  const fetchAsset = async () => {
-    try {
-      const assetData = await ProducerService.getAssetById(assetId);
-      setAsset(assetData);
-    } catch (err) {
-      console.error('Error fetching asset:', err);
-      // Non-critical, just won't have full asset details
-    }
-  };
+  // Update loading ref when loading state changes
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
 
-  // Handle new quote requests (now supports multiple quotes)
-  const handleQuotesRequested = (newQuotes: Quote[]) => {
-    // Add new quotes to the list (optimistic update)
-    setQuotes(prev => [...newQuotes, ...prev]);
-  };
+  // Set up polling interval for quotes (20 seconds)
+  useEffect(() => {
+    // Initial load
+    fetchQuotes();
+
+    // Set up polling interval (20 seconds)
+    intervalRef.current = setInterval(() => {
+      // Only poll if not currently loading to prevent overlapping requests
+      if (!loadingRef.current) {
+        fetchQuotes();
+      }
+    }, 20000); // 20 seconds
+
+    // Cleanup: clear interval on unmount or when assetId changes
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [fetchQuotes]);
 
   // Handle quote updates from comparison modal (accepts/rejects)
   const handleQuoteUpdate = () => {
@@ -197,7 +207,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
 
           {/* Request Quote Button */}
           <button
-            onClick={() => setIsRequestModalOpen(true)}
+            onClick={onOpenRequestModal}
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium text-sm"
           >
             <Plus className="w-4 h-4" />
@@ -216,7 +226,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
             Request quotes from suppliers to get pricing for this asset
           </p>
           <button
-            onClick={() => setIsRequestModalOpen(true)}
+            onClick={onOpenRequestModal}
             className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
           >
             <Plus className="w-4 h-4" />
@@ -341,17 +351,6 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
           })}
         </div>
       )}
-
-      {/* Enhanced Request Quote Flow */}
-      <EnhancedRequestQuoteFlow
-        isOpen={isRequestModalOpen}
-        assetId={assetId}
-        assetName={assetName}
-        asset={asset}
-        existingQuotes={quotes}
-        onClose={() => setIsRequestModalOpen(false)}
-        onQuotesRequested={handleQuotesRequested}
-      />
 
       {/* Quote Comparison Modal */}
       <QuoteComparisonModal
