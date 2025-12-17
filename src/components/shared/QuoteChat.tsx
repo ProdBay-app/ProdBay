@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageCircle, Send, User, Loader2 } from 'lucide-react';
 import { QuoteService, type Message } from '@/services/quoteService';
 import { useNotification } from '@/hooks/useNotification';
+import { createInitialRequestMessage, isInitialRequestMessage } from '@/utils/quoteRequestMessage';
+import MessageAttachments from './MessageAttachments';
 
 interface QuoteChatProps {
   quoteId: string;
@@ -61,7 +63,16 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
         return;
       }
 
-      setMessages(response.data.messages || []);
+      // Prepend initial request message if it exists
+      const initialRequest = createInitialRequestMessage(
+        response.data.quote,
+        response.data.quote.id
+      );
+      const allMessages = initialRequest
+        ? [initialRequest, ...(response.data.messages || [])]
+        : (response.data.messages || []);
+      
+      setMessages(allMessages);
       setError(null);
     } catch (err) {
       console.error('Error loading messages:', err);
@@ -78,9 +89,21 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
     try {
       const response = await QuoteService.getQuoteMessages(quoteId);
       if (response.success && response.data) {
+        // Prepend initial request message if it exists (same as loadMessages)
+        const initialRequest = createInitialRequestMessage(
+          response.data.quote,
+          response.data.quote.id
+        );
+        const newMessages = initialRequest
+          ? [initialRequest, ...(response.data.messages || [])]
+          : (response.data.messages || []);
+        
         // Only update if messages have changed (avoid unnecessary re-renders)
-        const newMessages = response.data.messages || [];
-        if (JSON.stringify(newMessages) !== JSON.stringify(messages)) {
+        // Compare without the synthetic message ID (which includes timestamp)
+        const currentMessagesWithoutSynthetic = messages.filter(m => !isInitialRequestMessage(m.id));
+        const newMessagesWithoutSynthetic = newMessages.filter(m => !isInitialRequestMessage(m.id));
+        
+        if (JSON.stringify(newMessagesWithoutSynthetic) !== JSON.stringify(currentMessagesWithoutSynthetic)) {
           setMessages(newMessages);
         }
       }
@@ -221,6 +244,8 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
           ) : (
             messages.map((message) => {
               const isProducer = message.sender_type === 'PRODUCER';
+              const isInitialRequest = isInitialRequestMessage(message.id);
+              
               return (
                 <div
                   key={message.id}
@@ -228,7 +253,9 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
                 >
                   <div
                     className={`max-w-[75%] rounded-lg p-3 ${
-                      isProducer
+                      isInitialRequest
+                        ? 'bg-purple-600/80 border-2 border-purple-400 text-white'
+                        : isProducer
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-700 text-gray-100'
                     }`}
@@ -236,13 +263,23 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
                     <div className="flex items-center space-x-2 mb-1">
                       <User className="h-4 w-4" />
                       <span className="text-xs font-medium">
-                        {isProducer ? 'Me' : supplierName}
+                        {isInitialRequest ? 'Original Request' : isProducer ? 'Me' : supplierName}
                       </span>
-                      <span className={`text-xs ${isProducer ? 'text-blue-100' : 'text-gray-400'}`}>
+                      <span className={`text-xs ${isProducer || isInitialRequest ? 'text-blue-100' : 'text-gray-400'}`}>
                         {formatTime(message.created_at)}
                       </span>
                     </div>
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    
+                    {/* Attachments (if present) */}
+                    {message.attachments && message.attachments.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-white/20">
+                        <MessageAttachments 
+                          attachments={message.attachments}
+                          variant={isProducer || isInitialRequest ? 'light' : 'dark'}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               );

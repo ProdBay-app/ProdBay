@@ -37,9 +37,13 @@ class EmailService {
    * @param {string} params.message - Email message body
    * @param {string} params.quoteLink - Link to submit quote
    * @param {string} [params.subject] - Optional custom subject
+   * @param {Array} [params.attachments] - Optional array of attachments with {filename, content (Base64), contentType} (fallback)
+   * @param {Array} [params.attachmentUrls] - Optional array of {url, filename} from Storage (preferred)
+   * @param {string} [params.cc] - Optional comma-separated CC email addresses
+   * @param {string} [params.bcc] - Optional comma-separated BCC email addresses
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null }) {
+  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null, attachments = null, attachmentUrls = null, cc = null, bcc = null }) {
     try {
       // Log entry point and parameters
       console.log('[EmailService] Attempting to send quote request email');
@@ -121,16 +125,90 @@ class EmailService {
         footerText: 'ProdBay - Production Management Platform'
       });
 
+      // Process attachments: Combine Storage URLs and Base64 attachments
+      // Both can be present if some uploads succeeded and others failed
+      let resendAttachments = [];
+      
+      // Add Storage URL attachments (successful uploads)
+      if (attachmentUrls && Array.isArray(attachmentUrls) && attachmentUrls.length > 0) {
+        console.log(`[EmailService] Using ${attachmentUrls.length} Storage URL attachment(s)...`);
+        const urlAttachments = attachmentUrls.map(att => {
+          // Extract filename from URL or use provided filename
+          const filename = att.filename || att.url.split('/').pop() || 'attachment';
+          return {
+            filename: filename,
+            path: att.url  // Resend will fetch file from this URL
+          };
+        });
+        resendAttachments.push(...urlAttachments);
+        console.log(`[EmailService] Storage URL attachments: ${urlAttachments.map(a => a.filename).join(', ')}`);
+      }
+      
+      // Add Base64 attachments (failed uploads - fallback)
+      if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+        console.log(`[EmailService] Processing ${attachments.length} Base64 attachment(s) (fallback for failed uploads)...`);
+        const base64Attachments = attachments.map(att => {
+          // Convert Base64 string to Buffer
+          const buffer = Buffer.from(att.content, 'base64');
+          return {
+            filename: att.filename,
+            content: buffer,
+            // contentType is optional in Resend, but we include it if provided
+            ...(att.contentType && { contentType: att.contentType })
+          };
+        });
+        resendAttachments.push(...base64Attachments);
+        console.log(`[EmailService] Base64 attachments: ${base64Attachments.map(a => a.filename).join(', ')}`);
+      }
+      
+      // Only set resendAttachments if we have any attachments
+      if (resendAttachments.length === 0) {
+        resendAttachments = undefined;
+      } else {
+        console.log(`[EmailService] Total attachments prepared: ${resendAttachments.length} (${attachmentUrls?.length || 0} from Storage, ${attachments?.length || 0} from Base64)`);
+      }
+
+      // Parse CC and BCC emails (comma-separated strings to arrays)
+      let ccArray = null;
+      let bccArray = null;
+      
+      if (cc && typeof cc === 'string' && cc.trim()) {
+        ccArray = cc.split(',').map(e => e.trim()).filter(Boolean);
+        if (ccArray.length === 0) {
+          ccArray = null;
+        } else {
+          console.log(`[EmailService] CC recipients: ${ccArray.join(', ')}`);
+        }
+      }
+      
+      if (bcc && typeof bcc === 'string' && bcc.trim()) {
+        bccArray = bcc.split(',').map(e => e.trim()).filter(Boolean);
+        if (bccArray.length === 0) {
+          bccArray = null;
+        } else {
+          console.log(`[EmailService] BCC recipients: ${bccArray.length} recipient(s)`); // Don't log BCC emails for privacy
+        }
+      }
+
       // Send email via Resend
       console.log('[EmailService] Calling Resend API...');
-      const { data, error } = await this.resend.emails.send({
+      const emailPayload = {
         from: this.fromEmail,
         to: [to],
         reply_to: [replyTo],
         subject: emailSubject,
         text: emailBody,
-        html: htmlBody
-      });
+        html: htmlBody,
+        ...(ccArray && { cc: ccArray }),
+        ...(bccArray && { bcc: bccArray })
+      };
+
+      // Add attachments if present
+      if (resendAttachments) {
+        emailPayload.attachments = resendAttachments;
+      }
+
+      const { data, error } = await this.resend.emails.send(emailPayload);
 
       // Log Resend API response
       console.log('[EmailService] Resend API call completed');
@@ -341,7 +419,7 @@ class EmailService {
       }
 
       // Generate email subject
-      const emailSubject = `New message about ${quoteName}`;
+      const emailSubject = `New Message from ${senderName} - ${quoteName}`;
       console.log('[EmailService] Subject:', emailSubject);
 
       // Build email body (plain text for fallback)

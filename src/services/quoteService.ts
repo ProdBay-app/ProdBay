@@ -15,6 +15,19 @@ export interface Message {
   content: string;
   created_at: string;
   is_read: boolean;
+  // Optional: For synthetic "initial request" messages only
+  attachments?: QuoteRequestAttachment[];
+}
+
+export interface QuoteRequestAttachment {
+  id: string;
+  quote_id: string;
+  filename: string;
+  storage_path: string;
+  storage_url: string;
+  file_size_bytes: number;
+  content_type: string;
+  created_at: string;
 }
 
 export interface Quote {
@@ -25,6 +38,8 @@ export interface Quote {
   notes_capacity: string;
   status: 'Pending' | 'Submitted' | 'Accepted' | 'Rejected';
   access_token: string;
+  request_email_body?: string;
+  request_attachments?: QuoteRequestAttachment[];
   created_at: string;
   updated_at: string;
 }

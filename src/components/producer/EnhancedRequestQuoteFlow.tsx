@@ -7,6 +7,7 @@ import { getSupabase } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import type { Supplier, Quote, ContactPerson, Asset } from '@/lib/supabase';
 import { getSupplierRelevanceMetadata } from '@/utils/supplierRelevance';
+import { validateFile, formatFileSize } from '@/utils/fileValidation';
 
 interface RequestQuoteFlowProps {
   isOpen: boolean;
@@ -248,18 +249,10 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
     const contactEmail = primaryContact?.email || supplier.contact_email;
     
     const subject = `Quote Request: ${assetName}`;
-    
-    // Include project details if available (asset.project is populated via join in getAssetById)
-    const assetWithProject = asset as Asset & { project?: { project_name: string; client_name: string; timeline_deadline?: string } };
-    const projectInfo = assetWithProject?.project ? `
-Project: ${assetWithProject.project.project_name}
-Client: ${assetWithProject.project.client_name}${assetWithProject.project.timeline_deadline ? `
-Deadline: ${new Date(assetWithProject.project.timeline_deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : ''}` : '';
 
     const body = `Dear ${contactName},
 
 We would like to request a quote for the following asset:
-${projectInfo}
 
 Asset: ${assetName}
 Specifications: ${asset?.specifications || 'See project brief for details'}
@@ -321,17 +314,58 @@ ${signature.phone}`;
     );
   };
 
-  // Handle file attachment
+  // Handle file attachment with size validation and 10-file limit
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
+      const currentEmail = customizedEmails[currentSupplierIndex];
+      const currentCount = currentEmail.attachments.length;
+      const maxAttachments = 10;
+      
       const newFiles = Array.from(e.target.files);
-      setCustomizedEmails(prev => 
-        prev.map((email, index) => 
-          index === currentSupplierIndex 
-            ? { ...email, attachments: [...email.attachments, ...newFiles] }
-            : email
-        )
-      );
+      
+      // Check if adding these files would exceed limit
+      if (currentCount + newFiles.length > maxAttachments) {
+        const remaining = maxAttachments - currentCount;
+        showError(`Maximum ${maxAttachments} attachments allowed. You can add ${remaining} more file(s).`);
+        e.target.value = '';
+        return;
+      }
+      
+      const validFiles: File[] = [];
+      const rejectedFiles: { file: File; reason: string }[] = [];
+      
+      // Validate each file (type and size check)
+      newFiles.forEach(file => {
+        const validation = validateFile(file, 5);
+        if (validation.valid) {
+          validFiles.push(file);
+        } else {
+          rejectedFiles.push({ file, reason: validation.error || 'File validation failed' });
+          showError(validation.error || `File "${file.name}" validation failed`);
+        }
+      });
+      
+      // Only add valid files to state (check limit again after validation)
+      if (validFiles.length > 0) {
+        const finalCount = currentCount + validFiles.length;
+        if (finalCount > maxAttachments) {
+          const allowed = maxAttachments - currentCount;
+          showError(`Maximum ${maxAttachments} attachments allowed. Only ${allowed} file(s) can be added.`);
+          e.target.value = '';
+          return;
+        }
+        
+        setCustomizedEmails(prev => 
+          prev.map((email, index) => 
+            index === currentSupplierIndex 
+              ? { ...email, attachments: [...email.attachments, ...validFiles] }
+              : email
+          )
+        );
+      }
+      
+      // Reset file input to allow selecting the same file again if needed
+      e.target.value = '';
     }
   };
 
@@ -367,12 +401,55 @@ ${signature.phone}`;
       // Extract supplier IDs from customized emails
       const supplierIds = customizedEmails.map(email => email.supplierId);
 
-      // Transform customizedEmails to backend format
-      const backendCustomizedEmails = customizedEmails.map(email => ({
-        supplierId: email.supplierId,
-        subject: email.subject,
-        body: email.body
-      }));
+      // Convert files to Base64 and transform customizedEmails to backend format
+      const convertFilesToBase64 = async (files: File[]): Promise<Array<{ filename: string; content: string; contentType: string }>> => {
+        const conversions = files.map(file => {
+          return new Promise<{ filename: string; content: string; contentType: string }>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result as string;
+              // Remove data:type;base64, prefix to get just the Base64 string
+              const base64 = result.split(',')[1];
+              resolve({
+                filename: file.name,
+                content: base64,
+                contentType: file.type || 'application/octet-stream'
+              });
+            };
+            reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+            reader.readAsDataURL(file);
+          });
+        });
+        return Promise.all(conversions);
+      };
+
+      // Validate all attachments before conversion (safety check)
+      const allAttachments = customizedEmails.flatMap(email => email.attachments);
+      const invalidFiles = allAttachments.filter(file => !validateFile(file, 5).valid);
+      if (invalidFiles.length > 0) {
+        const invalidFileNames = invalidFiles.map(f => f.name).join(', ');
+        showError(`Cannot send: ${invalidFiles.length} file(s) failed validation (${invalidFileNames}). Please remove them and try again.`);
+        setSubmitting(false);
+        return;
+      }
+
+      // Convert all attachments to Base64
+      const backendCustomizedEmails = await Promise.all(
+        customizedEmails.map(async (email) => {
+          const attachments = email.attachments.length > 0
+            ? await convertFilesToBase64(email.attachments)
+            : undefined;
+
+          return {
+            supplierId: email.supplierId,
+            subject: email.subject,
+            body: email.body,
+            ...(email.ccEmails && { ccEmails: email.ccEmails }),
+            ...(email.bccEmails && { bccEmails: email.bccEmails }),
+            ...(attachments && { attachments })
+          };
+        })
+      );
 
       // Call backend API to create quotes and send emails
       const result = await QuoteRequestService.sendQuoteRequests(
@@ -879,7 +956,7 @@ ${signature.phone}`;
                     {/* Attachments */}
                     <div>
                       <label className="block text-sm font-medium text-gray-200 mb-2">
-                        Attachments
+                        Attachments ({currentEmail.attachments.length}/10)
                       </label>
                       <div className="space-y-2">
                         {/* File input */}
@@ -899,7 +976,10 @@ ${signature.phone}`;
                           <div className="space-y-1">
                             {currentEmail.attachments.map((file, index) => (
                               <div key={index} className="flex items-center justify-between bg-black/20 px-3 py-2 rounded border border-white/20">
-                                <span className="text-sm text-white">{file.name}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-white">{file.name}</span>
+                                  <span className="text-xs text-gray-400">({formatFileSize(file.size)})</span>
+                                </div>
                                 <button
                                   onClick={() => removeAttachment(index)}
                                   className="text-red-400 hover:text-red-300 text-sm"

@@ -125,6 +125,17 @@ export interface Supplier {
   created_at: string;
 }
 
+export interface QuoteRequestAttachment {
+  id: string;
+  quote_id: string;
+  filename: string;
+  storage_path: string;
+  storage_url: string;
+  file_size_bytes: number;
+  content_type: string;
+  created_at: string;
+}
+
 export interface Quote {
   id: string;
   supplier_id: string;
@@ -135,6 +146,8 @@ export interface Quote {
   quote_token: string;
   access_token?: string; // UUID token for supplier portal access
   quote_document_url?: string;
+  request_email_body?: string;
+  request_attachments?: QuoteRequestAttachment[];
   cost_breakdown?: {
     labor: number;
     materials: number;
