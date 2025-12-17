@@ -37,9 +37,10 @@ class EmailService {
    * @param {string} params.message - Email message body
    * @param {string} params.quoteLink - Link to submit quote
    * @param {string} [params.subject] - Optional custom subject
+   * @param {Array} [params.attachments] - Optional array of attachments with {filename, content (Base64), contentType}
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null }) {
+  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null, attachments = null }) {
     try {
       // Log entry point and parameters
       console.log('[EmailService] Attempting to send quote request email');
@@ -121,16 +122,40 @@ class EmailService {
         footerText: 'ProdBay - Production Management Platform'
       });
 
+      // Process attachments: Convert Base64 strings to Buffers for Resend
+      let resendAttachments = undefined;
+      if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+        console.log(`[EmailService] Processing ${attachments.length} attachment(s)...`);
+        resendAttachments = attachments.map(att => {
+          // Convert Base64 string to Buffer
+          const buffer = Buffer.from(att.content, 'base64');
+          return {
+            filename: att.filename,
+            content: buffer,
+            // contentType is optional in Resend, but we include it if provided
+            ...(att.contentType && { contentType: att.contentType })
+          };
+        });
+        console.log(`[EmailService] Attachments prepared: ${resendAttachments.map(a => a.filename).join(', ')}`);
+      }
+
       // Send email via Resend
       console.log('[EmailService] Calling Resend API...');
-      const { data, error } = await this.resend.emails.send({
+      const emailPayload = {
         from: this.fromEmail,
         to: [to],
         reply_to: [replyTo],
         subject: emailSubject,
         text: emailBody,
         html: htmlBody
-      });
+      };
+
+      // Add attachments if present
+      if (resendAttachments) {
+        emailPayload.attachments = resendAttachments;
+      }
+
+      const { data, error } = await this.resend.emails.send(emailPayload);
 
       // Log Resend API response
       console.log('[EmailService] Resend API call completed');

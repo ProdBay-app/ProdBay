@@ -435,10 +435,12 @@ ${fromEmail}`;
 
       // Use customized email content if provided, otherwise generate default
       let subject, message;
+      let attachments = null;
       
       if (customizedEmail) {
         subject = customizedEmail.subject;
         message = customizedEmail.body;
+        attachments = customizedEmail.attachments || null;
         
         // Add quote link to the body if not already present
         if (!message.includes(quoteLink)) {
@@ -461,7 +463,8 @@ ${fromEmail}`;
         assetName: asset.asset_name,
         message: message,
         quoteLink: quoteLink,
-        subject: subject
+        subject: subject,
+        attachments: attachments
       });
 
       return emailResult;
