@@ -11,6 +11,7 @@ import {
 import { QuoteService, type Message } from '@/services/quoteService';
 import { useNotification } from '@/hooks/useNotification';
 import { createInitialRequestMessage, isInitialRequestMessage } from '@/utils/quoteRequestMessage';
+import MessageAttachments from '@/components/shared/MessageAttachments';
 
 /**
  * ProducerQuoteChat Component
@@ -71,7 +72,17 @@ const ProducerQuoteChat: React.FC = () => {
         asset: response.data.asset,
         supplier: response.data.supplier
       });
-      setMessages(response.data.messages || []);
+      
+      // Prepend initial request message if it exists
+      const initialRequest = createInitialRequestMessage(
+        response.data.quote,
+        response.data.quote.id
+      );
+      const allMessages = initialRequest
+        ? [initialRequest, ...(response.data.messages || [])]
+        : (response.data.messages || []);
+      
+      setMessages(allMessages);
       setError(null);
     } catch (err) {
       console.error('Error loading quote data:', err);
@@ -299,6 +310,16 @@ const ProducerQuoteChat: React.FC = () => {
                           </span>
                         </div>
                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        
+                        {/* Attachments (if present) */}
+                        {message.attachments && message.attachments.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-white/20">
+                            <MessageAttachments 
+                              attachments={message.attachments}
+                              variant={isProducer || isInitialRequest ? 'light' : 'dark'}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

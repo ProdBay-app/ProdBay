@@ -15,6 +15,8 @@ export interface Message {
   content: string;
   created_at: string;
   is_read: boolean;
+  // Optional: For synthetic "initial request" messages only
+  attachments?: QuoteRequestAttachment[];
 }
 
 export interface QuoteRequestAttachment {

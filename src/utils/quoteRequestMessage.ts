@@ -20,18 +20,8 @@ export function createInitialRequestMessage(
     return null;
   }
 
-  // Build message content with email body
-  let content = quote.request_email_body;
-
-  // Add attachments as clickable links
-  if (quote.request_attachments && quote.request_attachments.length > 0) {
-    content += '\n\n📎 Attachments:\n';
-    quote.request_attachments.forEach((att) => {
-      const sizeMB = (att.file_size_bytes / (1024 * 1024)).toFixed(2);
-      content += `• ${att.filename} (${sizeMB} MB)\n`;
-      content += `  ${att.storage_url}\n`;
-    });
-  }
+  // Only include email body in content (attachments will be rendered separately)
+  const content = quote.request_email_body;
 
   // Create synthesized message object
   // Note: This message doesn't exist in the messages table
@@ -42,7 +32,9 @@ export function createInitialRequestMessage(
     sender_type: 'PRODUCER',
     content: content,
     created_at: quote.created_at, // Use quote creation date for chronological ordering
-    is_read: false
+    is_read: false,
+    // Include attachments as structured data for rendering
+    attachments: quote.request_attachments || []
   };
 }
 
