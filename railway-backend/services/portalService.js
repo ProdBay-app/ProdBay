@@ -36,6 +36,7 @@ class PortalService {
               physical_parameters,
               timeline_deadline,
               project_status,
+              producer_id,
               created_at,
               updated_at
             )
