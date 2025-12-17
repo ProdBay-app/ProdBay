@@ -314,14 +314,27 @@ ${signature.phone}`;
     );
   };
 
-  // Handle file attachment with size validation
+  // Handle file attachment with size validation and 10-file limit
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
+      const currentEmail = customizedEmails[currentSupplierIndex];
+      const currentCount = currentEmail.attachments.length;
+      const maxAttachments = 10;
+      
       const newFiles = Array.from(e.target.files);
+      
+      // Check if adding these files would exceed limit
+      if (currentCount + newFiles.length > maxAttachments) {
+        const remaining = maxAttachments - currentCount;
+        showError(`Maximum ${maxAttachments} attachments allowed. You can add ${remaining} more file(s).`);
+        e.target.value = '';
+        return;
+      }
+      
       const validFiles: File[] = [];
       const rejectedFiles: { file: File; reason: string }[] = [];
       
-      // Validate each file
+      // Validate each file (size check)
       newFiles.forEach(file => {
         const validation = validateFileSize(file, 5);
         if (validation.valid) {
@@ -332,8 +345,16 @@ ${signature.phone}`;
         }
       });
       
-      // Only add valid files to state
+      // Only add valid files to state (check limit again after validation)
       if (validFiles.length > 0) {
+        const finalCount = currentCount + validFiles.length;
+        if (finalCount > maxAttachments) {
+          const allowed = maxAttachments - currentCount;
+          showError(`Maximum ${maxAttachments} attachments allowed. Only ${allowed} file(s) can be added.`);
+          e.target.value = '';
+          return;
+        }
+        
         setCustomizedEmails(prev => 
           prev.map((email, index) => 
             index === currentSupplierIndex 
@@ -932,7 +953,7 @@ ${signature.phone}`;
                     {/* Attachments */}
                     <div>
                       <label className="block text-sm font-medium text-gray-200 mb-2">
-                        Attachments
+                        Attachments ({currentEmail.attachments.length}/10)
                       </label>
                       <div className="space-y-2">
                         {/* File input */}

@@ -37,10 +37,11 @@ class EmailService {
    * @param {string} params.message - Email message body
    * @param {string} params.quoteLink - Link to submit quote
    * @param {string} [params.subject] - Optional custom subject
-   * @param {Array} [params.attachments] - Optional array of attachments with {filename, content (Base64), contentType}
+   * @param {Array} [params.attachments] - Optional array of attachments with {filename, content (Base64), contentType} (fallback)
+   * @param {Array} [params.attachmentUrls] - Optional array of {url, filename} from Storage (preferred)
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null, attachments = null }) {
+  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null, attachments = null, attachmentUrls = null }) {
     try {
       // Log entry point and parameters
       console.log('[EmailService] Attempting to send quote request email');
@@ -122,10 +123,24 @@ class EmailService {
         footerText: 'ProdBay - Production Management Platform'
       });
 
-      // Process attachments: Convert Base64 strings to Buffers for Resend
+      // Process attachments: Prefer Storage URLs, fallback to Base64
       let resendAttachments = undefined;
-      if (attachments && Array.isArray(attachments) && attachments.length > 0) {
-        console.log(`[EmailService] Processing ${attachments.length} attachment(s)...`);
+      
+      if (attachmentUrls && Array.isArray(attachmentUrls) && attachmentUrls.length > 0) {
+        // Use Storage URLs (preferred method - Resend will fetch from URLs)
+        console.log(`[EmailService] Using ${attachmentUrls.length} Storage URL attachment(s)...`);
+        resendAttachments = attachmentUrls.map(att => {
+          // Extract filename from URL or use provided filename
+          const filename = att.filename || att.url.split('/').pop() || 'attachment';
+          return {
+            filename: filename,
+            path: att.url  // Resend will fetch file from this URL
+          };
+        });
+        console.log(`[EmailService] Attachments prepared (Storage URLs): ${resendAttachments.map(a => a.filename).join(', ')}`);
+      } else if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+        // Fallback to Base64 (if Storage upload failed or not available)
+        console.log(`[EmailService] Processing ${attachments.length} Base64 attachment(s) (fallback)...`);
         resendAttachments = attachments.map(att => {
           // Convert Base64 string to Buffer
           const buffer = Buffer.from(att.content, 'base64');
@@ -136,7 +151,7 @@ class EmailService {
             ...(att.contentType && { contentType: att.contentType })
           };
         });
-        console.log(`[EmailService] Attachments prepared: ${resendAttachments.map(a => a.filename).join(', ')}`);
+        console.log(`[EmailService] Attachments prepared (Base64): ${resendAttachments.map(a => a.filename).join(', ')}`);
       }
 
       // Send email via Resend

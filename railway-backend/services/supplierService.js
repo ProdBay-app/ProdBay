@@ -1,5 +1,6 @@
 const { supabase } = require('../config/database');
 const emailService = require('./emailService');
+const storageService = require('../utils/storageService');
 
 /**
  * Supplier Service
@@ -332,6 +333,86 @@ ${fromEmail}`;
             continue;
           }
 
+          // Find customized email content for this supplier
+          const customizedEmail = customizedEmails?.find(email => email.supplierId === supplier.id);
+          
+          // Upload attachments to Storage and save metadata
+          const attachmentUrls = [];
+          if (customizedEmail?.attachments && customizedEmail.attachments.length > 0) {
+            try {
+              console.log(`[SupplierService] Uploading ${customizedEmail.attachments.length} attachment(s) for quote ${quote.id}...`);
+              
+              for (const attachment of customizedEmail.attachments) {
+                try {
+                  // Convert Base64 to Buffer
+                  const fileBuffer = Buffer.from(attachment.content, 'base64');
+                  
+                  // Upload to Storage
+                  const { storagePath, publicUrl } = await storageService.uploadQuoteRequestAttachment(
+                    quote.id,
+                    fileBuffer,
+                    attachment.filename,
+                    attachment.contentType || 'application/octet-stream'
+                  );
+                  
+                  // Save attachment metadata to database
+                  const { data: attachmentRecord, error: attachmentError } = await supabase
+                    .from('quote_request_attachments')
+                    .insert({
+                      quote_id: quote.id,
+                      filename: attachment.filename,
+                      storage_path: storagePath,
+                      storage_url: publicUrl,
+                      file_size_bytes: fileBuffer.length,
+                      content_type: attachment.contentType || 'application/octet-stream'
+                    })
+                    .select()
+                    .single();
+                  
+                  if (attachmentError) {
+                    console.error(`[SupplierService] Failed to save attachment metadata:`, attachmentError);
+                    // Continue with email even if metadata save fails
+                  } else {
+                    console.log(`[SupplierService] ✅ Saved attachment: ${attachment.filename}`);
+                    attachmentUrls.push({
+                      url: publicUrl,
+                      filename: attachment.filename
+                    });
+                  }
+                } catch (uploadError) {
+                  console.error(`[SupplierService] Failed to upload attachment ${attachment.filename}:`, uploadError);
+                  // Continue with email even if one attachment fails
+                  // Will fall back to Base64 in email service
+                }
+              }
+              
+              console.log(`[SupplierService] ✅ Uploaded ${attachmentUrls.length}/${customizedEmail.attachments.length} attachment(s)`);
+            } catch (error) {
+              console.error(`[SupplierService] Error uploading attachments:`, error);
+              // Continue with email even if upload fails (will use Base64 fallback)
+            }
+          }
+          
+          // Save email body to quotes table
+          if (customizedEmail?.body) {
+            try {
+              const { error: updateError } = await supabase
+                .from('quotes')
+                .update({ request_email_body: customizedEmail.body })
+                .eq('id', quote.id);
+              
+              if (updateError) {
+                console.error(`[SupplierService] Failed to save email body:`, updateError);
+                // Continue with email even if save fails
+              } else {
+                console.log(`[SupplierService] ✅ Saved email body for quote ${quote.id}`);
+              }
+            } catch (error) {
+              console.error(`[SupplierService] Error saving email body:`, error);
+              // Continue with email even if save fails
+            }
+          }
+
           // Send email notification (if configured)
           if (from && from.name && from.email) {
             try {
@@ -339,15 +420,13 @@ ${fromEmail}`;
               const supplierEmail = supplier.contact_persons?.find(p => p.is_primary)?.email || supplier.contact_email;
               console.log('[SupplierService] Sending email to:', supplierEmail);
               
-              // Find customized email content for this supplier
-              const customizedEmail = customizedEmails?.find(email => email.supplierId === supplier.id);
-              
               const emailResult = await this.sendQuoteRequestEmail(
                 supplier,
                 asset,
                 quote,
                 from,
-                customizedEmail
+                customizedEmail,
+                attachmentUrls.length > 0 ? attachmentUrls : null
               );
               results.push({
                 supplier_id: supplier.id,
@@ -415,9 +494,10 @@ ${fromEmail}`;
    * @param {Object} quote - Quote record
    * @param {Object} from - Sender information {name, email}
    * @param {Object} customizedEmail - Customized email content
+   * @param {Array} attachmentUrls - Array of {url, filename} from Storage (optional)
    * @returns {Promise<Object>} Email send result
    */
-  static async sendQuoteRequestEmail(supplier, asset, quote, from, customizedEmail = null) {
+  static async sendQuoteRequestEmail(supplier, asset, quote, from, customizedEmail = null, attachmentUrls = null) {
     try {
       // Validate that access_token exists (critical for portal functionality)
       if (!quote.access_token) {
@@ -456,6 +536,18 @@ ${fromEmail}`;
         message += `\n\nPlease provide your quote by visiting: ${quoteLink}`;
       }
 
+      // Prepare attachments: Prefer Storage URLs, fallback to Base64
+      let finalAttachments = null;
+      let finalAttachmentUrls = null;
+      
+      if (attachmentUrls && attachmentUrls.length > 0) {
+        // Use Storage URLs (preferred method)
+        finalAttachmentUrls = attachmentUrls;
+      } else if (attachments && attachments.length > 0) {
+        // Fallback to Base64 (if Storage upload failed or not available)
+        finalAttachments = attachments;
+      }
+
       // Send email via Resend with Reply-To pattern
       const emailResult = await emailService.sendQuoteRequest({
         to: supplierEmail,
@@ -464,7 +556,8 @@ ${fromEmail}`;
         message: message,
         quoteLink: quoteLink,
         subject: subject,
-        attachments: attachments
+        attachments: finalAttachments, // Base64 fallback
+        attachmentUrls: finalAttachmentUrls // Storage URLs (preferred)
       });
 
       return emailResult;
