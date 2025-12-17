@@ -123,13 +123,14 @@ class EmailService {
         footerText: 'ProdBay - Production Management Platform'
       });
 
-      // Process attachments: Prefer Storage URLs, fallback to Base64
-      let resendAttachments = undefined;
+      // Process attachments: Combine Storage URLs and Base64 attachments
+      // Both can be present if some uploads succeeded and others failed
+      let resendAttachments = [];
       
+      // Add Storage URL attachments (successful uploads)
       if (attachmentUrls && Array.isArray(attachmentUrls) && attachmentUrls.length > 0) {
-        // Use Storage URLs (preferred method - Resend will fetch from URLs)
         console.log(`[EmailService] Using ${attachmentUrls.length} Storage URL attachment(s)...`);
-        resendAttachments = attachmentUrls.map(att => {
+        const urlAttachments = attachmentUrls.map(att => {
           // Extract filename from URL or use provided filename
           const filename = att.filename || att.url.split('/').pop() || 'attachment';
           return {
@@ -137,11 +138,14 @@ class EmailService {
             path: att.url  // Resend will fetch file from this URL
           };
         });
-        console.log(`[EmailService] Attachments prepared (Storage URLs): ${resendAttachments.map(a => a.filename).join(', ')}`);
-      } else if (attachments && Array.isArray(attachments) && attachments.length > 0) {
-        // Fallback to Base64 (if Storage upload failed or not available)
-        console.log(`[EmailService] Processing ${attachments.length} Base64 attachment(s) (fallback)...`);
-        resendAttachments = attachments.map(att => {
+        resendAttachments.push(...urlAttachments);
+        console.log(`[EmailService] Storage URL attachments: ${urlAttachments.map(a => a.filename).join(', ')}`);
+      }
+      
+      // Add Base64 attachments (failed uploads - fallback)
+      if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+        console.log(`[EmailService] Processing ${attachments.length} Base64 attachment(s) (fallback for failed uploads)...`);
+        const base64Attachments = attachments.map(att => {
           // Convert Base64 string to Buffer
           const buffer = Buffer.from(att.content, 'base64');
           return {
@@ -151,7 +155,15 @@ class EmailService {
             ...(att.contentType && { contentType: att.contentType })
           };
         });
-        console.log(`[EmailService] Attachments prepared (Base64): ${resendAttachments.map(a => a.filename).join(', ')}`);
+        resendAttachments.push(...base64Attachments);
+        console.log(`[EmailService] Base64 attachments: ${base64Attachments.map(a => a.filename).join(', ')}`);
+      }
+      
+      // Only set resendAttachments if we have any attachments
+      if (resendAttachments.length === 0) {
+        resendAttachments = undefined;
+      } else {
+        console.log(`[EmailService] Total attachments prepared: ${resendAttachments.length} (${attachmentUrls?.length || 0} from Storage, ${attachments?.length || 0} from Base64)`);
       }
 
       // Send email via Resend

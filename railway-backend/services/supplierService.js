@@ -337,7 +337,10 @@ ${fromEmail}`;
           const customizedEmail = customizedEmails?.find(email => email.supplierId === supplier.id);
           
           // Upload attachments to Storage and save metadata
+          // Track which attachments succeeded in Storage vs need Base64 fallback
           const attachmentUrls = [];
+          const failedAttachments = []; // Base64 attachments for failed uploads
+          
           if (customizedEmail?.attachments && customizedEmail.attachments.length > 0) {
             try {
               console.log(`[SupplierService] Uploading ${customizedEmail.attachments.length} attachment(s) for quote ${quote.id}...`);
@@ -370,8 +373,12 @@ ${fromEmail}`;
                     .single();
                   
                   if (attachmentError) {
-                    console.error(`[SupplierService] Failed to save attachment metadata:`, attachmentError);
-                    // Continue with email even if metadata save fails
+                    console.error(`[SupplierService] Failed to save attachment metadata for ${attachment.filename}:`, attachmentError);
+                    // Storage upload succeeded but DB save failed - still use Storage URL
+                    attachmentUrls.push({
+                      url: publicUrl,
+                      filename: attachment.filename
+                    });
                   } else {
                     console.log(`[SupplierService] ✅ Saved attachment: ${attachment.filename}`);
                     attachmentUrls.push({
@@ -381,15 +388,23 @@ ${fromEmail}`;
                   }
                 } catch (uploadError) {
                   console.error(`[SupplierService] Failed to upload attachment ${attachment.filename}:`, uploadError);
-                  // Continue with email even if one attachment fails
-                  // Will fall back to Base64 in email service
+                  // Store Base64 data for fallback
+                  failedAttachments.push({
+                    filename: attachment.filename,
+                    content: attachment.content,
+                    contentType: attachment.contentType || 'application/octet-stream'
+                  });
                 }
               }
               
-              console.log(`[SupplierService] ✅ Uploaded ${attachmentUrls.length}/${customizedEmail.attachments.length} attachment(s)`);
+              console.log(`[SupplierService] ✅ Uploaded ${attachmentUrls.length}/${customizedEmail.attachments.length} attachment(s) to Storage`);
+              if (failedAttachments.length > 0) {
+                console.log(`[SupplierService] ⚠️  ${failedAttachments.length} attachment(s) will use Base64 fallback`);
+              }
             } catch (error) {
               console.error(`[SupplierService] Error uploading attachments:`, error);
-              // Continue with email even if upload fails (will use Base64 fallback)
+              // If entire upload process fails, use all Base64
+              failedAttachments.push(...(customizedEmail.attachments || []));
             }
           }
           
@@ -420,13 +435,15 @@ ${fromEmail}`;
               const supplierEmail = supplier.contact_persons?.find(p => p.is_primary)?.email || supplier.contact_email;
               console.log('[SupplierService] Sending email to:', supplierEmail);
               
+              // Pass both Storage URLs (for successful uploads) and Base64 (for failed uploads)
               const emailResult = await this.sendQuoteRequestEmail(
                 supplier,
                 asset,
                 quote,
                 from,
                 customizedEmail,
-                attachmentUrls.length > 0 ? attachmentUrls : null
+                attachmentUrls.length > 0 ? attachmentUrls : null,
+                failedAttachments.length > 0 ? failedAttachments : null
               );
               results.push({
                 supplier_id: supplier.id,
@@ -495,9 +512,10 @@ ${fromEmail}`;
    * @param {Object} from - Sender information {name, email}
    * @param {Object} customizedEmail - Customized email content
    * @param {Array} attachmentUrls - Array of {url, filename} from Storage (optional)
+   * @param {Array} failedAttachments - Array of Base64 attachments for failed uploads (optional)
    * @returns {Promise<Object>} Email send result
    */
-  static async sendQuoteRequestEmail(supplier, asset, quote, from, customizedEmail = null, attachmentUrls = null) {
+  static async sendQuoteRequestEmail(supplier, asset, quote, from, customizedEmail = null, attachmentUrls = null, failedAttachments = null) {
     try {
       // Validate that access_token exists (critical for portal functionality)
       if (!quote.access_token) {
@@ -515,12 +533,10 @@ ${fromEmail}`;
 
       // Use customized email content if provided, otherwise generate default
       let subject, message;
-      let attachments = null;
       
       if (customizedEmail) {
         subject = customizedEmail.subject;
         message = customizedEmail.body;
-        attachments = customizedEmail.attachments || null;
         
         // Add quote link to the body if not already present
         if (!message.includes(quoteLink)) {
@@ -536,17 +552,10 @@ ${fromEmail}`;
         message += `\n\nPlease provide your quote by visiting: ${quoteLink}`;
       }
 
-      // Prepare attachments: Prefer Storage URLs, fallback to Base64
-      let finalAttachments = null;
-      let finalAttachmentUrls = null;
-      
-      if (attachmentUrls && attachmentUrls.length > 0) {
-        // Use Storage URLs (preferred method)
-        finalAttachmentUrls = attachmentUrls;
-      } else if (attachments && attachments.length > 0) {
-        // Fallback to Base64 (if Storage upload failed or not available)
-        finalAttachments = attachments;
-      }
+      // Prepare attachments: Combine Storage URLs (successful uploads) and Base64 (failed uploads)
+      // Both can be present simultaneously - email service will handle both types
+      const finalAttachmentUrls = attachmentUrls && attachmentUrls.length > 0 ? attachmentUrls : null;
+      const finalAttachments = failedAttachments && failedAttachments.length > 0 ? failedAttachments : null;
 
       // Send email via Resend with Reply-To pattern
       const emailResult = await emailService.sendQuoteRequest({
