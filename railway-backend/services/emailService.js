@@ -393,7 +393,7 @@ class EmailService {
       }
 
       // Generate email subject
-      const emailSubject = `New message about ${quoteName}`;
+      const emailSubject = `New Message from ${senderName} - ${quoteName}`;
       console.log('[EmailService] Subject:', emailSubject);
 
       // Build email body (plain text for fallback)
