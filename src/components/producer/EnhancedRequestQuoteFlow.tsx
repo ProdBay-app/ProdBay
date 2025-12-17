@@ -248,18 +248,10 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
     const contactEmail = primaryContact?.email || supplier.contact_email;
     
     const subject = `Quote Request: ${assetName}`;
-    
-    // Include project details if available (asset.project is populated via join in getAssetById)
-    const assetWithProject = asset as Asset & { project?: { project_name: string; client_name: string; timeline_deadline?: string } };
-    const projectInfo = assetWithProject?.project ? `
-Project: ${assetWithProject.project.project_name}
-Client: ${assetWithProject.project.client_name}${assetWithProject.project.timeline_deadline ? `
-Deadline: ${new Date(assetWithProject.project.timeline_deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : ''}` : '';
 
     const body = `Dear ${contactName},
 
 We would like to request a quote for the following asset:
-${projectInfo}
 
 Asset: ${assetName}
 Specifications: ${asset?.specifications || 'See project brief for details'}
