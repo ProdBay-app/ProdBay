@@ -7,7 +7,7 @@ import { getSupabase } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import type { Supplier, Quote, ContactPerson, Asset } from '@/lib/supabase';
 import { getSupplierRelevanceMetadata } from '@/utils/supplierRelevance';
-import { validateFileSize, formatFileSize } from '@/utils/fileValidation';
+import { validateFile, formatFileSize } from '@/utils/fileValidation';
 
 interface RequestQuoteFlowProps {
   isOpen: boolean;
@@ -334,14 +334,14 @@ ${signature.phone}`;
       const validFiles: File[] = [];
       const rejectedFiles: { file: File; reason: string }[] = [];
       
-      // Validate each file (size check)
+      // Validate each file (type and size check)
       newFiles.forEach(file => {
-        const validation = validateFileSize(file, 5);
+        const validation = validateFile(file, 5);
         if (validation.valid) {
           validFiles.push(file);
         } else {
-          rejectedFiles.push({ file, reason: validation.error || 'File too large' });
-          showError(validation.error || `File "${file.name}" exceeds 5MB limit`);
+          rejectedFiles.push({ file, reason: validation.error || 'File validation failed' });
+          showError(validation.error || `File "${file.name}" validation failed`);
         }
       });
       
@@ -425,9 +425,10 @@ ${signature.phone}`;
 
       // Validate all attachments before conversion (safety check)
       const allAttachments = customizedEmails.flatMap(email => email.attachments);
-      const invalidFiles = allAttachments.filter(file => !validateFileSize(file, 5).valid);
+      const invalidFiles = allAttachments.filter(file => !validateFile(file, 5).valid);
       if (invalidFiles.length > 0) {
-        showError(`Cannot send: ${invalidFiles.length} file(s) exceed the 5MB limit. Please remove them and try again.`);
+        const invalidFileNames = invalidFiles.map(f => f.name).join(', ');
+        showError(`Cannot send: ${invalidFiles.length} file(s) failed validation (${invalidFileNames}). Please remove them and try again.`);
         setSubmitting(false);
         return;
       }

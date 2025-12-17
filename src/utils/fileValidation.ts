@@ -8,12 +8,53 @@ export interface FileValidationResult {
 }
 
 /**
- * Validate file size against maximum allowed size
+ * Blocked file extensions that trigger email security filters
+ * These file types are commonly rejected by Gmail and other providers
+ * due to security concerns (executables, archives, scripts)
+ */
+export const BLOCKED_EXTENSIONS = [
+  // Executables
+  '.exe', '.msi', '.dmg', '.pkg', '.deb', '.rpm',
+  // Scripts
+  '.bat', '.cmd', '.sh', '.bash', '.ps1', '.vbs', '.js',
+  // Archives (often contain executables)
+  '.zip', '.rar', '.7z', '.tar', '.gz', '.bz2',
+  // Other risky types
+  '.bin', '.jar', '.app', '.scr', '.com'
+] as const;
+
+/**
+ * Extract file extension from filename (case-insensitive)
+ * @param filename - File name (e.g., "document.pdf", "FILE.ZIP")
+ * @returns Lowercase extension with leading dot (e.g., ".pdf", ".zip") or empty string
+ */
+function getFileExtension(filename: string): string {
+  const lastDot = filename.lastIndexOf('.');
+  if (lastDot === -1 || lastDot === filename.length - 1) {
+    return ''; // No extension or trailing dot
+  }
+  return filename.substring(lastDot).toLowerCase();
+}
+
+/**
+ * Validate file type and size
+ * Checks file extension against blocklist first, then validates size
  * @param file - File object to validate
  * @param maxSizeMB - Maximum file size in megabytes (default: 5MB)
  * @returns Validation result with error message if invalid
  */
-export function validateFileSize(file: File, maxSizeMB: number = 5): FileValidationResult {
+export function validateFile(file: File, maxSizeMB: number = 5): FileValidationResult {
+  // Step 1: Check file extension (fail fast for security)
+  const extension = getFileExtension(file.name);
+  
+  if (extension && BLOCKED_EXTENSIONS.includes(extension as typeof BLOCKED_EXTENSIONS[number])) {
+    return {
+      valid: false,
+      error: `Security Restriction: File type ${extension} is not allowed. Please use a different file format (e.g., PDF, images, or documents).`
+    };
+  }
+  
+  // Step 2: Check file size (only if extension is allowed)
   const maxSizeBytes = maxSizeMB * 1024 * 1024; // Convert MB to bytes
   
   if (file.size > maxSizeBytes) {
@@ -24,6 +65,14 @@ export function validateFileSize(file: File, maxSizeMB: number = 5): FileValidat
   }
   
   return { valid: true };
+}
+
+/**
+ * @deprecated Use validateFile() instead. This function only checks size.
+ * validateFile() checks both file type and size.
+ */
+export function validateFileSize(file: File, maxSizeMB: number = 5): FileValidationResult {
+  return validateFile(file, maxSizeMB);
 }
 
 /**
