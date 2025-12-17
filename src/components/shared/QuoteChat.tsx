@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageCircle, Send, User, Loader2 } from 'lucide-react';
 import { QuoteService, type Message } from '@/services/quoteService';
 import { useNotification } from '@/hooks/useNotification';
+import { createInitialRequestMessage, isInitialRequestMessage } from '@/utils/quoteRequestMessage';
 
 interface QuoteChatProps {
   quoteId: string;
@@ -61,7 +62,16 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
         return;
       }
 
-      setMessages(response.data.messages || []);
+      // Prepend initial request message if it exists
+      const initialRequest = createInitialRequestMessage(
+        response.data.quote,
+        response.data.quote.id
+      );
+      const allMessages = initialRequest
+        ? [initialRequest, ...(response.data.messages || [])]
+        : (response.data.messages || []);
+      
+      setMessages(allMessages);
       setError(null);
     } catch (err) {
       console.error('Error loading messages:', err);

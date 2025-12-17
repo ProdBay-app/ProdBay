@@ -13,6 +13,7 @@ import {
 import { PortalService, type PortalSession, type Message, type Quote } from '@/services/portalService';
 import { useNotification } from '@/hooks/useNotification';
 import SupplierQuoteModal from '@/components/portal/SupplierQuoteModal';
+import OriginalRequestCard from '@/components/portal/OriginalRequestCard';
 
 /**
  * QuotePortal Component
@@ -292,6 +293,12 @@ const QuotePortal: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Context */}
         <div className="lg:col-span-1 space-y-4">
+          {/* Original Request */}
+          <OriginalRequestCard
+            emailBody={quote.request_email_body}
+            attachments={quote.request_attachments}
+          />
+
           {/* Project Context */}
           {project && (
             <div className="bg-white/5 border border-white/10 rounded-xl p-6">

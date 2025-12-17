@@ -15,6 +15,17 @@ export interface Message {
   is_read: boolean;
 }
 
+export interface QuoteRequestAttachment {
+  id: string;
+  quote_id: string;
+  filename: string;
+  storage_path: string;
+  storage_url: string;
+  file_size_bytes: number;
+  content_type: string;
+  created_at: string;
+}
+
 export interface Quote {
   id: string;
   supplier_id: string;
@@ -24,6 +35,8 @@ export interface Quote {
   status: 'Pending' | 'Submitted' | 'Accepted' | 'Rejected';
   access_token: string;
   quote_document_url?: string;
+  request_email_body?: string;
+  request_attachments?: QuoteRequestAttachment[];
   created_at: string;
   updated_at: string;
 }

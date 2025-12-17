@@ -39,7 +39,8 @@ class PortalService {
               created_at,
               updated_at
             )
-          )
+          ),
+          request_attachments:quote_request_attachments(*)
         `)
         .eq('access_token', token)
         .single();
@@ -102,6 +103,8 @@ class PortalService {
           notes_capacity: quote.notes_capacity,
           status: quote.status,
           access_token: quote.access_token,
+          request_email_body: quote.request_email_body || null,
+          request_attachments: quote.request_attachments || [],
           created_at: quote.created_at,
           updated_at: quote.updated_at
         },
@@ -488,7 +491,8 @@ class PortalService {
           asset:assets(
             *,
             project:projects(*)
-          )
+          ),
+          request_attachments:quote_request_attachments(*)
         `)
         .eq('id', quoteId)
         .single();
@@ -518,6 +522,8 @@ class PortalService {
           notes_capacity: quote.notes_capacity,
           status: quote.status,
           access_token: quote.access_token,
+          request_email_body: quote.request_email_body || null,
+          request_attachments: quote.request_attachments || [],
           created_at: quote.created_at,
           updated_at: quote.updated_at
         },
