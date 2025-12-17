@@ -39,9 +39,11 @@ class EmailService {
    * @param {string} [params.subject] - Optional custom subject
    * @param {Array} [params.attachments] - Optional array of attachments with {filename, content (Base64), contentType} (fallback)
    * @param {Array} [params.attachmentUrls] - Optional array of {url, filename} from Storage (preferred)
+   * @param {string} [params.cc] - Optional comma-separated CC email addresses
+   * @param {string} [params.bcc] - Optional comma-separated BCC email addresses
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null, attachments = null, attachmentUrls = null }) {
+  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null, attachments = null, attachmentUrls = null, cc = null, bcc = null }) {
     try {
       // Log entry point and parameters
       console.log('[EmailService] Attempting to send quote request email');
@@ -166,6 +168,28 @@ class EmailService {
         console.log(`[EmailService] Total attachments prepared: ${resendAttachments.length} (${attachmentUrls?.length || 0} from Storage, ${attachments?.length || 0} from Base64)`);
       }
 
+      // Parse CC and BCC emails (comma-separated strings to arrays)
+      let ccArray = null;
+      let bccArray = null;
+      
+      if (cc && typeof cc === 'string' && cc.trim()) {
+        ccArray = cc.split(',').map(e => e.trim()).filter(Boolean);
+        if (ccArray.length === 0) {
+          ccArray = null;
+        } else {
+          console.log(`[EmailService] CC recipients: ${ccArray.join(', ')}`);
+        }
+      }
+      
+      if (bcc && typeof bcc === 'string' && bcc.trim()) {
+        bccArray = bcc.split(',').map(e => e.trim()).filter(Boolean);
+        if (bccArray.length === 0) {
+          bccArray = null;
+        } else {
+          console.log(`[EmailService] BCC recipients: ${bccArray.length} recipient(s)`); // Don't log BCC emails for privacy
+        }
+      }
+
       // Send email via Resend
       console.log('[EmailService] Calling Resend API...');
       const emailPayload = {
@@ -174,7 +198,9 @@ class EmailService {
         reply_to: [replyTo],
         subject: emailSubject,
         text: emailBody,
-        html: htmlBody
+        html: htmlBody,
+        ...(ccArray && { cc: ccArray }),
+        ...(bccArray && { bcc: bccArray })
       };
 
       // Add attachments if present

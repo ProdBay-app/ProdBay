@@ -557,6 +557,10 @@ ${fromEmail}`;
       const finalAttachmentUrls = attachmentUrls && attachmentUrls.length > 0 ? attachmentUrls : null;
       const finalAttachments = failedAttachments && failedAttachments.length > 0 ? failedAttachments : null;
 
+      // Extract CC and BCC emails from customizedEmail
+      const ccEmails = customizedEmail?.ccEmails || null;
+      const bccEmails = customizedEmail?.bccEmails || null;
+
       // Send email via Resend with Reply-To pattern
       const emailResult = await emailService.sendQuoteRequest({
         to: supplierEmail,
@@ -566,7 +570,9 @@ ${fromEmail}`;
         quoteLink: quoteLink,
         subject: subject,
         attachments: finalAttachments, // Base64 fallback
-        attachmentUrls: finalAttachmentUrls // Storage URLs (preferred)
+        attachmentUrls: finalAttachmentUrls, // Storage URLs (preferred)
+        cc: ccEmails, // CC recipients (comma-separated string)
+        bcc: bccEmails // BCC recipients (comma-separated string)
       });
 
       return emailResult;

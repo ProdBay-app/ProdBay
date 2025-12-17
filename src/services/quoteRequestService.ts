@@ -5,6 +5,8 @@ export interface CustomizedEmail {
   supplierId: string;
   subject: string;
   body: string;
+  ccEmails?: string; // Comma-separated string
+  bccEmails?: string; // Comma-separated string
   attachments?: Array<{
     filename: string;
     content: string; // Base64 encoded

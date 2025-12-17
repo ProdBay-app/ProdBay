@@ -444,6 +444,8 @@ ${signature.phone}`;
             supplierId: email.supplierId,
             subject: email.subject,
             body: email.body,
+            ...(email.ccEmails && { ccEmails: email.ccEmails }),
+            ...(email.bccEmails && { bccEmails: email.bccEmails }),
             ...(attachments && { attachments })
           };
         })
