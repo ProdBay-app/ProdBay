@@ -339,7 +339,7 @@ class AIAllocationService {
           }
         ],
         temperature: 0.3,
-        max_tokens: 4000
+        max_completion_tokens: 4000
       });
 
       // Log the raw response for debugging
@@ -619,7 +619,7 @@ Be specific and practical in your asset identification, considering the event ty
       const response = await this.openai.chat.completions.create({
         model: "gpt-5-nano",
         messages: [{ role: "user", content: "Hello" }],
-        max_tokens: 5
+        max_completion_tokens: 5
       });
 
       return {

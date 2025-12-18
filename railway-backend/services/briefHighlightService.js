@@ -112,7 +112,7 @@ Extraction Rules:
         ],
         response_format: { type: "json_object" }, // Force JSON output
         temperature: 0.3, // Low temperature for consistent extraction
-        max_tokens: 500
+        max_completion_tokens: 500
       });
 
       const content = response.choices[0].message.content;
@@ -170,7 +170,7 @@ Extraction Rules:
       const response = await this.openai.chat.completions.create({
         model: "gpt-5-nano",
         messages: [{ role: "user", content: "Hello" }],
-        max_tokens: 5
+        max_completion_tokens: 5
       });
 
       return {
