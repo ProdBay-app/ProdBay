@@ -8,8 +8,6 @@ const RAILWAY_API_URL = import.meta.env.VITE_RAILWAY_API_URL || '';
 export interface AIAssetSuggestion {
   asset_name: string;
   specifications: string;
-  priority: 'high' | 'medium' | 'low';
-  estimated_cost_range: 'low' | 'medium' | 'high';
   source_text?: string;
 }
 

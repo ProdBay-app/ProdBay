@@ -2,13 +2,49 @@ const OpenAI = require('openai');
 
 /**
  * Brief Highlight Service
- * Extracts key project information from a brief using OpenAI GPT-4o-mini
+ * Extracts key project information from a brief using OpenAI GPT-5 nano
  */
 class BriefHighlightService {
   constructor() {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
     });
+  }
+
+  /**
+   * Sanitize brief description text before including in prompt
+   * This prevents special characters from causing issues in the AI response
+   */
+  sanitizeBriefText(briefText) {
+    if (!briefText || typeof briefText !== 'string') {
+      return '';
+    }
+    
+    let sanitized = briefText;
+    
+    // Escape backslashes that might be interpreted as escape sequences
+    // But preserve valid escape sequences if they exist
+    sanitized = sanitized.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, '\\\\');
+    
+    // Escape quotes to prevent breaking JSON structure in prompt
+    sanitized = sanitized.replace(/"/g, '\\"');
+    
+    // Normalize newlines (convert to spaces or preserve as \n)
+    sanitized = sanitized.replace(/\r\n/g, ' ');
+    sanitized = sanitized.replace(/\n/g, ' ');
+    sanitized = sanitized.replace(/\r/g, ' ');
+    
+    // Remove or convert LaTeX notation to plain text
+    sanitized = sanitized.replace(/\$(\d+)\s*\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
+    sanitized = sanitized.replace(/(\d+)\s*\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
+    
+    // Trim and limit length to prevent prompt injection
+    sanitized = sanitized.trim();
+    if (sanitized.length > 8000) {
+      sanitized = sanitized.substring(0, 8000) + '...';
+    }
+    
+    return sanitized;
   }
 
   /**
@@ -28,7 +64,14 @@ class BriefHighlightService {
         throw new Error('OpenAI API key not configured');
       }
 
-      const systemPrompt = `You are an expert project management assistant. Your task is to analyze project briefs and extract key information.
+      const systemPrompt = `You are an expert event production project manager. Your task is to extract key data from project briefs while ignoring PDF artifacts like headers, footers, page numbers, and legal boilerplate.
+
+CRITICAL RULES:
+1. FOCUS: Prioritize Event Specifications, Dimensions (Spatial Layout), and Talent (DJs/Headline Acts).
+2. SANITIZE: Always convert LaTeX (e.g., 360^{\\circ}) into plain text (e.g., '360 degrees').
+3. FORMAT: Output ONLY valid JSON. All backslashes and quotes must be properly escaped according to JSON standards.
+4. DIMENSIONS: Standardize spatial data as 'Length m x Width m' (e.g., '50 m x 40 m') whenever possible.
+5. NOISE: Ignore repeated branding, document metadata, and table of contents.
 
 You must respond with ONLY a valid JSON object. Do not include any explanatory text, markdown formatting, code blocks, or any characters outside of the JSON structure.
 
@@ -41,21 +84,22 @@ The JSON object must conform to this exact schema:
   "physicalParameters": string | null
 }
 
-Rules:
+Extraction Rules:
 - If information cannot be found in the brief, set the value to null
-- For projectName: Extract the project/event name
-- For clientName: Extract the client/company/organization name
+- For projectName: Extract the project/event name (ignore document titles and headers)
+- For clientName: Extract the client/company/organization name (ignore repeated branding)
 - For budget: Extract only numeric values (convert from any currency format to a number)
 - For deadline: Extract dates in YYYY-MM-DD format. If only month/year is given, use the last day of that month
-- For physicalParameters: Extract any physical specifications like dimensions, venue details, capacity, etc.
-- Be precise and extract only information that is explicitly stated or clearly implied`;
+- For physicalParameters: Extract dimensions (standardize as 'X m x Y m'), venue details, capacity, and spatial layout. Focus on Event Specifications section.`;
 
-      const userPrompt = `Analyze this project brief and extract the key information:\n\n${briefText}`;
+      // Sanitize the brief text before sending to API
+      const sanitizedBriefText = this.sanitizeBriefText(briefText);
+      const userPrompt = `Analyze this project brief and extract the key information:\n\n${sanitizedBriefText}`;
 
       console.log('Calling OpenAI API for brief highlight extraction...');
 
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-5-nano",
         messages: [
           {
             role: "system",
@@ -124,14 +168,14 @@ Rules:
 
       // Test with a simple request
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-5-nano",
         messages: [{ role: "user", content: "Hello" }],
         max_tokens: 5
       });
 
       return {
         healthy: true,
-        model: "gpt-4o-mini",
+        model: "gpt-5-nano",
         service: 'briefHighlights'
       };
     } catch (error) {

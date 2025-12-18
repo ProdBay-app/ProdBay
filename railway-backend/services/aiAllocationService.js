@@ -3,7 +3,7 @@ const { supabase } = require('../config/database');
 
 /**
  * AI Allocation Service
- * Handles AI-powered asset allocation using OpenAI GPT-4.1 nano
+ * Handles AI-powered asset allocation using OpenAI GPT-5 nano
  */
 class AIAllocationService {
   constructor() {
@@ -225,19 +225,6 @@ class AIAllocationService {
     // Handle the specific case where properties are duplicated within the same object
     // This is a simpler approach that focuses on the most common issues
     
-    // Remove duplicate property patterns like: "priority": "high", "priority": "medium"
-    cleaned = cleaned.replace(/"priority":\s*"[^"]*",\s*"priority":\s*"[^"]*"/g, (match) => {
-      // Keep only the last occurrence
-      const priorities = match.match(/"priority":\s*"([^"]*)"/g);
-      return priorities ? priorities[priorities.length - 1] : match;
-    });
-    
-    // Remove duplicate estimated_cost_range
-    cleaned = cleaned.replace(/"estimated_cost_range":\s*"[^"]*",\s*"estimated_cost_range":\s*"[^"]*"/g, (match) => {
-      const costs = match.match(/"estimated_cost_range":\s*"([^"]*)"/g);
-      return costs ? costs[costs.length - 1] : match;
-    });
-    
     // Remove duplicate specifications
     cleaned = cleaned.replace(/"specifications":\s*"[^"]*",\s*"specifications":\s*"[^"]*"/g, (match) => {
       const specs = match.match(/"specifications":\s*"([^"]*)"/g);
@@ -282,8 +269,6 @@ class AIAllocationService {
               assets.push({
                 asset_name: asset.asset_name,
                 specifications: asset.specifications,
-                priority: asset.priority || 'medium',
-                estimated_cost_range: asset.estimated_cost_range || 'medium',
                 source_text: asset.source_text || '',
                 tags: asset.tags || []
               });
@@ -311,8 +296,6 @@ class AIAllocationService {
                 assets.push({
                   asset_name: asset.asset_name,
                   specifications: asset.specifications,
-                  priority: asset.priority || 'medium',
-                  estimated_cost_range: asset.estimated_cost_range || 'medium',
                   source_text: asset.source_text || '',
                   tags: asset.tags || []
                 });
@@ -344,7 +327,7 @@ class AIAllocationService {
       const prompt = this.buildAssetAnalysisPrompt(briefDescription, projectContext);
       
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4o-mini", // Using GPT-4o-mini (equivalent to 4.1 nano)
+        model: "gpt-5-nano",
         messages: [
           {
             role: "system",
@@ -551,8 +534,6 @@ Respond with ONLY a JSON object in this exact format (no markdown, no code block
     {
       "asset_name": "Specific Asset Name",
       "specifications": "Detailed technical requirements including quantities, dimensions, power needs, setup requirements",
-      "priority": "high|medium|low",
-      "estimated_cost_range": "low|medium|high",
       "source_text": "The exact sentence or phrase from the brief that mentions this asset requirement",
       "tags": ["TagName1", "TagName2"]
     }
@@ -597,8 +578,6 @@ Be specific and practical in your asset identification, considering the event ty
     return assetNames.map(name => ({
       asset_name: name,
       specifications: `Requirements for ${name.toLowerCase()} based on project brief`,
-      priority: 'medium',
-      estimated_cost_range: 'medium',
       tags: [] // Empty tags for fallback assets
     }));
   }
@@ -638,14 +617,14 @@ Be specific and practical in your asset identification, considering the event ty
 
       // Test with a simple request
       const response = await this.openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-5-nano",
         messages: [{ role: "user", content: "Hello" }],
         max_tokens: 5
       });
 
       return {
         healthy: true,
-        model: "gpt-4o-mini",
+        model: "gpt-5-nano",
         responseTime: Date.now()
       };
     } catch (error) {
