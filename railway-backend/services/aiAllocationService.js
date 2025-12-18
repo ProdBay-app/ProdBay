@@ -17,9 +17,17 @@ class AIAllocationService {
    * Handles markdown code blocks and other formatting issues
    */
   parseAIResponse(content) {
+    // Declare cleanedContent outside try block to avoid ReferenceError in catch
+    let cleanedContent = null;
+    
     try {
+      // Validate input
+      if (!content || typeof content !== 'string') {
+        throw new Error('Invalid content: content must be a non-empty string');
+      }
+      
       // Remove markdown code blocks if present
-      let cleanedContent = content.trim();
+      cleanedContent = content.trim();
       
       // Remove ```json and ``` markers
       if (cleanedContent.startsWith('```json')) {
@@ -45,41 +53,167 @@ class AIAllocationService {
       return JSON.parse(cleanedContent);
     } catch (error) {
       console.error('Failed to parse AI response:', error);
-      console.error('Raw content:', content);
-      console.error('Cleaned content:', cleanedContent);
+      console.error('Error type:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Raw content length:', content ? content.length : 0);
+      console.error('Raw content preview:', content ? content.substring(0, 500) : 'null');
+      if (cleanedContent !== null) {
+        console.error('Cleaned content length:', cleanedContent.length);
+        console.error('Cleaned content preview:', cleanedContent.substring(0, 500));
+      } else {
+        console.error('Cleaned content: null (not initialized)');
+      }
+      
       const parseError = new Error(`Failed to parse AI response: ${error.message}`);
       parseError.rawContent = content;
+      parseError.cleanedContent = cleanedContent;
       throw parseError;
     }
   }
 
   /**
+   * Sanitize string values within JSON to handle special characters, LaTeX, and escape sequences
+   * This method processes JSON string values to ensure they are properly escaped
+   * Uses regex to find string values and sanitize them properly
+   */
+  sanitizeJsonStringValues(jsonString) {
+    let sanitized = jsonString;
+    
+    // Step 1: Convert LaTeX notation to plain text before processing escapes
+    // This handles cases like $360^{\circ}$ that appear in the raw JSON
+    sanitized = sanitized.replace(/\$(\d+)\s*\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
+    sanitized = sanitized.replace(/(\d+)\s*\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
+    sanitized = sanitized.replace(/\$(\d+)\s*°\s*\$/g, '$1 degrees');
+    
+    // Step 2: Find and fix string values (not keys)
+    // Pattern: ": "value" - matches string values after colons
+    // This regex handles escaped quotes within strings: "([^"\\]|\\.)*"
+    sanitized = sanitized.replace(/:\s*"((?:[^"\\]|\\.)*)"/g, (match, content) => {
+      let sanitizedContent = content;
+      
+      // Fix invalid escape sequences - escape backslashes not part of valid sequences
+      // Valid JSON escapes: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+      sanitizedContent = sanitizedContent.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, '\\\\');
+      
+      // Escape control characters - handle both literal control chars and already-escaped sequences
+      // First, we need to track if we're in an escape sequence
+      let processed = '';
+      let inEscapeSequence = false;
+      
+      for (let i = 0; i < sanitizedContent.length; i++) {
+        const char = sanitizedContent[i];
+        const prevChar = i > 0 ? sanitizedContent[i - 1] : '';
+        
+        // If we're in an escape sequence, add the character and reset the flag
+        if (inEscapeSequence) {
+          processed += char;
+          inEscapeSequence = false;
+          continue;
+        }
+        
+        // If current char is a backslash, mark that we're entering an escape sequence
+        if (char === '\\') {
+          processed += char;
+          inEscapeSequence = true;
+          continue;
+        }
+        
+        // Escape unescaped control characters (literal newlines, tabs, etc.)
+        if (char === '\n') {
+          processed += '\\n';
+        } else if (char === '\r') {
+          processed += '\\r';
+        } else if (char === '\t') {
+          processed += '\\t';
+        } else if (char === '\f') {
+          processed += '\\f';
+        } else if (char === '\b') {
+          processed += '\\b';
+        } else {
+          processed += char;
+        }
+      }
+      sanitizedContent = processed;
+      
+      // Remove any remaining problematic LaTeX patterns
+      sanitizedContent = sanitizedContent.replace(/\$[^$]*\$/g, (latexMatch) => {
+        return latexMatch.replace(/\$/g, '').replace(/\\/g, '\\\\');
+      });
+      
+      return `: "${sanitizedContent}"`;
+    });
+    
+    return sanitized;
+  }
+
+  /**
    * Clean common JSON formatting issues from AI responses
+   * Now includes comprehensive string value sanitization
    */
   cleanJsonResponse(jsonString) {
+    if (!jsonString || typeof jsonString !== 'string') {
+      return jsonString;
+    }
+    
     let cleaned = jsonString;
     
-    // Remove any trailing commas before closing brackets/braces
+    // Step 1: Sanitize string values (handle LaTeX, backslashes, special characters)
+    cleaned = this.sanitizeJsonStringValues(cleaned);
+    
+    // Step 2: Remove any trailing commas before closing brackets/braces
     cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
     
-    // Fix incomplete arrays by removing trailing commas
+    // Step 3: Fix incomplete arrays by removing trailing commas
     cleaned = cleaned.replace(/,(\s*])/g, '$1');
     
-    // Fix incomplete objects by removing trailing commas
+    // Step 4: Fix incomplete objects by removing trailing commas
     cleaned = cleaned.replace(/,(\s*})/g, '$1');
     
-    // Remove any incomplete property definitions at the end
+    // Step 5: Remove any incomplete property definitions at the end
     cleaned = cleaned.replace(/,\s*"[^"]*":\s*"[^"]*$/, '');
     
-    // Handle duplicate properties within objects - keep only the last occurrence
+    // Step 6: Handle duplicate properties within objects - keep only the last occurrence
     cleaned = this.removeDuplicateProperties(cleaned);
     
-    // Ensure proper array closing
+    // Step 7: Ensure proper array closing
     if (cleaned.includes('"assets": [') && !cleaned.includes(']')) {
       cleaned = cleaned.replace(/"assets": \[([^]]*)$/, '"assets": [$1]');
     }
     
+    // Step 8: Final pass to fix any remaining escape sequence issues
+    // This handles cases where the regex might have missed nested strings
+    cleaned = this.fixRemainingEscapeIssues(cleaned);
+    
     return cleaned;
+  }
+
+  /**
+   * Fix remaining escape sequence issues in JSON strings
+   * This is a more aggressive approach that processes the entire JSON string
+   * Uses regex to find and fix any remaining problematic escape sequences
+   */
+  fixRemainingEscapeIssues(jsonString) {
+    let fixed = jsonString;
+    
+    // Pattern to match string values (not keys) - look for ": "value""
+    // This regex tries to match string values more carefully
+    const stringValuePattern = /:\s*"((?:[^"\\]|\\.)*)"/g;
+    
+    fixed = fixed.replace(stringValuePattern, (match, content) => {
+      let fixedContent = content;
+      
+      // Fix invalid escape sequences that weren't caught earlier
+      // Replace \ followed by invalid character (not in ["\\/bfnrtu] or \uXXXX) with \\
+      fixedContent = fixedContent.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, '\\\\');
+      
+      // Ensure any remaining LaTeX patterns are converted
+      fixedContent = fixedContent.replace(/\$(\d+)\s*\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
+      fixedContent = fixedContent.replace(/(\d+)\s*\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
+      
+      return `: "${fixedContent}"`;
+    });
+    
+    return fixed;
   }
 
   /**
@@ -214,7 +348,7 @@ class AIAllocationService {
         messages: [
           {
             role: "system",
-            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure. Ensure all JSON arrays and objects are properly closed with correct brackets and braces. Do not include trailing commas. Each property in an object must appear only once - no duplicate properties within the same object."
+            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure. CRITICAL JSON REQUIREMENTS: 1) All string values must have proper escape sequences - use \\\\ for backslashes, \\n for newlines, \\\" for quotes. 2) Do NOT include LaTeX notation (like $360^{\\circ}$) - convert to plain text (e.g., '360 degrees'). 3) Ensure all JSON arrays and objects are properly closed with correct brackets and braces. 4) Do not include trailing commas. 5) Each property in an object must appear only once - no duplicate properties within the same object. 6) All special characters in string values must be properly escaped according to JSON standards."
           },
           {
             role: "user",
@@ -311,9 +445,48 @@ class AIAllocationService {
   }
 
   /**
+   * Sanitize brief description text before including in prompt
+   * This prevents special characters from causing issues in the AI response
+   */
+  sanitizeBriefText(briefText) {
+    if (!briefText || typeof briefText !== 'string') {
+      return '';
+    }
+    
+    let sanitized = briefText;
+    
+    // Escape backslashes that might be interpreted as escape sequences
+    // But preserve valid escape sequences if they exist
+    sanitized = sanitized.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, '\\\\');
+    
+    // Escape quotes to prevent breaking JSON structure in prompt
+    sanitized = sanitized.replace(/"/g, '\\"');
+    
+    // Normalize newlines (convert to spaces or preserve as \n)
+    sanitized = sanitized.replace(/\r\n/g, ' ');
+    sanitized = sanitized.replace(/\n/g, ' ');
+    sanitized = sanitized.replace(/\r/g, ' ');
+    
+    // Remove or convert LaTeX notation to plain text
+    sanitized = sanitized.replace(/\$(\d+)\s*\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
+    sanitized = sanitized.replace(/(\d+)\s*\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
+    
+    // Trim and limit length to prevent prompt injection
+    sanitized = sanitized.trim();
+    if (sanitized.length > 8000) {
+      sanitized = sanitized.substring(0, 8000) + '...';
+    }
+    
+    return sanitized;
+  }
+
+  /**
    * Build prompt for asset analysis with industry-specific categories and examples
    */
   buildAssetAnalysisPrompt(briefDescription, projectContext) {
+    // Sanitize the brief description before including in prompt
+    const sanitizedBrief = this.sanitizeBriefText(briefDescription);
+    
     const availableTags = this.getAvailableAssetTags();
     const tagsList = availableTags.map((tag, index) => `${index + 1}. ${tag}`).join('\n');
     return `
@@ -349,7 +522,7 @@ VENUE-SPECIFIC CONSIDERATIONS:
 
 Analyze this project brief and identify ALL required assets with detailed specifications.
 
-Project Brief: "${briefDescription}"
+Project Brief: "${sanitizedBrief}"
 
 Additional Context:
 - Budget: ${projectContext.financial_parameters || 'Not specified'}
