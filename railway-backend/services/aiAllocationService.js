@@ -338,7 +338,8 @@ class AIAllocationService {
             content: prompt
           }
         ],
-        max_completion_tokens: 4000
+        max_completion_tokens: 8000, // Increased from 4000 to handle complex asset lists with multiple assets, tags, and detailed specifications
+        response_format: { type: "json_object" } // Force JSON output for consistency
       });
 
       // Validate response structure before accessing content
