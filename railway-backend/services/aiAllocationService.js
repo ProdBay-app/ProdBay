@@ -341,12 +341,37 @@ class AIAllocationService {
         max_completion_tokens: 4000
       });
 
+      // Validate response structure before accessing content
+      if (!response || !response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
+        throw new Error('Invalid API response structure: missing choices array');
+      }
+
+      if (!response.choices[0] || !response.choices[0].message) {
+        throw new Error('Invalid API response structure: missing message in choices[0]');
+      }
+
+      const content = response.choices[0].message.content;
+      
+      // Handle null/undefined content explicitly
+      if (content === null || content === undefined) {
+        const finishReason = response.choices[0]?.finish_reason;
+        throw new Error(`AI returned null/undefined content. Finish reason: ${finishReason || 'unknown'}. This may indicate the model hit a limit or encountered an error.`);
+      }
+      
       // Log the raw response for debugging
-      console.log('Raw AI response:', response.choices[0].message.content);
+      console.log('Raw AI response:', content);
+      console.log('Response structure:', {
+        hasResponse: !!response,
+        choicesCount: response.choices?.length || 0,
+        hasMessage: !!response.choices[0]?.message,
+        contentLength: content?.length || 0,
+        contentType: typeof content,
+        finishReason: response.choices[0]?.finish_reason
+      });
       // Note: OpenAI SDK handles timeouts and retries automatically
       // For large payloads (>200k chars), processing may take longer but is within gpt-5-nano's 400k token capacity
 
-      const aiResponse = this.parseAIResponse(response.choices[0].message.content);
+      const aiResponse = this.parseAIResponse(content);
       const processingTime = Date.now() - startTime;
 
       // Log the AI processing
