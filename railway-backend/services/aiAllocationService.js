@@ -48,13 +48,25 @@ class AIAllocationService {
       }
       
       // Additional JSON cleaning - handle common AI response issues
+      // Reset repair flag before cleaning
+      this._lastRepairAttempted = false;
       cleanedContent = this.cleanJsonResponse(cleanedContent);
+      
+      // Log if repair was attempted (for monitoring and debugging)
+      if (this._lastRepairAttempted) {
+        console.log('[Repair] Merged asset objects detected and repaired automatically');
+      }
       
       return JSON.parse(cleanedContent);
     } catch (error) {
-      console.error('Failed to parse AI response:', error);
+      // Enhanced error logging with repair attempt information
+      const repairInfo = this._lastRepairAttempted ? ' [REPAIR ATTEMPTED]' : '';
+      console.error(`Failed to parse AI response${repairInfo}:`, error);
       console.error('Error type:', error.name);
       console.error('Error message:', error.message);
+      if (this._lastRepairAttempted) {
+        console.error('⚠️  Merged object repair was attempted but parsing still failed - may need fallback extraction');
+      }
       console.error('Raw content length:', content ? content.length : 0);
       console.error('Raw content preview:', content ? content.substring(0, 500) : 'null');
       if (cleanedContent !== null) {
@@ -67,6 +79,7 @@ class AIAllocationService {
       const parseError = new Error(`Failed to parse AI response: ${error.message}`);
       parseError.rawContent = content;
       parseError.cleanedContent = cleanedContent;
+      parseError.repairAttempted = this._lastRepairAttempted || false;
       throw parseError;
     }
   }
@@ -148,8 +161,111 @@ class AIAllocationService {
   }
 
   /**
+   * Repair merged asset objects by splitting them into separate objects
+   * Detects cases where multiple "asset_name" fields appear in a single object
+   * and splits them by inserting object boundaries (}, {)
+   * 
+   * Regex Logic:
+   * - Finds patterns where "asset_name": appears multiple times within the same object
+   * - Detects merged objects by looking for: closing field (] or ") followed directly by "asset_name":
+   * - Inserts }, { to split merged objects into separate, valid JSON objects
+   * 
+   * @param {string} jsonString - The JSON string to repair
+   * @returns {{repaired: string, wasRepaired: boolean}} - Repaired JSON string and repair flag
+   */
+  repairMergedObjects(jsonString) {
+    if (!jsonString || typeof jsonString !== 'string') {
+      return { repaired: jsonString, wasRepaired: false };
+    }
+
+    // Extract the assets array content
+    const assetsArrayMatch = jsonString.match(/"assets":\s*\[([\s\S]*?)(?:\]|$)/);
+    if (!assetsArrayMatch) {
+      return { repaired: jsonString, wasRepaired: false }; // No assets array found
+    }
+
+    let assetsContent = assetsArrayMatch[1];
+    const beforeAssets = jsonString.substring(0, assetsArrayMatch.index + '"assets": ['.length);
+    const afterAssets = jsonString.substring(assetsArrayMatch.index + assetsArrayMatch[0].length);
+
+    // Count "asset_name": occurrences - if more than 1, we may have merged objects
+    const assetNameCount = (assetsContent.match(/"asset_name":/g) || []).length;
+    if (assetNameCount <= 1) {
+      return { repaired: jsonString, wasRepaired: false }; // No merging detected
+    }
+
+    // Pattern to detect merged objects:
+    // Look for: closing bracket ] (end of tags array) or closing quote " (end of string field)
+    // followed by optional whitespace/comma, then directly "asset_name": (next asset starts)
+    // This indicates a merged object where the previous asset wasn't closed
+    
+    // Strategy: Use regex to find all instances where a field ends (], ", or }) 
+    // is followed by "asset_name": without an intervening closing brace }
+    // This pattern indicates a merged object
+    
+    let repaired = assetsContent;
+    let wasRepaired = false;
+    
+    // Pattern 1: Match closing bracket ] (from tags array) followed by "asset_name":
+    // This is the most common case: tags array ends, then next asset_name starts
+    const pattern1 = /(\])\s*,?\s*(?=\s*"asset_name":)/g;
+    let match1;
+    const replacements1 = [];
+    while ((match1 = pattern1.exec(assetsContent)) !== null) {
+      // Check if there's a closing brace } between this position and the next asset_name
+      const beforeNextAssetName = assetsContent.substring(match1.index, match1.index + 200);
+      if (!beforeNextAssetName.includes('}')) {
+        // No closing brace - this is a merged object
+        replacements1.push({
+          index: match1.index + match1[0].length,
+          insert: '}, {'
+        });
+      }
+    }
+    
+    // Pattern 2: Match closing quote " (from string field) followed by "asset_name":
+    // Less common but possible if tags array is missing
+    const pattern2 = /(")\s*,?\s*(?=\s*"asset_name":)/g;
+    let match2;
+    const replacements2 = [];
+    while ((match2 = pattern2.exec(assetsContent)) !== null) {
+      // Check context: make sure this isn't part of a string value
+      const beforeMatch = assetsContent.substring(Math.max(0, match2.index - 50), match2.index);
+      // Only consider if it looks like the end of a field (has a colon before it)
+      if (beforeMatch.match(/:\s*"[^"]*"$/)) {
+        const beforeNextAssetName = assetsContent.substring(match2.index, match2.index + 200);
+        if (!beforeNextAssetName.includes('}')) {
+          replacements2.push({
+            index: match2.index + match2[0].length,
+            insert: '}, {'
+          });
+        }
+      }
+    }
+    
+    // Combine and sort replacements by index (descending) to process from end
+    const allReplacements = [...replacements1, ...replacements2]
+      .sort((a, b) => b.index - a.index); // Sort descending
+    
+    // Apply replacements from end to beginning to avoid offset issues
+    for (const replacement of allReplacements) {
+      repaired = repaired.substring(0, replacement.index) + 
+                 replacement.insert + 
+                 repaired.substring(replacement.index);
+      wasRepaired = true;
+    }
+
+    // Reconstruct the full JSON string
+    const fullRepaired = wasRepaired ? (beforeAssets + repaired + afterAssets) : jsonString;
+    return { repaired: fullRepaired, wasRepaired };
+  }
+
+  /**
    * Clean common JSON formatting issues from AI responses
-   * Now includes comprehensive string value sanitization
+   * Now includes comprehensive string value sanitization and merged object repair
+   * 
+   * @param {string} jsonString - The JSON string to clean
+   * @returns {string} - Cleaned JSON string
    */
   cleanJsonResponse(jsonString) {
     if (!jsonString || typeof jsonString !== 'string') {
@@ -157,6 +273,13 @@ class AIAllocationService {
     }
     
     let cleaned = jsonString;
+    
+    // Step 0: Repair merged objects FIRST (before any other processing)
+    // This ensures we're working with properly separated objects
+    const repairResult = this.repairMergedObjects(cleaned);
+    cleaned = repairResult.repaired;
+    // Store repair flag for logging (will be checked in parseAIResponse)
+    this._lastRepairAttempted = repairResult.wasRepaired;
     
     // Step 1: Sanitize string values (handle LaTeX, backslashes, special characters)
     cleaned = this.sanitizeJsonStringValues(cleaned);
@@ -333,7 +456,7 @@ class AIAllocationService {
         messages: [
           {
             role: "system",
-            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure. CRITICAL JSON REQUIREMENTS: 1) All string values must have proper escape sequences - use \\\\ for backslashes, \\n for newlines, \\\" for quotes. 2) Do NOT include LaTeX notation (like $360^{\\circ}$) - convert to plain text (e.g., '360 degrees'). 3) Ensure all JSON arrays and objects are properly closed with correct brackets and braces. 4) Do not include trailing commas. 5) Each property in an object must appear only once - no duplicate properties within the same object. 6) All special characters in string values must be properly escaped according to JSON standards."
+            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure. CRITICAL JSON REQUIREMENTS: 1) All string values must have proper escape sequences - use \\\\ for backslashes, \\n for newlines, \\\" for quotes. 2) Do NOT include LaTeX notation (like $360^{\\circ}$) - convert to plain text (e.g., '360 degrees'). 3) Ensure all JSON arrays and objects are properly closed with correct brackets and braces. 4) Do not include trailing commas. 5) Each property in an object must appear only once - no duplicate properties within the same object. 6) All special characters in string values must be properly escaped according to JSON standards. 7) Never merge multiple assets into one object. Each 'asset_name' must have its own { } block - every asset must be a separate, closed JSON object in the assets array."
           },
           {
             role: "user",
@@ -628,6 +751,39 @@ Respond with ONLY a JSON object in this exact format (no markdown, no code block
   "reasoning": "Explanation of why these assets were identified based on event type, scale, and venue requirements",
   "confidence": 0.85
 }
+
+CRITICAL ATOMICITY REQUIREMENTS:
+- Each asset MUST be its own closed JSON object within the array.
+- Every asset object MUST end with a closing brace } before the next asset begins.
+- NEVER list two or more "asset_name" fields within a single object.
+- Each object must be completely self-contained with all its properties (asset_name, specifications, source_text, tags) before closing with }.
+- After closing each object with }, add a comma if more assets follow in the array.
+
+COMMON MISTAKES TO AVOID:
+❌ INCORRECT - Merged objects (DO NOT DO THIS):
+   {
+     "asset_name": "Blueprint photo booth",
+     "specifications": "...",
+     "source_text": "...",
+     "tags": ["Photography"],
+     "asset_name": "Industrial workbenches",  // WRONG - second asset_name in same object
+     "specifications": "...",
+     "tags": ["Furniture"]
+   }
+
+✅ CORRECT - Separate objects (DO THIS):
+   {
+     "asset_name": "Blueprint photo booth",
+     "specifications": "...",
+     "source_text": "...",
+     "tags": ["Photography"]
+   },
+   {
+     "asset_name": "Industrial workbenches",
+     "specifications": "...",
+     "source_text": "...",
+     "tags": ["Furniture"]
+   }
 
 IMPORTANT GUIDELINES:
 - The source_text field should contain the precise text from the brief (verbatim) that led you to identify this asset
