@@ -37,7 +37,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
   ];
 
 
-  // Step progression effect - advance every 5 seconds
+  // Step progression effect - advance every 6.25 seconds
   useEffect(() => {
     if (!isVisible) {
       setCurrentStep(0); // Reset step when overlay is hidden
@@ -52,7 +52,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
         }
         return prevStep + 1;
       });
-    }, 5000); // 5 seconds per step
+    }, 6250); // 6.25 seconds per step (increased by 25% from 5 seconds)
 
     return () => clearInterval(interval);
   }, [isVisible, steps.length]);

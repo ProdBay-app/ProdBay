@@ -80,7 +80,7 @@ async function testAssetAnalysis() {
       // Display first few assets
       console.log('\n   Sample assets:');
       data.data.assets.slice(0, 3).forEach((asset, index) => {
-        console.log(`   ${index + 1}. ${asset.asset_name} (${asset.priority} priority, ${asset.estimated_cost_range} cost)`);
+        console.log(`   ${index + 1}. ${asset.asset_name}`);
       });
       
       return data.data.assets;
