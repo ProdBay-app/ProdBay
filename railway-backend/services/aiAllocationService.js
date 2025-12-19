@@ -355,23 +355,7 @@ class AIAllocationService {
 
       const content = response.choices[0].message.content;
       
-      // Handle null/undefined/empty content explicitly
-      if (content === null || content === undefined) {
-        const finishReason = response.choices[0]?.finish_reason;
-        throw new Error(`AI returned null/undefined content. Finish reason: ${finishReason || 'unknown'}. This may indicate the model hit a limit or encountered an error.`);
-      }
-      
-      // Handle empty string content (often caused by 'length' finish reason with very low token limits)
-      if (content.trim().length === 0) {
-        const finishReason = response.choices[0]?.finish_reason;
-        if (finishReason === 'length') {
-          throw new Error(`AI response was cut off due to token limit (finish_reason: 'length'). Content is empty, suggesting max_completion_tokens may be too low. Consider increasing the limit.`);
-        }
-        throw new Error(`AI returned empty content. Finish reason: ${finishReason || 'unknown'}. This may indicate the model encountered an error or the response was filtered.`);
-      }
-      
-      // Log the raw response for debugging
-      console.log('Raw AI response:', content);
+      // Log the response structure BEFORE checking content to diagnose issues
       console.log('Response structure:', {
         hasResponse: !!response,
         choicesCount: response.choices?.length || 0,
@@ -382,8 +366,32 @@ class AIAllocationService {
         usage: response.usage || 'not provided',
         promptTokens: response.usage?.prompt_tokens || 'unknown',
         completionTokens: response.usage?.completion_tokens || 'unknown',
-        totalTokens: response.usage?.total_tokens || 'unknown'
+        totalTokens: response.usage?.total_tokens || 'unknown',
+        promptLength: typeof prompt !== 'undefined' ? prompt.length : 'unknown'
       });
+      
+      // Handle null/undefined/empty content explicitly
+      if (content === null || content === undefined) {
+        const finishReason = response.choices[0]?.finish_reason;
+        const promptTokens = response.usage?.prompt_tokens || 'unknown';
+        const maxTokens = 16000;
+        throw new Error(`AI returned null/undefined content. Finish reason: ${finishReason || 'unknown'}. Prompt tokens: ${promptTokens}, Max completion tokens: ${maxTokens}. This may indicate the model hit a limit or encountered an error.`);
+      }
+      
+      // Handle empty string content (often caused by 'length' finish reason with very low token limits)
+      if (content.trim().length === 0) {
+        const finishReason = response.choices[0]?.finish_reason;
+        const promptTokens = response.usage?.prompt_tokens || 'unknown';
+        const completionTokens = response.usage?.completion_tokens || 0;
+        const maxTokens = 16000;
+        if (finishReason === 'length') {
+          throw new Error(`AI response was cut off due to token limit (finish_reason: 'length'). Prompt tokens: ${promptTokens}, Completion tokens: ${completionTokens}, Max completion tokens: ${maxTokens}. Content is empty, suggesting the prompt may be too large or max_completion_tokens may be too low.`);
+        }
+        throw new Error(`AI returned empty content. Finish reason: ${finishReason || 'unknown'}. Prompt tokens: ${promptTokens}, Completion tokens: ${completionTokens}. This may indicate the model encountered an error or the response was filtered.`);
+      }
+      
+      // Log the raw response for debugging
+      console.log('Raw AI response:', content);
       // Note: OpenAI SDK handles timeouts and retries automatically
       // For large payloads (>200k chars), processing may take longer but is within gpt-5-nano's 400k token capacity
 
