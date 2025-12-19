@@ -58,8 +58,9 @@ class BriefHighlightService {
     sanitized = sanitized.replace(/\r/g, ' ');
     
     // STEP 6: Remove or convert LaTeX notation to plain text
-    sanitized = sanitized.replace(/\$(\d+)\s*\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
-    sanitized = sanitized.replace(/(\d+)\s*\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
+    // Note: \^? matches optional caret (^) for superscript notation (e.g., $360^{\circ}$)
+    sanitized = sanitized.replace(/\$(\d+)\s*\^?\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
+    sanitized = sanitized.replace(/(\d+)\s*\^?\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
     
     // STEP 7: Escape backslashes that might be interpreted as escape sequences
     // But preserve valid escape sequences if they exist
@@ -211,7 +212,7 @@ Extraction Rules:
           }
         ],
         response_format: { type: "json_object" }, // Force JSON output
-        max_completion_tokens: 2000 // Increased from 500 to handle larger responses and prevent 'length' finish reason
+        max_completion_tokens: 4000 // Increased from 2000 to provide ample headroom for JSON responses
       });
 
       // Validate response structure before accessing content
@@ -247,7 +248,11 @@ Extraction Rules:
         hasMessage: !!response.choices[0]?.message,
         contentLength: content?.length || 0,
         contentType: typeof content,
-        finishReason: response.choices[0]?.finish_reason
+        finishReason: response.choices[0]?.finish_reason,
+        usage: response.usage || 'not provided',
+        promptTokens: response.usage?.prompt_tokens || 'unknown',
+        completionTokens: response.usage?.completion_tokens || 'unknown',
+        totalTokens: response.usage?.total_tokens || 'unknown'
       });
 
       // Parse the JSON response using robust parsing method

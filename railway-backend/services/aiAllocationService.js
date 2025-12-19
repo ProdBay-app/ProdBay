@@ -81,8 +81,9 @@ class AIAllocationService {
     
     // Step 1: Convert LaTeX notation to plain text before processing escapes
     // This handles cases like $360^{\circ}$ that appear in the raw JSON
-    sanitized = sanitized.replace(/\$(\d+)\s*\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
-    sanitized = sanitized.replace(/(\d+)\s*\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
+    // Note: \^? matches optional caret (^) for superscript notation
+    sanitized = sanitized.replace(/\$(\d+)\s*\^?\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
+    sanitized = sanitized.replace(/(\d+)\s*\^?\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
     sanitized = sanitized.replace(/\$(\d+)\s*°\s*\$/g, '$1 degrees');
     
     // Step 2: Find and fix string values (not keys)
@@ -207,8 +208,9 @@ class AIAllocationService {
       fixedContent = fixedContent.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, '\\\\');
       
       // Ensure any remaining LaTeX patterns are converted
-      fixedContent = fixedContent.replace(/\$(\d+)\s*\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
-      fixedContent = fixedContent.replace(/(\d+)\s*\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
+      // Note: \^? matches optional caret (^) for superscript notation
+      fixedContent = fixedContent.replace(/\$(\d+)\s*\^?\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
+      fixedContent = fixedContent.replace(/(\d+)\s*\^?\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
       
       return `: "${fixedContent}"`;
     });
@@ -338,7 +340,7 @@ class AIAllocationService {
             content: prompt
           }
         ],
-        max_completion_tokens: 8000, // Increased from 4000 to handle complex asset lists with multiple assets, tags, and detailed specifications
+        max_completion_tokens: 16000, // Increased from 8000 to provide ample headroom for complex asset lists with multiple assets, tags, and detailed specifications
         response_format: { type: "json_object" } // Force JSON output for consistency
       });
 
@@ -376,7 +378,11 @@ class AIAllocationService {
         hasMessage: !!response.choices[0]?.message,
         contentLength: content?.length || 0,
         contentType: typeof content,
-        finishReason: response.choices[0]?.finish_reason
+        finishReason: response.choices[0]?.finish_reason,
+        usage: response.usage || 'not provided',
+        promptTokens: response.usage?.prompt_tokens || 'unknown',
+        completionTokens: response.usage?.completion_tokens || 'unknown',
+        totalTokens: response.usage?.total_tokens || 'unknown'
       });
       // Note: OpenAI SDK handles timeouts and retries automatically
       // For large payloads (>200k chars), processing may take longer but is within gpt-5-nano's 400k token capacity
@@ -510,8 +516,9 @@ class AIAllocationService {
     sanitized = sanitized.replace(/\r/g, ' ');
     
     // STEP 6: Remove or convert LaTeX notation to plain text
-    sanitized = sanitized.replace(/\$(\d+)\s*\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
-    sanitized = sanitized.replace(/(\d+)\s*\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
+    // Note: \^? matches optional caret (^) for superscript notation (e.g., $360^{\circ}$)
+    sanitized = sanitized.replace(/\$(\d+)\s*\^?\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
+    sanitized = sanitized.replace(/(\d+)\s*\^?\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
     
     // STEP 7: Escape backslashes that might be interpreted as escape sequences
     // But preserve valid escape sequences if they exist
