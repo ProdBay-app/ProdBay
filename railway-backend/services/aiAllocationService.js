@@ -480,7 +480,7 @@ class AIAllocationService {
             content: prompt
           }
         ],
-        max_completion_tokens: 16000, // Increased from 8000 to provide ample headroom for complex asset lists with multiple assets, tags, and detailed specifications
+        max_completion_tokens: 24000, // Increased from 16000 to handle very large asset lists. gpt-5-nano supports up to 400k tokens total, so 24k completion tokens provides headroom for complex briefs with 30+ assets
         response_format: { type: "json_object" } // Force JSON output for consistency
       });
 
@@ -523,9 +523,9 @@ class AIAllocationService {
         const finishReason = response.choices[0]?.finish_reason;
         const promptTokens = response.usage?.prompt_tokens || 'unknown';
         const completionTokens = response.usage?.completion_tokens || 0;
-        const maxTokens = 16000;
+        const maxTokens = 24000;
         if (finishReason === 'length') {
-          throw new Error(`AI response was cut off due to token limit (finish_reason: 'length'). Prompt tokens: ${promptTokens}, Completion tokens: ${completionTokens}, Max completion tokens: ${maxTokens}. Content is empty, suggesting the prompt may be too large or max_completion_tokens may be too low.`);
+          throw new Error(`AI response was cut off due to token limit (finish_reason: 'length'). Prompt tokens: ${promptTokens}, Completion tokens: ${completionTokens}, Max completion tokens: ${maxTokens}. The response exceeded the token limit - consider splitting the brief into smaller sections or the asset list may be exceptionally large (30+ assets).`);
         }
         throw new Error(`AI returned empty content. Finish reason: ${finishReason || 'unknown'}. Prompt tokens: ${promptTokens}, Completion tokens: ${completionTokens}. This may indicate the model encountered an error or the response was filtered.`);
       }
