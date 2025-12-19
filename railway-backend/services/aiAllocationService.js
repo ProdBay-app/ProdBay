@@ -473,7 +473,7 @@ class AIAllocationService {
         messages: [
           {
             role: "system",
-            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure. CRITICAL JSON REQUIREMENTS: 1) All string values must have proper escape sequences - use \\\\ for backslashes, \\n for newlines, \\\" for quotes. 2) Do NOT include LaTeX notation (like $360^{\\circ}$) - convert to plain text (e.g., '360 degrees'). 3) Ensure all JSON arrays and objects are properly closed with correct brackets and braces. 4) Do not include trailing commas. 5) Each property in an object must appear only once - no duplicate properties within the same object. 6) All special characters in string values must be properly escaped according to JSON standards. 7) Never merge multiple assets into one object. Each 'asset_name' must have its own { } block - every asset must be a separate, closed JSON object in the assets array."
+            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure. CRITICAL JSON REQUIREMENTS: 1) All string values must have proper escape sequences - use \\\\ for backslashes, \\n for newlines, \\\" for quotes. 2) Do NOT include LaTeX notation (like $360^{\\circ}$) - convert to plain text (e.g., '360 degrees'). 3) Ensure all JSON arrays and objects are properly closed with correct brackets and braces. 4) Do not include trailing commas. 5) Each property in an object must appear only once - no duplicate properties within the same object. 6) All special characters in string values must be properly escaped according to JSON standards. 7) Never merge multiple assets into one object. Each 'asset_name' must have its own { } block - every asset must be a separate, closed JSON object in the assets array. STRICT ASSET DEFINITION: An asset is a SINGLE physical item, piece of equipment, service, or crew role required for production. Each asset must be functionally distinct and independently procurable. When source text lists multiple items (comma, slash, or 'and' separated), split into separate assets UNLESS they are: a) Part of a pre-assembled kit/set (e.g., 'DJ booth package'), b) Functionally inseparable (e.g., 'LED wall with mounting hardware'), or c) Explicitly described as a single unit. CREW & TALENT GRANULARITY: Individual roles must be separate assets. 'Event Manager', 'Brand Ambassadors', 'Workshop Leaders', and 'DJs' are distinct assets, not a single 'Crew' asset. Each role requires different skills, contracts, and allocation."
           },
           {
             role: "user",
@@ -765,6 +765,15 @@ TAG SELECTION RULES:
 - Example: For "LED Video Wall" use tags: ["LED Screens", "Video Production"]
 - Example: For "Catering Service" use tags: ["Catering", "Event Staff"]
 
+DEDUPLICATION LOGIC:
+- If multiple items serve the same functional purpose in the same zone, they should be grouped ONLY if:
+  a) They are explicitly described as a set/package (e.g., 'DJ booth package', 'furniture set')
+  b) They are functionally inseparable (e.g., 'LED wall with built-in mounting hardware', 'stage with integrated lighting')
+- Otherwise, create separate assets for each distinct item
+- Use consistent asset names across all briefs for the same item type
+- Example: 'Industrial workbenches' and 'Industrial stools' are separate assets even if used in the same zone
+- Example: 'DJ booth package' (if explicitly called a package) remains one asset
+
 Respond with ONLY a JSON object in this exact format (no markdown, no code blocks):
 {
   "assets": [
@@ -780,11 +789,37 @@ Respond with ONLY a JSON object in this exact format (no markdown, no code block
 }
 
 CRITICAL ATOMICITY REQUIREMENTS:
-- Each asset MUST be its own closed JSON object within the array.
-- Every asset object MUST end with a closing brace } before the next asset begins.
-- NEVER list two or more "asset_name" fields within a single object.
-- Each object must be completely self-contained with all its properties (asset_name, specifications, source_text, tags) before closing with }.
-- After closing each object with }, add a comma if more assets follow in the array.
+
+1. ASSET GRANULARITY RULES:
+   - Each asset MUST represent a single, independently procurable item, piece of equipment, service, or crew role
+   - When source text lists multiple items (comma, slash, or 'and' separated), split into separate assets
+   - Example: 'workbenches, stools, and racks' → Create 3 separate assets: 'Industrial Workbenches', 'Stools', 'Storage Racks'
+   - Example: 'workbenches/stools' → Create 2 separate assets: 'Industrial Workbenches', 'Stools'
+   - Exception: Only group if brief explicitly describes as a 'set', 'package', or 'kit' (e.g., 'DJ booth package')
+
+2. CREW & TALENT GRANULARITY:
+   - Individual roles must be separate assets, not grouped under generic 'Crew' or 'Staff'
+   - Example: 'Event Manager, Crew, Photo/Video Team, 6 Ambassadors, 4 Workshop Leaders' → Create separate assets:
+     * 'Event Manager'
+     * 'Production Crew'
+     * 'Photo/Video Team'
+     * 'Brand Ambassadors' (quantity: 6)
+     * 'Workshop Leaders' (quantity: 4)
+   - Example: '3 DJs + 1 Headline Artist' → Create 2 separate assets:
+     * 'DJs' (quantity: 3)
+     * 'Headline Artist' (quantity: 1)
+
+3. JSON STRUCTURE REQUIREMENTS:
+   - Each asset MUST be its own closed JSON object within the array
+   - Every asset object MUST end with a closing brace } before the next asset begins
+   - NEVER list two or more "asset_name" fields within a single object
+   - Each object must be completely self-contained with all its properties (asset_name, specifications, source_text, tags) before closing with }
+   - After closing each object with }, add a comma if more assets follow in the array
+
+4. CONSISTENCY REQUIREMENTS:
+   - Use consistent naming conventions (e.g., 'Industrial Workbenches' not 'workbenches' in one place and 'Workbenches' in another)
+   - If an asset appears in multiple briefs, use the same name and structure
+   - Reference the same functional purpose across all extractions
 
 COMMON MISTAKES TO AVOID:
 ❌ INCORRECT - Merged objects (DO NOT DO THIS):
@@ -798,19 +833,75 @@ COMMON MISTAKES TO AVOID:
      "tags": ["Furniture"]
    }
 
+❌ INCORRECT - Grouped items that should be split (DO NOT DO THIS):
+   {
+     "asset_name": "Industrial workbenches, stools, and racks",  // WRONG - should be 3 separate assets
+     "specifications": "...",
+     "tags": ["Furniture"]
+   }
+
+❌ INCORRECT - Generic crew grouping (DO NOT DO THIS):
+   {
+     "asset_name": "Event Staff",  // WRONG - should split into individual roles
+     "specifications": "Event Manager, Ambassadors, Workshop Leaders",
+     "tags": ["Event Staff"]
+   }
+
 ✅ CORRECT - Separate objects (DO THIS):
    {
-     "asset_name": "Blueprint photo booth",
+     "asset_name": "Blueprint Photo Booth",
      "specifications": "...",
      "source_text": "...",
      "tags": ["Photography"]
    },
    {
-     "asset_name": "Industrial workbenches",
+     "asset_name": "Industrial Workbenches",
+     "specifications": "...",
+     "source_text": "...",
+     "tags": ["Furniture"]
+   },
+   {
+     "asset_name": "Stools",
+     "specifications": "...",
+     "source_text": "...",
+     "tags": ["Furniture"]
+   },
+   {
+     "asset_name": "Storage Racks",
      "specifications": "...",
      "source_text": "...",
      "tags": ["Furniture"]
    }
+
+✅ CORRECT - Separate crew roles (DO THIS):
+   {
+     "asset_name": "Event Manager",
+     "specifications": "...",
+     "tags": ["Event Staff"]
+   },
+   {
+     "asset_name": "Brand Ambassadors",
+     "specifications": "Quantity: 6",
+     "tags": ["Event Staff"]
+   },
+   {
+     "asset_name": "Workshop Leaders",
+     "specifications": "Quantity: 4",
+     "tags": ["Event Staff"]
+   }
+
+REFERENCE EXAMPLE (For Calibration Only):
+The following is an EXAMPLE of proper asset granularity for a specific project. This demonstrates the logic of splitting grouped items, but different projects will have different asset lists. Apply the SAME LOGIC (not the same assets) to any brief:
+
+Example Project Assets (26 distinct entities):
+- Infrastructure/Large Scale: Entrance Tunnel, DJ Stage Shipping Container, Mesh Signage Walls, Movement Lab, Power Solution
+- Branding/Signage: Adidas Logo Light Box, Floor Decals, Printed Fabric Banners
+- Interactive/Digital: Digital Sketch Wall, AI Art Generator, Photographer & Videographer
+- Furniture/Decor: Sneaker Customization Stations, Industrial Workbenches, Industrial Stools, Industrial Racks, Merch Display Stands, Cafe Lounge Couches and WiFi
+- Staff/Crew: Event Manager, Production Crew, Brand Ambassadors, Workshop Leaders, DJs
+- Merch/Inventory: Adidas Patches and Pins, Blueprint Notebooks, Branded T-Shirts, Discount Codes
+
+Note: This example shows that 'workbenches, stools, and racks' should be 3 separate assets, and crew roles should be split individually. Different projects will have different master lists - apply the same logical splitting principles to extract independently procurable items.
 
 IMPORTANT GUIDELINES:
 - The source_text field should contain the precise text from the brief (verbatim) that led you to identify this asset
