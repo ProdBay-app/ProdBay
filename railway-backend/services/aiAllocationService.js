@@ -429,6 +429,7 @@ class AIAllocationService {
   /**
    * Sanitize brief description text before including in prompt
    * This prevents special characters from causing issues in the AI response
+   * Aggressively filters noise patterns from PDF extraction artifacts
    */
   sanitizeBriefText(briefText) {
     if (!briefText || typeof briefText !== 'string') {
@@ -437,23 +438,55 @@ class AIAllocationService {
     
     let sanitized = briefText;
     
-    // Escape backslashes that might be interpreted as escape sequences
-    // But preserve valid escape sequences if they exist
-    sanitized = sanitized.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, '\\\\');
+    // STEP 1: Remove ASCII character maps (PDF font encoding artifacts)
+    // Pattern: Sequences of 90+ printable ASCII characters in order
+    // Matches: !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+    sanitized = sanitized.replace(/[!-~]{90,}/g, '');
     
-    // Escape quotes to prevent breaking JSON structure in prompt
-    sanitized = sanitized.replace(/"/g, '\\"');
+    // STEP 2: Remove repeated character sequences (PDF rendering artifacts)
+    // Pattern: Single character repeated 20+ times (with optional spaces between)
+    // Matches: 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1...
+    sanitized = sanitized.replace(/(.)\s*\1{19,}/g, '');
     
-    // Normalize newlines (convert to spaces or preserve as \n)
+    // STEP 3: Remove high-entropy blocks (non-human-readable character sequences)
+    // Pattern: 30+ consecutive non-alphanumeric, non-whitespace characters
+    // Matches: ÇüéãààçéëéííiÃÂÉæÆõöòùùýÖÜç£¥RfáíóúñÑao¿r~½¼i«»
+    sanitized = sanitized.replace(/[^\w\s]{30,}/g, '');
+    
+    // STEP 4: Decode HTML entities (common in PDF text extraction)
+    // Convert HTML entities back to their actual characters
+    const htmlEntityMap = {
+      '&amp;': '&',
+      '&lt;': '<',
+      '&gt;': '>',
+      '&quot;': '"',
+      '&#39;': "'",
+      '&apos;': "'"
+    };
+    Object.entries(htmlEntityMap).forEach(([entity, char]) => {
+      sanitized = sanitized.replace(new RegExp(entity, 'g'), char);
+    });
+    
+    // STEP 5: Normalize whitespace (convert all line breaks to spaces)
     sanitized = sanitized.replace(/\r\n/g, ' ');
     sanitized = sanitized.replace(/\n/g, ' ');
     sanitized = sanitized.replace(/\r/g, ' ');
     
-    // Remove or convert LaTeX notation to plain text
+    // STEP 6: Remove or convert LaTeX notation to plain text
     sanitized = sanitized.replace(/\$(\d+)\s*\\?\{?\s*\\circ\s*\}?\s*\$/g, '$1 degrees');
     sanitized = sanitized.replace(/(\d+)\s*\\?\{?\s*\\circ\s*\}?/g, '$1 degrees');
     
-    // Trim and limit length to prevent prompt injection
+    // STEP 7: Escape backslashes that might be interpreted as escape sequences
+    // But preserve valid escape sequences if they exist
+    sanitized = sanitized.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, '\\\\');
+    
+    // STEP 8: Escape quotes to prevent breaking JSON structure in prompt
+    sanitized = sanitized.replace(/"/g, '\\"');
+    
+    // STEP 9: Clean up multiple spaces created by removals
+    sanitized = sanitized.replace(/\s+/g, ' ');
+    
+    // STEP 10: Trim and limit length AFTER noise removal (maximize clean content)
     sanitized = sanitized.trim();
     if (sanitized.length > 8000) {
       sanitized = sanitized.substring(0, 8000) + '...';
