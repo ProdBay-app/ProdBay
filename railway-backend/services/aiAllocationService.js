@@ -530,11 +530,11 @@ class AIAllocationService {
       
       const response = await this.openai.chat.completions.create({
         model: "gpt-4.1-nano",
-        temperature: 0.2,
+        temperature: 0.0,
         messages: [
           {
             role: "system",
-            content: "You are an expert event production manager. Analyze project briefs and identify required assets with detailed specifications. You must respond with ONLY valid JSON - no markdown formatting, no code blocks, no explanations outside the JSON structure. CRITICAL JSON REQUIREMENTS: 1) All string values must have proper escape sequences - use \\\\ for backslashes, \\n for newlines, \\\" for quotes. 2) Do NOT include LaTeX notation (like $360^{\\circ}$) - convert to plain text (e.g., '360 degrees'). 3) Ensure all JSON arrays and objects are properly closed with correct brackets and braces. 4) Do not include trailing commas. 5) Each property in an object must appear only once - no duplicate properties within the same object. 6) All special characters in string values must be properly escaped according to JSON standards. 7) Never merge multiple assets into one object. Each 'asset_name' must have its own { } block - every asset must be a separate, closed JSON object in the assets array. STRICT ASSET DEFINITION: An asset is a SINGLE physical item, piece of equipment, service, or crew role required for production. Each asset must be functionally distinct and independently procurable. When source text lists multiple items (comma, slash, or 'and' separated), split into separate assets UNLESS they are: a) Part of a pre-assembled kit/set (e.g., 'DJ booth package'), b) Functionally inseparable (e.g., 'LED wall with mounting hardware'), or c) Explicitly described as a single unit. CREW & TALENT GRANULARITY: Individual roles must be separate assets. 'Event Manager', 'Brand Ambassadors', 'Workshop Leaders', and 'DJs' are distinct assets, not a single 'Crew' asset. Each role requires different skills, contracts, and allocation."
+            content: "You are an expert event production manager. Analyze project briefs to identify all required assets, listing each with detailed specifications. Respond with JSON only—do not use markdown, code blocks, or add explanations outside the JSON. STRICT JSON RULES: 1) Escape all string values: use \\ for backslashes, \" for quotes, \n for newlines. 2) Write all symbols in plain text (e.g., '360 degrees', not LaTeX). 3) Validate arrays/objects: all brackets/braces must close, no trailing commas. 4) No duplicate properties in any object. 5) Escape special characters according to JSON rules. 6) Each asset object must be separate within the assets array—never merge multiple assets. ASSET GUIDELINES: An asset is a physical item, piece of equipment, service, or crew role essential for production. Assets must be functionally distinct and independently procurable. When multiple items are listed together, split into separate assets unless: (a) they are a single pre-assembled kit/set, (b) they are functionally inseparable, or (c) described as a single unit. CREW/TALENT: Specify each individual crew/talent role as its own asset. Never use a generic 'Crew' asset—each distinct role (e.g., 'Event Manager', 'Brand Ambassador', 'DJ') is a separate asset due to their unique requirements."
           },
           {
             role: "user",
@@ -1040,7 +1040,7 @@ Be specific and practical in your asset identification, considering the event ty
       // Test with a simple request
       const response = await this.openai.chat.completions.create({
         model: "gpt-4.1-nano",
-        temperature: 0.2,
+        temperature: 0.0,
         messages: [{ role: "user", content: "Hello" }],
         max_completion_tokens: 5
       });

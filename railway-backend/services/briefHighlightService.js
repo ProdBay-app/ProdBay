@@ -201,7 +201,7 @@ Extraction Rules:
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-4.1-nano",
-        temperature: 0.2,
+        temperature: 0.0,
         messages: [
           {
             role: "system",
@@ -307,7 +307,7 @@ Extraction Rules:
       // Test with a simple request
       const response = await this.openai.chat.completions.create({
         model: "gpt-4.1-nano",
-        temperature: 0.2,
+        temperature: 0.0,
         messages: [{ role: "user", content: "Hello" }],
         max_completion_tokens: 5
       });
