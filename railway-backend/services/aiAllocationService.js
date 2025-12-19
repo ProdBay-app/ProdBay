@@ -530,7 +530,7 @@ class AIAllocationService {
       
       const response = await this.openai.chat.completions.create({
         model: "gpt-4.1-nano",
-        temperature: 0.0,
+        temperature: 0.2,
         messages: [
           {
             role: "system",
@@ -1040,7 +1040,7 @@ Be specific and practical in your asset identification, considering the event ty
       // Test with a simple request
       const response = await this.openai.chat.completions.create({
         model: "gpt-4.1-nano",
-        temperature: 0.0,
+        temperature: 0.2,
         messages: [{ role: "user", content: "Hello" }],
         max_completion_tokens: 5
       });
