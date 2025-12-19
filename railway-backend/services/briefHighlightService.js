@@ -2,7 +2,7 @@ const OpenAI = require('openai');
 
 /**
  * Brief Highlight Service
- * Extracts key project information from a brief using OpenAI GPT-5 nano
+ * Extracts key project information from a brief using OpenAI GPT-4.1 nano
  */
 class BriefHighlightService {
   constructor() {
@@ -76,7 +76,7 @@ class BriefHighlightService {
     sanitized = sanitized.trim();
     
     // Soft limit: Log warning for very large briefs but allow full processing
-    // gpt-5-nano supports 400,000 tokens (~1.6M characters), so 200k chars is safe
+    // gpt-4.1-nano supports 400,000 tokens (~1.6M characters), so 200k chars is safe
     if (sanitized.length > 200000) {
       console.warn(`[warn] Processing Massive Brief: ${sanitized.length} characters. Monitoring for latency.`);
     }
@@ -197,10 +197,11 @@ Extraction Rules:
 
       console.log('Calling OpenAI API for brief highlight extraction...');
       // Note: OpenAI SDK handles timeouts and retries automatically
-      // For large payloads (>200k chars), processing may take longer but is within gpt-5-nano's 400k token capacity
+      // For large payloads (>200k chars), processing may take longer but is within gpt-4.1-nano's 400k token capacity
 
       const response = await this.openai.chat.completions.create({
-        model: "gpt-5-nano",
+        model: "gpt-4.1-nano",
+        temperature: 0.2,
         messages: [
           {
             role: "system",
@@ -305,14 +306,15 @@ Extraction Rules:
 
       // Test with a simple request
       const response = await this.openai.chat.completions.create({
-        model: "gpt-5-nano",
+        model: "gpt-4.1-nano",
+        temperature: 0.2,
         messages: [{ role: "user", content: "Hello" }],
         max_completion_tokens: 5
       });
 
       return {
         healthy: true,
-        model: "gpt-5-nano",
+        model: "gpt-4.1-nano",
         service: 'briefHighlights'
       };
     } catch (error) {

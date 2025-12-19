@@ -3,7 +3,7 @@ const { supabase } = require('../config/database');
 
 /**
  * AI Allocation Service
- * Handles AI-powered asset allocation using OpenAI GPT-5 nano
+ * Handles AI-powered asset allocation using OpenAI GPT-4.1 nano
  */
 class AIAllocationService {
   constructor() {
@@ -529,7 +529,8 @@ class AIAllocationService {
       const prompt = this.buildAssetAnalysisPrompt(briefDescription, projectContext);
       
       const response = await this.openai.chat.completions.create({
-        model: "gpt-5-nano",
+        model: "gpt-4.1-nano",
+        temperature: 0.2,
         messages: [
           {
             role: "system",
@@ -540,7 +541,7 @@ class AIAllocationService {
             content: prompt
           }
         ],
-        max_completion_tokens: 24000, // Increased from 16000 to handle very large asset lists. gpt-5-nano supports up to 400k tokens total, so 24k completion tokens provides headroom for complex briefs with 30+ assets
+        max_completion_tokens: 24000, // Increased from 16000 to handle very large asset lists. gpt-4.1-nano supports up to 400k tokens total, so 24k completion tokens provides headroom for complex briefs with 30+ assets
         response_format: { type: "json_object" } // Force JSON output for consistency
       });
 
@@ -593,7 +594,7 @@ class AIAllocationService {
       // Log the raw response for debugging
       console.log('Raw AI response:', content);
       // Note: OpenAI SDK handles timeouts and retries automatically
-      // For large payloads (>200k chars), processing may take longer but is within gpt-5-nano's 400k token capacity
+      // For large payloads (>200k chars), processing may take longer but is within gpt-4.1-nano's 400k token capacity
 
       const aiResponse = this.parseAIResponse(content);
       const processingTime = Date.now() - startTime;
@@ -752,7 +753,7 @@ class AIAllocationService {
     sanitized = sanitized.trim();
     
     // Soft limit: Log warning for very large briefs but allow full processing
-    // gpt-5-nano supports 400,000 tokens (~1.6M characters), so 200k chars is safe
+    // gpt-4.1-nano supports 400,000 tokens (~1.6M characters), so 200k chars is safe
     if (sanitized.length > 200000) {
       console.warn(`[warn] Processing Massive Brief: ${sanitized.length} characters. Monitoring for latency.`);
     }
@@ -1038,14 +1039,15 @@ Be specific and practical in your asset identification, considering the event ty
 
       // Test with a simple request
       const response = await this.openai.chat.completions.create({
-        model: "gpt-5-nano",
+        model: "gpt-4.1-nano",
+        temperature: 0.2,
         messages: [{ role: "user", content: "Hello" }],
         max_completion_tokens: 5
       });
 
       return {
         healthy: true,
-        model: "gpt-5-nano",
+        model: "gpt-4.1-nano",
         responseTime: Date.now()
       };
     } catch (error) {
