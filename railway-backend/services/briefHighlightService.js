@@ -71,10 +71,13 @@ class BriefHighlightService {
     // STEP 9: Clean up multiple spaces created by removals
     sanitized = sanitized.replace(/\s+/g, ' ');
     
-    // STEP 10: Trim and limit length AFTER noise removal (maximize clean content)
+    // STEP 10: Trim and apply soft limit for monitoring (no truncation - zero data loss)
     sanitized = sanitized.trim();
-    if (sanitized.length > 8000) {
-      sanitized = sanitized.substring(0, 8000) + '...';
+    
+    // Soft limit: Log warning for very large briefs but allow full processing
+    // gpt-5-nano supports 400,000 tokens (~1.6M characters), so 200k chars is safe
+    if (sanitized.length > 200000) {
+      console.warn(`[warn] Processing Massive Brief: ${sanitized.length} characters. Monitoring for latency.`);
     }
     
     return sanitized;
@@ -192,6 +195,8 @@ Extraction Rules:
       const userPrompt = `Analyze this project brief and extract the key information:\n\n${sanitizedBriefText}`;
 
       console.log('Calling OpenAI API for brief highlight extraction...');
+      // Note: OpenAI SDK handles timeouts and retries automatically
+      // For large payloads (>200k chars), processing may take longer but is within gpt-5-nano's 400k token capacity
 
       const response = await this.openai.chat.completions.create({
         model: "gpt-5-nano",
