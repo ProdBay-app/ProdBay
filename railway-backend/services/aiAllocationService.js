@@ -186,7 +186,19 @@ class AIAllocationService {
     }
 
     let assetsContent = assetsArrayMatch[1];
-    const beforeAssets = jsonString.substring(0, assetsArrayMatch.index + '"assets": ['.length);
+    
+    // Find the actual position of the opening bracket [ in the matched string
+    // The regex allows variable whitespace (\s*), so we can't use a hardcoded length
+    const fullMatch = assetsArrayMatch[0]; // e.g., "assets": [ or "assets":  [
+    const bracketIndexInMatch = fullMatch.indexOf('[');
+    if (bracketIndexInMatch === -1) {
+      // Should never happen if regex matched, but handle gracefully
+      return { repaired: jsonString, wasRepaired: false, savedCount: 0 };
+    }
+    
+    // Calculate correct positions: beforeAssets ends right before the opening bracket
+    const beforeAssetsEnd = assetsArrayMatch.index + bracketIndexInMatch + 1; // +1 to include the [
+    const beforeAssets = jsonString.substring(0, beforeAssetsEnd);
     const afterAssets = jsonString.substring(assetsArrayMatch.index + assetsArrayMatch[0].length);
 
     // Count "asset_name": occurrences - if more than 1, we may have merged objects
