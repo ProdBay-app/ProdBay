@@ -211,7 +211,7 @@ Extraction Rules:
           }
         ],
         response_format: { type: "json_object" }, // Force JSON output
-        max_completion_tokens: 500
+        max_completion_tokens: 2000 // Increased from 500 to handle larger responses and prevent 'length' finish reason
       });
 
       // Validate response structure before accessing content
@@ -225,10 +225,19 @@ Extraction Rules:
 
       const content = response.choices[0].message.content;
       
-      // Handle null/undefined content explicitly
+      // Handle null/undefined/empty content explicitly
       if (content === null || content === undefined) {
         const finishReason = response.choices[0]?.finish_reason;
         throw new Error(`AI returned null/undefined content. Finish reason: ${finishReason || 'unknown'}. This may indicate the model hit a limit or encountered an error.`);
+      }
+      
+      // Handle empty string content (often caused by 'length' finish reason with very low token limits)
+      if (content.trim().length === 0) {
+        const finishReason = response.choices[0]?.finish_reason;
+        if (finishReason === 'length') {
+          throw new Error(`AI response was cut off due to token limit (finish_reason: 'length'). Content is empty, suggesting max_completion_tokens may be too low. Consider increasing the limit.`);
+        }
+        throw new Error(`AI returned empty content. Finish reason: ${finishReason || 'unknown'}. This may indicate the model encountered an error or the response was filtered.`);
       }
       
       console.log('Raw AI response:', content);
