@@ -338,7 +338,6 @@ class AIAllocationService {
             content: prompt
           }
         ],
-        temperature: 0.3,
         max_completion_tokens: 4000
       });
 

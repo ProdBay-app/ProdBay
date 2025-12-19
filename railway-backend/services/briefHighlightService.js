@@ -111,7 +111,6 @@ Extraction Rules:
           }
         ],
         response_format: { type: "json_object" }, // Force JSON output
-        temperature: 0.3, // Low temperature for consistent extraction
         max_completion_tokens: 500
       });
 
