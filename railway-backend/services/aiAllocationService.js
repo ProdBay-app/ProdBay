@@ -179,27 +179,41 @@ class AIAllocationService {
       return { repaired: jsonString, wasRepaired: false, savedCount: 0 };
     }
 
-    // Extract the assets array content
-    const assetsArrayMatch = jsonString.match(/"assets":\s*\[([\s\S]*?)(?:\]|$)/);
-    if (!assetsArrayMatch) {
+    // Extract the assets array content by tracking bracket depth
+    // This properly handles nested arrays (like tags arrays) by finding the matching closing bracket
+    const assetsArrayStartMatch = jsonString.match(/"assets":\s*\[/);
+    if (!assetsArrayStartMatch) {
       return { repaired: jsonString, wasRepaired: false, savedCount: 0 }; // No assets array found
     }
 
-    let assetsContent = assetsArrayMatch[1];
+    // Find the opening bracket position
+    const arrayStartIndex = assetsArrayStartMatch.index + assetsArrayStartMatch[0].length - 1; // Position of [
+    let bracketDepth = 0;
+    let arrayEndIndex = -1;
     
-    // Find the actual position of the opening bracket [ in the matched string
-    // The regex allows variable whitespace (\s*), so we can't use a hardcoded length
-    const fullMatch = assetsArrayMatch[0]; // e.g., "assets": [ or "assets":  [
-    const bracketIndexInMatch = fullMatch.indexOf('[');
-    if (bracketIndexInMatch === -1) {
-      // Should never happen if regex matched, but handle gracefully
-      return { repaired: jsonString, wasRepaired: false, savedCount: 0 };
+    // Track bracket depth to find the matching closing bracket for the assets array
+    for (let i = arrayStartIndex; i < jsonString.length; i++) {
+      const char = jsonString[i];
+      if (char === '[') {
+        bracketDepth++;
+      } else if (char === ']') {
+        bracketDepth--;
+        if (bracketDepth === 0) {
+          arrayEndIndex = i;
+          break;
+        }
+      }
     }
     
-    // Calculate correct positions: beforeAssets ends right before the opening bracket
-    const beforeAssetsEnd = assetsArrayMatch.index + bracketIndexInMatch + 1; // +1 to include the [
-    const beforeAssets = jsonString.substring(0, beforeAssetsEnd);
-    const afterAssets = jsonString.substring(assetsArrayMatch.index + assetsArrayMatch[0].length);
+    // If we didn't find a closing bracket, use the end of the string
+    if (arrayEndIndex === -1) {
+      arrayEndIndex = jsonString.length;
+    }
+    
+    // Extract the assets array content (everything between [ and ])
+    const assetsContent = jsonString.substring(arrayStartIndex + 1, arrayEndIndex);
+    const beforeAssets = jsonString.substring(0, arrayStartIndex + 1);
+    const afterAssets = jsonString.substring(arrayEndIndex);
 
     // Count "asset_name": occurrences - if more than 1, we may have merged objects
     const assetNameCount = (assetsContent.match(/"asset_name":/g) || []).length;
@@ -226,10 +240,32 @@ class AIAllocationService {
     let match1;
     const replacements1 = [];
     while ((match1 = pattern1.exec(assetsContent)) !== null) {
-      // Check if there's a closing brace } between this position and the next asset_name
-      const beforeNextAssetName = assetsContent.substring(match1.index, match1.index + 200);
-      if (!beforeNextAssetName.includes('}')) {
-        // No closing brace - this is a merged object
+      // Find the next "asset_name": position to determine search boundary
+      const nextAssetNameMatch = assetsContent.substring(match1.index + match1[0].length).match(/"asset_name":/);
+      const searchEndIndex = nextAssetNameMatch 
+        ? match1.index + match1[0].length + nextAssetNameMatch.index 
+        : assetsContent.length;
+      
+      // Search for closing brace } between current position and next asset_name
+      // Track brace depth to find the actual object closing brace
+      let foundClosingBrace = false;
+      let braceDepth = 0;
+      for (let i = match1.index + match1[0].length; i < searchEndIndex; i++) {
+        const char = assetsContent[i];
+        if (char === '{') {
+          braceDepth++;
+        } else if (char === '}') {
+          braceDepth--;
+          if (braceDepth < 0) {
+            // Found a closing brace that closes the current object
+            foundClosingBrace = true;
+            break;
+          }
+        }
+      }
+      
+      if (!foundClosingBrace) {
+        // No closing brace found - this is a merged object
         replacements1.push({
           index: match1.index + match1[0].length,
           insert: '}, {'
@@ -247,8 +283,32 @@ class AIAllocationService {
       const beforeMatch = assetsContent.substring(Math.max(0, match2.index - 50), match2.index);
       // Only consider if it looks like the end of a field (has a colon before it)
       if (beforeMatch.match(/:\s*"[^"]*"$/)) {
-        const beforeNextAssetName = assetsContent.substring(match2.index, match2.index + 200);
-        if (!beforeNextAssetName.includes('}')) {
+        // Find the next "asset_name": position to determine search boundary
+        const nextAssetNameMatch = assetsContent.substring(match2.index + match2[0].length).match(/"asset_name":/);
+        const searchEndIndex = nextAssetNameMatch 
+          ? match2.index + match2[0].length + nextAssetNameMatch.index 
+          : assetsContent.length;
+        
+        // Search for closing brace } between current position and next asset_name
+        // Track brace depth to find the actual object closing brace
+        let foundClosingBrace = false;
+        let braceDepth = 0;
+        for (let i = match2.index + match2[0].length; i < searchEndIndex; i++) {
+          const char = assetsContent[i];
+          if (char === '{') {
+            braceDepth++;
+          } else if (char === '}') {
+            braceDepth--;
+            if (braceDepth < 0) {
+              // Found a closing brace that closes the current object
+              foundClosingBrace = true;
+              break;
+            }
+          }
+        }
+        
+        if (!foundClosingBrace) {
+          // No closing brace found - this is a merged object
           replacements2.push({
             index: match2.index + match2[0].length,
             insert: '}, {'
