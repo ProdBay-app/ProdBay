@@ -48,13 +48,14 @@ class AIAllocationService {
       }
       
       // Additional JSON cleaning - handle common AI response issues
-      // Reset repair flag before cleaning
+      // Reset repair flag and saved count before cleaning
       this._lastRepairAttempted = false;
+      this._lastSavedCount = 0;
       cleanedContent = this.cleanJsonResponse(cleanedContent);
       
       // Log if repair was attempted (for monitoring and debugging)
       if (this._lastRepairAttempted) {
-        console.log('[Repair] Merged asset objects detected and repaired automatically');
+        console.log(`[Repair] Merged asset objects detected and repaired automatically (${this._lastSavedCount} assets saved)`);
       }
       
       return JSON.parse(cleanedContent);
@@ -171,17 +172,17 @@ class AIAllocationService {
    * - Inserts }, { to split merged objects into separate, valid JSON objects
    * 
    * @param {string} jsonString - The JSON string to repair
-   * @returns {{repaired: string, wasRepaired: boolean}} - Repaired JSON string and repair flag
+   * @returns {{repaired: string, wasRepaired: boolean, savedCount: number}} - Repaired JSON string, repair flag, and count of assets saved
    */
   repairMergedObjects(jsonString) {
     if (!jsonString || typeof jsonString !== 'string') {
-      return { repaired: jsonString, wasRepaired: false };
+      return { repaired: jsonString, wasRepaired: false, savedCount: 0 };
     }
 
     // Extract the assets array content
     const assetsArrayMatch = jsonString.match(/"assets":\s*\[([\s\S]*?)(?:\]|$)/);
     if (!assetsArrayMatch) {
-      return { repaired: jsonString, wasRepaired: false }; // No assets array found
+      return { repaired: jsonString, wasRepaired: false, savedCount: 0 }; // No assets array found
     }
 
     let assetsContent = assetsArrayMatch[1];
@@ -191,7 +192,7 @@ class AIAllocationService {
     // Count "asset_name": occurrences - if more than 1, we may have merged objects
     const assetNameCount = (assetsContent.match(/"asset_name":/g) || []).length;
     if (assetNameCount <= 1) {
-      return { repaired: jsonString, wasRepaired: false }; // No merging detected
+      return { repaired: jsonString, wasRepaired: false, savedCount: 0 }; // No merging detected
     }
 
     // Pattern to detect merged objects:
@@ -205,6 +206,7 @@ class AIAllocationService {
     
     let repaired = assetsContent;
     let wasRepaired = false;
+    let savedCount = 0; // Track how many assets were saved from merging errors
     
     // Pattern 1: Match closing bracket ] (from tags array) followed by "asset_name":
     // This is the most common case: tags array ends, then next asset_name starts
@@ -248,16 +250,18 @@ class AIAllocationService {
       .sort((a, b) => b.index - a.index); // Sort descending
     
     // Apply replacements from end to beginning to avoid offset issues
+    // Each replacement saves one asset (the one that was merged into the previous object)
     for (const replacement of allReplacements) {
       repaired = repaired.substring(0, replacement.index) + 
                  replacement.insert + 
                  repaired.substring(replacement.index);
       wasRepaired = true;
+      savedCount++; // Increment for each asset saved from merging error
     }
 
     // Reconstruct the full JSON string
     const fullRepaired = wasRepaired ? (beforeAssets + repaired + afterAssets) : jsonString;
-    return { repaired: fullRepaired, wasRepaired };
+    return { repaired: fullRepaired, wasRepaired, savedCount };
   }
 
   /**
@@ -278,8 +282,9 @@ class AIAllocationService {
     // This ensures we're working with properly separated objects
     const repairResult = this.repairMergedObjects(cleaned);
     cleaned = repairResult.repaired;
-    // Store repair flag for logging (will be checked in parseAIResponse)
+    // Store repair flag and saved count for logging/telemetry (will be checked in parseAIResponse)
     this._lastRepairAttempted = repairResult.wasRepaired;
+    this._lastSavedCount = repairResult.savedCount || 0;
     
     // Step 1: Sanitize string values (handle LaTeX, backslashes, special characters)
     cleaned = this.sanitizeJsonStringValues(cleaned);
@@ -521,6 +526,11 @@ class AIAllocationService {
       const aiResponse = this.parseAIResponse(content);
       const processingTime = Date.now() - startTime;
 
+      // Capture telemetry data for repair effectiveness tracking
+      const savedCount = this._lastSavedCount || 0;
+      const repairTriggered = this._lastRepairAttempted || false;
+      const totalAssets = aiResponse.assets ? aiResponse.assets.length : 0;
+
       // Log the AI processing
       await this.logAIProcessing('asset_creation', {
         briefDescription,
@@ -532,7 +542,12 @@ class AIAllocationService {
         assets: aiResponse.assets,
         reasoning: aiResponse.reasoning,
         confidence: aiResponse.confidence,
-        processingTime
+        processingTime,
+        telemetry: {
+          total_assets: totalAssets,
+          saved_assets: savedCount,
+          repair_triggered: repairTriggered
+        }
       };
 
     } catch (error) {
