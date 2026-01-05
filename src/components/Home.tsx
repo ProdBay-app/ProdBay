@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Package, 
   Users, 
@@ -9,10 +9,26 @@ import {
   DollarSign,
   Clock
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import RotatingText from './RotatingText';
 import ScrollStack, { ScrollStackItem } from './ScrollStack';
 
 const Home: React.FC = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('[Home] Error signing out:', error);
+      // Still redirect to home page even if signOut fails
+      navigate('/');
+    }
+  };
+
   return (
     <div className="relative">
 
@@ -39,6 +55,44 @@ const Home: React.FC = () => {
               Streamline your production workflow from initial brief to final delivery. 
               Connect clients, producers, and suppliers in one comprehensive platform.
             </p>
+            
+            {/* Hero CTA Buttons - Prominent auth entry points */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mt-8 sm:mt-10">
+              {user ? (
+                <>
+                  <Link
+                    to="/producer/dashboard"
+                    className="px-8 py-4 sm:px-10 sm:py-5 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all text-lg sm:text-xl shadow-2xl hover:shadow-teal-500/50 transform hover:scale-105"
+                  >
+                    Dashboard
+                    <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 inline ml-2" />
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="px-8 py-4 sm:px-10 sm:py-5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all text-lg sm:text-xl shadow-2xl hover:shadow-red-500/50 transform hover:scale-105"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="px-8 py-4 sm:px-10 sm:py-5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all text-lg sm:text-xl shadow-2xl hover:shadow-blue-500/50 transform hover:scale-105"
+                  >
+                    Login
+                    <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 inline ml-2" />
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="px-8 py-4 sm:px-10 sm:py-5 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all text-lg sm:text-xl shadow-2xl hover:shadow-teal-500/50 transform hover:scale-105"
+                  >
+                    Sign Up
+                    <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 inline ml-2" />
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

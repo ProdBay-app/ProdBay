@@ -129,37 +129,41 @@ const Layout: React.FC = () => {
                 )}
               </div>
 
-              {/* Auth Buttons - show based on authentication status */}
-              {user ? (
-                <div className="flex items-center space-x-3">
-                  <Link
-                    to="/producer/dashboard"
-                    className="px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors rounded-lg hover:bg-white/10"
-                  >
-                    Dashboard
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors rounded-lg shadow-md hover:shadow-lg"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-3">
-                  <Link
-                    to="/login"
-                    className="px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors rounded-lg hover:bg-white/10"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors rounded-lg shadow-md hover:shadow-lg"
-                  >
-                    Sign Up
-                  </Link>
-                </div>
+              {/* Auth Buttons - hidden on landing page, visible on all other pages */}
+              {!isLandingPage && (
+                <>
+                  {user ? (
+                    <div className="flex items-center space-x-3">
+                      <Link
+                        to="/producer/dashboard"
+                        className="px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+                      >
+                        Dashboard
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors rounded-lg shadow-md hover:shadow-lg"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-3">
+                      <Link
+                        to="/login"
+                        className="px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        to="/signup"
+                        className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors rounded-lg shadow-md hover:shadow-lg"
+                      >
+                        Sign Up
+                      </Link>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
