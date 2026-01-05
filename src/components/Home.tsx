@@ -56,20 +56,20 @@ const Home: React.FC = () => {
               Connect clients, producers, and suppliers in one comprehensive platform.
             </p>
             
-            {/* Hero CTA Buttons - Prominent auth entry points */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mt-8 sm:mt-10">
+            {/* Hero CTA Buttons - Elegant auth entry points */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8 sm:mt-10">
               {user ? (
                 <>
                   <Link
                     to="/producer/dashboard"
-                    className="px-8 py-4 sm:px-10 sm:py-5 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all text-lg sm:text-xl shadow-2xl hover:shadow-teal-500/50 transform hover:scale-105"
+                    className="px-6 py-3 sm:px-8 sm:py-4 bg-teal-600/90 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-teal-600 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-teal-500/20"
                   >
                     Dashboard
-                    <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 inline ml-2" />
+                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="px-8 py-4 sm:px-10 sm:py-5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all text-lg sm:text-xl shadow-2xl hover:shadow-red-500/50 transform hover:scale-105"
+                    className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-white/20 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-white/20"
                   >
                     Logout
                   </button>
@@ -78,17 +78,17 @@ const Home: React.FC = () => {
                 <>
                   <Link
                     to="/login"
-                    className="px-8 py-4 sm:px-10 sm:py-5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all text-lg sm:text-xl shadow-2xl hover:shadow-blue-500/50 transform hover:scale-105"
+                    className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-white/20 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-white/20"
                   >
                     Login
-                    <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 inline ml-2" />
+                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
                   </Link>
                   <Link
                     to="/signup"
-                    className="px-8 py-4 sm:px-10 sm:py-5 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-all text-lg sm:text-xl shadow-2xl hover:shadow-teal-500/50 transform hover:scale-105"
+                    className="px-6 py-3 sm:px-8 sm:py-4 bg-teal-600/90 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-teal-600 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-teal-500/20"
                   >
                     Sign Up
-                    <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 inline ml-2" />
+                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
                   </Link>
                 </>
               )}
