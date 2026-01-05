@@ -14,7 +14,7 @@ import RotatingText from './RotatingText';
 import ScrollStack, { ScrollStackItem } from './ScrollStack';
 
 const Home: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
 
   // Handle logout
@@ -57,42 +57,44 @@ const Home: React.FC = () => {
             </p>
             
             {/* Hero CTA Buttons - Elegant auth entry points */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8 sm:mt-10">
-              {user ? (
-                <>
-                  <Link
-                    to="/producer/dashboard"
-                    className="px-6 py-3 sm:px-8 sm:py-4 bg-teal-600/90 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-teal-600 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-teal-500/20"
-                  >
-                    Dashboard
-                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-white/20 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-white/20"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-white/20 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-white/20"
-                  >
-                    Login
-                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="px-6 py-3 sm:px-8 sm:py-4 bg-teal-600/90 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-teal-600 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-teal-500/20"
-                  >
-                    Sign Up
-                    <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
-                  </Link>
-                </>
-              )}
-            </div>
+            {!loading && (
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8 sm:mt-10">
+                {user ? (
+                  <>
+                    <Link
+                      to="/producer/dashboard"
+                      className="px-6 py-3 sm:px-8 sm:py-4 bg-teal-600/90 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-teal-600 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-teal-500/20"
+                    >
+                      Dashboard
+                      <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-white/20 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-white/20"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-white/20 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-white/20"
+                    >
+                      Login
+                      <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
+                    </Link>
+                    <Link
+                      to="/signup"
+                      className="px-6 py-3 sm:px-8 sm:py-4 bg-teal-600/90 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-teal-600 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-teal-500/20"
+                    >
+                      Sign Up
+                      <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
