@@ -75,6 +75,18 @@ export interface Quote {
   updated_at: string;
 }
 
+export interface MessageAttachment {
+  id: string;
+  message_id: string;
+  quote_id: string;
+  sender_type: 'PRODUCER' | 'SUPPLIER';
+  filename: string;
+  storage_path: string;
+  file_size_bytes: number;
+  content_type: string;
+  created_at: string;
+}
+
 export interface ProjectMilestone {
   id: string;
   project_id: string;

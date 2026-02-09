@@ -1,4 +1,5 @@
 const express = require('express');
+const multer = require('multer');
 const PortalService = require('../services/portalService');
 const { authenticateJWT } = require('../middleware/auth');
 
@@ -7,6 +8,16 @@ const portalRouter = express.Router();
 
 // Producer message route (protected endpoint using JWT)
 const producerMessageRouter = express.Router();
+
+// Configure multer for in-memory storage (no disk writes)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB max file size per attachment
+    files: 10
+  }
+});
 
 /**
  * GET /api/portal/session/:token
@@ -74,6 +85,58 @@ portalRouter.get('/session/:token', async (req, res) => {
 });
 
 /**
+ * GET /api/portal/message-attachments
+ * Get message attachments for a quote via portal token
+ *
+ * Query params:
+ *   - token: access token (UUID)
+ */
+portalRouter.get('/message-attachments', async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_TOKEN',
+          message: 'Access token is required'
+        }
+      });
+    }
+
+    const attachments = await PortalService.getMessageAttachmentsByToken(token);
+
+    res.status(200).json({
+      success: true,
+      data: attachments,
+      message: 'Message attachments retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Portal attachments endpoint error:', error);
+
+    if (error.message.includes('Invalid access token format') || error.message.includes('Quote not found')) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'QUOTE_NOT_FOUND',
+          message: error.message
+        }
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while fetching message attachments',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }
+    });
+  }
+});
+
+/**
  * POST /api/portal/messages
  * Send message from supplier via portal
  * Public endpoint - validates access_token
@@ -84,34 +147,36 @@ portalRouter.get('/session/:token', async (req, res) => {
  *   "content": "Message content"
  * }
  */
-portalRouter.post('/messages', async (req, res) => {
+portalRouter.post('/messages', upload.array('files', 10), async (req, res) => {
   try {
     const { token, content } = req.body;
+    const files = req.files || [];
+    const hasContent = typeof content === 'string' && content.trim().length > 0;
 
     // Validate request body
-    if (!token || !content) {
+    if (!token || (!hasContent && files.length === 0)) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'MISSING_REQUIRED_FIELDS',
-          message: 'token and content are required'
+          message: 'token and content or files are required'
         }
       });
     }
 
     // Validate data types
-    if (typeof token !== 'string' || typeof content !== 'string') {
+    if (typeof token !== 'string' || (content !== undefined && typeof content !== 'string')) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'INVALID_DATA_TYPE',
-          message: 'token and content must be strings'
+          message: 'token must be a string and content must be a string when provided'
         }
       });
     }
 
     // Send supplier message
-    const message = await PortalService.sendSupplierMessage(token, content);
+    const message = await PortalService.sendSupplierMessage(token, content || '', files);
 
     res.status(201).json({
       success: true,
@@ -284,35 +349,37 @@ portalRouter.post('/submit-quote', async (req, res) => {
  *   "content": "Message content"
  * }
  */
-producerMessageRouter.post('/', authenticateJWT, async (req, res) => {
+producerMessageRouter.post('/', authenticateJWT, upload.array('files', 10), async (req, res) => {
   try {
     const { quoteId, content } = req.body;
     const user = req.user; // From JWT middleware
+    const files = req.files || [];
+    const hasContent = typeof content === 'string' && content.trim().length > 0;
 
     // Validate request body
-    if (!quoteId || !content) {
+    if (!quoteId || (!hasContent && files.length === 0)) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'MISSING_REQUIRED_FIELDS',
-          message: 'quoteId and content are required'
+          message: 'quoteId and content or files are required'
         }
       });
     }
 
     // Validate data types
-    if (typeof quoteId !== 'string' || typeof content !== 'string') {
+    if (typeof quoteId !== 'string' || (content !== undefined && typeof content !== 'string')) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'INVALID_DATA_TYPE',
-          message: 'quoteId and content must be strings'
+          message: 'quoteId must be a string and content must be a string when provided'
         }
       });
     }
 
     // Send producer message
-    const message = await PortalService.sendProducerMessage(quoteId, content, user);
+    const message = await PortalService.sendProducerMessage(quoteId, content || '', user, files);
 
     res.status(201).json({
       success: true,

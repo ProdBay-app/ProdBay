@@ -82,6 +82,66 @@ class StorageService {
   }
 
   /**
+   * Upload a chat message attachment to Supabase Storage
+   * @param {string} quoteId - UUID of the quote
+   * @param {string} messageId - UUID of the message
+   * @param {Buffer} fileBuffer - File content as Buffer
+   * @param {string} filename - Original filename
+   * @param {string} contentType - MIME type (e.g., 'application/pdf')
+   * @returns {Promise<{storagePath: string, publicUrl: string, fileSize: number}>} Storage path, public URL, and file size
+   */
+  async uploadMessageAttachment(quoteId, messageId, fileBuffer, filename, contentType) {
+    if (!this.supabase) {
+      throw new Error('Supabase Storage not configured. SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required.');
+    }
+
+    try {
+      // Sanitize filename: remove special characters, keep only alphanumeric, dots, dashes, underscores
+      const sanitizedFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+      // Generate unique storage path: message-attachments/{quoteId}/{messageId}/{timestamp}-{filename}
+      const timestamp = Date.now();
+      const storagePath = `message-attachments/${quoteId}/${messageId}/${timestamp}-${sanitizedFilename}`;
+
+      console.log(`[StorageService] Uploading message attachment: ${storagePath} (${fileBuffer.length} bytes)`);
+
+      // Upload file to Storage
+      const { error: uploadError } = await this.supabase.storage
+        .from('quote-attachments')
+        .upload(storagePath, fileBuffer, {
+          contentType: contentType || 'application/octet-stream',
+          upsert: false,
+          cacheControl: '3600'
+        });
+
+      if (uploadError) {
+        console.error('[StorageService] Upload error:', uploadError);
+        throw new Error(`Failed to upload file to Storage: ${uploadError.message}`);
+      }
+
+      // Get public URL
+      const { data: urlData } = this.supabase.storage
+        .from('quote-attachments')
+        .getPublicUrl(storagePath);
+
+      if (!urlData?.publicUrl) {
+        throw new Error('Failed to get public URL for uploaded file');
+      }
+
+      console.log(`[StorageService] ✅ Upload successful: ${urlData.publicUrl}`);
+
+      return {
+        storagePath,
+        publicUrl: urlData.publicUrl,
+        fileSize: fileBuffer.length
+      };
+    } catch (error) {
+      console.error('[StorageService] Error uploading message attachment:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Delete a quote request attachment from Storage
    * @param {string} storagePath - Path to file in Storage
    * @returns {Promise<void>}

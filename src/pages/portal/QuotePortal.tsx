@@ -8,12 +8,15 @@ import {
   AlertCircle,
   User,
   Briefcase,
-  MapPin
+  MapPin,
+  Paperclip,
+  X
 } from 'lucide-react';
 import { PortalService, type PortalSession, type Message, type Quote } from '@/services/portalService';
 import { useNotification } from '@/hooks/useNotification';
 import SupplierQuoteModal from '@/components/portal/SupplierQuoteModal';
 import OriginalRequestCard from '@/components/portal/OriginalRequestCard';
+import AttachmentSidePanel from '@/components/shared/AttachmentSidePanel';
 
 /**
  * QuotePortal Component
@@ -36,8 +39,12 @@ const QuotePortal: React.FC = () => {
   // Message state
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAttachmentPanelOpen, setIsAttachmentPanelOpen] = useState(false);
 
   // Modal state
   const [showSubmitModal, setShowSubmitModal] = useState<boolean>(false);
@@ -102,10 +109,10 @@ const QuotePortal: React.FC = () => {
 
   // Send message
   const sendMessage = useCallback(async () => {
-    if (!token || !messageInput.trim() || sendingMessage) return;
+    if (!token || sendingMessage) return;
+    if (!messageInput.trim() && selectedFiles.length === 0) return;
 
     const content = messageInput.trim();
-    setMessageInput('');
 
     // Optimistic UI: Add message immediately
     const optimisticMessage: Message = {
@@ -122,7 +129,7 @@ const QuotePortal: React.FC = () => {
     scrollToBottom();
 
     try {
-      const response = await PortalService.sendMessage(token, content);
+      const response = await PortalService.sendMessage(token, content, selectedFiles);
       
       if (!response.success || !response.data) {
         // Remove optimistic message on error
@@ -136,6 +143,9 @@ const QuotePortal: React.FC = () => {
         prev.map(m => m.id === optimisticMessage.id ? response.data! : m)
       );
       
+      setMessageInput('');
+      setSelectedFiles([]);
+      messageInputRef.current?.focus();
       showSuccess('Message sent successfully');
     } catch (err) {
       // Remove optimistic message on error
@@ -144,14 +154,29 @@ const QuotePortal: React.FC = () => {
     } finally {
       setSendingMessage(false);
     }
-  }, [token, messageInput, sendingMessage, session, scrollToBottom, showSuccess, showError]);
+  }, [token, messageInput, selectedFiles, sendingMessage, session, scrollToBottom, showSuccess, showError]);
 
   // Handle Enter key in message input
-  const handleMessageKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleMessageKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const handleFileSelectClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    setSelectedFiles(prev => [...prev, ...files]);
+    event.target.value = '';
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   // Format date for display
@@ -409,8 +434,20 @@ const QuotePortal: React.FC = () => {
           <div className="bg-white/5 border border-white/10 rounded-xl flex flex-col h-[600px]">
             {/* Chat Header */}
             <div className="border-b border-white/10 p-4 bg-white/5 rounded-t-xl">
-              <h2 className="text-lg font-semibold text-white">Conversation</h2>
-              <p className="text-sm text-gray-400">Chat with the producer about this quote</p>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Conversation</h2>
+                  <p className="text-sm text-gray-400">Chat with the producer about this quote</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAttachmentPanelOpen(true)}
+                  className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                  aria-label="View attachments"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
@@ -425,6 +462,7 @@ const QuotePortal: React.FC = () => {
                   return (
                     <div
                       key={message.id}
+                      id={`msg-${message.id}`}
                       className={`flex ${isSupplier ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
@@ -444,6 +482,27 @@ const QuotePortal: React.FC = () => {
                           </span>
                         </div>
                         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+
+                        {message.message_attachments && message.message_attachments.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-white/20 space-y-2">
+                            {message.message_attachments.map((attachment) => {
+                              const attachmentUrl = attachment.storage_url || attachment.public_url;
+                              if (!attachmentUrl) return null;
+                              return (
+                                <a
+                                  key={attachment.id}
+                                  href={attachmentUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded px-2 py-1"
+                                >
+                                  <FileText className="h-3.5 w-3.5 text-white/70" />
+                                  <span className="truncate">{attachment.filename}</span>
+                                </a>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -454,11 +513,51 @@ const QuotePortal: React.FC = () => {
 
             {/* Message Input */}
             <div className="border-t border-white/10 p-4 bg-white/5 rounded-b-xl">
+              {selectedFiles.length > 0 && (
+                <div className="mb-3 space-y-2">
+                  {selectedFiles.map((file, index) => (
+                    <div
+                      key={`${file.name}-${index}`}
+                      className="flex items-center justify-between bg-white/10 border border-white/20 rounded-md px-3 py-2"
+                    >
+                      <div className="flex items-center gap-2 text-xs text-white/90 truncate">
+                        <FileText className="h-3.5 w-3.5 text-white/70" />
+                        <span className="truncate">{file.name}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(index)}
+                        className="text-white/70 hover:text-white"
+                        aria-label="Remove file"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="flex space-x-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={handleFileSelectClick}
+                  className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                  disabled={sendingMessage}
+                  aria-label="Attach files"
+                >
+                  <Paperclip className="h-4 w-4" />
+                </button>
                 <textarea
+                  ref={messageInputRef}
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyPress={handleMessageKeyPress}
+                  onKeyDown={handleMessageKeyDown}
                   placeholder="Type your message..."
                   className="flex-1 resize-none bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   rows={2}
@@ -466,7 +565,7 @@ const QuotePortal: React.FC = () => {
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!messageInput.trim() || sendingMessage}
+                  disabled={(!messageInput.trim() && selectedFiles.length === 0) || sendingMessage}
                   className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                 >
                   <Send className="h-4 w-4" />
@@ -499,6 +598,13 @@ const QuotePortal: React.FC = () => {
         token={token || ''}
         onQuoteSubmitted={handleQuoteSubmitted}
       />
+      {session?.quote?.id && (
+        <AttachmentSidePanel
+          quoteId={session.quote.id}
+          isOpen={isAttachmentPanelOpen}
+          onClose={() => setIsAttachmentPanelOpen(false)}
+        />
+      )}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { MessageCircle, Send, User, Loader2 } from 'lucide-react';
+import { MessageCircle, Send, User, Loader2, Paperclip, X, FileText } from 'lucide-react';
 import { QuoteService, type Message } from '@/services/quoteService';
 import { useNotification } from '@/hooks/useNotification';
 import { createInitialRequestMessage, isInitialRequestMessage } from '@/utils/quoteRequestMessage';
@@ -33,10 +33,13 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
   // Message state
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Polling interval ref
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -115,10 +118,10 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
 
   // Send message
   const sendMessage = useCallback(async () => {
-    if (!quoteId || !messageInput.trim() || sendingMessage) return;
+    if (!quoteId || sendingMessage) return;
+    if (!messageInput.trim() && selectedFiles.length === 0) return;
 
     const content = messageInput.trim();
-    setMessageInput('');
 
     // Optimistic UI: Add message immediately
     const optimisticMessage: Message = {
@@ -135,7 +138,7 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
     scrollToBottom();
 
     try {
-      const response = await QuoteService.sendProducerMessage(quoteId, content);
+      const response = await QuoteService.sendProducerMessage(quoteId, content, selectedFiles);
       
       if (!response.success || !response.data) {
         // Remove optimistic message on error
@@ -149,6 +152,9 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
         prev.map(m => m.id === optimisticMessage.id ? response.data! : m)
       );
       
+      setMessageInput('');
+      setSelectedFiles([]);
+      messageInputRef.current?.focus();
       showSuccess('Message sent successfully');
       onMessageSent?.();
     } catch (err) {
@@ -158,14 +164,29 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
     } finally {
       setSendingMessage(false);
     }
-  }, [quoteId, messageInput, sendingMessage, scrollToBottom, showSuccess, showError, onMessageSent]);
+  }, [quoteId, messageInput, selectedFiles, sendingMessage, scrollToBottom, showSuccess, showError, onMessageSent]);
 
   // Handle Enter key in message input
-  const handleMessageKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleMessageKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const handleFileSelectClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    setSelectedFiles(prev => [...prev, ...files]);
+    event.target.value = '';
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   // Format time for display
@@ -249,6 +270,7 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
               return (
                 <div
                   key={message.id}
+                  id={`msg-${message.id}`}
                   className={`flex ${isProducer ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
@@ -280,6 +302,27 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
                         />
                       </div>
                     )}
+
+                    {message.message_attachments && message.message_attachments.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-white/20 space-y-2">
+                        {message.message_attachments.map((attachment) => {
+                          const attachmentUrl = attachment.storage_url || attachment.public_url;
+                          if (!attachmentUrl) return null;
+                          return (
+                            <a
+                              key={attachment.id}
+                              href={attachmentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded px-2 py-1"
+                            >
+                              <FileText className="h-3.5 w-3.5 text-white/70" />
+                              <span className="truncate">{attachment.filename}</span>
+                            </a>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -291,11 +334,51 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
 
       {/* Message Input */}
       <div className="border-t border-white/20 p-4 bg-white/5">
+        {selectedFiles.length > 0 && (
+          <div className="mb-3 space-y-2">
+            {selectedFiles.map((file, index) => (
+              <div
+                key={`${file.name}-${index}`}
+                className="flex items-center justify-between bg-white/10 border border-white/20 rounded-md px-3 py-2"
+              >
+                <div className="flex items-center gap-2 text-xs text-white/90 truncate">
+                  <FileText className="h-3.5 w-3.5 text-white/70" />
+                  <span className="truncate">{file.name}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFile(index)}
+                  className="text-white/70 hover:text-white"
+                  aria-label="Remove file"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="flex space-x-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={handleFileSelectClick}
+            className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+            disabled={sendingMessage || loading}
+            aria-label="Attach files"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
           <textarea
+            ref={messageInputRef}
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
-            onKeyPress={handleMessageKeyPress}
+            onKeyDown={handleMessageKeyDown}
             placeholder="Type your message..."
             className="flex-1 resize-none bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             rows={2}
@@ -303,7 +386,7 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
           />
           <button
             onClick={sendMessage}
-            disabled={!messageInput.trim() || sendingMessage || loading}
+            disabled={(!messageInput.trim() && selectedFiles.length === 0) || sendingMessage || loading}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
           >
             {sendingMessage ? (
