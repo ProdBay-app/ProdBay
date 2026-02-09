@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ChevronDown, ChevronRight, FileText, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText, Paperclip, X } from 'lucide-react';
 import { QuoteService, type MessageAttachment } from '@/services/quoteService';
 import { PortalService } from '@/services/portalService';
 
@@ -8,12 +8,18 @@ interface AttachmentSidePanelProps {
   quoteId: string;
   isOpen: boolean;
   onClose: () => void;
+  onUploadFiles?: (files: File[]) => void;
+  uploadDisabled?: boolean;
+  variant?: 'overlay' | 'inline';
 }
 
 const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
   quoteId,
   isOpen,
-  onClose
+  onClose,
+  onUploadFiles,
+  uploadDisabled = false,
+  variant = 'overlay'
 }) => {
   const { token } = useParams<{ token?: string }>();
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
@@ -21,21 +27,34 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showProducer, setShowProducer] = useState(true);
   const [showSupplier, setShowSupplier] = useState(true);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  const sortedAttachments = useMemo(() => {
+    return [...attachments].sort((a, b) => {
+      const aTime = Date.parse(a.created_at);
+      const bTime = Date.parse(b.created_at);
+      if (Number.isNaN(aTime) || Number.isNaN(bTime)) return 0;
+      return bTime - aTime;
+    });
+  }, [attachments]);
 
   const producerAttachments = useMemo(
-    () => attachments.filter((attachment) => attachment.sender_type === 'PRODUCER'),
-    [attachments]
+    () => sortedAttachments.filter((attachment) => attachment.sender_type === 'PRODUCER'),
+    [sortedAttachments]
   );
 
   const supplierAttachments = useMemo(
-    () => attachments.filter((attachment) => attachment.sender_type === 'SUPPLIER'),
-    [attachments]
+    () => sortedAttachments.filter((attachment) => attachment.sender_type === 'SUPPLIER'),
+    [sortedAttachments]
   );
 
-  const fetchAttachments = useCallback(async () => {
+  const fetchAttachments = useCallback(async (showLoading = true) => {
     if (!quoteId || !isOpen) return;
 
-    setLoading(true);
+    if (showLoading) {
+      setLoading(true);
+    }
     setError(null);
 
     const response = token
@@ -50,12 +69,24 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
     }
 
     setAttachments(response.data);
-    setLoading(false);
+    if (showLoading) {
+      setLoading(false);
+    }
   }, [quoteId, isOpen, token]);
 
   useEffect(() => {
-    fetchAttachments();
-  }, [fetchAttachments]);
+    if (!isOpen) return;
+    fetchAttachments(true);
+    pollingRef.current = setInterval(() => {
+      fetchAttachments(false);
+    }, 8000);
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, [fetchAttachments, isOpen]);
 
   const formatDate = (dateString: string) => {
     try {
@@ -95,19 +126,43 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
     onClose();
   };
 
+  const handleUploadClick = () => {
+    if (uploadDisabled) return;
+    uploadInputRef.current?.click();
+  };
+
+  const handleUploadChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    onUploadFiles?.(files);
+    event.target.value = '';
+  };
+
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-40 flex justify-end">
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-        aria-label="Close attachments panel"
-      />
-      <div className="relative h-full w-full max-w-md bg-slate-900/95 border-l border-white/10 shadow-xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-          <h3 className="text-white font-semibold text-lg">Attachments</h3>
+  const panelContent = (
+    <>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+        <h3 className="text-white font-semibold text-lg">Attachments</h3>
+        <div className="flex items-center gap-2">
+          <input
+            ref={uploadInputRef}
+            type="file"
+            multiple
+            onChange={handleUploadChange}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={handleUploadClick}
+            className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+            disabled={uploadDisabled || !onUploadFiles}
+          >
+            <span className="flex items-center gap-2 text-sm">
+              <Paperclip className="h-4 w-4" />
+              Upload New
+            </span>
+          </button>
           <button
             type="button"
             onClick={onClose}
@@ -117,8 +172,9 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
             <X className="h-5 w-5" />
           </button>
         </div>
+      </div>
 
-        <div className="h-full overflow-y-auto p-4 space-y-4 pb-24">
+      <div className="h-full overflow-y-auto p-4 space-y-4 pb-24">
           {loading && (
             <p className="text-sm text-gray-400">Loading attachments...</p>
           )}
@@ -176,7 +232,7 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
                               )}
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-gray-400">
-                              <span>{formatDate(attachment.created_at)}</span>
+                              <span>Uploaded {formatDate(attachment.created_at)}</span>
                               <button
                                 type="button"
                                 onClick={() => handleJumpToMessage(attachment.message_id)}
@@ -234,7 +290,7 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
                               )}
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-gray-400">
-                              <span>{formatDate(attachment.created_at)}</span>
+                              <span>Uploaded {formatDate(attachment.created_at)}</span>
                               <button
                                 type="button"
                                 onClick={() => handleJumpToMessage(attachment.message_id)}
@@ -252,7 +308,28 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
               </div>
             </>
           )}
-        </div>
+      </div>
+    </>
+  );
+
+  if (variant === 'inline') {
+    return (
+      <div className="h-full w-full bg-slate-900/95 border border-white/10 rounded-xl shadow-lg flex flex-col">
+        {panelContent}
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 flex justify-end lg:pointer-events-none">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/50 lg:hidden"
+        onClick={onClose}
+        aria-label="Close attachments panel"
+      />
+      <div className="relative h-full w-full max-w-md bg-slate-900/95 border-l border-white/10 shadow-xl lg:pointer-events-auto">
+        {panelContent}
       </div>
     </div>
   );

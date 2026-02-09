@@ -57,6 +57,12 @@ const QuotePortal: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  useEffect(() => {
+    if (window.innerWidth >= 1024) {
+      setIsAttachmentPanelOpen(true);
+    }
+  }, []);
+
   // Load session data
   const loadSession = useCallback(async () => {
     if (!token) {
@@ -107,19 +113,25 @@ const QuotePortal: React.FC = () => {
     }
   }, [token, session, messages]);
 
-  // Send message
-  const sendMessage = useCallback(async () => {
+  const sendMessageWithPayload = useCallback(async (
+    content: string,
+    files: File[],
+    options: {
+      clearInput: boolean;
+      clearFiles: boolean;
+      focusInput: boolean;
+    }
+  ) => {
     if (!token || sendingMessage) return;
-    if (!messageInput.trim() && selectedFiles.length === 0) return;
 
-    const content = messageInput.trim();
+    const normalizedContent = content.trim();
+    if (!normalizedContent && files.length === 0) return;
 
-    // Optimistic UI: Add message immediately
     const optimisticMessage: Message = {
       id: `temp-${Date.now()}`,
       quote_id: session?.quote.id || '',
       sender_type: 'SUPPLIER',
-      content,
+      content: normalizedContent,
       created_at: new Date().toISOString(),
       is_read: false
     };
@@ -129,32 +141,52 @@ const QuotePortal: React.FC = () => {
     scrollToBottom();
 
     try {
-      const response = await PortalService.sendMessage(token, content, selectedFiles);
-      
+      const response = await PortalService.sendMessage(token, normalizedContent, files);
+
       if (!response.success || !response.data) {
-        // Remove optimistic message on error
         setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
         showError(response.error?.message || 'Failed to send message');
         return;
       }
 
-      // Replace optimistic message with real one
-      setMessages(prev => 
+      setMessages(prev =>
         prev.map(m => m.id === optimisticMessage.id ? response.data! : m)
       );
-      
-      setMessageInput('');
-      setSelectedFiles([]);
-      messageInputRef.current?.focus();
+
+      if (options.clearInput) {
+        setMessageInput('');
+      }
+      if (options.clearFiles) {
+        setSelectedFiles([]);
+      }
+      if (options.focusInput) {
+        messageInputRef.current?.focus();
+      }
+
       showSuccess('Message sent successfully');
     } catch (err) {
-      // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       showError('Failed to send message');
     } finally {
       setSendingMessage(false);
     }
-  }, [token, messageInput, selectedFiles, sendingMessage, session, scrollToBottom, showSuccess, showError]);
+  }, [token, sendingMessage, session, scrollToBottom, showSuccess, showError]);
+
+  const sendMessage = useCallback(async () => {
+    await sendMessageWithPayload(messageInput, selectedFiles, {
+      clearInput: true,
+      clearFiles: true,
+      focusInput: true
+    });
+  }, [messageInput, selectedFiles, sendMessageWithPayload]);
+
+  const handlePanelUpload = useCallback(async (files: File[]) => {
+    await sendMessageWithPayload('', files, {
+      clearInput: false,
+      clearFiles: false,
+      focusInput: false
+    });
+  }, [sendMessageWithPayload]);
 
   // Handle Enter key in message input
   const handleMessageKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -304,14 +336,25 @@ const QuotePortal: React.FC = () => {
       <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-        <h1 className="text-2xl font-bold text-white mb-2">
-          Request for Quote: {asset.asset_name}
-        </h1>
-        {project && (
-          <p className="text-gray-300 text-sm">
-            {project.project_name} • {project.client_name}
-          </p>
-        )}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-2">
+              Request for Quote: {asset.asset_name}
+            </h1>
+            {project && (
+              <p className="text-gray-300 text-sm">
+                {project.project_name} • {project.client_name}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsAttachmentPanelOpen(true)}
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white/90 hover:text-white hover:bg-white/20 transition-colors"
+          >
+            View Attachments
+          </button>
+        </div>
       </div>
 
       {/* Two-Column Layout */}
@@ -431,148 +474,162 @@ const QuotePortal: React.FC = () => {
 
         {/* Right Column: Conversation */}
         <div className="lg:col-span-2 flex flex-col">
-          <div className="bg-white/5 border border-white/10 rounded-xl flex flex-col h-[600px]">
-            {/* Chat Header */}
-            <div className="border-b border-white/10 p-4 bg-white/5 rounded-t-xl">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Conversation</h2>
-                  <p className="text-sm text-gray-400">Chat with the producer about this quote</p>
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className={`bg-white/5 border border-white/10 rounded-xl flex flex-col h-[600px] ${isAttachmentPanelOpen ? 'lg:flex-1' : 'w-full'}`}>
+              {/* Chat Header */}
+              <div className="border-b border-white/10 p-4 bg-white/5 rounded-t-xl">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">Conversation</h2>
+                    <p className="text-sm text-gray-400">Chat with the producer about this quote</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsAttachmentPanelOpen(true)}
+                    className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                    aria-label="View attachments"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsAttachmentPanelOpen(true)}
-                  className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
-                  aria-label="View attachments"
-                >
-                  <Paperclip className="h-4 w-4" />
-                </button>
               </div>
-            </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  <p>No messages yet. Start the conversation!</p>
-                </div>
-              ) : (
-                messages.map((message) => {
-                  const isSupplier = message.sender_type === 'SUPPLIER';
-                  return (
-                    <div
-                      key={message.id}
-                      id={`msg-${message.id}`}
-                      className={`flex ${isSupplier ? 'justify-end' : 'justify-start'}`}
-                    >
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {messages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-gray-400">
+                    <p>No messages yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  messages.map((message) => {
+                    const isSupplier = message.sender_type === 'SUPPLIER';
+                    return (
                       <div
-                        className={`max-w-[75%] rounded-lg p-3 ${
-                          isSupplier
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-white/10 text-gray-100 border border-white/20'
-                        }`}
+                        key={message.id}
+                        id={`msg-${message.id}`}
+                        className={`flex ${isSupplier ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div className="flex items-center space-x-2 mb-1">
-                          <User className="h-4 w-4" />
-                          <span className="text-xs font-medium">
-                            {isSupplier ? 'Me' : 'Producer'}
-                          </span>
-                          <span className={`text-xs ${isSupplier ? 'text-purple-100' : 'text-gray-400'}`}>
-                            {formatTime(message.created_at)}
-                          </span>
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-
-                        {message.message_attachments && message.message_attachments.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-white/20 space-y-2">
-                            {message.message_attachments.map((attachment) => {
-                              const attachmentUrl = attachment.storage_url || attachment.public_url;
-                              if (!attachmentUrl) return null;
-                              return (
-                                <a
-                                  key={attachment.id}
-                                  href={attachmentUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded px-2 py-1"
-                                >
-                                  <FileText className="h-3.5 w-3.5 text-white/70" />
-                                  <span className="truncate">{attachment.filename}</span>
-                                </a>
-                              );
-                            })}
+                        <div
+                          className={`max-w-[75%] rounded-lg p-3 ${
+                            isSupplier
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-white/10 text-gray-100 border border-white/20'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2 mb-1">
+                            <User className="h-4 w-4" />
+                            <span className="text-xs font-medium">
+                              {isSupplier ? 'Me' : 'Producer'}
+                            </span>
+                            <span className={`text-xs ${isSupplier ? 'text-purple-100' : 'text-gray-400'}`}>
+                              {formatTime(message.created_at)}
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
 
-            {/* Message Input */}
-            <div className="border-t border-white/10 p-4 bg-white/5 rounded-b-xl">
-              {selectedFiles.length > 0 && (
-                <div className="mb-3 space-y-2">
-                  {selectedFiles.map((file, index) => (
-                    <div
-                      key={`${file.name}-${index}`}
-                      className="flex items-center justify-between bg-white/10 border border-white/20 rounded-md px-3 py-2"
-                    >
-                      <div className="flex items-center gap-2 text-xs text-white/90 truncate">
-                        <FileText className="h-3.5 w-3.5 text-white/70" />
-                        <span className="truncate">{file.name}</span>
+                          {message.message_attachments && message.message_attachments.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-white/20 space-y-2">
+                              {message.message_attachments.map((attachment) => {
+                                const attachmentUrl = attachment.storage_url || attachment.public_url;
+                                if (!attachmentUrl) return null;
+                                return (
+                                  <a
+                                    key={attachment.id}
+                                    href={attachmentUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded px-2 py-1"
+                                  >
+                                    <FileText className="h-3.5 w-3.5 text-white/70" />
+                                    <span className="truncate">{attachment.filename}</span>
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile(index)}
-                        className="text-white/70 hover:text-white"
-                        aria-label="Remove file"
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message Input */}
+              <div className="border-t border-white/10 p-4 bg-white/5 rounded-b-xl">
+                {selectedFiles.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    {selectedFiles.map((file, index) => (
+                      <div
+                        key={`${file.name}-${index}`}
+                        className="flex items-center justify-between bg-white/10 border border-white/20 rounded-md px-3 py-2"
                       >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
+                        <div className="flex items-center gap-2 text-xs text-white/90 truncate">
+                          <FileText className="h-3.5 w-3.5 text-white/70" />
+                          <span className="truncate">{file.name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(index)}
+                          className="text-white/70 hover:text-white"
+                          aria-label="Remove file"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex space-x-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleFileSelectClick}
+                    className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                    disabled={sendingMessage}
+                    aria-label="Attach files"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </button>
+                  <textarea
+                    ref={messageInputRef}
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    onKeyDown={handleMessageKeyDown}
+                    placeholder="Type your message..."
+                    className="flex-1 resize-none bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    rows={2}
+                    disabled={sendingMessage}
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={(!messageInput.trim() && selectedFiles.length === 0) || sendingMessage}
+                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                  >
+                    <Send className="h-4 w-4" />
+                    <span>Send</span>
+                  </button>
                 </div>
-              )}
-              <div className="flex space-x-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={handleFileSelectClick}
-                  className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
-                  disabled={sendingMessage}
-                  aria-label="Attach files"
-                >
-                  <Paperclip className="h-4 w-4" />
-                </button>
-                <textarea
-                  ref={messageInputRef}
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyDown={handleMessageKeyDown}
-                  placeholder="Type your message..."
-                  className="flex-1 resize-none bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  rows={2}
-                  disabled={sendingMessage}
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={(!messageInput.trim() && selectedFiles.length === 0) || sendingMessage}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-                >
-                  <Send className="h-4 w-4" />
-                  <span>Send</span>
-                </button>
               </div>
             </div>
+            {isAttachmentPanelOpen && (
+              <div className="hidden lg:block w-96 h-[600px]">
+                <AttachmentSidePanel
+                  quoteId={session.quote.id}
+                  isOpen={isAttachmentPanelOpen}
+                  onClose={() => setIsAttachmentPanelOpen(false)}
+                  onUploadFiles={handlePanelUpload}
+                  uploadDisabled={sendingMessage}
+                  variant="inline"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -599,11 +656,16 @@ const QuotePortal: React.FC = () => {
         onQuoteSubmitted={handleQuoteSubmitted}
       />
       {session?.quote?.id && (
-        <AttachmentSidePanel
-          quoteId={session.quote.id}
-          isOpen={isAttachmentPanelOpen}
-          onClose={() => setIsAttachmentPanelOpen(false)}
-        />
+        <div className="lg:hidden">
+          <AttachmentSidePanel
+            quoteId={session.quote.id}
+            isOpen={isAttachmentPanelOpen}
+            onClose={() => setIsAttachmentPanelOpen(false)}
+            onUploadFiles={handlePanelUpload}
+            uploadDisabled={sendingMessage}
+            variant="overlay"
+          />
+        </div>
       )}
       </div>
     </div>
