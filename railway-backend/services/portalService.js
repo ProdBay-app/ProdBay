@@ -1,6 +1,12 @@
 const { supabase } = require('../config/database');
 const emailService = require('./emailService');
 
+const getPrimaryContact = (supplier) => {
+  const contactPersons = Array.isArray(supplier?.contact_persons) ? supplier.contact_persons : [];
+  if (contactPersons.length === 0) return null;
+  return contactPersons.find(person => person.is_primary || person.isPrimary) || contactPersons[0];
+};
+
 /**
  * Portal Service
  * Handles business logic for supplier portal and messaging
@@ -196,9 +202,8 @@ class PortalService {
               console.log(`[PortalService] ✅ Found Producer: Email ${producer.email}`);
 
               // Get supplier info for sender
-              const primaryContact = supplier?.contact_persons?.find(cp => cp.is_primary) || 
-                                  (supplier?.contact_persons?.length > 0 ? supplier.contact_persons[0] : null);
-              const supplierEmail = primaryContact?.email || supplier?.contact_email || 'noreply@prodbay.com';
+              const primaryContact = getPrimaryContact(supplier);
+              const supplierEmail = primaryContact?.email || 'noreply@prodbay.com';
               const supplierName = primaryContact?.name || supplier?.supplier_name || 'Supplier';
 
               // Generate portal link for producer (link to quote chat page)
@@ -307,7 +312,8 @@ class PortalService {
 
       // Get supplier email
       const supplier = quote.supplier;
-      const supplierEmail = supplier?.contact_email || null;
+      const primaryContact = getPrimaryContact(supplier);
+      const supplierEmail = primaryContact?.email || null;
       const supplierName = supplier?.supplier_name || 'Supplier';
 
       // Get asset info for email context
@@ -427,7 +433,7 @@ class PortalService {
               ),
               supplier:suppliers(
                 supplier_name,
-                contact_email
+                contact_persons
               )
             `)
             .eq('id', updatedQuote.id)
@@ -441,9 +447,11 @@ class PortalService {
 
             // Send notification email (non-blocking - errors logged but don't fail quote submission)
             const emailService = require('./emailService');
+            const primaryContact = getPrimaryContact(quoteWithRelations.supplier);
+            const replyToEmail = primaryContact?.email || 'noreply@prodbay.com';
             emailService.sendQuoteReceivedNotification({
               to: producerSettings.from_email,
-              replyTo: quoteWithRelations.supplier.contact_email || quoteWithRelations.supplier.supplier_name,
+              replyTo: replyToEmail,
               assetName: quoteWithRelations.asset.asset_name,
               supplierName: quoteWithRelations.supplier.supplier_name,
               cost: updatedQuote.cost,

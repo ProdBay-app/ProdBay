@@ -43,6 +43,12 @@ const normalizeFrontendUrl = (url) => {
   return url.replace(/\/$/, '');
 };
 
+const getPrimaryContact = (supplier) => {
+  const contactPersons = Array.isArray(supplier?.contact_persons) ? supplier.contact_persons : [];
+  if (contactPersons.length === 0) return null;
+  return contactPersons.find(person => person.is_primary || person.isPrimary) || contactPersons[0];
+};
+
 /**
  * POST /api/webhooks/new-message
  * Handle new message webhook from Supabase
@@ -103,7 +109,6 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
         supplier:suppliers(
           id,
           supplier_name,
-          contact_email,
           contact_persons
         ),
         asset:assets(
@@ -230,10 +235,9 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
         });
       }
 
-      // Get supplier email (prefer primary contact, fallback to contact_email)
-      const primaryContact = supplier.contact_persons?.find(cp => cp.is_primary) || 
-                            (supplier.contact_persons?.length > 0 ? supplier.contact_persons[0] : null);
-      recipientEmail = primaryContact?.email || supplier.contact_email;
+      // Get supplier email from primary contact or first contact
+      const primaryContact = getPrimaryContact(supplier);
+      recipientEmail = primaryContact?.email || null;
       recipientName = primaryContact?.name || supplier.supplier_name;
 
       // Get producer info for sender (use fetched producer or fallback)
@@ -274,9 +278,8 @@ router.post('/new-message', validateWebhookSecret, async (req, res) => {
 
       // Get supplier info for sender
       const supplier = quote.supplier;
-      const primaryContact = supplier?.contact_persons?.find(cp => cp.is_primary) || 
-                            (supplier?.contact_persons?.length > 0 ? supplier.contact_persons[0] : null);
-      senderEmail = primaryContact?.email || supplier?.contact_email || 'noreply@prodbay.com';
+      const primaryContact = getPrimaryContact(supplier);
+      senderEmail = primaryContact?.email || 'noreply@prodbay.com';
       senderName = primaryContact?.name || supplier?.supplier_name || 'Supplier';
 
       // Build dashboard link for producer (link to quote chat page)

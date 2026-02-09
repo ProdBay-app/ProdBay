@@ -86,7 +86,6 @@ describe('supplierRelevance', () => {
     const createSupplier = (categories: string[]): Supplier => ({
       id: 'test-id',
       supplier_name: 'Test Supplier',
-      contact_email: 'test@example.com',
       service_categories: categories,
       contact_persons: [],
       created_at: new Date().toISOString()
@@ -125,7 +124,6 @@ describe('supplierRelevance', () => {
     const createSupplier = (name: string, categories: string[]): Supplier => ({
       id: `id-${name}`,
       supplier_name: name,
-      contact_email: `${name.toLowerCase()}@example.com`,
       service_categories: categories,
       contact_persons: [],
       created_at: new Date().toISOString()
@@ -220,7 +218,6 @@ describe('supplierRelevance', () => {
     const createSupplier = (categories: string[]): Supplier => ({
       id: 'test-id',
       supplier_name: 'Test Supplier',
-      contact_email: 'test@example.com',
       service_categories: categories,
       contact_persons: [],
       created_at: new Date().toISOString()

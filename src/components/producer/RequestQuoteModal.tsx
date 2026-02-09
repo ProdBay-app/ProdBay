@@ -3,6 +3,7 @@ import { X, Building2, Mail, Tag, Loader2 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import type { Supplier, Quote } from '@/lib/supabase';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 interface RequestQuoteModalProps {
   isOpen: boolean;
@@ -155,6 +156,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                   {suppliers.map((supplier) => {
                     const alreadyContacted = hasExistingQuote(supplier.id);
                     const isSelected = selectedSupplierId === supplier.id;
+                    const supplierEmail = getSupplierPrimaryEmail(supplier);
 
                     return (
                       <div
@@ -197,10 +199,12 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                               )}
                             </div>
 
-                            <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-2">
-                              <Mail className="w-3.5 h-3.5" />
-                              <span>{supplier.contact_email}</span>
-                            </div>
+                            {supplierEmail && (
+                              <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-2">
+                                <Mail className="w-3.5 h-3.5" />
+                                <span>{supplierEmail}</span>
+                              </div>
+                            )}
 
                             {supplier.service_categories && supplier.service_categories.length > 0 && (
                               <div className="flex items-start gap-1.5">

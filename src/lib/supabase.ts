@@ -114,12 +114,13 @@ export interface ContactPerson {
   role: string;
   phone?: string;
   is_primary: boolean;
+  isPrimary?: boolean;
 }
 
 export interface Supplier {
   id: string;
   supplier_name: string;
-  contact_email: string;
+  contact_email?: string | null;
   service_categories: string[];
   contact_persons: ContactPerson[];
   created_at: string;

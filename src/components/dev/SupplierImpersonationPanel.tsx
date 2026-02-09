@@ -2,6 +2,7 @@ import React from 'react';
 import { useSupplierImpersonation } from '@/contexts/SupplierImpersonationContext';
 import { getDevEnvironmentInfo } from '@/utils/devMode';
 import { Users, UserCheck, X, RefreshCw, Info } from 'lucide-react';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 const SupplierImpersonationPanel: React.FC = () => {
   const {
@@ -81,7 +82,7 @@ const SupplierImpersonationPanel: React.FC = () => {
               </option>
               {availableSuppliers.map((supplier) => (
                 <option key={supplier.id} value={supplier.id}>
-                  {supplier.supplier_name} ({supplier.contact_email})
+                  {supplier.supplier_name} ({getSupplierPrimaryEmail(supplier) || 'no email'})
                 </option>
               ))}
             </select>

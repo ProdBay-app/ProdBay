@@ -7,6 +7,7 @@ import { getSupabase } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import type { Supplier, Quote, ContactPerson, Asset } from '@/lib/supabase';
 import { getSupplierRelevanceMetadata } from '@/utils/supplierRelevance';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 import { validateFile, formatFileSize } from '@/utils/fileValidation';
 
 interface RequestQuoteFlowProps {
@@ -117,13 +118,15 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(supplier => {
+        const primaryEmail = getSupplierPrimaryEmail(supplier);
+        const emailMatch = primaryEmail ? primaryEmail.toLowerCase().includes(term) : false;
         // Primary: match supplier name
         if (supplier.supplier_name.toLowerCase().includes(term)) {
           return true;
         }
         // Fallback: match email or service categories
         return (
-          supplier.contact_email.toLowerCase().includes(term) ||
+          emailMatch ||
           (supplier.service_categories && supplier.service_categories.some(cat => 
             cat.toLowerCase().includes(term)
           ))
@@ -246,7 +249,7 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
                           supplier.contact_persons?.[0];
     
     const contactName = primaryContact?.name || supplier.supplier_name;
-    const contactEmail = primaryContact?.email || supplier.contact_email;
+    const contactEmail = getSupplierPrimaryEmail(supplier) || '';
     
     const subject = `Quote Request: ${assetName}`;
 
@@ -687,6 +690,7 @@ ${signature.phone}`;
                               const isSelected = selectedSupplierIds.includes(supplier.id);
                               const isAlreadyContacted = supplier.already_contacted;
                               const matchingCategories = supplier.relevance.matchingCategories;
+                              const supplierEmail = getSupplierPrimaryEmail(supplier);
 
                               return (
                                 <div
@@ -734,10 +738,12 @@ ${signature.phone}`;
                                         )}
                                       </div>
 
-                                      <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
-                                        <Mail className="w-3.5 h-3.5" />
-                                        <span>{supplier.contact_email}</span>
-                                      </div>
+                                      {supplierEmail && (
+                                        <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
+                                          <Mail className="w-3.5 h-3.5" />
+                                          <span>{supplierEmail}</span>
+                                        </div>
+                                      )}
 
                                       {supplier.service_categories && supplier.service_categories.length > 0 && (
                                         <div className="flex items-start gap-1.5">
@@ -782,12 +788,13 @@ ${signature.phone}`;
                               Other Suppliers ({otherSuppliers.length})
                             </h4>
                           </div>
-                          <div className="space-y-3">
-                            {otherSuppliers.map((supplier) => {
-                              const isSelected = selectedSupplierIds.includes(supplier.id);
-                              const isAlreadyContacted = supplier.already_contacted;
-
-                              return (
+                        <div className="space-y-3">
+                          {otherSuppliers.map((supplier) => {
+                            const isSelected = selectedSupplierIds.includes(supplier.id);
+                            const isAlreadyContacted = supplier.already_contacted;
+                            const supplierEmail = getSupplierPrimaryEmail(supplier);
+                            
+                            return (
                                 <div
                                   key={supplier.id}
                                   className={`
@@ -827,10 +834,12 @@ ${signature.phone}`;
                                         )}
                                       </div>
 
-                                      <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
-                                        <Mail className="w-3.5 h-3.5" />
-                                        <span>{supplier.contact_email}</span>
-                                      </div>
+                                      {supplierEmail && (
+                                        <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
+                                          <Mail className="w-3.5 h-3.5" />
+                                          <span>{supplierEmail}</span>
+                                        </div>
+                                      )}
 
                                       {supplier.service_categories && supplier.service_categories.length > 0 && (
                                         <div className="flex items-start gap-1.5">

@@ -3,7 +3,6 @@ import type { Supplier, ContactPerson } from '@/lib/supabase';
 
 export interface CreateSupplierData {
   supplier_name: string;
-  contact_email: string;
   service_categories: string[];
   contact_persons: ContactPerson[];
 }
@@ -122,7 +121,7 @@ export class SupplierService {
     const { data, error } = await supabase
       .from('suppliers')
       .select('*')
-      .or(`supplier_name.ilike.%${searchTerm}%,contact_email.ilike.%${searchTerm}%`)
+      .ilike('supplier_name', `%${searchTerm}%`)
       .order('supplier_name');
 
     if (error) {

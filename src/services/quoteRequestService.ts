@@ -21,7 +21,6 @@ export interface EmailPreviewResponse {
     suppliers: Array<{
       id: string;
       supplier_name: string;
-      contact_email: string;
       contact_persons: Array<{
         name: string;
         email: string;

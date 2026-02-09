@@ -3,6 +3,7 @@ import { Building2, Mail, Clock, CheckCircle, AlertCircle, Radio } from 'lucide-
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import type { Asset, Quote, Supplier } from '@/lib/supabase';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 interface SupplierStatusTrackerProps {
   asset: Asset;
@@ -232,35 +233,41 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                     <p className="text-sm">No suppliers in this status</p>
                   </div>
                 ) : (
-                  suppliers.map(({ supplier, quote, lastActivity }) => (
-                    <div
-                      key={supplier.id}
-                      className={`bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 hover:bg-white/20 transition-colors ${
-                        quote ? 'cursor-pointer' : ''
-                      }`}
-                      onClick={() => {
-                        if (quote && onQuoteClick) {
-                          onQuoteClick(quote);
-                        }
-                      }}
-                    >
-                      {/* Supplier Info */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h5 className="font-medium text-white text-sm">
-                            {supplier.supplier_name}
-                          </h5>
-                          <div className="flex items-center gap-1 text-xs text-gray-300 mt-0.5">
-                            <Mail className="w-3 h-3" />
-                            <span>{supplier.contact_email}</span>
+                  suppliers.map(({ supplier, quote, lastActivity }) => {
+                    const supplierEmail = getSupplierPrimaryEmail(supplier);
+
+                    return (
+                      <div
+                        key={supplier.id}
+                        className={`bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 hover:bg-white/20 transition-colors ${
+                          quote ? 'cursor-pointer' : ''
+                        }`}
+                        onClick={() => {
+                          if (quote && onQuoteClick) {
+                            onQuoteClick(quote);
+                          }
+                        }}
+                      >
+                        {/* Supplier Info */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h5 className="font-medium text-white text-sm">
+                              {supplier.supplier_name}
+                            </h5>
+                            {supplierEmail && (
+                              <div className="flex items-center gap-1 text-xs text-gray-300 mt-0.5">
+                                <Mail className="w-3 h-3" />
+                                <span>{supplierEmail}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {formatDate(lastActivity)}
                           </div>
                         </div>
-                        <div className="text-xs text-gray-400">
-                          {formatDate(lastActivity)}
-                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
