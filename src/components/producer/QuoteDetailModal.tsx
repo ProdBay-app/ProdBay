@@ -42,6 +42,8 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
+  const [selectedChatFiles, setSelectedChatFiles] = useState<File[]>([]);
+  const [attachmentNotes, setAttachmentNotes] = useState<Record<string, string>>({});
 
   // Load quote data when modal opens
   useEffect(() => {
@@ -54,6 +56,8 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
       setLoading(false);
       setAccepting(false);
       setIsSidePanelOpen(false);
+      setSelectedChatFiles([]);
+      setAttachmentNotes({});
     }
   }, [isOpen, quote?.id]);
 
@@ -111,6 +115,11 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePanelUpload = (files: File[]) => {
+    if (files.length === 0) return;
+    setSelectedChatFiles(prev => [...prev, ...files]);
   };
 
   // Format cost as currency
@@ -423,6 +432,10 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                       supplierName={quoteData.supplier?.supplier_name || quote.supplier?.supplier_name || 'Supplier'}
                       assetName={quoteData.asset?.asset_name || 'Asset'}
                       onMessageSent={onQuoteUpdate}
+                      externalSelectedFiles={selectedChatFiles}
+                      onSelectedFilesChange={setSelectedChatFiles}
+                      externalAttachmentNotes={attachmentNotes}
+                      onAttachmentNotesChange={setAttachmentNotes}
                     />
                   </div>
                   {isSidePanelOpen && (
@@ -431,6 +444,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                         quoteId={quote.id}
                         isOpen={isSidePanelOpen}
                         onClose={() => setIsSidePanelOpen(false)}
+                        onUploadFiles={handlePanelUpload}
                         variant="inline"
                       />
                     </div>
@@ -442,6 +456,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                       quoteId={quote.id}
                       isOpen={isSidePanelOpen}
                       onClose={() => setIsSidePanelOpen(false)}
+                      onUploadFiles={handlePanelUpload}
                       variant="overlay"
                     />
                   </div>

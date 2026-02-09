@@ -40,6 +40,7 @@ const QuotePortal: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [attachmentNotes, setAttachmentNotes] = useState<Record<string, string>>({});
   const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
@@ -113,6 +114,21 @@ const QuotePortal: React.FC = () => {
     }
   }, [token, session, messages]);
 
+  const getFileKey = (file: File, index: number) => `${file.name}-${file.size}-${file.lastModified}-${index}`;
+
+  const buildAttachmentNotes = useCallback(() => {
+    const noteLines = selectedFiles
+      .map((file, index) => {
+        const note = attachmentNotes[getFileKey(file, index)]?.trim();
+        if (!note) return null;
+        return `- ${file.name}: ${note}`;
+      })
+      .filter(Boolean);
+
+    if (noteLines.length === 0) return '';
+    return `Attachment notes:\n${noteLines.join('\n')}`;
+  }, [attachmentNotes, selectedFiles]);
+
   const sendMessageWithPayload = useCallback(async (
     content: string,
     files: File[],
@@ -161,6 +177,7 @@ const QuotePortal: React.FC = () => {
       }
       if (options.clearFiles) {
         setSelectedFiles([]);
+        setAttachmentNotes({});
       }
       if (options.focusInput) {
         messageInputRef.current?.focus();
@@ -178,20 +195,19 @@ const QuotePortal: React.FC = () => {
 
   // Send message
   const sendMessage = useCallback(async () => {
-    await sendMessageWithPayload(messageInput, selectedFiles, {
+    const notesText = buildAttachmentNotes();
+    const combinedContent = [messageInput.trim(), notesText].filter(Boolean).join('\n\n');
+    await sendMessageWithPayload(combinedContent, selectedFiles, {
       clearInput: true,
       clearFiles: true,
       focusInput: true
     });
-  }, [messageInput, selectedFiles, sendMessageWithPayload]);
+  }, [messageInput, selectedFiles, sendMessageWithPayload, buildAttachmentNotes]);
 
   const handlePanelUpload = useCallback(async (files: File[]) => {
-    await sendMessageWithPayload('', files, {
-      clearInput: false,
-      clearFiles: false,
-      focusInput: false
-    });
-  }, [sendMessageWithPayload]);
+    if (files.length === 0) return;
+    setSelectedFiles(prev => [...prev, ...files]);
+  }, []);
 
   // Handle Enter key in message input
   const handleMessageKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -213,7 +229,13 @@ const QuotePortal: React.FC = () => {
   };
 
   const handleRemoveFile = (index: number) => {
+    const fileKey = getFileKey(selectedFiles[index], index);
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setAttachmentNotes((prev) => {
+      const next = { ...prev };
+      delete next[fileKey];
+      return next;
+    });
   };
 
   // Format date for display
@@ -564,25 +586,43 @@ const QuotePortal: React.FC = () => {
               <div className="border-t border-white/10 p-4 bg-white/5 rounded-b-xl">
                 {selectedFiles.length > 0 && (
                   <div className="mb-3 space-y-2">
-                    {selectedFiles.map((file, index) => (
-                      <div
-                        key={`${file.name}-${index}`}
-                        className="flex items-center justify-between bg-white/10 border border-white/20 rounded-md px-3 py-2"
-                      >
-                        <div className="flex items-center gap-2 text-xs text-white/90 truncate">
-                          <FileText className="h-3.5 w-3.5 text-white/70" />
-                          <span className="truncate">{file.name}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFile(index)}
-                          className="text-white/70 hover:text-white"
-                          aria-label="Remove file"
+                    {selectedFiles.map((file, index) => {
+                      const fileKey = getFileKey(file, index);
+                      return (
+                        <div
+                          key={fileKey}
+                          className="bg-white/10 border border-white/20 rounded-md px-3 py-2 space-y-2"
                         >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs text-white/90 truncate">
+                              <FileText className="h-3.5 w-3.5 text-white/70" />
+                              <span className="truncate">{file.name}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile(index)}
+                              className="text-white/70 hover:text-white"
+                              aria-label="Remove file"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <textarea
+                            value={attachmentNotes[fileKey] || ''}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              setAttachmentNotes((prev) => ({
+                                ...prev,
+                                [fileKey]: value
+                              }));
+                            }}
+                            placeholder="Add a note for this attachment..."
+                            rows={2}
+                            className="w-full resize-none rounded-md bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
                 <div className="flex space-x-2">
