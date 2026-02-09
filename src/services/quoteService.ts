@@ -70,6 +70,8 @@ export interface ContactPerson {
   phone?: string;
   is_primary?: boolean;
   isPrimary?: boolean;
+  default_cc?: boolean;
+  default_bcc?: boolean;
 }
 
 export interface QuoteMessagesResponse {

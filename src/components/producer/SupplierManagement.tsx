@@ -237,6 +237,33 @@ const SupplierManagement: React.FC = () => {
                             placeholder="+1-555-0123"
                           />
                         </div>
+
+                        <div className="md:col-span-2">
+                          <div className="flex flex-wrap gap-4 text-xs text-gray-200">
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(person.default_cc)}
+                                onChange={(e) => updateContactPerson(index, 'default_cc', e.target.checked)}
+                                className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
+                              />
+                              <span title="Add this contact to CC by default for quote requests">
+                                Always CC on Quote Requests
+                              </span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(person.default_bcc)}
+                                onChange={(e) => updateContactPerson(index, 'default_bcc', e.target.checked)}
+                                className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
+                              />
+                              <span title="Add this contact to BCC by default for quote requests">
+                                Always BCC on Quote Requests
+                              </span>
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}

@@ -214,6 +214,8 @@ export const useSupplierManagement = (): UseSupplierManagementReturn => {
         email: '',
         role: '',
         phone: '',
+        default_cc: false,
+        default_bcc: false,
         is_primary: prev.contact_persons.length === 0 // First contact person is primary by default
       }]
     }));
