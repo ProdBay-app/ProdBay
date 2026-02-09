@@ -304,19 +304,19 @@ const SupplierManagement: React.FC = () => {
 
             return (
               <div key={supplier.id} className="p-6 hover:bg-white/20 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-medium text-white">
-                      {supplier.supplier_name}
-                    </h3>
-                    {primaryEmail && (
-                    <div className="flex items-center space-x-1 text-gray-300">
-                      <Mail className="h-4 w-4" />
-                        <span className="text-sm">{primaryEmail}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="text-lg font-medium text-white">
+                        {supplier.supplier_name}
+                      </h3>
+                      {primaryEmail && (
+                        <div className="flex items-center space-x-1 text-gray-300">
+                          <Mail className="h-4 w-4" />
+                          <span className="text-sm">{primaryEmail}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  </div>
 
                   {/* Contact Persons Display */}
                   {supplier.contact_persons && supplier.contact_persons.length > 0 && (
@@ -368,23 +368,23 @@ const SupplierManagement: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 ml-4">
-                  <button
-                    onClick={() => handleEdit(supplier)}
-                    className="p-2 text-gray-300 hover:text-teal-300 hover:bg-teal-500/20 rounded transition-colors"
-                    title="Edit Supplier"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(supplier.id)}
-                    className="p-2 text-gray-300 hover:text-red-400 hover:bg-red-500/20 rounded transition-colors"
-                    title="Delete Supplier"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center space-x-2 ml-4">
+                    <button
+                      onClick={() => handleEdit(supplier)}
+                      className="p-2 text-gray-300 hover:text-teal-300 hover:bg-teal-500/20 rounded transition-colors"
+                      title="Edit Supplier"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(supplier.id)}
+                      className="p-2 text-gray-300 hover:text-red-400 hover:bg-red-500/20 rounded transition-colors"
+                      title="Delete Supplier"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
               </div>
             </div>
             );
