@@ -175,139 +175,139 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
       </div>
 
       <div className="h-full overflow-y-auto p-4 space-y-4 pb-24">
-          {loading && (
-            <p className="text-sm text-gray-400">Loading attachments...</p>
-          )}
+        {loading && (
+          <p className="text-sm text-gray-400">Loading attachments...</p>
+        )}
 
-          {error && !loading && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3">
-              <p className="text-sm text-red-300">{error}</p>
+        {error && !loading && (
+          <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3">
+            <p className="text-sm text-red-300">{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && attachments.length === 0 && (
+          <p className="text-sm text-gray-400">No attachments yet.</p>
+        )}
+
+        {!loading && !error && (
+          <>
+            <div className="border border-white/10 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setShowProducer((prev) => !prev)}
+                className="w-full flex items-center justify-between px-4 py-3 text-white/90"
+              >
+                <span className="text-sm font-semibold">Producer Uploads</span>
+                {showProducer ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
+              {showProducer && (
+                <div className="px-4 pb-3 space-y-3">
+                  {producerAttachments.length === 0 ? (
+                    <p className="text-xs text-gray-400">No producer attachments.</p>
+                  ) : (
+                    producerAttachments.map((attachment) => {
+                      const attachmentUrl = attachment.storage_url || attachment.public_url;
+                      return (
+                        <div
+                          key={attachment.id}
+                          className="bg-white/5 border border-white/10 rounded-md p-3 space-y-2"
+                        >
+                          <div className="flex items-center gap-2 text-xs text-white/90">
+                            <FileText className="h-3.5 w-3.5 text-white/70" />
+                            {attachmentUrl ? (
+                              <a
+                                href={attachmentUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="truncate hover:text-white"
+                              >
+                                {attachment.filename}
+                              </a>
+                            ) : (
+                              <span className="truncate">{attachment.filename}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] text-gray-400">
+                            <span>Uploaded {formatDate(attachment.created_at)}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleJumpToMessage(attachment.message_id)}
+                              className="text-purple-300 hover:text-purple-200"
+                            >
+                              Jump to Message
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
-          )}
 
-          {!loading && !error && attachments.length === 0 && (
-            <p className="text-sm text-gray-400">No attachments yet.</p>
-          )}
-
-          {!loading && !error && (
-            <>
-              <div className="border border-white/10 rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => setShowProducer((prev) => !prev)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-white/90"
-                >
-                  <span className="text-sm font-semibold">Producer Uploads</span>
-                  {showProducer ? (
-                    <ChevronDown className="h-4 w-4" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4" />
-                  )}
-                </button>
-                {showProducer && (
-                  <div className="px-4 pb-3 space-y-3">
-                    {producerAttachments.length === 0 ? (
-                      <p className="text-xs text-gray-400">No producer attachments.</p>
-                    ) : (
-                      producerAttachments.map((attachment) => {
-                        const attachmentUrl = attachment.storage_url || attachment.public_url;
-                        return (
-                          <div
-                            key={attachment.id}
-                            className="bg-white/5 border border-white/10 rounded-md p-3 space-y-2"
-                          >
-                            <div className="flex items-center gap-2 text-xs text-white/90">
-                              <FileText className="h-3.5 w-3.5 text-white/70" />
-                              {attachmentUrl ? (
-                                <a
-                                  href={attachmentUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="truncate hover:text-white"
-                                >
-                                  {attachment.filename}
-                                </a>
-                              ) : (
-                                <span className="truncate">{attachment.filename}</span>
-                              )}
-                            </div>
-                            <div className="flex items-center justify-between text-[11px] text-gray-400">
-                              <span>Uploaded {formatDate(attachment.created_at)}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleJumpToMessage(attachment.message_id)}
-                                className="text-purple-300 hover:text-purple-200"
-                              >
-                                Jump to Message
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
+            <div className="border border-white/10 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setShowSupplier((prev) => !prev)}
+                className="w-full flex items-center justify-between px-4 py-3 text-white/90"
+              >
+                <span className="text-sm font-semibold">Supplier Uploads</span>
+                {showSupplier ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
                 )}
-              </div>
-
-              <div className="border border-white/10 rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => setShowSupplier((prev) => !prev)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-white/90"
-                >
-                  <span className="text-sm font-semibold">Supplier Uploads</span>
-                  {showSupplier ? (
-                    <ChevronDown className="h-4 w-4" />
+              </button>
+              {showSupplier && (
+                <div className="px-4 pb-3 space-y-3">
+                  {supplierAttachments.length === 0 ? (
+                    <p className="text-xs text-gray-400">No supplier attachments.</p>
                   ) : (
-                    <ChevronRight className="h-4 w-4" />
-                  )}
-                </button>
-                {showSupplier && (
-                  <div className="px-4 pb-3 space-y-3">
-                    {supplierAttachments.length === 0 ? (
-                      <p className="text-xs text-gray-400">No supplier attachments.</p>
-                    ) : (
-                      supplierAttachments.map((attachment) => {
-                        const attachmentUrl = attachment.storage_url || attachment.public_url;
-                        return (
-                          <div
-                            key={attachment.id}
-                            className="bg-white/5 border border-white/10 rounded-md p-3 space-y-2"
-                          >
-                            <div className="flex items-center gap-2 text-xs text-white/90">
-                              <FileText className="h-3.5 w-3.5 text-white/70" />
-                              {attachmentUrl ? (
-                                <a
-                                  href={attachmentUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="truncate hover:text-white"
-                                >
-                                  {attachment.filename}
-                                </a>
-                              ) : (
-                                <span className="truncate">{attachment.filename}</span>
-                              )}
-                            </div>
-                            <div className="flex items-center justify-between text-[11px] text-gray-400">
-                              <span>Uploaded {formatDate(attachment.created_at)}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleJumpToMessage(attachment.message_id)}
-                                className="text-purple-300 hover:text-purple-200"
+                    supplierAttachments.map((attachment) => {
+                      const attachmentUrl = attachment.storage_url || attachment.public_url;
+                      return (
+                        <div
+                          key={attachment.id}
+                          className="bg-white/5 border border-white/10 rounded-md p-3 space-y-2"
+                        >
+                          <div className="flex items-center gap-2 text-xs text-white/90">
+                            <FileText className="h-3.5 w-3.5 text-white/70" />
+                            {attachmentUrl ? (
+                              <a
+                                href={attachmentUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="truncate hover:text-white"
                               >
-                                Jump to Message
-                              </button>
-                            </div>
+                                {attachment.filename}
+                              </a>
+                            ) : (
+                              <span className="truncate">{attachment.filename}</span>
+                            )}
                           </div>
-                        );
-                      })
-                    )}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+                          <div className="flex items-center justify-between text-[11px] text-gray-400">
+                            <span>Uploaded {formatDate(attachment.created_at)}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleJumpToMessage(attachment.message_id)}
+                              className="text-purple-300 hover:text-purple-200"
+                            >
+                              Jump to Message
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </>
   );

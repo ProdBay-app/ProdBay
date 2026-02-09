@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { 
-  Package, 
-  FileText, 
-  Calendar, 
-  Send, 
+import {
+  Package,
+  FileText,
+  Calendar,
+  Send,
   AlertCircle,
   User,
   Briefcase,
@@ -73,7 +73,7 @@ const QuotePortal: React.FC = () => {
 
     try {
       const response = await PortalService.getSession(token);
-      
+
       if (!response.success || !response.data) {
         // Use the error message from the backend, which now provides more helpful context
         const errorMessage = response.error?.message || 'Failed to load portal session';
@@ -127,6 +127,7 @@ const QuotePortal: React.FC = () => {
     const normalizedContent = content.trim();
     if (!normalizedContent && files.length === 0) return;
 
+    // Optimistic UI: Add message immediately
     const optimisticMessage: Message = {
       id: `temp-${Date.now()}`,
       quote_id: session?.quote.id || '',
@@ -144,11 +145,13 @@ const QuotePortal: React.FC = () => {
       const response = await PortalService.sendMessage(token, normalizedContent, files);
 
       if (!response.success || !response.data) {
+        // Remove optimistic message on error
         setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
         showError(response.error?.message || 'Failed to send message');
         return;
       }
 
+      // Replace optimistic message with real one
       setMessages(prev =>
         prev.map(m => m.id === optimisticMessage.id ? response.data! : m)
       );
@@ -165,6 +168,7 @@ const QuotePortal: React.FC = () => {
 
       showSuccess('Message sent successfully');
     } catch (err) {
+      // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       showError('Failed to send message');
     } finally {
@@ -172,6 +176,7 @@ const QuotePortal: React.FC = () => {
     }
   }, [token, sendingMessage, session, scrollToBottom, showSuccess, showError]);
 
+  // Send message
   const sendMessage = useCallback(async () => {
     await sendMessageWithPayload(messageInput, selectedFiles, {
       clearInput: true,
@@ -214,18 +219,18 @@ const QuotePortal: React.FC = () => {
   // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit'
     });
   };
 
@@ -462,7 +467,7 @@ const QuotePortal: React.FC = () => {
             <div className="text-sm">
               <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                 quote.status === 'Submitted' ? 'bg-green-500/30 text-green-200 border border-green-400/50' :
-                quote.status === 'Accepted' ? 'bg-blue-500/30 text-blue-200 border border-blue-400/50' :
+                quote.status === 'Accepted' ? 'bg-blue-500/30 text-blue-200 border-blue-400/50' :
                 quote.status === 'Rejected' ? 'bg-red-500/30 text-red-200 border border-red-400/50' :
                 'bg-gray-500/30 text-gray-200 border border-gray-400/50'
               }`}>
@@ -673,4 +678,3 @@ const QuotePortal: React.FC = () => {
 };
 
 export default QuotePortal;
-

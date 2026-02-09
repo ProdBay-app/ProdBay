@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  MessageCircle, 
-  Send, 
+import {
+  MessageCircle,
+  Send,
   ChevronLeft,
   User,
   AlertCircle,
@@ -74,7 +74,7 @@ const ProducerQuoteChat: React.FC = () => {
 
     try {
       const response = await QuoteService.getQuoteMessages(quoteId);
-      
+
       if (!response.success || !response.data) {
         setError(response.error?.message || 'Failed to load quote data');
         setLoading(false);
@@ -86,7 +86,7 @@ const ProducerQuoteChat: React.FC = () => {
         asset: response.data.asset,
         supplier: response.data.supplier
       });
-      
+
       // Prepend initial request message if it exists
       const initialRequest = createInitialRequestMessage(
         response.data.quote,
@@ -95,7 +95,7 @@ const ProducerQuoteChat: React.FC = () => {
       const allMessages = initialRequest
         ? [initialRequest, ...(response.data.messages || [])]
         : (response.data.messages || []);
-      
+
       setMessages(allMessages);
       setError(null);
     } catch (err) {
@@ -121,12 +121,12 @@ const ProducerQuoteChat: React.FC = () => {
         const newMessages = initialRequest
           ? [initialRequest, ...(response.data.messages || [])]
           : (response.data.messages || []);
-        
+
         // Only update if messages have changed (avoid unnecessary re-renders)
         // Compare without the synthetic message ID (which includes timestamp)
         const currentMessagesWithoutSynthetic = messages.filter(m => !isInitialRequestMessage(m.id));
         const newMessagesWithoutSynthetic = newMessages.filter(m => !isInitialRequestMessage(m.id));
-        
+
         if (JSON.stringify(newMessagesWithoutSynthetic) !== JSON.stringify(currentMessagesWithoutSynthetic)) {
           setMessages(newMessages);
         }
@@ -196,7 +196,7 @@ const ProducerQuoteChat: React.FC = () => {
     }
   }, [quoteId, sendingMessage, scrollToBottom, showSuccess, showError]);
 
-  // Send message from input area
+  // Send message
   const sendMessage = useCallback(async () => {
     await sendMessageWithPayload(messageInput, selectedFiles, {
       clearInput: true,
@@ -239,9 +239,9 @@ const ProducerQuoteChat: React.FC = () => {
   // Format time for display
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit'
     });
   };
 
@@ -364,7 +364,7 @@ const ProducerQuoteChat: React.FC = () => {
                   messages.map((message) => {
                     const isProducer = message.sender_type === 'PRODUCER';
                     const isInitialRequest = isInitialRequestMessage(message.id);
-                    
+
                     return (
                       <div
                         key={message.id}
@@ -390,11 +390,11 @@ const ProducerQuoteChat: React.FC = () => {
                             </span>
                           </div>
                           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                          
+
                           {/* Attachments (if present) */}
                           {message.attachments && message.attachments.length > 0 && (
                             <div className="mt-3 pt-3 border-t border-white/20">
-                              <MessageAttachments 
+                              <MessageAttachments
                                 attachments={message.attachments}
                                 variant={isProducer || isInitialRequest ? 'light' : 'dark'}
                               />
@@ -528,4 +528,3 @@ const ProducerQuoteChat: React.FC = () => {
 };
 
 export default ProducerQuoteChat;
-
