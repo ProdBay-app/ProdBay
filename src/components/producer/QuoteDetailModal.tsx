@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, DollarSign, FileText, Building2, Mail, Clock, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
+import { X, DollarSign, FileText, Building2, Mail, Clock, AlertCircle, Loader2, CheckCircle, Paperclip } from 'lucide-react';
 import { QuoteService } from '@/services/quoteService';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import QuoteChat from '@/components/shared/QuoteChat';
+import AttachmentSidePanel from '@/components/shared/AttachmentSidePanel';
 import type { Quote } from '@/lib/supabase';
 import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
@@ -40,6 +41,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
 
   // Load quote data when modal opens
   useEffect(() => {
@@ -51,8 +53,15 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
       setError(null);
       setLoading(false);
       setAccepting(false);
+      setIsSidePanelOpen(false);
     }
   }, [isOpen, quote?.id]);
+
+  useEffect(() => {
+    if (isOpen && window.innerWidth >= 1024) {
+      setIsSidePanelOpen(true);
+    }
+  }, [isOpen]);
 
   // Handle accept quote
   const handleAcceptQuote = async () => {
@@ -177,7 +186,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
 
       {/* Modal Content */}
       <div
-        className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden z-[101] flex flex-col"
+        className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl w-full max-w-[95vw] max-h-[90vh] overflow-hidden z-[101] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -393,12 +402,51 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                 </div>
               </div>
             ) : quoteData ? (
-              <QuoteChat
-                quoteId={quote.id}
-                supplierName={quoteData.supplier?.supplier_name || quote.supplier?.supplier_name || 'Supplier'}
-                assetName={quoteData.asset?.asset_name || 'Asset'}
-                onMessageSent={onQuoteUpdate}
-              />
+              <div className="flex flex-col h-full min-h-0 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-white">Conversation</h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsSidePanelOpen(prev => !prev)}
+                    className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                  >
+                    <span className="flex items-center gap-2 text-sm">
+                      <Paperclip className="w-4 h-4" />
+                      View Attachments
+                    </span>
+                  </button>
+                </div>
+                <div className="flex flex-col lg:flex-row gap-4 h-full min-h-0">
+                  <div className="flex-1 min-w-0 h-full">
+                    <QuoteChat
+                      quoteId={quote.id}
+                      supplierName={quoteData.supplier?.supplier_name || quote.supplier?.supplier_name || 'Supplier'}
+                      assetName={quoteData.asset?.asset_name || 'Asset'}
+                      onMessageSent={onQuoteUpdate}
+                    />
+                  </div>
+                  {isSidePanelOpen && (
+                    <div className="hidden lg:block w-80 h-full shrink-0">
+                      <AttachmentSidePanel
+                        quoteId={quote.id}
+                        isOpen={isSidePanelOpen}
+                        onClose={() => setIsSidePanelOpen(false)}
+                        variant="inline"
+                      />
+                    </div>
+                  )}
+                </div>
+                {isSidePanelOpen && (
+                  <div className="lg:hidden">
+                    <AttachmentSidePanel
+                      quoteId={quote.id}
+                      isOpen={isSidePanelOpen}
+                      onClose={() => setIsSidePanelOpen(false)}
+                      variant="overlay"
+                    />
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-300">
                 <p>Unable to load chat</p>
