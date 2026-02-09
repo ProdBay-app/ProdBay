@@ -299,7 +299,7 @@ const ProducerQuoteChat: React.FC = () => {
           </div>
           <button
             type="button"
-            onClick={() => setIsAttachmentPanelOpen(true)}
+            onClick={() => setIsAttachmentPanelOpen(prev => !prev)}
             className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white/90 hover:text-white hover:bg-white/20 transition-colors"
           >
             View Attachments
@@ -329,8 +329,8 @@ const ProducerQuoteChat: React.FC = () => {
 
         {/* Chat Interface */}
         {!loading && !error && quoteData && (
-          <div className="flex flex-col lg:flex-row gap-6">
-            <div className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-lg flex flex-col h-[600px] shadow-lg ${isAttachmentPanelOpen ? 'lg:flex-1' : 'w-full'}`}>
+          <div className="flex flex-col lg:flex-row gap-6 h-full">
+            <div className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-lg flex flex-col h-[600px] shadow-lg flex-1 min-w-0 ${isAttachmentPanelOpen ? '' : 'w-full'}`}>
               {/* Chat Header */}
               <div className="border-b border-white/20 p-4 bg-white/5">
                 <div className="flex items-center justify-between gap-3">
@@ -345,7 +345,7 @@ const ProducerQuoteChat: React.FC = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setIsAttachmentPanelOpen(true)}
+                    onClick={() => setIsAttachmentPanelOpen(prev => !prev)}
                     className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
                     aria-label="View attachments"
                   >
@@ -497,7 +497,7 @@ const ProducerQuoteChat: React.FC = () => {
               </div>
             </div>
             {isAttachmentPanelOpen && (
-              <div className="hidden lg:block w-96 h-[600px]">
+              <div className="hidden lg:block w-96 h-[600px] shrink-0">
                 <AttachmentSidePanel
                   quoteId={quoteId}
                   isOpen={isAttachmentPanelOpen}
