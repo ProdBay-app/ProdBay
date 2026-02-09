@@ -4,6 +4,7 @@ import { QuoteComparisonService, type Quote, type Asset, type ComparisonMetrics 
 import { useNotification } from '@/hooks/useNotification';
 import { getSupabase } from '@/lib/supabase';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 interface QuoteComparisonModalProps {
   isOpen: boolean;
@@ -295,9 +296,11 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
                           </h4>
                           {getCostComparisonIcon(quote)}
                         </div>
-                        <p className="text-sm text-gray-600 truncate">
-                          {quote.supplier.contact_email}
-                        </p>
+                        {getSupplierPrimaryEmail(quote.supplier) && (
+                          <p className="text-sm text-gray-600 truncate">
+                            {getSupplierPrimaryEmail(quote.supplier)}
+                          </p>
+                        )}
                       </div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${QuoteComparisonService.getStatusColor(quote.status)}`}>
                         {quote.status}

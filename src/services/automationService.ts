@@ -1,6 +1,7 @@
 import { getSupabase } from '@/lib/supabase';
 import type { Project, Asset, Supplier } from '@/lib/supabase';
 import type { QuoteInsert, AssetUpdate, QuoteUpdate } from '@/types/database';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 export class AutomationService {
   // Note: Brief processing functions have been migrated to Railway backend
@@ -65,6 +66,13 @@ export class AutomationService {
         const fnKey = import.meta.env.VITE_EMAIL_FUNCTION_KEY || '';
         const subject = `Quote Request: ${asset.asset_name}`;
         const body = `Please provide a quote for ${asset.asset_name}.\n\nSpecifications: ${asset.specifications || ''}\n\nSubmit here: ${window.location.origin}/quote/${quote.quote_token}`;
+        const supplierEmail = getSupplierPrimaryEmail(supplier);
+        if (!supplierEmail) {
+          // eslint-disable-next-line no-console
+          console.warn(`No supplier contact email found for ${supplier.supplier_name}. Skipping email send.`);
+          continue;
+        }
+
         if (fnUrl && fnKey && from) {
           try {
             await fetch(fnUrl, {
@@ -75,7 +83,7 @@ export class AutomationService {
               },
               body: JSON.stringify({
                 from: `${from.name} <${from.email}>`,
-                to: supplier.contact_email,
+                to: supplierEmail,
                 subject,
                 text: body
               })
@@ -87,7 +95,7 @@ export class AutomationService {
         } else {
           // Fallback to console if function not configured
           // eslint-disable-next-line no-console
-          console.log(`Email (simulated) to ${supplier.contact_email}: ${subject}`);
+          console.log(`Email (simulated) to ${supplierEmail}: ${subject}`);
         }
       }
     }

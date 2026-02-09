@@ -58,9 +58,20 @@ export interface Asset {
 export interface Supplier {
   id: string;
   supplier_name: string;
-  contact_email: string;
   service_categories: string[];
+  contact_persons: ContactPerson[];
   created_at: string;
+}
+
+export interface ContactPerson {
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  is_primary?: boolean;
+  isPrimary?: boolean;
+  default_cc?: boolean;
+  default_bcc?: boolean;
 }
 
 export interface QuoteMessagesResponse {

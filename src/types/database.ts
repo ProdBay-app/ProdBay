@@ -44,9 +44,21 @@ export interface Asset {
 export interface Supplier {
   id: string;
   supplier_name: string;
-  contact_email: string;
+  contact_email: string | null;
   service_categories: string[];
+  contact_persons?: ContactPerson[];
   created_at: string;
+}
+
+export interface ContactPerson {
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  is_primary?: boolean;
+  isPrimary?: boolean;
+  default_cc?: boolean;
+  default_bcc?: boolean;
 }
 
 export interface Quote {
@@ -139,9 +151,10 @@ export type ProjectInsert = Omit<Project, 'id' | 'created_at' | 'updated_at'> & 
   updated_at?: string;
 };
 
-export type SupplierInsert = Omit<Supplier, 'id' | 'created_at'> & {
+export type SupplierInsert = Omit<Supplier, 'id' | 'created_at' | 'contact_email'> & {
   id?: string;
   created_at?: string;
+  contact_email?: string | null;
 };
 
 export type MilestoneInsert = Omit<ProjectMilestone, 'id' | 'created_at' | 'updated_at'> & {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getSupabase } from '@/lib/supabase';
 import type { Asset, Supplier, ContactPerson } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 import { 
   X, 
   ChevronLeft, 
@@ -17,7 +18,6 @@ import {
 interface SupplierWithPreview {
   id: string;
   supplier_name: string;
-  contact_email: string;
   contact_persons: ContactPerson[];
   preview_email: {
     to: string;
@@ -78,7 +78,7 @@ const QuoteRequestPreviewModal: React.FC<QuoteRequestPreviewModalProps> = ({
                               supplier.contact_persons?.[0];
         
         const contactName = primaryContact?.name || supplier.supplier_name;
-        const contactEmail = primaryContact?.email || supplier.contact_email;
+        const contactEmail = getSupplierPrimaryEmail(supplier) || '';
         
         const subject = `Quote Request: ${asset.asset_name}`;
         const body = `Dear ${contactName},
@@ -100,7 +100,6 @@ Best regards,
         return {
           id: supplier.id,
           supplier_name: supplier.supplier_name,
-          contact_email: supplier.contact_email,
           contact_persons: supplier.contact_persons || [],
           preview_email: {
             to: contactEmail,

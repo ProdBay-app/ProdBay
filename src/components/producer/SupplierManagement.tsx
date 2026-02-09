@@ -2,6 +2,7 @@ import React from 'react';
 import { Users, Mail, Plus, Tag, Edit, Trash2, User, Phone, Star } from 'lucide-react';
 import SupplierFilters from './supplier-filters/SupplierFilters';
 import { useSupplierManagement } from '@/hooks/useSupplierManagement';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 const SupplierManagement: React.FC = () => {
   const {
@@ -90,7 +91,7 @@ const SupplierManagement: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <div>
                 <label htmlFor="supplier_name" className="block text-sm font-medium text-gray-200 mb-1">
                   Supplier Name *
@@ -100,20 +101,6 @@ const SupplierManagement: React.FC = () => {
                   id="supplier_name"
                   value={formData.supplier_name}
                   onChange={(e) => updateFormData('supplier_name', e.target.value)}
-                  required
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="contact_email" className="block text-sm font-medium text-gray-200 mb-1">
-                  Contact Email *
-                </label>
-                <input
-                  type="email"
-                  id="contact_email"
-                  value={formData.contact_email}
-                  onChange={(e) => updateFormData('contact_email', e.target.value)}
                   required
                   className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
@@ -250,6 +237,33 @@ const SupplierManagement: React.FC = () => {
                             placeholder="+1-555-0123"
                           />
                         </div>
+
+                        <div className="md:col-span-2">
+                          <div className="flex flex-wrap gap-4 text-xs text-gray-200">
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(person.default_cc)}
+                                onChange={(e) => updateContactPerson(index, 'default_cc', e.target.checked)}
+                                className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
+                              />
+                              <span title="Add this contact to CC by default for quote requests">
+                                Always CC on Quote Requests
+                              </span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(person.default_bcc)}
+                                onChange={(e) => updateContactPerson(index, 'default_bcc', e.target.checked)}
+                                className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
+                              />
+                              <span title="Add this contact to BCC by default for quote requests">
+                                Always BCC on Quote Requests
+                              </span>
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -312,19 +326,24 @@ const SupplierManagement: React.FC = () => {
         </div>
 
         <div className="divide-y divide-white/10">
-          {filteredSuppliers.map((supplier) => (
-            <div key={supplier.id} className="p-6 hover:bg-white/20 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-medium text-white">
-                      {supplier.supplier_name}
-                    </h3>
-                    <div className="flex items-center space-x-1 text-gray-300">
-                      <Mail className="h-4 w-4" />
-                      <span className="text-sm">{supplier.contact_email}</span>
+          {filteredSuppliers.map((supplier) => {
+            const primaryEmail = getSupplierPrimaryEmail(supplier);
+
+            return (
+              <div key={supplier.id} className="p-6 hover:bg-white/20 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h3 className="text-lg font-medium text-white">
+                        {supplier.supplier_name}
+                      </h3>
+                      {primaryEmail && (
+                        <div className="flex items-center space-x-1 text-gray-300">
+                          <Mail className="h-4 w-4" />
+                          <span className="text-sm">{primaryEmail}</span>
+                        </div>
+                      )}
                     </div>
-                  </div>
 
                   {/* Contact Persons Display */}
                   {supplier.contact_persons && supplier.contact_persons.length > 0 && (
@@ -376,25 +395,26 @@ const SupplierManagement: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 ml-4">
-                  <button
-                    onClick={() => handleEdit(supplier)}
-                    className="p-2 text-gray-300 hover:text-teal-300 hover:bg-teal-500/20 rounded transition-colors"
-                    title="Edit Supplier"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(supplier.id)}
-                    className="p-2 text-gray-300 hover:text-red-400 hover:bg-red-500/20 rounded transition-colors"
-                    title="Delete Supplier"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center space-x-2 ml-4">
+                    <button
+                      onClick={() => handleEdit(supplier)}
+                      className="p-2 text-gray-300 hover:text-teal-300 hover:bg-teal-500/20 rounded transition-colors"
+                      title="Edit Supplier"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(supplier.id)}
+                      className="p-2 text-gray-300 hover:text-red-400 hover:bg-red-500/20 rounded transition-colors"
+                      title="Delete Supplier"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {filteredSuppliers.length === 0 && (

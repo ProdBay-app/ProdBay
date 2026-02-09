@@ -181,7 +181,7 @@ class SupplierService {
       const emailPreviews = suppliers.map(supplier => {
         const primaryContact = this.getPrimaryContact(supplier);
         const contactName = primaryContact?.name || supplier.supplier_name;
-        const contactEmail = primaryContact?.email || supplier.contact_email;
+        const contactEmail = primaryContact?.email || null;
         
         const subject = `Quote Request: ${asset.asset_name}`;
         const body = this.generateEmailBody(asset, contactName, from);
@@ -189,7 +189,7 @@ class SupplierService {
         return {
           id: supplier.id,
           supplier_name: supplier.supplier_name,
-          contact_email: supplier.contact_email,
+          contact_email: contactEmail,
           contact_persons: supplier.contact_persons || [],
           preview_email: {
             to: contactEmail,
@@ -220,7 +220,7 @@ class SupplierService {
       return null;
     }
     
-    return supplier.contact_persons.find(person => person.is_primary) || 
+    return supplier.contact_persons.find(person => person.is_primary || person.isPrimary) || 
            supplier.contact_persons[0];
   }
 
@@ -432,7 +432,7 @@ ${fromEmail}`;
           if (from && from.name && from.email) {
             try {
               // Log email sending attempt
-              const supplierEmail = supplier.contact_persons?.find(p => p.is_primary)?.email || supplier.contact_email;
+              const supplierEmail = this.getPrimaryContact(supplier)?.email || null;
               console.log('[SupplierService] Sending email to:', supplierEmail);
               
               // Pass both Storage URLs (for successful uploads) and Base64 (for failed uploads)
@@ -464,7 +464,8 @@ ${fromEmail}`;
             }
           } else {
             // No email configuration, just log
-            console.log(`Quote request created for ${supplier.supplier_name} (${supplier.contact_email})`);
+            const supplierEmail = this.getPrimaryContact(supplier)?.email || 'no-email';
+            console.log(`Quote request created for ${supplier.supplier_name} (${supplierEmail})`);
             results.push({
               supplier_id: supplier.id,
               supplier_name: supplier.supplier_name,
@@ -525,7 +526,13 @@ ${fromEmail}`;
 
       // Get supplier contact email
       const primaryContact = this.getPrimaryContact(supplier);
-      const supplierEmail = primaryContact?.email || supplier.contact_email;
+      const supplierEmail = primaryContact?.email || null;
+      if (!supplierEmail) {
+        return {
+          success: false,
+          error: 'Supplier has no contact email on file'
+        };
+      }
       
       // Generate quote link using access_token and new portal path
       const frontendUrl = this.normalizeFrontendUrl(process.env.FRONTEND_URL || 'http://localhost:5173');

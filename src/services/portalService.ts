@@ -68,8 +68,15 @@ export interface Project {
 export interface Supplier {
   id: string;
   supplier_name: string;
-  contact_email: string;
   service_categories: string[];
+  contact_persons: Array<{
+    name: string;
+    email: string;
+    role: string;
+    phone?: string;
+    is_primary?: boolean;
+    isPrimary?: boolean;
+  }>;
   created_at: string;
 }
 

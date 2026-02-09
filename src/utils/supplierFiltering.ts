@@ -1,6 +1,7 @@
 import type { Supplier } from '@/lib/supabase';
 import type { FilterState } from '@/components/producer/supplier-filters/SupplierFilters';
 import { getUniqueNestedValues, filterBySearchTerm, filterByDateRange, debounce } from './arrayUtils';
+import { getSupplierPrimaryEmail } from './supplierUtils';
 
 /**
  * Filter suppliers based on the provided filter state
@@ -11,7 +12,8 @@ export const filterSuppliers = (suppliers: Supplier[], filters: FilterState): Su
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase();
       const nameMatch = supplier.supplier_name.toLowerCase().includes(searchLower);
-      const emailMatch = supplier.contact_email.toLowerCase().includes(searchLower);
+      const primaryEmail = getSupplierPrimaryEmail(supplier);
+      const emailMatch = primaryEmail ? primaryEmail.toLowerCase().includes(searchLower) : false;
       
       // Also search in contact person names
       const contactMatch = supplier.contact_persons?.some(person => 

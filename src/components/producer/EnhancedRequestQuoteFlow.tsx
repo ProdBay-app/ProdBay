@@ -7,6 +7,7 @@ import { getSupabase } from '@/lib/supabase';
 import { useNotification } from '@/hooks/useNotification';
 import type { Supplier, Quote, ContactPerson, Asset } from '@/lib/supabase';
 import { getSupplierRelevanceMetadata } from '@/utils/supplierRelevance';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 import { validateFile, formatFileSize } from '@/utils/fileValidation';
 
 interface RequestQuoteFlowProps {
@@ -117,13 +118,15 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(supplier => {
+        const primaryEmail = getSupplierPrimaryEmail(supplier);
+        const emailMatch = primaryEmail ? primaryEmail.toLowerCase().includes(term) : false;
         // Primary: match supplier name
         if (supplier.supplier_name.toLowerCase().includes(term)) {
           return true;
         }
         // Fallback: match email or service categories
         return (
-          supplier.contact_email.toLowerCase().includes(term) ||
+          emailMatch ||
           (supplier.service_categories && supplier.service_categories.some(cat => 
             cat.toLowerCase().includes(term)
           ))
@@ -240,13 +243,27 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
   const allRecommendedSelected = recommendedSuppliers.length > 0 && 
     recommendedSuppliers.every(s => selectedSupplierIds.includes(s.id));
 
+  const getDefaultContactEmails = (supplier: SupplierWithDetails, field: 'default_cc' | 'default_bcc'): string[] => {
+    const primaryEmail = getSupplierPrimaryEmail(supplier);
+    const contacts = supplier.contact_persons || [];
+    const emails = contacts
+      .filter(person => Boolean(person?.[field]))
+      .map(person => person.email)
+      .filter(Boolean)
+      .filter(email => email !== primaryEmail);
+
+    return Array.from(new Set(emails));
+  };
+
   // Generate default email content for a supplier
   const generateDefaultEmail = (supplier: SupplierWithDetails): CustomizedEmail => {
     const primaryContact = supplier.contact_persons?.find((p: ContactPerson) => p.is_primary) || 
                           supplier.contact_persons?.[0];
     
     const contactName = primaryContact?.name || supplier.supplier_name;
-    const contactEmail = primaryContact?.email || supplier.contact_email;
+    const contactEmail = getSupplierPrimaryEmail(supplier) || '';
+    const ccEmails = getDefaultContactEmails(supplier, 'default_cc').join(', ');
+    const bccEmails = getDefaultContactEmails(supplier, 'default_bcc').join(', ');
     
     const subject = `Quote Request: ${assetName}`;
 
@@ -275,8 +292,8 @@ ${signature.phone}`;
       contactName,
       subject,
       body,
-      ccEmails: '',
-      bccEmails: '',
+      ccEmails,
+      bccEmails,
       attachments: []
     };
   };
@@ -312,6 +329,18 @@ ${signature.phone}`;
           : email
       )
     );
+  };
+
+  const mergeEmailIntoList = (existing: string, email: string): string => {
+    if (!email) return existing;
+    const items = existing
+      .split(',')
+      .map(item => item.trim())
+      .filter(Boolean);
+    if (!items.includes(email)) {
+      items.push(email);
+    }
+    return items.join(', ');
   };
 
   // Handle file attachment with size validation and 10-file limit
@@ -687,6 +716,7 @@ ${signature.phone}`;
                               const isSelected = selectedSupplierIds.includes(supplier.id);
                               const isAlreadyContacted = supplier.already_contacted;
                               const matchingCategories = supplier.relevance.matchingCategories;
+                              const supplierEmail = getSupplierPrimaryEmail(supplier);
 
                               return (
                                 <div
@@ -734,10 +764,12 @@ ${signature.phone}`;
                                         )}
                                       </div>
 
-                                      <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
-                                        <Mail className="w-3.5 h-3.5" />
-                                        <span>{supplier.contact_email}</span>
-                                      </div>
+                                      {supplierEmail && (
+                                        <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
+                                          <Mail className="w-3.5 h-3.5" />
+                                          <span>{supplierEmail}</span>
+                                        </div>
+                                      )}
 
                                       {supplier.service_categories && supplier.service_categories.length > 0 && (
                                         <div className="flex items-start gap-1.5">
@@ -782,12 +814,13 @@ ${signature.phone}`;
                               Other Suppliers ({otherSuppliers.length})
                             </h4>
                           </div>
-                          <div className="space-y-3">
-                            {otherSuppliers.map((supplier) => {
-                              const isSelected = selectedSupplierIds.includes(supplier.id);
-                              const isAlreadyContacted = supplier.already_contacted;
-
-                              return (
+                        <div className="space-y-3">
+                          {otherSuppliers.map((supplier) => {
+                            const isSelected = selectedSupplierIds.includes(supplier.id);
+                            const isAlreadyContacted = supplier.already_contacted;
+                            const supplierEmail = getSupplierPrimaryEmail(supplier);
+                            
+                            return (
                                 <div
                                   key={supplier.id}
                                   className={`
@@ -827,10 +860,12 @@ ${signature.phone}`;
                                         )}
                                       </div>
 
-                                      <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
-                                        <Mail className="w-3.5 h-3.5" />
-                                        <span>{supplier.contact_email}</span>
-                                      </div>
+                                      {supplierEmail && (
+                                        <div className="flex items-center gap-1.5 text-sm text-gray-300 mb-2">
+                                          <Mail className="w-3.5 h-3.5" />
+                                          <span>{supplierEmail}</span>
+                                        </div>
+                                      )}
 
                                       {supplier.service_categories && supplier.service_categories.length > 0 && (
                                         <div className="flex items-start gap-1.5">
@@ -999,7 +1034,7 @@ ${signature.phone}`;
                         <h4 className="text-sm font-medium text-gray-200 mb-3">Contact Person Details</h4>
                         <div className="space-y-2">
                           {currentSupplier.contact_persons.map((person, index) => (
-                            <div key={index} className="flex items-center gap-4 text-sm">
+                            <div key={index} className="flex flex-wrap items-center gap-3 text-sm">
                               <div className="flex items-center gap-2">
                                 <User className="h-4 w-4 text-gray-400" />
                                 <span className="font-medium text-white">{person.name}</span>
@@ -1017,6 +1052,27 @@ ${signature.phone}`;
                                 <div className="flex items-center gap-1 text-gray-300">
                                   <Phone className="h-3 w-3" />
                                   <span>{person.phone}</span>
+                                </div>
+                              )}
+                              {person.email && (
+                                <span className="text-gray-300">{person.email}</span>
+                              )}
+                              {!person.is_primary && person.email && currentEmail && (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => updateCurrentEmail('ccEmails', mergeEmailIntoList(currentEmail.ccEmails, person.email))}
+                                    className="px-2 py-0.5 text-xs bg-white/10 text-gray-200 rounded hover:bg-white/20"
+                                  >
+                                    Add to CC
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateCurrentEmail('bccEmails', mergeEmailIntoList(currentEmail.bccEmails, person.email))}
+                                    className="px-2 py-0.5 text-xs bg-white/10 text-gray-200 rounded hover:bg-white/20"
+                                  >
+                                    Add to BCC
+                                  </button>
                                 </div>
                               )}
                             </div>

@@ -7,7 +7,6 @@ import type { FilterState } from '@/components/producer/supplier-filters/Supplie
 
 export interface SupplierFormData {
   supplier_name: string;
-  contact_email: string;
   service_categories: string[];
   contact_persons: ContactPerson[];
 }
@@ -67,7 +66,6 @@ const AVAILABLE_CATEGORIES = [
 
 const INITIAL_FORM_DATA: SupplierFormData = {
   supplier_name: '',
-  contact_email: '',
   service_categories: [],
   contact_persons: []
 };
@@ -177,7 +175,6 @@ export const useSupplierManagement = (): UseSupplierManagementReturn => {
   const handleEdit = (supplier: Supplier): void => {
     setFormData({
       supplier_name: supplier.supplier_name,
-      contact_email: supplier.contact_email,
       service_categories: supplier.service_categories,
       contact_persons: supplier.contact_persons || []
     });
@@ -217,6 +214,8 @@ export const useSupplierManagement = (): UseSupplierManagementReturn => {
         email: '',
         role: '',
         phone: '',
+        default_cc: false,
+        default_bcc: false,
         is_primary: prev.contact_persons.length === 0 // First contact person is primary by default
       }]
     }));

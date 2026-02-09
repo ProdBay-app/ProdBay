@@ -4,6 +4,7 @@ import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import QuoteComparisonModal from './QuoteComparisonModal';
 import type { Quote } from '@/lib/supabase';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 interface QuotesListProps {
   assetId: string;
@@ -238,6 +239,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
           {quotes.map((quote) => {
             const badge = getStatusBadge(quote);
             const isPending = quote.status === 'Pending' || (quote.status === 'Submitted' && quote.cost === 0);
+            const supplierEmail = quote.supplier ? getSupplierPrimaryEmail(quote.supplier) : null;
 
             return (
               <div
@@ -252,10 +254,10 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
                       <h4 className="font-semibold text-white">
                         {quote.supplier?.supplier_name || 'Unknown Supplier'}
                       </h4>
-                      {quote.supplier?.contact_email && (
+                      {supplierEmail && (
                         <div className="flex items-center gap-1.5 text-sm text-gray-300 mt-0.5">
                           <Mail className="w-3.5 h-3.5" />
-                          <span>{quote.supplier.contact_email}</span>
+                          <span>{supplierEmail}</span>
                         </div>
                       )}
                     </div>

@@ -6,6 +6,7 @@ import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import QuoteChat from '@/components/shared/QuoteChat';
 import type { Quote } from '@/lib/supabase';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 interface QuoteDetailModalProps {
   isOpen: boolean;
@@ -162,6 +163,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
   if (!isOpen || !quote) return null;
 
   const statusBadge = getStatusBadge(quote.status || 'Pending');
+  const supplierEmail = quoteData?.supplier ? getSupplierPrimaryEmail(quoteData.supplier) : null;
 
   // Render modal using React Portal
   const modalContent = (
@@ -240,10 +242,10 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                       </label>
                       <p className="text-white">{quoteData.supplier?.supplier_name || 'Unknown'}</p>
                     </div>
-                    {quoteData.supplier?.contact_email && (
+                    {supplierEmail && (
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-gray-300" />
-                        <span className="text-white">{quoteData.supplier.contact_email}</span>
+                        <span className="text-white">{supplierEmail}</span>
                       </div>
                     )}
                   </div>

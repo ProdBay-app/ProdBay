@@ -3,6 +3,7 @@ import { Package, Search, CheckSquare, Square, X, Star, Trophy } from 'lucide-re
 import type { Asset, SuggestedSupplier } from '@/lib/supabase';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { getSupplierRelevanceMetadata } from '@/utils/supplierRelevance';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 interface SupplierSelectionModalProps {
   isOpen: boolean;
@@ -51,13 +52,15 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(supplier => {
+        const primaryEmail = getSupplierPrimaryEmail(supplier);
+        const emailMatch = primaryEmail ? primaryEmail.toLowerCase().includes(term) : false;
         // Primary: match supplier name
         if (supplier.supplier_name.toLowerCase().includes(term)) {
           return true;
         }
         // Fallback: match email or service categories
         return (
-          supplier.contact_email.toLowerCase().includes(term) ||
+          emailMatch ||
           (supplier.service_categories && supplier.service_categories.some(cat => 
             cat.toLowerCase().includes(term)
           ))
@@ -384,7 +387,9 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-sm text-gray-300">{supplier.contact_email}</p>
+                                    {getSupplierPrimaryEmail(supplier) && (
+                                      <p className="text-sm text-gray-300">{getSupplierPrimaryEmail(supplier)}</p>
+                                    )}
                                     {supplier.service_categories && supplier.service_categories.length > 0 && (
                                       <div className="flex flex-wrap gap-1 mt-2">
                                         {supplier.service_categories.map((category, index) => {
@@ -460,7 +465,9 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                                         </span>
                                       )}
                                     </div>
-                                    <p className="text-sm text-gray-300">{supplier.contact_email}</p>
+                                    {getSupplierPrimaryEmail(supplier) && (
+                                      <p className="text-sm text-gray-300">{getSupplierPrimaryEmail(supplier)}</p>
+                                    )}
                                     {supplier.service_categories && supplier.service_categories.length > 0 && (
                                       <div className="flex flex-wrap gap-1 mt-2">
                                         {supplier.service_categories.map((category, index) => (

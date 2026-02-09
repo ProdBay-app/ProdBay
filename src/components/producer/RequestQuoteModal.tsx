@@ -3,6 +3,8 @@ import { X, Building2, Mail, Tag, Loader2 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import type { Supplier, Quote } from '@/lib/supabase';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 interface RequestQuoteModalProps {
   isOpen: boolean;
@@ -38,14 +40,44 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
+  const [ccEmails, setCcEmails] = useState('');
+  const [bccEmails, setBccEmails] = useState('');
 
   // Fetch all suppliers when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchSuppliers();
       setSelectedSupplierId(null); // Reset selection
+      setCcEmails('');
+      setBccEmails('');
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!selectedSupplierId) {
+      setCcEmails('');
+      setBccEmails('');
+      return;
+    }
+
+    const selectedSupplier = suppliers.find(supplier => supplier.id === selectedSupplierId);
+    if (!selectedSupplier) return;
+
+    const primaryEmail = getSupplierPrimaryEmail(selectedSupplier);
+    const contacts = selectedSupplier.contact_persons || [];
+
+    const toList = (field: 'default_cc' | 'default_bcc') => {
+      const emails = contacts
+        .filter(person => Boolean(person?.[field]))
+        .map(person => person.email)
+        .filter(Boolean)
+        .filter(email => email !== primaryEmail);
+      return Array.from(new Set(emails)).join(', ');
+    };
+
+    setCcEmails(toList('default_cc'));
+    setBccEmails(toList('default_bcc'));
+  }, [selectedSupplierId, suppliers]);
 
   const fetchSuppliers = async () => {
     setLoading(true);
@@ -155,6 +187,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                   {suppliers.map((supplier) => {
                     const alreadyContacted = hasExistingQuote(supplier.id);
                     const isSelected = selectedSupplierId === supplier.id;
+                    const supplierEmail = getSupplierPrimaryEmail(supplier);
 
                     return (
                       <div
@@ -197,10 +230,12 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                               )}
                             </div>
 
-                            <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-2">
-                              <Mail className="w-3.5 h-3.5" />
-                              <span>{supplier.contact_email}</span>
-                            </div>
+                            {supplierEmail && (
+                              <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-2">
+                                <Mail className="w-3.5 h-3.5" />
+                                <span>{supplierEmail}</span>
+                              </div>
+                            )}
 
                             {supplier.service_categories && supplier.service_categories.length > 0 && (
                               <div className="flex items-start gap-1.5">
@@ -222,6 +257,36 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {selectedSupplierId && (
+                <div className="mt-6 border-t border-gray-200 pt-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-gray-700">Routing (optional)</h3>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      CC (comma-separated emails)
+                    </label>
+                    <input
+                      type="text"
+                      value={ccEmails}
+                      onChange={(e) => setCcEmails(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="cc@example.com, another@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      BCC (comma-separated emails)
+                    </label>
+                    <input
+                      type="text"
+                      value={bccEmails}
+                      onChange={(e) => setBccEmails(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="bcc@example.com"
+                    />
+                  </div>
                 </div>
               )}
             </div>

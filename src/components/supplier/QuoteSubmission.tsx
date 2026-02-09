@@ -8,6 +8,7 @@ interface AssetWithProject extends Asset {
   project?: Project;
 }
 import { useNotification } from '@/hooks/useNotification';
+import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 import { 
   DollarSign, 
   FileText, 
@@ -233,7 +234,7 @@ const QuoteSubmission: React.FC = () => {
                   <h3 className="font-medium text-gray-900 mb-2">Your Details</h3>
                   <div className="space-y-2 text-sm">
                     <p><span className="font-medium">Company:</span> {supplier.supplier_name}</p>
-                    <p><span className="font-medium">Email:</span> {supplier.contact_email}</p>
+                    <p><span className="font-medium">Email:</span> {getSupplierPrimaryEmail(supplier) || 'Not provided'}</p>
                     <p><span className="font-medium">Categories:</span> {supplier.service_categories.join(', ')}</p>
                   </div>
                 </div>

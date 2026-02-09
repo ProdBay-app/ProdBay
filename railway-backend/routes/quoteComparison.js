@@ -2,6 +2,13 @@ const express = require('express');
 const { supabase } = require('../config/database');
 const router = express.Router();
 
+const getPrimaryContactEmail = (supplier) => {
+  const contactPersons = Array.isArray(supplier?.contact_persons) ? supplier.contact_persons : [];
+  if (contactPersons.length === 0) return null;
+  const primary = contactPersons.find(person => person.is_primary || person.isPrimary) || contactPersons[0];
+  return primary?.email || null;
+};
+
 /**
  * GET /api/quotes/compare/:assetId
  * Get all quotes for an asset with comparison data
@@ -65,8 +72,8 @@ router.get('/compare/:assetId', async (req, res) => {
         supplier:suppliers(
           id,
           supplier_name,
-          contact_email,
-          service_categories
+          service_categories,
+          contact_persons
         )
       `)
       .eq('asset_id', assetId)
@@ -94,13 +101,24 @@ router.get('/compare/:assetId', async (req, res) => {
     };
 
     // Add cost ranking to each quote
-    const quotesWithRanking = quotes.map((quote, index) => ({
-      ...quote,
-      cost_rank: index + 1,
-      cost_percentage_of_lowest: comparisonMetrics.lowest_cost > 0 
-        ? Math.round((quote.cost / comparisonMetrics.lowest_cost) * 100) 
-        : 100
-    }));
+    const quotesWithRanking = quotes.map((quote, index) => {
+      const supplier = quote.supplier || null;
+      const contactEmail = supplier ? getPrimaryContactEmail(supplier) : null;
+
+      return {
+        ...quote,
+        supplier: supplier
+          ? {
+              ...supplier,
+              contact_email: contactEmail
+            }
+          : supplier,
+        cost_rank: index + 1,
+        cost_percentage_of_lowest: comparisonMetrics.lowest_cost > 0 
+          ? Math.round((quote.cost / comparisonMetrics.lowest_cost) * 100) 
+          : 100
+      };
+    });
 
     res.status(200).json({
       success: true,
