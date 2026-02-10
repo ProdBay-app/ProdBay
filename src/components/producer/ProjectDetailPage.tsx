@@ -21,6 +21,7 @@ import EditableBrief from './EditableBrief';
 import ClientProjectsModal from './ClientProjectsModal';
 import AssetDetailModal from './AssetDetailModal';
 import AssetFormModal from './AssetFormModal';
+import { toTitleCase } from '@/utils/textFormatters';
 import type { Project, Asset } from '@/lib/supabase';
 
 /**
@@ -58,6 +59,7 @@ const ProjectDetailPage: React.FC = () => {
   const [assetsLoading, setAssetsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isCreatingAsset, setIsCreatingAsset] = useState(false);
 
   // Track current edited brief values for PDF download
   const [currentEditedBriefDescription, setCurrentEditedBriefDescription] = useState<string>('');
@@ -211,11 +213,13 @@ const ProjectDetailPage: React.FC = () => {
     quantity?: number;
     tags?: string[];
   }) => {
+    if (!project || isCreatingAsset) return;
+
     try {
+      setIsCreatingAsset(true);
       // Create asset via API
-      if (!project) return;
       const newAsset = await ProducerService.createAsset(project.id, {
-        asset_name: assetData.asset_name,
+        asset_name: toTitleCase(assetData.asset_name),
         specifications: assetData.specifications,
         status: 'Pending',
         timeline: '',
@@ -231,7 +235,10 @@ const ProjectDetailPage: React.FC = () => {
       setIsAddModalOpen(false);
     } catch (err) {
       console.error('Error creating asset:', err);
-      // Error handling could be improved with a notification system
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create asset';
+      showError(errorMessage);
+    } finally {
+      setIsCreatingAsset(false);
     }
   };
 
@@ -709,7 +716,7 @@ const ProjectDetailPage: React.FC = () => {
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleCreateAsset}
         mode="create"
-        isSubmitting={false}
+        isSubmitting={isCreatingAsset}
       />
     </>
   );
