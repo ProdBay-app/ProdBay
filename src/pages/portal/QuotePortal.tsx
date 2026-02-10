@@ -432,7 +432,7 @@ const QuotePortal: React.FC = () => {
                     Location
                   </label>
                   <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
-                    {project.location?.trim() ? project.location : 'Not specified'}
+                    {project.location?.trim() ? project.location.trim() : 'Not specified'}
                   </p>
                 </div>
               </div>
