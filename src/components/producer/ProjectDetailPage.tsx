@@ -55,6 +55,7 @@ const ProjectDetailPage: React.FC = () => {
   const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
   const [isAssetDetailModalOpen, setIsAssetDetailModalOpen] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [assetsLoading, setAssetsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -113,12 +114,15 @@ const ProjectDetailPage: React.FC = () => {
       if (!projectId) return;
 
       try {
+        setAssetsLoading(true);
         const assetsData = await ProducerService.getAssetsByProjectId(projectId);
         setAssets(assetsData);
       } catch (err) {
         console.error('Error fetching assets for brief:', err);
         // Silently fail - brief will just not have interactive highlights
         setAssets([]);
+      } finally {
+        setAssetsLoading(false);
       }
     };
 
@@ -243,6 +247,10 @@ const ProjectDetailPage: React.FC = () => {
     if (viewingAsset?.id === updatedAsset.id) {
       setViewingAsset(updatedAsset);
     }
+  };
+
+  const handleAssetDelete = (assetId: string) => {
+    setAssets(prevAssets => prevAssets.filter(a => a.id !== assetId));
   };
 
   // ========================================
@@ -631,12 +639,13 @@ const ProjectDetailPage: React.FC = () => {
           <div className="w-full">
             {activeView === 'assets' && (
               <AssetList 
-                projectId={project.id}
+                assets={assets}
+                isLoading={assetsLoading}
                 hoveredAssetId={hoveredAssetId}
                 onAssetHover={setHoveredAssetId}
-                onAddAsset={handleAddAsset}
-                onToggleFilters={handleToggleFilters}
                 showFilters={showFilters}
+                onDelete={handleAssetDelete}
+                onAssetUpdate={handleAssetUpdate}
               />
             )}
 

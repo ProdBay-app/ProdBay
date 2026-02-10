@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, AlertCircle, Search, ArrowUpDown, X } from 'lucide-react';
+import { Package, Search, ArrowUpDown, X } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
-import AssetCard from './AssetCard';
 import AssetTable from './AssetTable';
 import AssetFormModal from './AssetFormModal';
 import AssetDetailModal from './AssetDetailModal';
@@ -12,16 +11,16 @@ import { toTitleCase } from '@/utils/textFormatters';
 import type { Asset } from '@/lib/supabase';
 
 interface AssetListProps {
-  projectId: string;
+  assets: Asset[];
+  isLoading: boolean;
   
   // Props for bi-directional hover linking with brief
   hoveredAssetId?: string | null;
   onAssetHover?: (assetId: string | null) => void;
   
-  // Props for external button controls (handled by parent component)
-  onAddAsset?: () => void; // External add asset button handler
-  onToggleFilters?: () => void; // External filter toggle handler
   showFilters?: boolean; // Filter visibility state
+  onDelete?: (assetId: string) => void;
+  onAssetUpdate?: (asset: Asset) => void;
 }
 
 /**
@@ -35,20 +34,17 @@ interface AssetListProps {
  * - Bi-directional hover linking with project brief (highlights assets when brief text hovered)
  */
 const AssetList: React.FC<AssetListProps> = ({ 
-  projectId, 
+  assets,
+  isLoading,
   hoveredAssetId, 
   onAssetHover, 
-  onAddAsset,
-  onToggleFilters,
-  showFilters = false
+  showFilters = false,
+  onDelete,
+  onAssetUpdate
 }) => {
   const { showError, showSuccess } = useNotification();
 
   // State management
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -70,64 +66,6 @@ const AssetList: React.FC<AssetListProps> = ({
   useEffect(() => {
     console.log('Sorting changed:', { sortBy, sortOrder });
   }, [sortBy, sortOrder]);
-
-  // Fetch assets from the backend
-  useEffect(() => {
-    const fetchAssets = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const assetData = await ProducerService.getAssetsByProjectId(projectId);
-        setAssets(assetData);
-      } catch (err) {
-        console.error('Error fetching assets:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load assets';
-        setError(errorMessage);
-        showError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAssets();
-  }, [projectId, showError]);
-
-  // Handle adding a new asset
-  const handleAddAssetInternal = async (assetData: { 
-    asset_name: string; 
-    specifications: string;
-    quantity?: number;
-    tags?: string[];
-  }) => {
-    setIsSubmitting(true);
-    try {
-      // Create asset with default values (Title Case formatting applied)
-      const newAsset = await ProducerService.createAsset(projectId, {
-        asset_name: toTitleCase(assetData.asset_name),
-        specifications: assetData.specifications,
-        status: 'Pending',
-        timeline: '',
-        assigned_supplier_id: undefined,
-        quantity: assetData.quantity,
-        tags: assetData.tags || []
-      });
-
-      // Update local state to include new asset
-      setAssets(prev => [...prev, newAsset]);
-
-      // Close modal and show success
-      setIsAddModalOpen(false);
-      showSuccess(`Asset "${assetData.asset_name}" created successfully!`);
-    } catch (err) {
-      console.error('Error creating asset:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create asset';
-      showError(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // External add asset button is handled by parent component
 
   // Handle opening the edit modal
   const handleOpenEditModal = (asset: Asset) => {
@@ -157,8 +95,8 @@ const AssetList: React.FC<AssetListProps> = ({
         tags: assetData.tags || []
       });
 
-      // Update local state by replacing the old asset with the updated one
-      setAssets(prev => prev.map(a => a.id === updatedAsset.id ? updatedAsset : a));
+      // Let parent own the source of truth
+      onAssetUpdate?.(updatedAsset);
 
       // Close modal and show success
       setIsEditModalOpen(false);
@@ -188,8 +126,8 @@ const AssetList: React.FC<AssetListProps> = ({
       // Delete asset from database (cascade deletes related quotes)
       await ProducerService.deleteAsset(deletingAsset.id);
 
-      // Remove from local state
-      setAssets(prev => prev.filter(a => a.id !== deletingAsset.id));
+      // Let parent own the source of truth
+      onDelete?.(deletingAsset.id);
 
       // Close modal and show success
       setIsDeleteModalOpen(false);
@@ -212,8 +150,7 @@ const AssetList: React.FC<AssetListProps> = ({
 
   // Handle asset updates from the detail modal
   const handleAssetUpdate = (updatedAsset: Asset) => {
-    // Update the master assets array
-    setAssets(prev => prev.map(a => a.id === updatedAsset.id ? updatedAsset : a));
+    onAssetUpdate?.(updatedAsset);
     
     // Also update viewingAsset if it's the same asset
     if (viewingAsset?.id === updatedAsset.id) {
@@ -314,7 +251,7 @@ const AssetList: React.FC<AssetListProps> = ({
   }, [assets]);
 
   // Loading state
-  if (loading) {
+  if (isLoading) {
     return (
       <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
         <h2 className="text-2xl font-bold text-white mb-6">Assets</h2>
@@ -322,24 +259,6 @@ const AssetList: React.FC<AssetListProps> = ({
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
             <p className="text-gray-300">Loading assets...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Assets</h2>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="bg-red-500/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-400" />
-            </div>
-            <p className="text-red-400 font-semibold mb-2">Error loading assets</p>
-            <p className="text-gray-300 text-sm">{error}</p>
           </div>
         </div>
       </section>
@@ -536,15 +455,6 @@ const AssetList: React.FC<AssetListProps> = ({
           onAssetHover={onAssetHover}
         />
       )}
-
-      {/* Add Asset Modal */}
-      <AssetFormModal
-        isOpen={isAddModalOpen}
-        isSubmitting={isSubmitting}
-        mode="create"
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddAssetInternal}
-      />
 
       {/* Edit Asset Modal */}
       <AssetFormModal
