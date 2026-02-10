@@ -42,7 +42,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
-  const [selectedChatFiles, setSelectedChatFiles] = useState<File[]>([]);
+  const [selectedChatFiles, setSelectedChatFiles] = useState<Array<{ file: File; key: string }>>([]);
   const [attachmentNotes, setAttachmentNotes] = useState<Record<string, string>>({});
 
   // Load quote data when modal opens
@@ -119,7 +119,13 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
 
   const handlePanelUpload = (files: File[]) => {
     if (files.length === 0) return;
-    setSelectedChatFiles(prev => [...prev, ...files]);
+    setSelectedChatFiles(prev => [
+      ...prev,
+      ...files.map((file) => ({
+        file,
+        key: `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`
+      }))
+    ]);
   };
 
   // Format cost as currency

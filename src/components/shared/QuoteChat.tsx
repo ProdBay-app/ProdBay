@@ -10,8 +10,8 @@ interface QuoteChatProps {
   supplierName: string;
   assetName: string;
   onMessageSent?: () => void;
-  externalSelectedFiles?: File[];
-  onSelectedFilesChange?: (files: File[]) => void;
+  externalSelectedFiles?: Array<{ file: File; key: string }>;
+  onSelectedFilesChange?: (files: Array<{ file: File; key: string }>) => void;
   externalAttachmentNotes?: Record<string, string>;
   onAttachmentNotesChange?: (notes: Record<string, string>) => void;
 }
@@ -41,7 +41,7 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
   // Message state
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
-  const [localSelectedFiles, setLocalSelectedFiles] = useState<File[]>([]);
+  const [localSelectedFiles, setLocalSelectedFiles] = useState<Array<{ file: File; key: string }>>([]);
   const [localAttachmentNotes, setLocalAttachmentNotes] = useState<Record<string, string>>({});
   const [sendingMessage, setSendingMessage] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -53,7 +53,11 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
   const selectedFiles = externalSelectedFiles ?? localSelectedFiles;
   const attachmentNotes = externalAttachmentNotes ?? localAttachmentNotes;
 
-  const updateSelectedFiles = useCallback((updater: File[] | ((prev: File[]) => File[])) => {
+  const updateSelectedFiles = useCallback((
+    updater:
+      | Array<{ file: File; key: string }>
+      | ((prev: Array<{ file: File; key: string }>) => Array<{ file: File; key: string }>)
+  ) => {
     const next = typeof updater === 'function' ? updater(selectedFiles) : updater;
     if (onSelectedFilesChange) {
       onSelectedFilesChange(next);
@@ -71,14 +75,14 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
     }
   }, [attachmentNotes, onAttachmentNotesChange]);
 
-  const getFileKey = (file: File, index: number) => `${file.name}-${file.size}-${file.lastModified}-${index}`;
+  const getFileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`;
 
   const buildAttachmentNotes = useCallback(() => {
     const noteLines = selectedFiles
-      .map((file, index) => {
-        const note = attachmentNotes[getFileKey(file, index)]?.trim();
+      .map((fileItem) => {
+        const note = attachmentNotes[fileItem.key]?.trim();
         if (!note) return null;
-        return `- ${file.name}: ${note}`;
+        return `- ${fileItem.file.name}: ${note}`;
       })
       .filter(Boolean);
 
@@ -184,7 +188,11 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
     scrollToBottom();
 
     try {
-      const response = await QuoteService.sendProducerMessage(quoteId, content, selectedFiles);
+      const response = await QuoteService.sendProducerMessage(
+        quoteId,
+        content,
+        selectedFiles.map((item) => item.file)
+      );
       
       if (!response.success || !response.data) {
         // Remove optimistic message on error
@@ -228,16 +236,24 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
-    updateSelectedFiles(prev => [...prev, ...files]);
+    updateSelectedFiles(prev => [
+      ...prev,
+      ...files.map((file) => ({
+        file,
+        key: getFileKey(file)
+      }))
+    ]);
     event.target.value = '';
   };
 
   const handleRemoveFile = (index: number) => {
-    const fileKey = getFileKey(selectedFiles[index], index);
+    const fileKey = selectedFiles[index]?.key;
     updateSelectedFiles(prev => prev.filter((_, i) => i !== index));
     updateAttachmentNotes((prev) => {
       const next = { ...prev };
-      delete next[fileKey];
+      if (fileKey) {
+        delete next[fileKey];
+      }
       return next;
     });
   };
@@ -389,8 +405,8 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
       <div className="border-t border-white/20 p-4 bg-white/5">
         {selectedFiles.length > 0 && (
           <div className="mb-3 space-y-2">
-            {selectedFiles.map((file, index) => {
-              const fileKey = getFileKey(file, index);
+            {selectedFiles.map((fileItem, index) => {
+              const fileKey = fileItem.key;
               return (
                 <div
                   key={fileKey}
@@ -399,7 +415,7 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-white/90 truncate">
                       <FileText className="h-3.5 w-3.5 text-white/70" />
-                      <span className="truncate">{file.name}</span>
+                      <span className="truncate">{fileItem.file.name}</span>
                     </div>
                     <button
                       type="button"

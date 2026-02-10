@@ -43,7 +43,7 @@ const ProducerQuoteChat: React.FC = () => {
   // Message state
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<Array<{ file: File; key: string }>>([]);
   const [attachmentNotes, setAttachmentNotes] = useState<Record<string, string>>({});
   const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -138,14 +138,14 @@ const ProducerQuoteChat: React.FC = () => {
     }
   }, [quoteId, quoteData, messages]);
 
-  const getFileKey = (file: File, index: number) => `${file.name}-${file.size}-${file.lastModified}-${index}`;
+  const getFileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`;
 
   const buildAttachmentNotes = useCallback(() => {
     const noteLines = selectedFiles
-      .map((file, index) => {
-        const note = attachmentNotes[getFileKey(file, index)]?.trim();
+      .map((fileItem) => {
+        const note = attachmentNotes[fileItem.key]?.trim();
         if (!note) return null;
-        return `- ${file.name}: ${note}`;
+        return `- ${fileItem.file.name}: ${note}`;
       })
       .filter(Boolean);
 
@@ -155,7 +155,7 @@ const ProducerQuoteChat: React.FC = () => {
 
   const sendMessageWithPayload = useCallback(async (
     content: string,
-    files: File[],
+    files: Array<{ file: File; key: string }>,
     options: {
       clearInput: boolean;
       clearFiles: boolean;
@@ -181,7 +181,11 @@ const ProducerQuoteChat: React.FC = () => {
     scrollToBottom();
 
     try {
-      const response = await QuoteService.sendProducerMessage(quoteId, normalizedContent, files);
+      const response = await QuoteService.sendProducerMessage(
+        quoteId,
+        normalizedContent,
+        files.map((item) => item.file)
+      );
 
       if (!response.success || !response.data) {
         setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
@@ -226,7 +230,13 @@ const ProducerQuoteChat: React.FC = () => {
 
   const handlePanelUpload = useCallback(async (files: File[]) => {
     if (files.length === 0) return;
-    setSelectedFiles(prev => [...prev, ...files]);
+    setSelectedFiles(prev => [
+      ...prev,
+      ...files.map((file) => ({
+        file,
+        key: getFileKey(file)
+      }))
+    ]);
   }, []);
 
   // Handle Enter key in message input
@@ -244,16 +254,24 @@ const ProducerQuoteChat: React.FC = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
-    setSelectedFiles(prev => [...prev, ...files]);
+    setSelectedFiles(prev => [
+      ...prev,
+      ...files.map((file) => ({
+        file,
+        key: getFileKey(file)
+      }))
+    ]);
     event.target.value = '';
   };
 
   const handleRemoveFile = (index: number) => {
-    const fileKey = getFileKey(selectedFiles[index], index);
+    const fileKey = selectedFiles[index]?.key;
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
     setAttachmentNotes((prev) => {
       const next = { ...prev };
-      delete next[fileKey];
+      if (fileKey) {
+        delete next[fileKey];
+      }
       return next;
     });
   };
@@ -456,8 +474,8 @@ const ProducerQuoteChat: React.FC = () => {
               <div className="border-t border-white/20 p-4 bg-white/5">
                 {selectedFiles.length > 0 && (
                   <div className="mb-3 space-y-2">
-                    {selectedFiles.map((file, index) => {
-                      const fileKey = getFileKey(file, index);
+                    {selectedFiles.map((fileItem, index) => {
+                      const fileKey = fileItem.key;
                       return (
                         <div
                           key={fileKey}
@@ -466,7 +484,7 @@ const ProducerQuoteChat: React.FC = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 text-xs text-white/90 truncate">
                               <FileText className="h-3.5 w-3.5 text-white/70" />
-                              <span className="truncate">{file.name}</span>
+                              <span className="truncate">{fileItem.file.name}</span>
                             </div>
                             <button
                               type="button"
