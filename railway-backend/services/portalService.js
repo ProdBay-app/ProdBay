@@ -1,10 +1,17 @@
 const { supabase } = require('../config/database');
 const emailService = require('./emailService');
+const storageService = require('../utils/storageService');
 
 const getPrimaryContact = (supplier) => {
   const contactPersons = Array.isArray(supplier?.contact_persons) ? supplier.contact_persons : [];
   if (contactPersons.length === 0) return null;
   return contactPersons.find(person => person.is_primary || person.isPrimary) || contactPersons[0];
+};
+
+const getPublicUrl = (storagePath) => {
+  const supabaseUrl = process.env.SUPABASE_URL || '';
+  if (!supabaseUrl || !storagePath) return null;
+  return `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/quote-attachments/${storagePath}`;
 };
 
 /**
@@ -101,6 +108,37 @@ class PortalService {
         // Don't throw - return empty messages array if fetch fails
       }
 
+      let messageAttachments = [];
+      try {
+        const { data: attachments, error: attachmentsError } = await supabase
+          .from('message_attachments')
+          .select('*')
+          .eq('quote_id', quote.id)
+          .order('created_at', { ascending: true });
+
+        if (attachmentsError) {
+          console.error('Error fetching message attachments:', attachmentsError);
+        } else {
+          messageAttachments = (attachments || []).map((attachment) => ({
+            ...attachment,
+            public_url: getPublicUrl(attachment.storage_path)
+          }));
+        }
+      } catch (attachmentsFetchError) {
+        console.error('Error fetching message attachments:', attachmentsFetchError);
+      }
+
+      const attachmentsByMessageId = messageAttachments.reduce((acc, attachment) => {
+        acc[attachment.message_id] = acc[attachment.message_id] || [];
+        acc[attachment.message_id].push(attachment);
+        return acc;
+      }, {});
+
+      const messagesWithAttachments = (messages || []).map((message) => ({
+        ...message,
+        message_attachments: attachmentsByMessageId[message.id] || []
+      }));
+
       return {
         quote: {
           id: quote.id,
@@ -118,7 +156,7 @@ class PortalService {
         asset: quote.asset,
         project: quote.asset?.project,
         supplier: quote.supplier,
-        messages: messages || []
+        messages: messagesWithAttachments
       };
     } catch (error) {
       throw error;
@@ -131,14 +169,17 @@ class PortalService {
    * @param {string} content - Message content
    * @returns {Promise<Object>} Created message object
    */
-  static async sendSupplierMessage(token, content) {
+  static async sendSupplierMessage(token, content, files = []) {
     try {
-      // Validate content
-      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      const trimmedContent = typeof content === 'string' ? content.trim() : '';
+      const hasFiles = Array.isArray(files) && files.length > 0;
+
+      // Validate content (allow empty when files are present)
+      if (!trimmedContent && !hasFiles) {
         throw new Error('Message content is required');
       }
 
-      if (content.length > 5000) {
+      if (trimmedContent.length > 5000) {
         throw new Error('Message content cannot exceed 5000 characters');
       }
 
@@ -151,7 +192,7 @@ class PortalService {
         .insert({
           quote_id: quote.id,
           sender_type: 'SUPPLIER',
-          content: content.trim(),
+          content: trimmedContent,
           is_read: false
         })
         .select()
@@ -159,6 +200,35 @@ class PortalService {
 
       if (messageError || !message) {
         throw new Error('Failed to create message');
+      }
+
+      // Upload and persist message attachments (if any)
+      if (hasFiles) {
+        for (const file of files) {
+          const uploadResult = await storageService.uploadMessageAttachment(
+            quote.id,
+            message.id,
+            file.buffer,
+            file.originalname,
+            file.mimetype
+          );
+
+          const { error: attachmentError } = await supabase
+            .from('message_attachments')
+            .insert({
+              message_id: message.id,
+              quote_id: quote.id,
+              sender_type: 'SUPPLIER',
+              filename: file.originalname,
+              storage_path: uploadResult.storagePath,
+              file_size_bytes: uploadResult.fileSize || file.size,
+              content_type: file.mimetype
+            });
+
+          if (attachmentError) {
+            throw new Error('Failed to create message attachment');
+          }
+        }
       }
 
       // ============================================
@@ -211,7 +281,7 @@ class PortalService {
               const portalLink = `${frontendUrl}/dashboard/quotes/${quote.id}/chat`;
 
               // Generate message preview (first 100 characters)
-              const messagePreview = content.trim().length > 100 ? content.trim().substring(0, 100) : content.trim();
+              const messagePreview = trimmedContent.length > 100 ? trimmedContent.substring(0, 100) : trimmedContent;
 
               // Send email notification
               console.log(`[PortalService] 📧 Sending email notification to ${producer.email} (SUPPLIER → PRODUCER)`);
@@ -252,18 +322,21 @@ class PortalService {
    * @param {Object} user - Authenticated user object from JWT
    * @returns {Promise<Object>} Created message object
    */
-  static async sendProducerMessage(quoteId, content, user) {
+  static async sendProducerMessage(quoteId, content, user, files = []) {
     try {
       // Validate inputs
       if (!quoteId || typeof quoteId !== 'string') {
         throw new Error('Quote ID is required');
       }
 
-      if (!content || typeof content !== 'string' || content.trim().length === 0) {
+      const trimmedContent = typeof content === 'string' ? content.trim() : '';
+      const hasFiles = Array.isArray(files) && files.length > 0;
+
+      if (!trimmedContent && !hasFiles) {
         throw new Error('Message content is required');
       }
 
-      if (content.length > 5000) {
+      if (trimmedContent.length > 5000) {
         throw new Error('Message content cannot exceed 5000 characters');
       }
 
@@ -300,7 +373,7 @@ class PortalService {
         .insert({
           quote_id: quoteId,
           sender_type: 'PRODUCER',
-          content: content.trim(),
+          content: trimmedContent,
           is_read: false
         })
         .select()
@@ -308,6 +381,35 @@ class PortalService {
 
       if (messageError || !message) {
         throw new Error('Failed to create message');
+      }
+
+      // Upload and persist message attachments (if any)
+      if (hasFiles) {
+        for (const file of files) {
+          const uploadResult = await storageService.uploadMessageAttachment(
+            quote.id,
+            message.id,
+            file.buffer,
+            file.originalname,
+            file.mimetype
+          );
+
+          const { error: attachmentError } = await supabase
+            .from('message_attachments')
+            .insert({
+              message_id: message.id,
+              quote_id: quote.id,
+              sender_type: 'PRODUCER',
+              filename: file.originalname,
+              storage_path: uploadResult.storagePath,
+              file_size_bytes: uploadResult.fileSize || file.size,
+              content_type: file.mimetype
+            });
+
+          if (attachmentError) {
+            throw new Error('Failed to create message attachment');
+          }
+        }
       }
 
       // Get supplier email
@@ -336,7 +438,7 @@ class PortalService {
             senderName: producerName,
             quoteName: asset?.asset_name || 'Quote',
             portalLink: portalLink,
-            messagePreview: content.trim().substring(0, 100)
+            messagePreview: trimmedContent.substring(0, 100)
           });
         } catch (emailError) {
           console.error('Failed to send email notification:', emailError);
@@ -522,6 +624,37 @@ class PortalService {
         // Don't throw - return empty messages array if fetch fails
       }
 
+      let messageAttachments = [];
+      try {
+        const { data: attachments, error: attachmentsError } = await supabase
+          .from('message_attachments')
+          .select('*')
+          .eq('quote_id', quoteId)
+          .order('created_at', { ascending: true });
+
+        if (attachmentsError) {
+          console.error('Error fetching message attachments:', attachmentsError);
+        } else {
+          messageAttachments = (attachments || []).map((attachment) => ({
+            ...attachment,
+            public_url: getPublicUrl(attachment.storage_path)
+          }));
+        }
+      } catch (attachmentsFetchError) {
+        console.error('Error fetching message attachments:', attachmentsFetchError);
+      }
+
+      const attachmentsByMessageId = messageAttachments.reduce((acc, attachment) => {
+        acc[attachment.message_id] = acc[attachment.message_id] || [];
+        acc[attachment.message_id].push(attachment);
+        return acc;
+      }, {});
+
+      const messagesWithAttachments = (messages || []).map((message) => ({
+        ...message,
+        message_attachments: attachmentsByMessageId[message.id] || []
+      }));
+
       return {
         quote: {
           id: quote.id,
@@ -539,8 +672,62 @@ class PortalService {
         asset: quote.asset,
         project: quote.asset?.project,
         supplier: quote.supplier,
-        messages: messages || []
+        messages: messagesWithAttachments
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Get message attachments for a quote (public portal)
+   * @param {string} token - Access token
+   * @returns {Promise<Array>} Message attachments list
+   */
+  static async getMessageAttachmentsByToken(token) {
+    try {
+      const quote = await this.validateAccessToken(token);
+
+      const { data: attachments, error } = await supabase
+        .from('message_attachments')
+        .select('*')
+        .eq('quote_id', quote.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw new Error('Failed to fetch message attachments');
+      }
+
+      return (attachments || []).map((attachment) => ({
+        ...attachment,
+        public_url: getPublicUrl(attachment.storage_path)
+      }));
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Get message attachments for a quote (authenticated)
+   * @param {string} quoteId - Quote ID
+   * @returns {Promise<Array>} Message attachments list
+   */
+  static async getMessageAttachmentsForQuote(quoteId) {
+    try {
+      const { data: attachments, error } = await supabase
+        .from('message_attachments')
+        .select('*')
+        .eq('quote_id', quoteId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw new Error('Failed to fetch message attachments');
+      }
+
+      return (attachments || []).map((attachment) => ({
+        ...attachment,
+        public_url: getPublicUrl(attachment.storage_path)
+      }));
     } catch (error) {
       throw error;
     }

@@ -1,17 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  MessageCircle, 
-  Send, 
+import {
+  MessageCircle,
+  Send,
   ChevronLeft,
   User,
   AlertCircle,
-  Loader2
+  Loader2,
+  Paperclip,
+  X,
+  FileText
 } from 'lucide-react';
 import { QuoteService, type Message } from '@/services/quoteService';
 import { useNotification } from '@/hooks/useNotification';
 import { createInitialRequestMessage, isInitialRequestMessage } from '@/utils/quoteRequestMessage';
 import MessageAttachments from '@/components/shared/MessageAttachments';
+import AttachmentSidePanel from '@/components/shared/AttachmentSidePanel';
 
 /**
  * ProducerQuoteChat Component
@@ -39,8 +43,13 @@ const ProducerQuoteChat: React.FC = () => {
   // Message state
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<Array<{ file: File; key: string }>>([]);
+  const [attachmentNotes, setAttachmentNotes] = useState<Record<string, string>>({});
   const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAttachmentPanelOpen, setIsAttachmentPanelOpen] = useState(false);
 
   // Polling interval ref
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -48,6 +57,12 @@ const ProducerQuoteChat: React.FC = () => {
   // Scroll to bottom of messages
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    if (window.innerWidth >= 1024) {
+      setIsAttachmentPanelOpen(true);
+    }
   }, []);
 
   // Load quote data and messages
@@ -60,7 +75,7 @@ const ProducerQuoteChat: React.FC = () => {
 
     try {
       const response = await QuoteService.getQuoteMessages(quoteId);
-      
+
       if (!response.success || !response.data) {
         setError(response.error?.message || 'Failed to load quote data');
         setLoading(false);
@@ -72,7 +87,7 @@ const ProducerQuoteChat: React.FC = () => {
         asset: response.data.asset,
         supplier: response.data.supplier
       });
-      
+
       // Prepend initial request message if it exists
       const initialRequest = createInitialRequestMessage(
         response.data.quote,
@@ -81,7 +96,7 @@ const ProducerQuoteChat: React.FC = () => {
       const allMessages = initialRequest
         ? [initialRequest, ...(response.data.messages || [])]
         : (response.data.messages || []);
-      
+
       setMessages(allMessages);
       setError(null);
     } catch (err) {
@@ -107,12 +122,12 @@ const ProducerQuoteChat: React.FC = () => {
         const newMessages = initialRequest
           ? [initialRequest, ...(response.data.messages || [])]
           : (response.data.messages || []);
-        
+
         // Only update if messages have changed (avoid unnecessary re-renders)
         // Compare without the synthetic message ID (which includes timestamp)
         const currentMessagesWithoutSynthetic = messages.filter(m => !isInitialRequestMessage(m.id));
         const newMessagesWithoutSynthetic = newMessages.filter(m => !isInitialRequestMessage(m.id));
-        
+
         if (JSON.stringify(newMessagesWithoutSynthetic) !== JSON.stringify(currentMessagesWithoutSynthetic)) {
           setMessages(newMessages);
         }
@@ -123,19 +138,40 @@ const ProducerQuoteChat: React.FC = () => {
     }
   }, [quoteId, quoteData, messages]);
 
-  // Send message
-  const sendMessage = useCallback(async () => {
-    if (!quoteId || !messageInput.trim() || sendingMessage) return;
+  const getFileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`;
 
-    const content = messageInput.trim();
-    setMessageInput('');
+  const buildAttachmentNotes = useCallback(() => {
+    const noteLines = selectedFiles
+      .map((fileItem) => {
+        const note = attachmentNotes[fileItem.key]?.trim();
+        if (!note) return null;
+        return `- ${fileItem.file.name}: ${note}`;
+      })
+      .filter(Boolean);
 
-    // Optimistic UI: Add message immediately
+    if (noteLines.length === 0) return '';
+    return `Attachment notes:\n${noteLines.join('\n')}`;
+  }, [attachmentNotes, selectedFiles]);
+
+  const sendMessageWithPayload = useCallback(async (
+    content: string,
+    files: Array<{ file: File; key: string }>,
+    options: {
+      clearInput: boolean;
+      clearFiles: boolean;
+      focusInput: boolean;
+    }
+  ) => {
+    if (!quoteId || sendingMessage) return;
+
+    const normalizedContent = content.trim();
+    if (!normalizedContent && files.length === 0) return;
+
     const optimisticMessage: Message = {
       id: `temp-${Date.now()}`,
       quote_id: quoteId,
       sender_type: 'PRODUCER',
-      content,
+      content: normalizedContent,
       created_at: new Date().toISOString(),
       is_read: false
     };
@@ -145,46 +181,115 @@ const ProducerQuoteChat: React.FC = () => {
     scrollToBottom();
 
     try {
-      const response = await QuoteService.sendProducerMessage(quoteId, content);
-      
+      const response = await QuoteService.sendProducerMessage(
+        quoteId,
+        normalizedContent,
+        files.map((item) => item.file)
+      );
+
       if (!response.success || !response.data) {
-        // Remove optimistic message on error
         setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
         showError(response.error?.message || 'Failed to send message');
         return;
       }
 
-      // Replace optimistic message with real one
-      setMessages(prev => 
+      setMessages(prev =>
         prev.map(m => m.id === optimisticMessage.id ? response.data! : m)
       );
-      
+
+      if (options.clearInput) {
+        setMessageInput('');
+      }
+      if (options.clearFiles) {
+        setSelectedFiles([]);
+        setAttachmentNotes({});
+      }
+      if (options.focusInput) {
+        messageInputRef.current?.focus();
+      }
+
       showSuccess('Message sent successfully');
     } catch (err) {
-      // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       showError('Failed to send message');
     } finally {
       setSendingMessage(false);
+      if (options.focusInput) {
+        setTimeout(() => {
+          messageInputRef.current?.focus();
+        }, 0);
+      }
     }
-  }, [quoteId, messageInput, sendingMessage, scrollToBottom, showSuccess, showError]);
+  }, [quoteId, sendingMessage, scrollToBottom, showSuccess, showError]);
+
+  // Send message
+  const sendMessage = useCallback(async () => {
+    const notesText = buildAttachmentNotes();
+    const combinedContent = [messageInput.trim(), notesText].filter(Boolean).join('\n\n');
+    await sendMessageWithPayload(combinedContent, selectedFiles, {
+      clearInput: true,
+      clearFiles: true,
+      focusInput: true
+    });
+  }, [messageInput, selectedFiles, sendMessageWithPayload, buildAttachmentNotes]);
+
+  const handlePanelUpload = useCallback(async (files: File[]) => {
+    if (files.length === 0) return;
+    setSelectedFiles(prev => [
+      ...prev,
+      ...files.map((file) => ({
+        file,
+        key: getFileKey(file)
+      }))
+    ]);
+  }, []);
 
   // Handle Enter key in message input
-  const handleMessageKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleMessageKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
 
+  const handleFileSelectClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    setSelectedFiles(prev => [
+      ...prev,
+      ...files.map((file) => ({
+        file,
+        key: getFileKey(file)
+      }))
+    ]);
+    event.target.value = '';
+  };
+
+  const handleRemoveFile = (index: number) => {
+    const fileKey = selectedFiles[index]?.key;
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setAttachmentNotes((prev) => {
+      const next = { ...prev };
+      if (fileKey) {
+        delete next[fileKey];
+      }
+      return next;
+    });
+  };
+
   // Format time for display
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit'
     });
   };
+
 
   // Load data on mount
   useEffect(() => {
@@ -213,29 +318,38 @@ const ProducerQuoteChat: React.FC = () => {
     <div className="min-h-screen pt-20 pb-10 px-4">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header with Back Button */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            title="Go back"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            <span>Back</span>
-          </button>
-          <div className="flex-1">
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
-                <h1 className="text-2xl font-bold text-white">Loading chat...</h1>
-              </div>
-            ) : quoteData ? (
-              <h1 className="text-2xl font-bold text-white">
-                Chat with {quoteData.supplier?.supplier_name || 'Supplier'} - {quoteData.asset?.asset_name || 'Quote'}
-              </h1>
-            ) : (
-              <h1 className="text-2xl font-bold text-white">Chat</h1>
-            )}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 px-4 py-2 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              title="Go back"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <span>Back</span>
+            </button>
+            <div className="flex-1">
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+                  <h1 className="text-2xl font-bold text-white">Loading chat...</h1>
+                </div>
+              ) : quoteData ? (
+                <h1 className="text-2xl font-bold text-white">
+                  Chat with {quoteData.supplier?.supplier_name || 'Supplier'} - {quoteData.asset?.asset_name || 'Quote'}
+                </h1>
+              ) : (
+                <h1 className="text-2xl font-bold text-white">Chat</h1>
+              )}
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsAttachmentPanelOpen(prev => !prev)}
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white/90 hover:text-white hover:bg-white/20 transition-colors"
+          >
+            View Attachments
+          </button>
         </div>
 
         {/* Error state */}
@@ -261,105 +375,220 @@ const ProducerQuoteChat: React.FC = () => {
 
         {/* Chat Interface */}
         {!loading && !error && quoteData && (
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg flex flex-col h-[600px] shadow-lg">
-            {/* Chat Header */}
-            <div className="border-b border-white/20 p-4 bg-white/5">
-              <div className="flex items-center gap-3">
-                <MessageCircle className="w-5 h-5 text-purple-300" />
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Conversation</h2>
-                  <p className="text-sm text-gray-300">
-                    {quoteData.supplier?.supplier_name || 'Supplier'} • {quoteData.asset?.asset_name || 'Quote'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  <p>No messages yet. Start the conversation!</p>
-                </div>
-              ) : (
-                messages.map((message) => {
-                  const isProducer = message.sender_type === 'PRODUCER';
-                  const isInitialRequest = isInitialRequestMessage(message.id);
-                  
-                  return (
-                    <div
-                      key={message.id}
-                      className={`flex ${isProducer ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[75%] rounded-lg p-3 ${
-                          isInitialRequest
-                            ? 'bg-purple-600/80 border-2 border-purple-400 text-white'
-                            : isProducer
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-700 text-gray-100'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-2 mb-1">
-                          <User className="h-4 w-4" />
-                          <span className="text-xs font-medium">
-                            {isInitialRequest ? 'Original Request' : isProducer ? 'Me' : quoteData.supplier?.supplier_name || 'Supplier'}
-                          </span>
-                          <span className={`text-xs ${isProducer || isInitialRequest ? 'text-blue-100' : 'text-gray-400'}`}>
-                            {formatTime(message.created_at)}
-                          </span>
-                        </div>
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                        
-                        {/* Attachments (if present) */}
-                        {message.attachments && message.attachments.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-white/20">
-                            <MessageAttachments 
-                              attachments={message.attachments}
-                              variant={isProducer || isInitialRequest ? 'light' : 'dark'}
-                            />
-                          </div>
-                        )}
-                      </div>
+          <div className="flex flex-col lg:flex-row gap-6 h-full">
+            <div className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-lg flex flex-col h-[600px] shadow-lg flex-1 min-w-0 ${isAttachmentPanelOpen ? '' : 'w-full'}`}>
+              {/* Chat Header */}
+              <div className="border-b border-white/20 p-4 bg-white/5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <MessageCircle className="w-5 h-5 text-purple-300" />
+                    <div>
+                      <h2 className="text-lg font-semibold text-white">Conversation</h2>
+                      <p className="text-sm text-gray-300">
+                        {quoteData.supplier?.supplier_name || 'Supplier'} • {quoteData.asset?.asset_name || 'Quote'}
+                      </p>
                     </div>
-                  );
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsAttachmentPanelOpen(prev => !prev)}
+                    className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                    aria-label="View attachments"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
 
-            {/* Message Input */}
-            <div className="border-t border-white/20 p-4 bg-white/5">
-              <div className="flex space-x-2">
-                <textarea
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyPress={handleMessageKeyPress}
-                  placeholder="Type your message..."
-                  className="flex-1 resize-none bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  rows={2}
-                  disabled={sendingMessage}
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={!messageInput.trim() || sendingMessage}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-                >
-                  {sendingMessage ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                  <span>Send</span>
-                </button>
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {messages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-gray-400">
+                    <p>No messages yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  messages.map((message) => {
+                    const isProducer = message.sender_type === 'PRODUCER';
+                    const isInitialRequest = isInitialRequestMessage(message.id);
+
+                    return (
+                      <div
+                        key={message.id}
+                        id={`msg-${message.id}`}
+                        className={`flex ${isProducer ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[75%] rounded-lg p-3 ${
+                            isInitialRequest
+                              ? 'bg-purple-600/80 border-2 border-purple-400 text-white'
+                              : isProducer
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-700 text-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2 mb-1">
+                            <User className="h-4 w-4" />
+                            <span className="text-xs font-medium">
+                              {isInitialRequest ? 'Original Request' : isProducer ? 'Me' : quoteData.supplier?.supplier_name || 'Supplier'}
+                            </span>
+                            <span className={`text-xs ${isProducer || isInitialRequest ? 'text-blue-100' : 'text-gray-400'}`}>
+                              {formatTime(message.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+
+                          {/* Attachments (if present) */}
+                          {message.attachments && message.attachments.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-white/20">
+                              <MessageAttachments
+                                attachments={message.attachments}
+                                variant={isProducer || isInitialRequest ? 'light' : 'dark'}
+                              />
+                            </div>
+                          )}
+
+                          {message.message_attachments && message.message_attachments.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-white/20 space-y-2">
+                              {message.message_attachments.map((attachment) => {
+                                const attachmentUrl = attachment.storage_url || attachment.public_url;
+                                if (!attachmentUrl) return null;
+                                return (
+                                  <a
+                                    key={attachment.id}
+                                    href={attachmentUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded px-2 py-1"
+                                  >
+                                    <FileText className="h-3.5 w-3.5 text-white/70" />
+                                    <span className="truncate">{attachment.filename}</span>
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message Input */}
+              <div className="border-t border-white/20 p-4 bg-white/5">
+                {selectedFiles.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    {selectedFiles.map((fileItem, index) => {
+                      const fileKey = fileItem.key;
+                      return (
+                        <div
+                          key={fileKey}
+                          className="bg-white/10 border border-white/20 rounded-md px-3 py-2 space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs text-white/90 truncate">
+                              <FileText className="h-3.5 w-3.5 text-white/70" />
+                              <span className="truncate">{fileItem.file.name}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile(index)}
+                              className="text-white/70 hover:text-white"
+                              aria-label="Remove file"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          <textarea
+                            value={attachmentNotes[fileKey] || ''}
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              setAttachmentNotes((prev) => ({
+                                ...prev,
+                                [fileKey]: value
+                              }));
+                            }}
+                            placeholder="Add a note for this attachment..."
+                            rows={2}
+                            className="w-full resize-none rounded-md bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex space-x-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleFileSelectClick}
+                    className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+                    disabled={sendingMessage}
+                    aria-label="Attach files"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </button>
+                  <textarea
+                    ref={messageInputRef}
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    onKeyDown={handleMessageKeyDown}
+                    placeholder="Type your message..."
+                    className="flex-1 resize-none bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    rows={2}
+                    disabled={sendingMessage}
+                  />
+                  <button
+                    onClick={sendMessage}
+                    disabled={(!messageInput.trim() && selectedFiles.length === 0) || sendingMessage}
+                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                  >
+                    {sendingMessage ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    <span>Send</span>
+                  </button>
+                </div>
               </div>
             </div>
+            {isAttachmentPanelOpen && (
+              <div className="hidden lg:block w-96 h-[600px] shrink-0">
+                <AttachmentSidePanel
+                  quoteId={quoteId}
+                  isOpen={isAttachmentPanelOpen}
+                  onClose={() => setIsAttachmentPanelOpen(false)}
+                  onUploadFiles={handlePanelUpload}
+                  uploadDisabled={sendingMessage}
+                  variant="inline"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
+      {quoteId && (
+        <div className="lg:hidden">
+          <AttachmentSidePanel
+            quoteId={quoteId}
+            isOpen={isAttachmentPanelOpen}
+            onClose={() => setIsAttachmentPanelOpen(false)}
+            onUploadFiles={handlePanelUpload}
+            uploadDisabled={sendingMessage}
+            variant="overlay"
+          />
+        </div>
+      )}
     </div>
   );
 };
 
 export default ProducerQuoteChat;
-

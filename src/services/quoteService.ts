@@ -17,6 +17,7 @@ export interface Message {
   is_read: boolean;
   // Optional: For synthetic "initial request" messages only
   attachments?: QuoteRequestAttachment[];
+  message_attachments?: MessageAttachment[];
 }
 
 export interface QuoteRequestAttachment {
@@ -25,6 +26,20 @@ export interface QuoteRequestAttachment {
   filename: string;
   storage_path: string;
   storage_url: string;
+  file_size_bytes: number;
+  content_type: string;
+  created_at: string;
+}
+
+export interface MessageAttachment {
+  id: string;
+  message_id: string;
+  quote_id: string;
+  sender_type: 'PRODUCER' | 'SUPPLIER';
+  filename: string;
+  storage_path: string;
+  storage_url?: string;
+  public_url?: string;
   file_size_bytes: number;
   content_type: string;
   created_at: string;
@@ -94,6 +109,17 @@ export interface QuoteMessagesResponse {
 export interface SendMessageResponse {
   success: boolean;
   data?: Message;
+  message?: string;
+  error?: {
+    code: string;
+    message: string;
+    details?: string;
+  };
+}
+
+export interface MessageAttachmentsResponse {
+  success: boolean;
+  data?: MessageAttachment[];
   message?: string;
   error?: {
     code: string;
@@ -212,7 +238,11 @@ export class QuoteService {
    * @param content - Message content
    * @returns Promise with created message
    */
-  static async sendProducerMessage(quoteId: string, content: string): Promise<SendMessageResponse> {
+  static async sendProducerMessage(
+    quoteId: string,
+    content: string,
+    files: File[] = []
+  ): Promise<SendMessageResponse> {
     if (!RAILWAY_API_URL) {
       return {
         success: false,
@@ -223,12 +253,12 @@ export class QuoteService {
       };
     }
 
-    if (!quoteId || !content) {
+    if (!quoteId || (!content && files.length === 0)) {
       return {
         success: false,
         error: {
           code: 'MISSING_PARAMETERS',
-          message: 'Quote ID and content are required'
+          message: 'Quote ID and content or files are required'
         }
       };
     }
@@ -245,19 +275,98 @@ export class QuoteService {
         };
       }
 
+      const formData = new FormData();
+      formData.append('quoteId', quoteId);
+      formData.append('quote_id', quoteId);
+      formData.append('sender_type', 'PRODUCER');
+      formData.append('content', content.trim());
+      files.forEach((file) => formData.append('files', file));
+
       const response = await fetch(`${RAILWAY_API_URL.replace(/\/$/, '')}/api/messages`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          quoteId,
-          content: content.trim()
-        })
+        body: formData
       });
 
       const data: SendMessageResponse = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: {
+            code: data.error?.code || 'API_ERROR',
+            message: data.error?.message || `HTTP ${response.status}: ${response.statusText}`,
+            details: data.error?.details
+          }
+        };
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Quote service error:', error);
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: error instanceof Error ? error.message : 'Unknown error occurred',
+          details: error instanceof Error ? error.stack : undefined
+        }
+      };
+    }
+  }
+
+  /**
+   * Get message attachments for a specific quote
+   * @param quoteId - Quote ID
+   * @returns Promise with attachments
+   */
+  static async getMessageAttachments(quoteId: string): Promise<MessageAttachmentsResponse> {
+    if (!RAILWAY_API_URL) {
+      return {
+        success: false,
+        error: {
+          code: 'CONFIG_ERROR',
+          message: 'Railway API URL not configured. Please set VITE_RAILWAY_API_URL environment variable.'
+        }
+      };
+    }
+
+    if (!quoteId) {
+      return {
+        success: false,
+        error: {
+          code: 'MISSING_QUOTE_ID',
+          message: 'Quote ID is required'
+        }
+      };
+    }
+
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        return {
+          success: false,
+          error: {
+            code: 'AUTH_ERROR',
+            message: 'Authentication required. Please log in.'
+          }
+        };
+      }
+
+      const response = await fetch(
+        `${RAILWAY_API_URL.replace(/\/$/, '')}/api/quotes/${quoteId}/message-attachments`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      const data: MessageAttachmentsResponse = await response.json();
 
       if (!response.ok) {
         return {

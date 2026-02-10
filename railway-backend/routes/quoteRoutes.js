@@ -74,6 +74,57 @@ quoteRouter.get('/:id/messages', authenticateJWT, async (req, res) => {
 });
 
 /**
+ * GET /api/quotes/:id/message-attachments
+ * Get all message attachments for a specific quote
+ * Protected endpoint - requires JWT authentication
+ */
+quoteRouter.get('/:id/message-attachments', authenticateJWT, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_QUOTE_ID',
+          message: 'Quote ID is required'
+        }
+      });
+    }
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_QUOTE_ID_FORMAT',
+          message: 'Invalid quote ID format'
+        }
+      });
+    }
+
+    const attachments = await PortalService.getMessageAttachmentsForQuote(id);
+
+    res.status(200).json({
+      success: true,
+      data: attachments,
+      message: 'Message attachments retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Get quote message attachments endpoint error:', error);
+
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'An unexpected error occurred while fetching message attachments',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }
+    });
+  }
+});
+
+/**
  * POST /api/quotes/:id/accept
  * Accept a quote and enforce exclusivity
  * Protected endpoint - requires JWT authentication

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { MessageCircle, Send, User, Loader2 } from 'lucide-react';
+import { MessageCircle, Send, User, Loader2, Paperclip, X, FileText } from 'lucide-react';
 import { QuoteService, type Message } from '@/services/quoteService';
 import { useNotification } from '@/hooks/useNotification';
 import { createInitialRequestMessage, isInitialRequestMessage } from '@/utils/quoteRequestMessage';
@@ -10,6 +10,10 @@ interface QuoteChatProps {
   supplierName: string;
   assetName: string;
   onMessageSent?: () => void;
+  externalSelectedFiles?: Array<{ file: File; key: string }>;
+  onSelectedFilesChange?: (files: Array<{ file: File; key: string }>) => void;
+  externalAttachmentNotes?: Record<string, string>;
+  onAttachmentNotesChange?: (notes: Record<string, string>) => void;
 }
 
 /**
@@ -26,17 +30,65 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
   quoteId,
   supplierName,
   assetName,
-  onMessageSent
+  onMessageSent,
+  externalSelectedFiles,
+  onSelectedFilesChange,
+  externalAttachmentNotes,
+  onAttachmentNotesChange
 }) => {
   const { showSuccess, showError } = useNotification();
 
   // Message state
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
+  const [localSelectedFiles, setLocalSelectedFiles] = useState<Array<{ file: File; key: string }>>([]);
+  const [localAttachmentNotes, setLocalAttachmentNotes] = useState<Record<string, string>>({});
   const [sendingMessage, setSendingMessage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const selectedFiles = externalSelectedFiles ?? localSelectedFiles;
+  const attachmentNotes = externalAttachmentNotes ?? localAttachmentNotes;
+
+  const updateSelectedFiles = useCallback((
+    updater:
+      | Array<{ file: File; key: string }>
+      | ((prev: Array<{ file: File; key: string }>) => Array<{ file: File; key: string }>)
+  ) => {
+    const next = typeof updater === 'function' ? updater(selectedFiles) : updater;
+    if (onSelectedFilesChange) {
+      onSelectedFilesChange(next);
+    } else {
+      setLocalSelectedFiles(next);
+    }
+  }, [onSelectedFilesChange, selectedFiles]);
+
+  const updateAttachmentNotes = useCallback((updater: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => {
+    const next = typeof updater === 'function' ? updater(attachmentNotes) : updater;
+    if (onAttachmentNotesChange) {
+      onAttachmentNotesChange(next);
+    } else {
+      setLocalAttachmentNotes(next);
+    }
+  }, [attachmentNotes, onAttachmentNotesChange]);
+
+  const getFileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}-${crypto.randomUUID()}`;
+
+  const buildAttachmentNotes = useCallback(() => {
+    const noteLines = selectedFiles
+      .map((fileItem) => {
+        const note = attachmentNotes[fileItem.key]?.trim();
+        if (!note) return null;
+        return `- ${fileItem.file.name}: ${note}`;
+      })
+      .filter(Boolean);
+
+    if (noteLines.length === 0) return '';
+    return `Attachment notes:\n${noteLines.join('\n')}`;
+  }, [attachmentNotes, selectedFiles]);
 
   // Polling interval ref
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -115,10 +167,11 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
 
   // Send message
   const sendMessage = useCallback(async () => {
-    if (!quoteId || !messageInput.trim() || sendingMessage) return;
+    if (!quoteId || sendingMessage) return;
+    if (!messageInput.trim() && selectedFiles.length === 0) return;
 
-    const content = messageInput.trim();
-    setMessageInput('');
+    const notesText = buildAttachmentNotes();
+    const content = [messageInput.trim(), notesText].filter(Boolean).join('\n\n');
 
     // Optimistic UI: Add message immediately
     const optimisticMessage: Message = {
@@ -135,7 +188,11 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
     scrollToBottom();
 
     try {
-      const response = await QuoteService.sendProducerMessage(quoteId, content);
+      const response = await QuoteService.sendProducerMessage(
+        quoteId,
+        content,
+        selectedFiles.map((item) => item.file)
+      );
       
       if (!response.success || !response.data) {
         // Remove optimistic message on error
@@ -149,6 +206,10 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
         prev.map(m => m.id === optimisticMessage.id ? response.data! : m)
       );
       
+      setMessageInput('');
+      updateSelectedFiles([]);
+      updateAttachmentNotes({});
+      messageInputRef.current?.focus();
       showSuccess('Message sent successfully');
       onMessageSent?.();
     } catch (err) {
@@ -157,15 +218,47 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
       showError('Failed to send message');
     } finally {
       setSendingMessage(false);
+      setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 0);
     }
-  }, [quoteId, messageInput, sendingMessage, scrollToBottom, showSuccess, showError, onMessageSent]);
+  }, [quoteId, messageInput, selectedFiles, sendingMessage, scrollToBottom, showSuccess, showError, onMessageSent, buildAttachmentNotes, updateAttachmentNotes, updateSelectedFiles]);
 
   // Handle Enter key in message input
-  const handleMessageKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleMessageKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const handleFileSelectClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    updateSelectedFiles(prev => [
+      ...prev,
+      ...files.map((file) => ({
+        file,
+        key: getFileKey(file)
+      }))
+    ]);
+    event.target.value = '';
+  };
+
+  const handleRemoveFile = (index: number) => {
+    const fileKey = selectedFiles[index]?.key;
+    updateSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    updateAttachmentNotes((prev) => {
+      const next = { ...prev };
+      if (fileKey) {
+        delete next[fileKey];
+      }
+      return next;
+    });
   };
 
   // Format time for display
@@ -249,6 +342,7 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
               return (
                 <div
                   key={message.id}
+                  id={`msg-${message.id}`}
                   className={`flex ${isProducer ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
@@ -280,6 +374,27 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
                         />
                       </div>
                     )}
+
+                    {message.message_attachments && message.message_attachments.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-white/20 space-y-2">
+                        {message.message_attachments.map((attachment) => {
+                          const attachmentUrl = attachment.storage_url || attachment.public_url;
+                          if (!attachmentUrl) return null;
+                          return (
+                            <a
+                              key={attachment.id}
+                              href={attachmentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded px-2 py-1"
+                            >
+                              <FileText className="h-3.5 w-3.5 text-white/70" />
+                              <span className="truncate">{attachment.filename}</span>
+                            </a>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -291,11 +406,69 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
 
       {/* Message Input */}
       <div className="border-t border-white/20 p-4 bg-white/5">
+        {selectedFiles.length > 0 && (
+          <div className="mb-3 space-y-2">
+            {selectedFiles.map((fileItem, index) => {
+              const fileKey = fileItem.key;
+              return (
+                <div
+                  key={fileKey}
+                  className="bg-white/10 border border-white/20 rounded-md px-3 py-2 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-white/90 truncate">
+                      <FileText className="h-3.5 w-3.5 text-white/70" />
+                      <span className="truncate">{fileItem.file.name}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFile(index)}
+                      className="text-white/70 hover:text-white"
+                      aria-label="Remove file"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <textarea
+                    value={attachmentNotes[fileKey] || ''}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      updateAttachmentNotes((prev) => ({
+                        ...prev,
+                        [fileKey]: value
+                      }));
+                    }}
+                    placeholder="Add a note for this attachment..."
+                    rows={2}
+                    className="w-full resize-none rounded-md bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="flex space-x-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={handleFileSelectClick}
+            className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+            disabled={sendingMessage || loading}
+            aria-label="Attach files"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
           <textarea
+            ref={messageInputRef}
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
-            onKeyPress={handleMessageKeyPress}
+            onKeyDown={handleMessageKeyDown}
             placeholder="Type your message..."
             className="flex-1 resize-none bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             rows={2}
@@ -303,7 +476,7 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
           />
           <button
             onClick={sendMessage}
-            disabled={!messageInput.trim() || sendingMessage || loading}
+            disabled={(!messageInput.trim() && selectedFiles.length === 0) || sendingMessage || loading}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
           >
             {sendingMessage ? (
