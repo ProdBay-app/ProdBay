@@ -83,6 +83,7 @@ export interface Project {
   physical_parameters?: string;
   financial_parameters?: number;
   timeline_deadline?: string;
+  event_date: string | null;
   project_status: 'New' | 'In Progress' | 'Quoting' | 'Completed' | 'Cancelled';
   ai_allocation_completed_at?: string;
   producer_id: string;

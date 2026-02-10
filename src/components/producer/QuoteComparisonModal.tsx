@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, DollarSign, Clock, Calendar, ChevronDown, ChevronUp, CheckCircle, XCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { QuoteComparisonService, type Quote, type Asset, type ComparisonMetrics } from '@/services/quoteComparisonService';
+import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import { getSupabase } from '@/lib/supabase';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
@@ -59,22 +60,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
 
   const handleAcceptQuote = async (quoteId: string) => {
     try {
-      const supabase = await getSupabase();
-      const { error } = await supabase
-        .from('quotes')
-        .update({ status: 'Accepted' })
-        .eq('id', quoteId);
-
-      if (error) throw error;
-
-      // Reject all other quotes for this asset
-      const { error: rejectError } = await supabase
-        .from('quotes')
-        .update({ status: 'Rejected' })
-        .eq('asset_id', assetId)
-        .neq('id', quoteId);
-
-      if (rejectError) throw rejectError;
+      await ProducerService.acceptQuote(quoteId);
 
       showSuccess('Quote accepted successfully');
       loadQuoteComparison(); // Reload data

@@ -69,11 +69,12 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
 
   // Handle accept quote
   const handleAcceptQuote = async () => {
-    if (!quote || quote.status !== 'Submitted') return;
+    const targetQuote = quoteData?.quote || quote;
+    if (!targetQuote || targetQuote.status !== 'Submitted') return;
 
     setAccepting(true);
     try {
-      const result = await ProducerService.acceptQuote(quote.id);
+      await ProducerService.acceptQuote(targetQuote.id);
       
       showSuccess('Quote accepted successfully! The asset has been updated and other quotes have been rejected.');
       
@@ -186,7 +187,8 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
   // Don't render if modal is closed
   if (!isOpen || !quote) return null;
 
-  const statusBadge = getStatusBadge(quote.status || 'Pending');
+  const currentQuote = quoteData?.quote || quote;
+  const statusBadge = getStatusBadge(currentQuote.status || 'Pending');
   const supplierEmail = quoteData?.supplier ? getSupplierPrimaryEmail(quoteData.supplier) : null;
 
   // Render modal using React Portal
@@ -294,37 +296,37 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                     </div>
 
                     {/* Cost */}
-                    {quote.cost > 0 && (
+                    {currentQuote.cost > 0 && (
                       <div>
                         <label className="block text-sm font-semibold text-gray-200 mb-1">
                           Quote Amount
                         </label>
                         <p className="text-2xl font-bold text-white">
-                          {formatCost(quote.cost)}
+                          {formatCost(currentQuote.cost)}
                         </p>
                       </div>
                     )}
 
                     {/* Notes */}
-                    {quote.notes_capacity && quote.notes_capacity.trim() && (
+                    {currentQuote.notes_capacity && currentQuote.notes_capacity.trim() && (
                       <div>
                         <label className="block text-sm font-semibold text-gray-200 mb-2">
                           Notes
                         </label>
                         <p className="text-white text-sm whitespace-pre-wrap leading-relaxed bg-black/30 rounded p-3">
-                          {quote.notes_capacity}
+                          {currentQuote.notes_capacity}
                         </p>
                       </div>
                     )}
 
                     {/* PDF Document */}
-                    {quote.quote_document_url && (
+                    {currentQuote.quote_document_url && (
                       <div>
                         <label className="block text-sm font-semibold text-gray-200 mb-2">
                           Quote Document
                         </label>
                         <a
-                          href={quote.quote_document_url}
+                          href={currentQuote.quote_document_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -361,20 +363,20 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                         <label className="block text-xs font-semibold text-gray-300 mb-1">
                           Created
                         </label>
-                        <p className="text-white text-sm">{formatDate(quote.created_at)}</p>
+                        <p className="text-white text-sm">{formatDate(currentQuote.created_at)}</p>
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-gray-300 mb-1">
                           Updated
                         </label>
-                        <p className="text-white text-sm">{formatDate(quote.updated_at)}</p>
+                        <p className="text-white text-sm">{formatDate(currentQuote.updated_at)}</p>
                       </div>
                     </div>
                   </div>
                 </section>
 
                 {/* Accept Quote Button */}
-                {quote.status === 'Submitted' && (
+                {currentQuote.status === 'Submitted' && (
                   <section>
                     <button
                       onClick={handleAcceptQuote}

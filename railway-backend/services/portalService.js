@@ -14,6 +14,17 @@ const getPublicUrl = (storagePath) => {
   return `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/quote-attachments/${storagePath}`;
 };
 
+const sanitizeProjectForPortal = (project) => {
+  if (!project) return null;
+
+  return {
+    id: project.id,
+    event_date: project.event_date || null,
+    location: project.physical_parameters || null,
+    timeline_deadline: project.timeline_deadline || null
+  };
+};
+
 /**
  * Portal Service
  * Handles business logic for supplier portal and messaging
@@ -43,15 +54,10 @@ class PortalService {
             *,
             project:projects(
               id,
-              project_name,
-              client_name,
-              brief_description,
+              event_date,
               physical_parameters,
               timeline_deadline,
-              project_status,
-              producer_id,
-              created_at,
-              updated_at
+              producer_id
             )
           ),
           request_attachments:quote_request_attachments(*)
@@ -139,6 +145,8 @@ class PortalService {
         message_attachments: attachmentsByMessageId[message.id] || []
       }));
 
+      const { project: _assetProject, ...assetWithoutProject } = quote.asset || {};
+
       return {
         quote: {
           id: quote.id,
@@ -153,8 +161,8 @@ class PortalService {
           created_at: quote.created_at,
           updated_at: quote.updated_at
         },
-        asset: quote.asset,
-        project: quote.asset?.project,
+        asset: assetWithoutProject,
+        project: sanitizeProjectForPortal(quote.asset?.project),
         supplier: quote.supplier,
         messages: messagesWithAttachments
       };

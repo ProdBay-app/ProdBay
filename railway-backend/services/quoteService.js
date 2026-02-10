@@ -1,4 +1,11 @@
 const { supabase } = require('../config/database');
+const emailService = require('./emailService');
+
+const getPrimaryContact = (supplier) => {
+  const contactPersons = Array.isArray(supplier?.contact_persons) ? supplier.contact_persons : [];
+  if (contactPersons.length === 0) return null;
+  return contactPersons.find((person) => person.is_primary || person.isPrimary) || contactPersons[0];
+};
 
 /**
  * Quote Service
@@ -25,7 +32,26 @@ class QuoteService {
       // Fetch the quote with asset_id and supplier_id
       const { data: quote, error: quoteError } = await supabase
         .from('quotes')
-        .select('id, asset_id, supplier_id, status, cost')
+        .select(`
+          id,
+          asset_id,
+          supplier_id,
+          status,
+          cost,
+          supplier:suppliers(
+            supplier_name,
+            contact_email,
+            contact_persons
+          ),
+          asset:assets(
+            id,
+            asset_name,
+            project:projects(
+              id,
+              project_name
+            )
+          )
+        `)
         .eq('id', quoteId)
         .single();
 
@@ -108,6 +134,44 @@ class QuoteService {
           .eq('id', quoteId);
         // Attempt to rollback rejected quotes (this is complex without transactions)
         throw new Error(`Failed to update asset: ${updateAssetError.message}`);
+      }
+
+      // Side effect 1: Insert system-style producer message into quote chat
+      const acceptanceMessage = 'Quote Accepted. Looking forward to working together.';
+      const { error: messageInsertError } = await supabase
+        .from('messages')
+        .insert({
+          quote_id: quoteId,
+          sender_type: 'PRODUCER',
+          content: acceptanceMessage,
+          is_read: false
+        });
+
+      if (messageInsertError) {
+        // Log and continue so acceptance itself is not blocked by notification failures
+        console.error('Failed to insert acceptance message:', messageInsertError);
+      }
+
+      // Side effect 2: Notify supplier by email
+      const primaryContact = getPrimaryContact(quote.supplier);
+      const supplierEmail = primaryContact?.email || quote.supplier?.contact_email || null;
+      const supplierName = primaryContact?.name || quote.supplier?.supplier_name || 'Supplier';
+      const quoteTitle = quote.asset?.asset_name || 'Quote';
+      const projectName = quote.asset?.project?.project_name || null;
+
+      if (supplierEmail) {
+        const emailResult = await emailService.sendQuoteAcceptedEmail(
+          supplierEmail,
+          supplierName,
+          projectName,
+          quoteTitle
+        );
+
+        if (!emailResult.success) {
+          console.error('Failed to send quote accepted email:', emailResult.error);
+        }
+      } else {
+        console.warn(`No supplier email found for accepted quote ${quoteId}; skipping acceptance email.`);
       }
 
       return {

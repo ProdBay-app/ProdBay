@@ -34,6 +34,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [activeQuote, setActiveQuote] = useState<Quote | null>(null);
+  const [quotesRefreshKey, setQuotesRefreshKey] = useState(0);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [tagSearchTerm, setTagSearchTerm] = useState('');
   
@@ -565,6 +566,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
             assetName={asset.asset_name}
             onQuoteClick={handleQuoteClick}
             onOpenRequestModal={handleOpenRequestModal}
+            refreshTrigger={quotesRefreshKey}
           />
         </section>
 
@@ -647,7 +649,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
         quote={activeQuote}
         onClose={() => setActiveQuote(null)}
         onQuoteUpdate={() => {
-          // Refresh quotes if needed
+          setQuotesRefreshKey((prev) => prev + 1);
         }}
       />
       {/* Enhanced Request Quote Flow - Rendered at AssetDetailModal level to prevent unmounting */}
