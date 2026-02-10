@@ -158,6 +158,23 @@ const AssetList: React.FC<AssetListProps> = ({
     }
   };
 
+  // Keep detail modal in sync with parent-owned asset list
+  useEffect(() => {
+    if (!viewingAsset) return;
+
+    const currentAsset = assets.find(asset => asset.id === viewingAsset.id);
+    if (!currentAsset) {
+      setIsDetailModalOpen(false);
+      setViewingAsset(null);
+      return;
+    }
+
+    // Refresh modal data when parent sends updated asset values
+    if (currentAsset !== viewingAsset) {
+      setViewingAsset(currentAsset);
+    }
+  }, [assets, viewingAsset]);
+
   // Filter and sort assets
   const filteredAndSortedAssets = useMemo(() => {
     let filtered = assets;

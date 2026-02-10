@@ -40,8 +40,36 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      // Success - redirect to producer dashboard
+      // Success - redirect new users to onboarding
       if (data.user) {
+        try {
+          const [projectsCountResult, suppliersCountResult] = await Promise.all([
+            supabase
+              .from('projects')
+              .select('id', { count: 'exact', head: true })
+              .eq('producer_id', data.user.id),
+            supabase
+              .from('suppliers')
+              .select('id', { count: 'exact', head: true })
+          ]);
+
+          if (projectsCountResult.error) throw projectsCountResult.error;
+          if (suppliersCountResult.error) throw suppliersCountResult.error;
+
+          const hasCompanyInfo = typeof data.user.user_metadata?.company_name === 'string' &&
+            data.user.user_metadata.company_name.trim().length > 0;
+
+          const hasProjects = (projectsCountResult.count ?? 0) > 0;
+          const hasSuppliers = (suppliersCountResult.count ?? 0) > 0;
+
+          if (!hasCompanyInfo || !hasProjects || !hasSuppliers) {
+            navigate('/onboarding');
+            return;
+          }
+        } catch (routingError) {
+          console.warn('[Login] Failed onboarding check, falling back to dashboard:', routingError);
+        }
+
         navigate('/producer/dashboard');
       }
     } catch (err) {

@@ -63,7 +63,7 @@ const SignUpPage: React.FC = () => {
 
     try {
       // Get the current origin for email redirect
-      const redirectTo = `${window.location.origin}/login`;
+      const redirectTo = `${window.location.origin}/onboarding`;
 
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -79,7 +79,14 @@ const SignUpPage: React.FC = () => {
         return;
       }
 
-      // Success - user created (but needs email verification)
+      // Success - if a session is immediately created, send user to onboarding.
+      // Otherwise, keep the existing email verification flow.
+      if (data.session && data.user) {
+        navigate('/onboarding');
+        return;
+      }
+
+      // Success - user created (email verification flow)
       if (data.user) {
         setSuccessEmail(email);
         setSuccess(true);
