@@ -9,6 +9,7 @@ export interface ProjectFormData {
   physical_parameters: string;
   financial_parameters: number | undefined;
   timeline_deadline: string;
+  event_date: string;
 }
 
 export interface AssetFormData {
@@ -131,6 +132,7 @@ export class ProducerService {
         physical_parameters: projectData.physical_parameters,
         financial_parameters: projectData.financial_parameters ?? 0,
         timeline_deadline: projectData.timeline_deadline || null,
+        event_date: projectData.event_date || null,
         project_status: 'New',
         producer_id: user.id // Assign ownership to the current user
       })
@@ -157,7 +159,8 @@ export class ProducerService {
         brief_description: projectData.brief_description,
         physical_parameters: projectData.physical_parameters,
         financial_parameters: projectData.financial_parameters ?? null,
-        timeline_deadline: projectData.timeline_deadline || null
+        timeline_deadline: projectData.timeline_deadline || null,
+        event_date: projectData.event_date || null
       })
       .eq('id', projectId);
 

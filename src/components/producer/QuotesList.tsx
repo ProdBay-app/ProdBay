@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FileText, Building2, Mail, DollarSign, Plus, Clock, AlertCircle, Loader2, BarChart3, MessageCircle } from 'lucide-react';
+import { FileText, Building2, Mail, DollarSign, Plus, Clock, AlertCircle, Loader2, BarChart3, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import QuoteComparisonModal from './QuoteComparisonModal';
@@ -11,6 +11,7 @@ interface QuotesListProps {
   assetName: string;
   onQuoteClick?: (quote: Quote) => void;
   onOpenRequestModal: () => void;
+  refreshTrigger?: number;
 }
 
 /**
@@ -25,13 +26,14 @@ interface QuotesListProps {
  * - Loading and error states
  * - Empty state when no quotes exist
  */
-const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClick, onOpenRequestModal }) => {
+const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClick, onOpenRequestModal, refreshTrigger }) => {
   const { showError } = useNotification();
   
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
+  const [showRejected, setShowRejected] = useState(false);
   
   // Polling refs
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -83,14 +85,31 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
     };
   }, [fetchQuotes]);
 
+  // Refresh on demand from parent (e.g., after accept in detail modal)
+  useEffect(() => {
+    if (refreshTrigger !== undefined && !loadingRef.current) {
+      fetchQuotes();
+    }
+  }, [refreshTrigger, fetchQuotes]);
+
   // Handle quote updates from comparison modal (accepts/rejects)
   const handleQuoteUpdate = () => {
     // Refresh quotes list after accept/reject actions
     fetchQuotes();
   };
 
+  const winnerQuote = quotes.find((quote) => quote.status === 'Accepted') || null;
+  const activeQuotes = quotes.filter((quote) => quote.status === 'Pending' || quote.status === 'Submitted');
+  const rejectedQuotes = quotes.filter((quote) => quote.status === 'Rejected');
+
+  useEffect(() => {
+    if (rejectedQuotes.length === 0 && showRejected) {
+      setShowRejected(false);
+    }
+  }, [rejectedQuotes.length, showRejected]);
+
   // Check if we have multiple submitted quotes (for comparison button)
-  const hasMultipleSubmittedQuotes = quotes.filter(
+  const hasMultipleSubmittedQuotes = activeQuotes.filter(
     q => q.status === 'Submitted' && q.cost > 0
   ).length > 1;
 
@@ -146,6 +165,135 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
       day: 'numeric',
       year: 'numeric'
     });
+  };
+
+  const renderQuoteCard = (quote: Quote, options?: { isWinner?: boolean; dimmed?: boolean }) => {
+    const { isWinner = false, dimmed = false } = options || {};
+    const badge = getStatusBadge(quote);
+    const isPending = quote.status === 'Pending' || (quote.status === 'Submitted' && quote.cost === 0);
+    const hasResponseDetails = quote.status === 'Submitted' || quote.status === 'Accepted' || quote.status === 'Rejected';
+    const supplierEmail = quote.supplier ? getSupplierPrimaryEmail(quote.supplier) : null;
+
+    return (
+      <div
+        key={quote.id}
+        className={[
+          'bg-white/10 backdrop-blur-md border rounded-lg p-4 hover:bg-white/20 transition-colors',
+          isWinner ? 'border-green-500/80 bg-green-500/10' : 'border-white/20',
+          dimmed ? 'opacity-75' : ''
+        ].join(' ')}
+      >
+        {/* Supplier Name and Status */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2 flex-1">
+            <Building2 className="w-5 h-5 text-purple-300 flex-shrink-0" />
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold text-white">
+                  {quote.supplier?.supplier_name || 'Unknown Supplier'}
+                </h4>
+                {isWinner && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/30 text-green-200 border border-green-400/50">
+                    Winner
+                  </span>
+                )}
+              </div>
+              {supplierEmail && (
+                <div className="flex items-center gap-1.5 text-sm text-gray-300 mt-0.5">
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>{supplierEmail}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Status Badge */}
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.className}`}>
+            {badge.icon}
+            {badge.text}
+          </span>
+        </div>
+
+        {/* Cost or Pending Indicator */}
+        <div className="flex items-center justify-between pt-3 border-t border-white/10">
+          <div className="flex items-center gap-4">
+            {/* Cost Display */}
+            {isPending ? (
+              <div className="flex items-center gap-2 text-amber-300">
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">Awaiting supplier response</span>
+              </div>
+            ) : quote.cost > 0 ? (
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-gray-300" />
+                <span className="text-lg font-bold text-white">
+                  {formatCost(quote.cost)}
+                </span>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Created Date */}
+            <div className="text-xs text-gray-400">
+              Requested {formatDate(quote.created_at)}
+            </div>
+
+            {/* View Details Button */}
+            <button
+              onClick={() => onQuoteClick?.(quote)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+              title="View quote details and chat"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>View Details</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Notes (for supplier responses) */}
+        {hasResponseDetails && quote.notes_capacity && quote.notes_capacity.trim() && (
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <p className="text-sm font-semibold text-gray-300 mb-2">Notes:</p>
+            <p className="text-white text-sm whitespace-pre-wrap leading-relaxed">
+              {quote.notes_capacity}
+            </p>
+          </div>
+        )}
+
+        {/* PDF Document Link (for supplier responses) */}
+        {hasResponseDetails && quote.quote_document_url && (
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <a
+              href={quote.quote_document_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              title="View quote PDF document"
+            >
+              <FileText className="w-4 h-4" />
+              <span>View Quote PDF</span>
+            </a>
+          </div>
+        )}
+
+        {/* Service Categories (if available) */}
+        {quote.supplier?.service_categories && quote.supplier.service_categories.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <div className="flex flex-wrap gap-1.5">
+              {quote.supplier.service_categories.map((category, idx) => (
+                <span
+                  key={idx}
+                  className="px-2 py-0.5 text-xs bg-purple-500/20 text-purple-200 rounded border border-purple-400/50"
+                >
+                  {category}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Loading state
@@ -236,121 +384,25 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
         </div>
       ) : (
         <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-          {quotes.map((quote) => {
-            const badge = getStatusBadge(quote);
-            const isPending = quote.status === 'Pending' || (quote.status === 'Submitted' && quote.cost === 0);
-            const supplierEmail = quote.supplier ? getSupplierPrimaryEmail(quote.supplier) : null;
-
-            return (
-              <div
-                key={quote.id}
-                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-4 hover:bg-white/20 transition-colors"
+          {winnerQuote && renderQuoteCard(winnerQuote, { isWinner: true })}
+          {activeQuotes.map((quote) => renderQuoteCard(quote))}
+          {rejectedQuotes.length > 0 && (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowRejected((prev) => !prev)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-colors text-sm text-gray-200"
               >
-                {/* Supplier Name and Status */}
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2 flex-1">
-                    <Building2 className="w-5 h-5 text-purple-300 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-white">
-                        {quote.supplier?.supplier_name || 'Unknown Supplier'}
-                      </h4>
-                      {supplierEmail && (
-                        <div className="flex items-center gap-1.5 text-sm text-gray-300 mt-0.5">
-                          <Mail className="w-3.5 h-3.5" />
-                          <span>{supplierEmail}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Status Badge */}
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${badge.className}`}>
-                    {badge.icon}
-                    {badge.text}
-                  </span>
+                <span>{showRejected ? 'Hide' : 'Show'} {rejectedQuotes.length} rejected quote{rejectedQuotes.length > 1 ? 's' : ''}</span>
+                {showRejected ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              {showRejected && (
+                <div className="mt-3 space-y-3">
+                  {rejectedQuotes.map((quote) => renderQuoteCard(quote, { dimmed: true }))}
                 </div>
-
-                {/* Cost or Pending Indicator */}
-                <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                  <div className="flex items-center gap-4">
-                    {/* Cost Display */}
-                    {isPending ? (
-                      <div className="flex items-center gap-2 text-amber-300">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm font-medium">Awaiting supplier response</span>
-                      </div>
-                    ) : quote.cost > 0 ? (
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-gray-300" />
-                        <span className="text-lg font-bold text-white">
-                          {formatCost(quote.cost)}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    {/* Created Date */}
-                    <div className="text-xs text-gray-400">
-                      Requested {formatDate(quote.created_at)}
-                    </div>
-
-                    {/* View Details Button */}
-                    <button
-                      onClick={() => onQuoteClick?.(quote)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                      title="View quote details and chat"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>View Details</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Notes (for submitted quotes) */}
-                {quote.status === 'Submitted' && quote.notes_capacity && quote.notes_capacity.trim() && (
-                  <div className="mt-3 pt-3 border-t border-white/10">
-                    <p className="text-sm font-semibold text-gray-300 mb-2">Notes:</p>
-                    <p className="text-white text-sm whitespace-pre-wrap leading-relaxed">
-                      {quote.notes_capacity}
-                    </p>
-                  </div>
-                )}
-
-                {/* PDF Document Link (for submitted quotes) */}
-                {quote.status === 'Submitted' && quote.quote_document_url && (
-                  <div className="mt-3 pt-3 border-t border-white/10">
-                    <a
-                      href={quote.quote_document_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                      title="View quote PDF document"
-                    >
-                      <FileText className="w-4 h-4" />
-                      <span>View Quote PDF</span>
-                    </a>
-                  </div>
-                )}
-
-                {/* Service Categories (if available) */}
-                {quote.supplier?.service_categories && quote.supplier.service_categories.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-white/10">
-                    <div className="flex flex-wrap gap-1.5">
-                      {quote.supplier.service_categories.map((category, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-0.5 text-xs bg-purple-500/20 text-purple-200 rounded border border-purple-400/50"
-                        >
-                          {category}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              )}
+            </div>
+          )}
         </div>
       )}
 

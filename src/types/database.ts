@@ -19,6 +19,7 @@ export interface Project {
   physical_parameters: string;
   financial_parameters: number;
   timeline_deadline: string | null;
+  event_date: string | null;
   project_status: ProjectStatus;
   producer_id: string;
   created_at: string;

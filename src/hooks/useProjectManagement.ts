@@ -48,7 +48,8 @@ export const useProjectManagement = (): UseProjectManagementReturn => {
     brief_description: '',
     physical_parameters: '',
     financial_parameters: 0 as number | undefined,
-    timeline_deadline: ''
+    timeline_deadline: '',
+    event_date: ''
   });
   const [allocationMethod, setAllocationMethod] = useState<'static' | 'ai'>('static');
 
@@ -89,7 +90,8 @@ export const useProjectManagement = (): UseProjectManagementReturn => {
       brief_description: '',
       physical_parameters: '',
       financial_parameters: undefined,
-      timeline_deadline: ''
+      timeline_deadline: '',
+      event_date: ''
     });
     setAllocationMethod('static');
     setShowProjectModal(true);
@@ -105,7 +107,8 @@ export const useProjectManagement = (): UseProjectManagementReturn => {
       brief_description: currentProject.brief_description || '',
       physical_parameters: currentProject.physical_parameters || '',
       financial_parameters: currentProject.financial_parameters,
-      timeline_deadline: currentProject.timeline_deadline || ''
+      timeline_deadline: currentProject.timeline_deadline || '',
+      event_date: currentProject.event_date || ''
     });
     setAllocationMethod('static');
     setShowProjectModal(true);

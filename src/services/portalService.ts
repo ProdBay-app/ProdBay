@@ -69,15 +69,9 @@ export interface Asset {
 
 export interface Project {
   id: string;
-  project_name: string;
-  client_name: string;
-  brief_description: string;
-  physical_parameters?: string;
-  timeline_deadline?: string;  // Date string
-  project_status: string;
-  // financial_parameters is NOT included (intentionally excluded)
-  created_at: string;
-  updated_at: string;
+  event_date: string | null;
+  location: string | null;
+  timeline_deadline: string | null;
 }
 
 export interface Supplier {

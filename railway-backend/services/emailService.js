@@ -496,6 +496,85 @@ class EmailService {
       };
     }
   }
+
+  /**
+   * Send quote accepted notification to supplier
+   * NOTE: projectName is accepted in the signature for compatibility, but intentionally
+   * not included in subject/body to avoid exposing project identifiers.
+   *
+   * @param {string} toEmail - Supplier email
+   * @param {string} supplierName - Supplier name/contact name
+   * @param {string|null} projectName - Optional project name (not used in content)
+   * @param {string} quoteTitle - Quote/asset title
+   * @returns {Promise<Object>} Result with success status and messageId or error
+   */
+  async sendQuoteAcceptedEmail(toEmail, supplierName, projectName, quoteTitle) {
+    try {
+      if (!toEmail || !supplierName || !quoteTitle) {
+        throw new Error('Missing required parameters: toEmail, supplierName, and quoteTitle are required');
+      }
+
+      if (!this.resend) {
+        return {
+          success: false,
+          error: 'Email service not configured. RESEND_API_KEY is missing.'
+        };
+      }
+
+      const safeSupplierName = escapeHtml(supplierName);
+      const safeQuoteTitle = escapeHtml(quoteTitle);
+      // Intentionally omitting projectName from subject/body per privacy requirement.
+      const emailSubject = 'Your Quote was Accepted';
+      const plainBody =
+        `Good news, ${safeSupplierName}!\n\n` +
+        `Your quote "${safeQuoteTitle}" has been accepted.\n` +
+        `The producer will be in touch shortly.\n\n` +
+        `Best regards,\nProdBay Team`;
+
+      const htmlBodyContent =
+        `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
+        `Good news, <strong>${safeSupplierName}</strong>!</p>` +
+        `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
+        `Your quote "<strong>${safeQuoteTitle}</strong>" has been accepted.</p>` +
+        `<p style="margin: 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
+        `The producer will be in touch shortly.</p>`;
+
+      const htmlBody = generateEmailHtml({
+        title: 'Quote Accepted',
+        body: htmlBodyContent,
+        ctaLink: null,
+        ctaText: null,
+        footerText: 'ProdBay - Production Management Platform'
+      });
+
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [toEmail],
+        subject: emailSubject,
+        text: plainBody,
+        html: htmlBody
+      });
+
+      if (error) {
+        return {
+          success: false,
+          error: error.message || 'Failed to send email via Resend'
+        };
+      }
+
+      return {
+        success: true,
+        messageId: data?.id,
+        error: null
+      };
+    } catch (error) {
+      console.error('Error in sendQuoteAcceptedEmail:', error);
+      return {
+        success: false,
+        error: error.message || 'Unknown error occurred while sending email'
+      };
+    }
+  }
 }
 
 /**

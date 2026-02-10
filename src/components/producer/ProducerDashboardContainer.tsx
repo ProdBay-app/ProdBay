@@ -156,7 +156,8 @@ const ProducerDashboardContainer: React.FC = () => {
     brief_description: '',
     physical_parameters: '',
     financial_parameters: 0 as number | undefined,
-    timeline_deadline: ''
+    timeline_deadline: '',
+    event_date: ''
   });
   const [assetForm, setAssetForm] = useState<AssetFormData>({
     id: undefined,
@@ -224,7 +225,8 @@ const ProducerDashboardContainer: React.FC = () => {
         brief_description: '',
         physical_parameters: '',
         financial_parameters: undefined,
-        timeline_deadline: ''
+        timeline_deadline: '',
+        event_date: ''
       });
       setAllocationMethod('static');
       setShowProjectModal(true);
@@ -295,7 +297,8 @@ const ProducerDashboardContainer: React.FC = () => {
       brief_description: '',
       physical_parameters: '',
       financial_parameters: undefined,
-      timeline_deadline: ''
+      timeline_deadline: '',
+      event_date: ''
     });
     setAllocationMethod('static');
     setShowProjectModal(true);
@@ -310,7 +313,8 @@ const ProducerDashboardContainer: React.FC = () => {
       brief_description: selectedProject.brief_description || '',
       physical_parameters: selectedProject.physical_parameters || '',
       financial_parameters: selectedProject.financial_parameters,
-      timeline_deadline: selectedProject.timeline_deadline || ''
+      timeline_deadline: selectedProject.timeline_deadline || '',
+      event_date: selectedProject.event_date || ''
     });
     setAllocationMethod('static');
     setShowProjectModal(true);

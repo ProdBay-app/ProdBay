@@ -327,24 +327,6 @@ const QuotePortal: React.FC = () => {
     }
   };
 
-  // Get status badge styling
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'New':
-        return 'bg-blue-500/30 text-blue-200 border-blue-400/50';
-      case 'In Progress':
-        return 'bg-yellow-500/30 text-yellow-200 border-yellow-400/50';
-      case 'Quoting':
-        return 'bg-purple-500/30 text-purple-200 border-purple-400/50';
-      case 'Completed':
-        return 'bg-green-500/30 text-green-200 border-green-400/50';
-      case 'Cancelled':
-        return 'bg-red-500/30 text-red-200 border-red-400/50';
-      default:
-        return 'bg-gray-500/30 text-gray-200 border-gray-400/50';
-    }
-  };
-
   // Error state
   if (error || (loading === false && !session)) {
     return (
@@ -393,7 +375,7 @@ const QuotePortal: React.FC = () => {
             </h1>
             {project && (
               <p className="text-gray-300 text-sm">
-                {project.project_name} • {project.client_name}
+                Project details
               </p>
             )}
           </div>
@@ -425,49 +407,34 @@ const QuotePortal: React.FC = () => {
                 <h2 className="text-lg font-semibold text-white">Project Context</h2>
               </div>
               <div className="space-y-4 text-sm">
-                {/* Project Name */}
+                {/* Event Date */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Project</label>
-                  <p className="text-white">{project.project_name}</p>
-                </div>
-
-                {/* Client Name */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Client</label>
-                  <p className="text-white">{project.client_name}</p>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1 flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Event Date
+                  </label>
+                  <p className="text-white">{formatProjectDate(project.event_date || undefined)}</p>
                 </div>
 
                 {/* Timeline/Deadline */}
-                {project.timeline_deadline && (
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1 flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
-                      Deadline
-                    </label>
-                    <p className="text-white">{formatProjectDate(project.timeline_deadline)}</p>
-                  </div>
-                )}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1 flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Deadline
+                  </label>
+                  <p className="text-white">{formatProjectDate(project.timeline_deadline || undefined)}</p>
+                </div>
 
-                {/* Physical Parameters (may contain location/logistics) */}
-                {project.physical_parameters && project.physical_parameters.trim() && (
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1 flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5" />
-                      Location & Logistics
-                    </label>
-                    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{project.physical_parameters}</p>
-                  </div>
-                )}
-
-                {/* Project Status */}
-                {project.project_status && (
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">Status</label>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(project.project_status)}`}>
-                      {project.project_status}
-                    </span>
-                  </div>
-                )}
+                {/* Location */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1 flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    Location
+                  </label>
+                  <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                    {project.location?.trim() ? project.location.trim() : 'Not specified'}
+                  </p>
+                </div>
               </div>
             </div>
           )}

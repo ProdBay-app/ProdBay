@@ -60,7 +60,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     brief_description: '',
     physical_parameters: '',
     financial_parameters: undefined,
-    timeline_deadline: ''
+    timeline_deadline: '',
+    event_date: ''
   });
   const [allocationMethod, setAllocationMethod] = useState<'static' | 'ai'>('static');
   
@@ -231,7 +232,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         brief_description: '',
         physical_parameters: '',
         financial_parameters: undefined,
-        timeline_deadline: ''
+        timeline_deadline: '',
+        event_date: ''
       });
       setAllocationMethod('static');
       setShowProjectModal(true);
@@ -264,7 +266,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       brief_description: '',
       physical_parameters: '',
       financial_parameters: undefined,
-      timeline_deadline: ''
+      timeline_deadline: '',
+      event_date: ''
     });
     setAllocationMethod('static');
     setShowProjectModal(true);
@@ -289,7 +292,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       brief_description: '',
       physical_parameters: '',
       financial_parameters: undefined,
-      timeline_deadline: ''
+      timeline_deadline: '',
+      event_date: ''
     });
   }, []);
 
