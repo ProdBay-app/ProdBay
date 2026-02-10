@@ -122,8 +122,6 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
         'animate-pulse'
       );
     }, 1500);
-
-    onClose();
   };
 
   const handleUploadClick = () => {

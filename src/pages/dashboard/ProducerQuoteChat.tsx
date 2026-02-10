@@ -214,6 +214,11 @@ const ProducerQuoteChat: React.FC = () => {
       showError('Failed to send message');
     } finally {
       setSendingMessage(false);
+      if (options.focusInput) {
+        setTimeout(() => {
+          messageInputRef.current?.focus();
+        }, 0);
+      }
     }
   }, [quoteId, sendingMessage, scrollToBottom, showSuccess, showError]);
 

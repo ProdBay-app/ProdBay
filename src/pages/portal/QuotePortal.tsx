@@ -194,6 +194,11 @@ const QuotePortal: React.FC = () => {
       showError('Failed to send message');
     } finally {
       setSendingMessage(false);
+      if (options.focusInput) {
+        setTimeout(() => {
+          messageInputRef.current?.focus();
+        }, 0);
+      }
     }
   }, [token, sendingMessage, session, scrollToBottom, showSuccess, showError]);
 

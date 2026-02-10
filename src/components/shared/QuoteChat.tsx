@@ -218,6 +218,9 @@ const QuoteChat: React.FC<QuoteChatProps> = ({
       showError('Failed to send message');
     } finally {
       setSendingMessage(false);
+      setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 0);
     }
   }, [quoteId, messageInput, selectedFiles, sendingMessage, scrollToBottom, showSuccess, showError, onMessageSent, buildAttachmentNotes, updateAttachmentNotes, updateSelectedFiles]);
 
