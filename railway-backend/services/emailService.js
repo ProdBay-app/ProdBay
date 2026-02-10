@@ -526,8 +526,8 @@ class EmailService {
       // Intentionally omitting projectName from subject/body per privacy requirement.
       const emailSubject = 'Your Quote was Accepted';
       const plainBody =
-        `Good news, ${supplierName}!\n\n` +
-        `Your quote "${quoteTitle}" has been accepted.\n` +
+        `Good news, ${safeSupplierName}!\n\n` +
+        `Your quote "${safeQuoteTitle}" has been accepted.\n` +
         `The producer will be in touch shortly.\n\n` +
         `Best regards,\nProdBay Team`;
 
