@@ -231,6 +231,9 @@ const ProjectDetailPage: React.FC = () => {
       // Add to local assets state
       setAssets(prev => [...prev, newAsset]);
 
+      // Show success feedback before closing modal
+      showSuccess(`Asset "${newAsset.asset_name}" created successfully!`);
+
       // Close modal
       setIsAddModalOpen(false);
     } catch (err) {

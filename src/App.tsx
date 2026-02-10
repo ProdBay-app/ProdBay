@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { SupplierImpersonationProvider } from '@/contexts/SupplierImpersonationContext';
 import LoadingFallback from '@/components/LoadingFallback';
@@ -20,6 +21,7 @@ const ActiveProjectsGrid = lazy(() => import('@/components/producer/ActiveProjec
 const AllProjectsPage = lazy(() => import('@/components/producer/AllProjectsPage'));
 const ProjectDetailPage = lazy(() => import('@/components/producer/ProjectDetailPage'));
 const SupplierManagement = lazy(() => import('@/components/producer/SupplierManagement'));
+const ProducerSettings = lazy(() => import('@/pages/dashboard/ProducerSettings'));
 const AdminDashboard = lazy(() => import('@/components/admin/AdminDashboard'));
 const QuoteSubmission = lazy(() => import('@/components/supplier/QuoteSubmission'));
 const SupplierDashboard = lazy(() => import('@/components/supplier/SupplierDashboardContainer'));
@@ -31,6 +33,25 @@ const QuotePortal = lazy(() => import('@/pages/portal/QuotePortal'));
 
 // Producer chat route
 const ProducerQuoteChat = lazy(() => import('@/pages/dashboard/ProducerQuoteChat'));
+const OnboardingPage = lazy(() => import('@/pages/onboarding/OnboardingPage'));
+
+interface RequireAuthProps {
+  children: JSX.Element;
+}
+
+const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingFallback />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
 
 function App() {
   return (
@@ -75,6 +96,19 @@ function App() {
             <Route path="projects" element={<AllProjectsPage />} />
             <Route path="projects/:projectId" element={<ProjectDetailPage />} />
             <Route path="suppliers" element={<SupplierManagement />} />
+            <Route path="settings" element={<ProducerSettings />} />
+          </Route>
+
+          {/* Onboarding route */}
+          <Route
+            path="/onboarding"
+            element={
+              <RequireAuth>
+                <Layout />
+              </RequireAuth>
+            }
+          >
+            <Route index element={<OnboardingPage />} />
           </Route>
           
           {/* Dashboard routes (shared between producer and other roles) */}
