@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChevronDown, MapPin } from 'lucide-react';
 import SearchBar from './SearchBar';
 import CategoryFilter from './CategoryFilter';
 import RoleFilter from './RoleFilter';
@@ -51,6 +52,7 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
       hasContactPersons: null,
       dateRange: { start: null, end: null }
     });
+    onSelectedCityChange('');
   };
 
   const clearSearch = () => updateFilter('searchTerm', '');
@@ -81,19 +83,23 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
             suppliers={suppliers}
           />
 
-          <select
-            value={selectedCity}
-            onChange={(e) => onSelectedCityChange(e.target.value)}
-            className="px-4 py-2 bg-black/20 border border-white/20 rounded-lg text-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-            aria-label="Filter by region"
-          >
-            <option value="">All Regions</option>
-            {availableCities.map((city) => (
-              <option key={city} value={city} className="text-black">
-                {city}
-              </option>
-            ))}
-          </select>
+          <div className="relative flex items-center space-x-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-transparent text-sm transition-colors md:cursor-pointer">
+            <MapPin className="h-4 w-4 text-gray-300" />
+            <select
+              value={selectedCity}
+              onChange={(e) => onSelectedCityChange(e.target.value)}
+              className="appearance-none bg-transparent border-none text-sm text-gray-200 pr-5 focus:outline-none focus:ring-0 cursor-pointer"
+              aria-label="Filter by region"
+            >
+              <option value="" className="text-black">All Regions</option>
+              {availableCities.map((city) => (
+                <option key={city} value={city} className="text-black">
+                  {city}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="h-4 w-4 text-gray-300 pointer-events-none" />
+          </div>
           
           <AdditionalFilters
             hasContactPersons={filters.hasContactPersons}
@@ -105,6 +111,7 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
               filters.searchTerm !== '' ||
               filters.selectedCategories.length > 0 ||
               filters.selectedRoles.length > 0 ||
+              selectedCity !== '' ||
               filters.hasContactPersons !== null ||
               filters.dateRange.start !== null ||
               filters.dateRange.end !== null
