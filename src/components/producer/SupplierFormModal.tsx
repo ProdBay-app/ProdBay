@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Tag, Trash2, X } from 'lucide-react';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { SupplierService, type CreateSupplierData } from '@/services/supplierService';
-import type { Supplier } from '@/lib/supabase';
+import type { ContactPerson, Supplier } from '@/lib/supabase';
 
 interface SupplierFormModalProps {
   isOpen: boolean;
@@ -41,6 +41,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
   onSuccess
 }) => {
   const [formState, setFormState] = useState<SupplierFormState>(INITIAL_FORM_STATE);
+  const [contactPersons, setContactPersons] = useState<ContactPerson[]>([]);
   const [cityInput, setCityInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = Boolean(initialData?.id);
@@ -58,11 +59,13 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
         address: initialData.address ?? '',
         cities_served: initialData.cities_served ?? []
       });
+      setContactPersons(initialData.contact_persons ?? []);
       setCityInput('');
       return;
     }
 
     setFormState(INITIAL_FORM_STATE);
+    setContactPersons([]);
     setCityInput('');
   }, [initialData, isOpen]);
 
@@ -119,6 +122,61 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
     setCityInput('');
   };
 
+  const addContactPerson = () => {
+    setContactPersons((prev) => [
+      ...prev,
+      {
+        name: '',
+        email: '',
+        phone: '',
+        role: '',
+        is_primary: prev.length === 0
+      }
+    ]);
+  };
+
+  const removeContactPerson = (indexToRemove: number) => {
+    setContactPersons((prev) => {
+      const updated = prev.filter((_, index) => index !== indexToRemove);
+      const hasPrimary = updated.some((person) => person.is_primary);
+      if (updated.length > 0 && !hasPrimary) {
+        updated[0] = { ...updated[0], is_primary: true };
+        setFormState((state) => ({
+          ...state,
+          contact_email: updated[0].email ?? ''
+        }));
+      }
+      return updated;
+    });
+  };
+
+  const updateContactPerson = (
+    indexToUpdate: number,
+    field: keyof ContactPerson,
+    value: string | boolean
+  ) => {
+    setContactPersons((prev) =>
+      prev.map((person, index) =>
+        index === indexToUpdate ? { ...person, [field]: value } : person
+      )
+    );
+  };
+
+  const setPrimaryContact = (indexToSet: number) => {
+    setContactPersons((prev) => {
+      const updated = prev.map((person, index) => ({
+        ...person,
+        is_primary: index === indexToSet
+      }));
+      const primaryEmail = updated[indexToSet]?.email?.trim() ?? '';
+      setFormState((state) => ({
+        ...state,
+        contact_email: primaryEmail
+      }));
+      return updated;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -130,7 +188,8 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
         contact_email: formState.contact_email.trim() || null,
         service_categories: formState.service_categories,
         address: formState.address.trim(),
-        cities_served: formState.cities_served
+        cities_served: formState.cities_served,
+        contact_persons: contactPersons
       };
 
       if (initialData?.id) {
@@ -252,6 +311,105 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                       <Trash2 className="h-3 w-3" />
                     </button>
                   </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-gray-200">Contact Persons</h3>
+              <button
+                type="button"
+                onClick={addContactPerson}
+                className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-teal-500/30 text-teal-200 rounded-lg hover:bg-teal-500/40 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Contact</span>
+              </button>
+            </div>
+
+            {contactPersons.length === 0 ? (
+              <div className="text-sm text-gray-300 py-3">
+                No contacts yet. Add contact people like billing or operations.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {contactPersons.map((person, index) => (
+                  <div key={index} className="border border-white/20 rounded-lg p-4 bg-white/5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Name</label>
+                        <input
+                          type="text"
+                          value={person.name}
+                          onChange={(e) => updateContactPerson(index, 'name', e.target.value)}
+                          placeholder="Contact name"
+                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={person.email}
+                          onChange={(e) => {
+                            const nextEmail = e.target.value;
+                            updateContactPerson(index, 'email', nextEmail);
+                            if (person.is_primary) {
+                              setFormState((prev) => ({
+                                ...prev,
+                                contact_email: nextEmail
+                              }));
+                            }
+                          }}
+                          placeholder="contact@supplier.com"
+                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Phone</label>
+                        <input
+                          type="text"
+                          value={person.phone ?? ''}
+                          onChange={(e) => updateContactPerson(index, 'phone', e.target.value)}
+                          placeholder="+1-555-0123"
+                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Role</label>
+                        <input
+                          type="text"
+                          value={person.role}
+                          onChange={(e) => updateContactPerson(index, 'role', e.target.value)}
+                          placeholder="Billing, Sales, Operations"
+                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-3">
+                      <label className="inline-flex items-center gap-2 text-xs text-gray-200">
+                        <input
+                          type="radio"
+                          name="primary_contact"
+                          checked={Boolean(person.is_primary)}
+                          onChange={() => setPrimaryContact(index)}
+                          className="h-4 w-4 text-teal-400 border-white/30 bg-black/20 focus:ring-teal-500"
+                        />
+                        <span>Primary contact</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => removeContactPerson(index)}
+                        className="inline-flex items-center gap-1 text-xs text-red-300 hover:text-red-200"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
