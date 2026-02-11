@@ -130,7 +130,9 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
         email: '',
         phone: '',
         role: '',
-        is_primary: prev.length === 0
+        is_primary: prev.length === 0,
+        is_cc: false,
+        is_bcc: false
       }
     ]);
   };
@@ -155,11 +157,29 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
     field: keyof ContactPerson,
     value: string | boolean
   ) => {
-    setContactPersons((prev) =>
-      prev.map((person, index) =>
-        index === indexToUpdate ? { ...person, [field]: value } : person
-      )
-    );
+    setContactPersons((prev) => {
+      return prev.map((person, index) => {
+        if (index !== indexToUpdate) return person;
+
+        if (field === 'is_cc') {
+          return {
+            ...person,
+            is_cc: Boolean(value),
+            is_bcc: value ? false : person.is_bcc
+          };
+        }
+
+        if (field === 'is_bcc') {
+          return {
+            ...person,
+            is_bcc: Boolean(value),
+            is_cc: value ? false : person.is_cc
+          };
+        }
+
+        return { ...person, [field]: value };
+      });
+    });
   };
 
   const setPrimaryContact = (indexToSet: number) => {
@@ -409,6 +429,32 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                         <span>Delete</span>
                       </button>
                     </div>
+
+                    {!person.is_primary && (
+                      <div className="mt-3 border-t border-white/10 pt-3">
+                        <p className="text-xs font-medium text-gray-300 mb-2">Communication Options</p>
+                        <div className="flex flex-wrap gap-4 text-xs text-gray-200">
+                          <label className="inline-flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(person.is_cc)}
+                              onChange={(e) => updateContactPerson(index, 'is_cc', e.target.checked)}
+                              className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
+                            />
+                            <span>Always CC on Quote Requests</span>
+                          </label>
+                          <label className="inline-flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(person.is_bcc)}
+                              onChange={(e) => updateContactPerson(index, 'is_bcc', e.target.checked)}
+                              className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
+                            />
+                            <span>Always BCC on Quote Requests</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

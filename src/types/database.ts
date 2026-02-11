@@ -60,6 +60,8 @@ export interface ContactPerson {
   phone?: string;
   is_primary?: boolean;
   isPrimary?: boolean;
+  is_cc?: boolean;
+  is_bcc?: boolean;
   default_cc?: boolean;
   default_bcc?: boolean;
 }
