@@ -19,13 +19,19 @@ interface SupplierFiltersProps {
   onFiltersChange: (filters: FilterState) => void;
   suppliers: Supplier[];
   availableCategories: string[];
+  selectedCity: string;
+  onSelectedCityChange: (city: string) => void;
+  availableCities: string[];
 }
 
 const SupplierFilters: React.FC<SupplierFiltersProps> = ({
   filters,
   onFiltersChange,
   suppliers,
-  availableCategories
+  availableCategories,
+  selectedCity,
+  onSelectedCityChange,
+  availableCities
 }) => {
   const updateFilter = <K extends keyof FilterState>(
     key: K,
@@ -74,6 +80,20 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
             onRolesChange={(roles) => updateFilter('selectedRoles', roles)}
             suppliers={suppliers}
           />
+
+          <select
+            value={selectedCity}
+            onChange={(e) => onSelectedCityChange(e.target.value)}
+            className="px-4 py-2 bg-black/20 border border-white/20 rounded-lg text-gray-200 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            aria-label="Filter by region"
+          >
+            <option value="">All Regions</option>
+            {availableCities.map((city) => (
+              <option key={city} value={city} className="text-black">
+                {city}
+              </option>
+            ))}
+          </select>
           
           <AdditionalFilters
             hasContactPersons={filters.hasContactPersons}

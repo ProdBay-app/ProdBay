@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Users, Mail, Plus, Tag, Edit, Trash2, User, Phone, Star } from 'lucide-react';
 import SupplierFilters from './supplier-filters/SupplierFilters';
 import SupplierFormModal from './SupplierFormModal';
@@ -33,6 +33,24 @@ const SupplierManagement: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>('');
+
+  const availableCities = useMemo(() => {
+    const cities = new Set<string>();
+    suppliers.forEach((supplier) => {
+      supplier.cities_served?.forEach((city) => cities.add(city));
+    });
+    return Array.from(cities).sort();
+  }, [suppliers]);
+
+  const cityFilteredSuppliers = useMemo(() => {
+    return filteredSuppliers.filter((supplier) => {
+      if (selectedCity && !supplier.cities_served?.includes(selectedCity)) {
+        return false;
+      }
+      return true;
+    });
+  }, [filteredSuppliers, selectedCity]);
 
   const handleAdd = () => {
     setSelectedSupplier(null);
@@ -81,6 +99,9 @@ const SupplierManagement: React.FC = () => {
         onFiltersChange={setFilters}
         suppliers={suppliers}
         availableCategories={availableCategories}
+        selectedCity={selectedCity}
+        onSelectedCityChange={setSelectedCity}
+        availableCities={availableCities}
       />
 
       {/* Suppliers List */}
@@ -91,9 +112,9 @@ const SupplierManagement: React.FC = () => {
               <Users className="h-6 w-6 text-teal-300" />
               <h2 className="text-xl font-semibold text-white">
                 Active Suppliers
-                {filterStats.isFiltered ? (
+                {filterStats.isFiltered || Boolean(selectedCity) ? (
                   <span className="text-gray-200 font-normal">
-                    {' '}({filterStats.filteredCount} of {filterStats.totalSuppliers})
+                    {' '}({cityFilteredSuppliers.length} of {filterStats.totalSuppliers})
                   </span>
                 ) : (
                   <span className="text-gray-200 font-normal">
@@ -102,16 +123,16 @@ const SupplierManagement: React.FC = () => {
                 )}
               </h2>
             </div>
-            {filterStats.isFiltered && (
+            {(filterStats.isFiltered || Boolean(selectedCity)) && (
               <div className="text-sm text-gray-300">
-                {filterStats.filteredCount === 0 ? 'No suppliers match your filters' : 'Filtered results'}
+                {cityFilteredSuppliers.length === 0 ? 'No suppliers match your filters' : 'Filtered results'}
               </div>
             )}
           </div>
         </div>
 
         <div className="divide-y divide-white/10">
-          {filteredSuppliers.map((supplier) => {
+          {cityFilteredSuppliers.map((supplier) => {
             const primaryEmail = getSupplierPrimaryEmail(supplier);
 
             return (
@@ -218,7 +239,7 @@ const SupplierManagement: React.FC = () => {
           })}
         </div>
 
-        {filteredSuppliers.length === 0 && (
+        {cityFilteredSuppliers.length === 0 && (
           <div className="p-8 text-center">
             <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             {suppliers.length === 0 ? (
@@ -239,7 +260,10 @@ const SupplierManagement: React.FC = () => {
                   Try adjusting your search criteria or clearing some filters
                 </p>
                 <button
-                  onClick={clearAllFilters}
+                  onClick={() => {
+                    clearAllFilters();
+                    setSelectedCity('');
+                  }}
                   className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   Clear All Filters
