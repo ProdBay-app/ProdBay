@@ -115,7 +115,11 @@ const SupplierManagement: React.FC = () => {
             const primaryEmail = getSupplierPrimaryEmail(supplier);
 
             return (
-              <div key={supplier.id} className="p-6 hover:bg-white/20 transition-colors">
+              <div
+                key={supplier.id}
+                onClick={() => handleEdit(supplier)}
+                className="p-6 cursor-pointer hover:bg-white/5 transition-colors"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
@@ -125,7 +129,13 @@ const SupplierManagement: React.FC = () => {
                       {primaryEmail && (
                         <div className="flex items-center space-x-1 text-gray-300">
                           <Mail className="h-4 w-4" />
-                          <span className="text-sm">{primaryEmail}</span>
+                          <a
+                            href={`mailto:${primaryEmail}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-sm hover:text-white underline underline-offset-2"
+                          >
+                            {primaryEmail}
+                          </a>
                         </div>
                       )}
                     </div>
@@ -182,14 +192,20 @@ const SupplierManagement: React.FC = () => {
 
                   <div className="flex items-center space-x-2 ml-4">
                     <button
-                      onClick={() => handleEdit(supplier)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(supplier);
+                      }}
                       className="p-2 text-gray-300 hover:text-teal-300 hover:bg-teal-500/20 rounded transition-colors"
                       title="Edit Supplier"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(supplier.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(supplier.id);
+                      }}
                       className="p-2 text-gray-300 hover:text-red-400 hover:bg-red-500/20 rounded transition-colors"
                       title="Delete Supplier"
                     >
