@@ -3,8 +3,11 @@ import type { Supplier, ContactPerson } from '@/lib/supabase';
 
 export interface CreateSupplierData {
   supplier_name: string;
+  contact_email?: string | null;
+  address?: string;
+  cities_served?: string[];
   service_categories: string[];
-  contact_persons: ContactPerson[];
+  contact_persons?: ContactPerson[];
 }
 
 export interface UpdateSupplierData extends CreateSupplierData {
