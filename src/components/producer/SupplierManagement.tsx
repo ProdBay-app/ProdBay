@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Users, Mail, Plus, Tag, Edit, Trash2, User, Phone, Star } from 'lucide-react';
 import SupplierFilters from './supplier-filters/SupplierFilters';
+import SupplierFormModal from './SupplierFormModal';
 import { useSupplierManagement } from '@/hooks/useSupplierManagement';
+import type { Supplier } from '@/lib/supabase';
 import { getSupplierPrimaryEmail } from '@/utils/supplierUtils';
 
 const SupplierManagement: React.FC = () => {
@@ -10,45 +12,43 @@ const SupplierManagement: React.FC = () => {
     suppliers,
     loading,
     
-    // Form state
-    showAddForm,
-    editingSupplier,
-    formData,
-    
     // Filter state
     filters,
     
     // Computed state
     filteredSuppliers,
     filterStats,
-    debouncedSetFilters,
     
     // Constants
     availableCategories,
     
     // Data operations
-    handleSubmit,
+    loadSuppliers,
     handleDelete,
-    
-    // Form management
-    handleEdit,
-    cancelEdit,
-    setShowAddForm,
-    updateFormData,
-    
-    // Category management
-    handleCategoryToggle,
-    
-    // Contact person management
-    addContactPerson,
-    removeContactPerson,
-    updateContactPerson,
-    setPrimaryContact,
     
     // Filter management
     setFilters,
     clearAllFilters
   } = useSupplierManagement();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+
+  const handleAdd = () => {
+    setSelectedSupplier(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (supplier: Supplier) => {
+    setSelectedSupplier(supplier);
+    setIsModalOpen(true);
+  };
+
+  const handleModalSuccess = async () => {
+    await loadSuppliers();
+    setSelectedSupplier(null);
+    setIsModalOpen(false);
+  };
 
 
   if (loading) {
@@ -67,228 +67,13 @@ const SupplierManagement: React.FC = () => {
           <p className="text-gray-200 mt-1">Manage your supplier network and categories</p>
         </div>
         <button
-          onClick={() => setShowAddForm(true)}
+          onClick={handleAdd}
           className="flex items-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
         >
           <Plus className="h-4 w-4" />
           <span>Add Supplier</span>
         </button>
       </div>
-
-      {/* Add/Edit Supplier Form */}
-      {showAddForm && (
-        <div className="bg-white/10 backdrop-blur-md rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">
-              {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
-            </h2>
-            <button
-              onClick={cancelEdit}
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              ×
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <div>
-                <label htmlFor="supplier_name" className="block text-sm font-medium text-gray-200 mb-1">
-                  Supplier Name *
-                </label>
-                <input
-                  type="text"
-                  id="supplier_name"
-                  value={formData.supplier_name}
-                  onChange={(e) => updateFormData('supplier_name', e.target.value)}
-                  required
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-2">
-                Service Categories
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {availableCategories.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => handleCategoryToggle(category)}
-                    className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                      formData.service_categories.includes(category)
-                        ? 'bg-teal-500/30 border-teal-400/50 text-teal-200'
-                        : 'bg-white/10 border-white/20 text-gray-200 hover:bg-white/20'
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-200">
-                  Contact Person(s)
-                </label>
-                <button
-                  type="button"
-                  onClick={addContactPerson}
-                  className="flex items-center space-x-1 px-3 py-1 text-sm bg-teal-500/30 text-teal-200 rounded-lg hover:bg-teal-500/40 transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add Contact</span>
-                </button>
-              </div>
-              
-              {formData.contact_persons.length === 0 ? (
-                <div className="text-center py-4 text-gray-300 text-sm">
-                  No contact persons added yet. Click "Add Contact" to add one.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {formData.contact_persons.map((person, index) => (
-                    <div key={index} className="border border-white/20 rounded-lg p-4 bg-white/5">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-2">
-                          <User className="h-4 w-4 text-gray-300" />
-                          <span className="text-sm font-medium text-gray-200">
-                            Contact Person {index + 1}
-                          </span>
-                          {person.is_primary && (
-                            <div className="flex items-center space-x-1 px-2 py-1 bg-yellow-500/30 text-yellow-200 rounded-full text-xs">
-                              <Star className="h-3 w-3" />
-                              <span>Primary</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {!person.is_primary && (
-                            <button
-                              type="button"
-                              onClick={() => setPrimaryContact(index)}
-                              className="text-xs text-blue-300 hover:text-blue-200"
-                            >
-                              Set Primary
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => removeContactPerson(index)}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-300 mb-1">
-                            Name *
-                          </label>
-                          <input
-                            type="text"
-                            value={person.name}
-                            onChange={(e) => updateContactPerson(index, 'name', e.target.value)}
-                            className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                            placeholder="Contact person name"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-xs font-medium text-gray-300 mb-1">
-                            Email *
-                          </label>
-                          <input
-                            type="email"
-                            value={person.email}
-                            onChange={(e) => updateContactPerson(index, 'email', e.target.value)}
-                            className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                            placeholder="contact@supplier.com"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-xs font-medium text-gray-300 mb-1">
-                            Role
-                          </label>
-                          <input
-                            type="text"
-                            value={person.role}
-                            onChange={(e) => updateContactPerson(index, 'role', e.target.value)}
-                            className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                            placeholder="e.g., Sales Manager, Project Coordinator"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-xs font-medium text-gray-300 mb-1">
-                            Phone
-                          </label>
-                          <input
-                            type="tel"
-                            value={person.phone || ''}
-                            onChange={(e) => updateContactPerson(index, 'phone', e.target.value)}
-                            className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                            placeholder="+1-555-0123"
-                          />
-                        </div>
-
-                        <div className="md:col-span-2">
-                          <div className="flex flex-wrap gap-4 text-xs text-gray-200">
-                            <label className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                checked={Boolean(person.default_cc)}
-                                onChange={(e) => updateContactPerson(index, 'default_cc', e.target.checked)}
-                                className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
-                              />
-                              <span title="Add this contact to CC by default for quote requests">
-                                Always CC on Quote Requests
-                              </span>
-                            </label>
-                            <label className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                checked={Boolean(person.default_bcc)}
-                                onChange={(e) => updateContactPerson(index, 'default_bcc', e.target.checked)}
-                                className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
-                              />
-                              <span title="Add this contact to BCC by default for quote requests">
-                                Always BCC on Quote Requests
-                              </span>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4 border-t border-white/20">
-              <button
-                type="button"
-                onClick={cancelEdit}
-                className="px-4 py-2 text-gray-200 border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
-              >
-                {editingSupplier ? 'Update Supplier' : 'Add Supplier'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
       {/* Filters */}
       <SupplierFilters
@@ -330,7 +115,11 @@ const SupplierManagement: React.FC = () => {
             const primaryEmail = getSupplierPrimaryEmail(supplier);
 
             return (
-              <div key={supplier.id} className="p-6 hover:bg-white/20 transition-colors">
+              <div
+                key={supplier.id}
+                onClick={() => handleEdit(supplier)}
+                className="p-6 cursor-pointer hover:bg-white/5 transition-colors"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
@@ -340,7 +129,13 @@ const SupplierManagement: React.FC = () => {
                       {primaryEmail && (
                         <div className="flex items-center space-x-1 text-gray-300">
                           <Mail className="h-4 w-4" />
-                          <span className="text-sm">{primaryEmail}</span>
+                          <a
+                            href={`mailto:${primaryEmail}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-sm hover:text-white underline underline-offset-2"
+                          >
+                            {primaryEmail}
+                          </a>
                         </div>
                       )}
                     </div>
@@ -397,14 +192,20 @@ const SupplierManagement: React.FC = () => {
 
                   <div className="flex items-center space-x-2 ml-4">
                     <button
-                      onClick={() => handleEdit(supplier)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(supplier);
+                      }}
                       className="p-2 text-gray-300 hover:text-teal-300 hover:bg-teal-500/20 rounded transition-colors"
                       title="Edit Supplier"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(supplier.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(supplier.id);
+                      }}
                       className="p-2 text-gray-300 hover:text-red-400 hover:bg-red-500/20 rounded transition-colors"
                       title="Delete Supplier"
                     >
@@ -425,7 +226,7 @@ const SupplierManagement: React.FC = () => {
                 <h3 className="text-lg font-medium text-white mb-2">No suppliers yet</h3>
                 <p className="text-gray-200 mb-4">Add your first supplier to start managing your network</p>
                 <button
-                  onClick={() => setShowAddForm(true)}
+                  onClick={handleAdd}
                   className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
                 >
                   Add First Supplier
@@ -448,6 +249,16 @@ const SupplierManagement: React.FC = () => {
           </div>
         )}
       </div>
+
+      <SupplierFormModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedSupplier(null);
+        }}
+        initialData={selectedSupplier}
+        onSuccess={handleModalSuccess}
+      />
     </div>
   );
 };

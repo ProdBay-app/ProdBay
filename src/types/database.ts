@@ -46,6 +46,8 @@ export interface Supplier {
   id: string;
   supplier_name: string;
   contact_email: string | null;
+  address?: string;
+  cities_served?: string[];
   service_categories: string[];
   contact_persons?: ContactPerson[];
   created_at: string;
@@ -58,6 +60,8 @@ export interface ContactPerson {
   phone?: string;
   is_primary?: boolean;
   isPrimary?: boolean;
+  is_cc?: boolean;
+  is_bcc?: boolean;
   default_cc?: boolean;
   default_bcc?: boolean;
 }

@@ -68,7 +68,12 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
 
     const toList = (field: 'default_cc' | 'default_bcc') => {
       const emails = contacts
-        .filter(person => Boolean(person?.[field]))
+        .filter(person => {
+          if (field === 'default_cc') {
+            return Boolean(person?.default_cc ?? person?.is_cc);
+          }
+          return Boolean(person?.default_bcc ?? person?.is_bcc);
+        })
         .map(person => person.email)
         .filter(Boolean)
         .filter(email => email !== primaryEmail);
