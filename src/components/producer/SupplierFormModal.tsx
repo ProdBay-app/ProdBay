@@ -52,6 +52,12 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
     if (!isOpen) return;
 
     if (initialData) {
+      const normalizedContacts = (initialData.contact_persons ?? []).map((person) => ({
+        ...person,
+        default_cc: Boolean(person.default_cc ?? person.is_cc),
+        default_bcc: Boolean(person.default_bcc ?? person.is_bcc)
+      }));
+
       setFormState({
         supplier_name: initialData.supplier_name ?? '',
         contact_email: initialData.contact_email ?? '',
@@ -59,7 +65,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
         address: initialData.address ?? '',
         cities_served: initialData.cities_served ?? []
       });
-      setContactPersons(initialData.contact_persons ?? []);
+      setContactPersons(normalizedContacts);
       setCityInput('');
       return;
     }
@@ -131,8 +137,8 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
         phone: '',
         role: '',
         is_primary: prev.length === 0,
-        is_cc: false,
-        is_bcc: false
+        default_cc: false,
+        default_bcc: false
       }
     ]);
   };
@@ -164,16 +170,16 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
         if (field === 'is_cc') {
           return {
             ...person,
-            is_cc: Boolean(value),
-            is_bcc: value ? false : person.is_bcc
+            default_cc: Boolean(value),
+            default_bcc: value ? false : person.default_bcc
           };
         }
 
         if (field === 'is_bcc') {
           return {
             ...person,
-            is_bcc: Boolean(value),
-            is_cc: value ? false : person.is_cc
+            default_bcc: Boolean(value),
+            default_cc: value ? false : person.default_cc
           };
         }
 
@@ -437,7 +443,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                           <label className="inline-flex items-center gap-2">
                             <input
                               type="checkbox"
-                              checked={Boolean(person.is_cc)}
+                              checked={Boolean(person.default_cc)}
                               onChange={(e) => updateContactPerson(index, 'is_cc', e.target.checked)}
                               className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
                             />
@@ -446,7 +452,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                           <label className="inline-flex items-center gap-2">
                             <input
                               type="checkbox"
-                              checked={Boolean(person.is_bcc)}
+                              checked={Boolean(person.default_bcc)}
                               onChange={(e) => updateContactPerson(index, 'is_bcc', e.target.checked)}
                               className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
                             />
