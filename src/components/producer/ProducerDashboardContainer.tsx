@@ -182,6 +182,12 @@ const ProducerDashboardContainer: React.FC = () => {
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
   const [loadingAI, setLoadingAI] = useState(false);
   
+  // PDF upload states
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadedFilename, setUploadedFilename] = useState<string | null>(null);
+  const [uploadedPdfFile, setUploadedPdfFile] = useState<File | null>(null);
+  
   // Selection states
   const [tagSelectionAsset, setTagSelectionAsset] = useState<Asset | null>(null);
   const [supplierSelectionAsset, setSupplierSelectionAsset] = useState<Asset | null>(null);
@@ -335,6 +341,48 @@ const ProducerDashboardContainer: React.FC = () => {
 
   const setAllocationMethodHandler = useCallback((method: 'static' | 'ai') => {
     setAllocationMethod(method);
+  }, []);
+
+  const handlePdfUpload = useCallback(async (file: File) => {
+    setIsUploadingPdf(true);
+    setUploadError(null);
+    try {
+      const formData = new FormData();
+      formData.append('pdf', file);
+      const railwayUrl = import.meta.env.VITE_RAILWAY_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${railwayUrl}/api/extract-text-from-pdf`, {
+        method: 'POST',
+        body: formData
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error?.message || 'Failed to extract text from PDF');
+      }
+      const extractedText = result.data?.text;
+      if (!extractedText) {
+        throw new Error('No text was extracted from the PDF');
+      }
+      updateProjectForm('brief_description', extractedText);
+      setUploadedFilename(file.name);
+      setUploadedPdfFile(file);
+      showSuccess(`Text extracted from ${file.name}!`);
+    } catch (error) {
+      console.error('PDF upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process PDF';
+      setUploadError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsUploadingPdf(false);
+    }
+  }, [updateProjectForm, showSuccess, showError]);
+
+  const handlePdfDownload = useCallback((file: File) => {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
   }, []);
 
   const submitProjectForm = useCallback(async (e: React.FormEvent) => {
@@ -913,6 +961,13 @@ const ProducerDashboardContainer: React.FC = () => {
       setAllocationMethod={setAllocationMethodHandler}
       submitProjectForm={submitProjectForm}
       deleteProject={deleteProject}
+      
+      onPdfUpload={handlePdfUpload}
+      isUploadingPdf={isUploadingPdf}
+      uploadError={uploadError}
+      uploadedFilename={uploadedFilename}
+      uploadedPdfFile={uploadedPdfFile}
+      onPdfDownload={handlePdfDownload}
       
       openCreateAsset={openCreateAsset}
       openEditAsset={openEditAsset}

@@ -4,6 +4,7 @@ import { Upload, FileText, Loader2, CheckCircle, XCircle, Sparkles, Download, Ar
 import type { ProjectFormData } from '@/services/producerService';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import Stepper, { Step } from '@/components/ui/Stepper';
+import UploadGuidelinesPanel from '@/components/shared/UploadGuidelinesPanel';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -15,13 +16,13 @@ interface ProjectModalProps {
   onSubmit: (e: React.FormEvent) => void;
   onFormChange: (field: keyof ProjectFormData, value: string | number | undefined) => void;
   onAllocationMethodChange: (method: 'static' | 'ai') => void;
-  // PDF upload props
-  onPdfUpload?: (file: File) => void;
-  isUploadingPdf?: boolean;
-  uploadError?: string | null;
-  uploadedFilename?: string | null;
-  uploadedPdfFile?: File | null;
-  onPdfDownload?: (file: File) => void;
+  // PDF upload props (required — PDF upload is the only way to populate the brief)
+  onPdfUpload: (file: File) => void;
+  isUploadingPdf: boolean;
+  uploadError: string | null;
+  uploadedFilename: string | null;
+  uploadedPdfFile: File | null;
+  onPdfDownload: (file: File) => void;
   // AI brief analysis props
   onAnalyzeBrief?: () => void;
   isAnalyzingBrief?: boolean;
@@ -38,10 +39,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
   onFormChange,
   onAllocationMethodChange,
   onPdfUpload,
-  isUploadingPdf = false,
-  uploadError = null,
-  uploadedFilename = null,
-  uploadedPdfFile = null,
+  isUploadingPdf,
+  uploadError,
+  uploadedFilename,
+  uploadedPdfFile,
   onPdfDownload,
   onAnalyzeBrief,
   isAnalyzingBrief = false
@@ -95,11 +96,11 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
     maxFiles: 1,
     maxSize: 10 * 1024 * 1024, // 10MB
     onDrop: (acceptedFiles: File[]) => {
-      if (acceptedFiles.length > 0 && onPdfUpload) {
+      if (acceptedFiles.length > 0) {
         onPdfUpload(acceptedFiles[0]);
       }
     },
-    disabled: isUploadingPdf || !onPdfUpload
+    disabled: isUploadingPdf
   });
 
 
@@ -151,12 +152,11 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   <div className="text-center">
                     <h4 className="text-lg font-medium text-white mb-2">Upload Your Project Brief</h4>
                     <p className="text-gray-300 text-sm">
-                      Upload a PDF brief or enter your project details manually. The system will analyze the content to extract key information.
+                      Upload a PDF brief and the system will analyze the content to extract key information.
                     </p>
                   </div>
 
             {/* PDF Upload Dropzone */}
-            {onPdfUpload && (
               <div>
                 <div
                   {...getRootProps()}
@@ -181,7 +181,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                           <FileText className="w-5 h-5 inline mr-2" />
                           {uploadedFilename}
                         </p>
-                        {uploadedPdfFile && onPdfDownload && (
+                        {uploadedPdfFile && (
                           <button
                             type="button"
                             onClick={() => onPdfDownload(uploadedPdfFile)}
@@ -219,23 +219,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   </div>
                 )}
               </div>
-            )}
 
-                  {/* Manual Brief Entry */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-200 mb-2">
-                      Or enter your project brief manually
-                    </label>
-                    <textarea
-                      name="brief_description"
-                      value={projectForm.brief_description}
-                      onChange={handleInputChange}
-                      required
-                      rows={6}
-                      placeholder="Describe your project requirements, goals, and specifications..."
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    />
-                  </div>
+            {/* Upload Guidelines */}
+            <UploadGuidelinesPanel />
                 </div>
               </Step>
 
@@ -403,7 +389,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               <label className="block text-sm font-medium text-gray-200 mb-1">Project Brief *</label>
               
               {/* PDF Upload Dropzone */}
-            {onPdfUpload && (
               <div className="mb-3">
                 <div
                   {...getRootProps()}
@@ -428,7 +413,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                           <FileText className="w-4 h-4 inline mr-1" />
                           {uploadedFilename}
                         </p>
-                        {uploadedPdfFile && onPdfDownload && (
+                        {uploadedPdfFile && (
                           <button
                             type="button"
                             onClick={() => onPdfDownload(uploadedPdfFile)}
@@ -466,7 +451,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   </div>
                 )}
               </div>
-            )}
+
+              {/* Upload Guidelines */}
+              <UploadGuidelinesPanel />
 
             <textarea
               name="brief_description"
