@@ -64,14 +64,14 @@ const NewProject: React.FC = () => {
       if (!briefResult.success) {
         console.warn('Brief processing failed:', briefResult.error?.message);
         // Show a warning but continue - project was created successfully
-        showWarning(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
+        showWarning(`Wedding created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create services later.`);
       } else {
         console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
         // Show success message with AI info if applicable
         const aiInfo = briefResult.data?.aiData 
           ? ` using AI (${Math.round(briefResult.data.aiData.confidence * 100)}% confidence)`
           : '';
-        showSuccess(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated from your brief${aiInfo}.`, { duration: 8000 });
+        showSuccess(`Wedding created successfully! ${briefResult.data?.createdAssets.length} services were automatically generated from your brief${aiInfo}.`, { duration: 8000 });
       }
 
       setSubmitStatus('success');
@@ -81,7 +81,7 @@ const NewProject: React.FC = () => {
     } catch (error) {
       console.error('Error creating project:', error);
       setSubmitStatus('error');
-      showError('Failed to create project. Please try again.');
+      showError('Failed to create wedding. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -93,8 +93,8 @@ const NewProject: React.FC = () => {
         <div className="flex items-center space-x-3 mb-8">
           <FileText className="h-8 w-8 text-blue-600" />
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Create New Project</h1>
-            <p className="text-gray-600 mt-1">Submit your project brief to get started</p>
+            <h1 className="text-3xl font-bold text-gray-900">Create New Wedding</h1>
+            <p className="text-gray-600 mt-1">Submit your wedding brief to get started</p>
           </div>
         </div>
 
@@ -102,7 +102,7 @@ const NewProject: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 mb-2">
-                Project Name *
+                Wedding Name *
               </label>
               <input
                 type="text"
@@ -112,13 +112,13 @@ const NewProject: React.FC = () => {
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter project name"
+                placeholder="Enter wedding name"
               />
             </div>
 
             <div>
               <label htmlFor="client_name" className="block text-sm font-medium text-gray-700 mb-2">
-                Client Name *
+                Couple Name *
               </label>
               <input
                 type="text"
@@ -128,14 +128,14 @@ const NewProject: React.FC = () => {
                 onChange={handleInputChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter client name"
+                placeholder="Enter couple name"
               />
             </div>
           </div>
 
           <div>
             <label htmlFor="brief_description" className="block text-sm font-medium text-gray-700 mb-2">
-              Project Brief & Description *
+              Wedding Brief & Description *
             </label>
             <textarea
               id="brief_description"
@@ -145,7 +145,7 @@ const NewProject: React.FC = () => {
               required
               rows={6}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Describe your event or project in detail. Include requirements for printing, staging, audio, lighting, catering, transport, or design services..."
+              placeholder="Describe your wedding in detail. Include requirements for venue, catering, photography, floral, music, or other services..."
             />
           </div>
 
@@ -153,14 +153,14 @@ const NewProject: React.FC = () => {
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
             <div className="flex items-center space-x-3 mb-3">
               <Brain className="h-6 w-6 text-purple-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Smart Asset Allocation</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Smart Service Allocation</h3>
               <Sparkles className="h-5 w-5 text-purple-500" />
             </div>
             <p className="text-gray-600 mb-4">
-              Enable smart analysis to automatically identify assets and suggest detailed specifications from your brief.
+              Enable smart analysis to automatically identify services and suggest detailed specifications from your brief.
             </p>
             <div className="space-y-3">
-              <p className="text-sm font-medium text-gray-700">Asset Allocation Method:</p>
+              <p className="text-sm font-medium text-gray-700">Service Allocation Method:</p>
               
               <div className="space-y-2">
                 <label className="flex items-center space-x-3 cursor-pointer">
@@ -174,7 +174,7 @@ const NewProject: React.FC = () => {
                   />
                   <div>
                     <span className="text-sm font-medium text-gray-700">Static Allocation</span>
-                    <p className="text-xs text-gray-500">Rule-based asset identification using keyword matching</p>
+                    <p className="text-xs text-gray-500">Rule-based service identification using keyword matching</p>
                   </div>
                 </label>
                 
@@ -189,7 +189,7 @@ const NewProject: React.FC = () => {
                   />
                   <div>
                     <span className="text-sm font-medium text-gray-700">Smart Allocation</span>
-                    <p className="text-xs text-gray-500">Automatically analyzes your brief to identify assets with detailed specifications</p>
+                    <p className="text-xs text-gray-500">Automatically analyzes your brief to identify services with detailed specifications</p>
                   </div>
                 </label>
               </div>
@@ -197,8 +197,8 @@ const NewProject: React.FC = () => {
               {allocationMethod === 'ai' && (
                 <div className="mt-3 p-3 bg-purple-100 rounded-lg">
                   <p className="text-sm text-purple-800">
-                    ✨ The system will analyze your brief to identify assets, create detailed specifications, 
-                    and suggest optimal supplier allocations with confidence scores.
+                    ✨ The system will analyze your brief to identify services, create detailed specifications, 
+                    and suggest optimal vendor allocations with confidence scores.
                   </p>
                 </div>
               )}
@@ -209,7 +209,7 @@ const NewProject: React.FC = () => {
             <div>
               <label htmlFor="physical_parameters" className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                 <MapPin className="h-4 w-4" />
-                <span>Physical Parameters</span>
+                <span>Venue Details</span>
               </label>
               <input
                 type="text"
@@ -218,7 +218,7 @@ const NewProject: React.FC = () => {
                 value={formData.physical_parameters}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Location, size, capacity, etc."
+                placeholder="Venue, size, capacity, etc."
               />
             </div>
 
@@ -264,11 +264,11 @@ const NewProject: React.FC = () => {
             >
               <Send className="h-4 w-4" />
               <span>
-                {submitStatus === 'creating-project' && 'Creating Project...'}
+                {submitStatus === 'creating-project' && 'Creating Wedding...'}
                 {submitStatus === 'processing-brief' && 'Processing Brief...'}
-                {submitStatus === 'success' && 'Project Created!'}
+                {submitStatus === 'success' && 'Wedding Created!'}
                 {submitStatus === 'error' && 'Failed - Try Again'}
-                {submitStatus === 'idle' && 'Create Project'}
+                {submitStatus === 'idle' && 'Create Wedding'}
               </span>
             </button>
           </div>

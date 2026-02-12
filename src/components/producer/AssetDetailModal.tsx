@@ -412,7 +412,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   {/* Asset Name */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-semibold text-gray-200 mb-2">
-                      Asset Name
+                      Service Name
                     </label>
                     <input
                       type="text"
@@ -420,7 +420,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       onChange={(e) => handleFieldChange('asset_name', e.target.value)}
                       onBlur={handleBlur}
                       className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                      placeholder="Enter asset name"
+                      placeholder="Enter service name"
                     />
                   </div>
 
@@ -435,7 +435,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       onBlur={handleBlur}
                       rows={4}
                       className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-y"
-                      placeholder="Enter asset specifications"
+                      placeholder="Enter service specifications"
                     />
                   </div>
 
@@ -605,7 +605,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   <div className="bg-white/5 rounded-lg p-5 border-2 border-dashed border-white/30 text-center">
                     <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                     <p className="text-white font-medium text-sm">Quotes Comparison</p>
-                    <p className="text-gray-300 text-xs mt-1">View and compare supplier quotes</p>
+                    <p className="text-gray-300 text-xs mt-1">View and compare vendor quotes</p>
                   </div>
 
                   {/* Activity Placeholder */}

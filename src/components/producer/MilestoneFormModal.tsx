@@ -165,7 +165,7 @@ const MilestoneFormModal: React.FC<MilestoneFormModalProps> = ({
               </h3>
               <p className="text-sm text-gray-600">
                 {mode === 'create' 
-                  ? 'Create a new checkpoint for your project timeline' 
+                  ? 'Create a new checkpoint for your wedding timeline' 
                   : 'Update milestone details'}
               </p>
             </div>
@@ -195,7 +195,7 @@ const MilestoneFormModal: React.FC<MilestoneFormModalProps> = ({
               value={formData.milestone_name}
               onChange={handleInputChange}
               disabled={isSubmitting}
-              placeholder="e.g., Pre-production Complete, Principal Photography Start"
+              placeholder="e.g., Venue Confirmed, Catering Finalized"
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.milestone_name ? 'border-red-500' : 'border-gray-300'
               }`}

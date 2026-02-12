@@ -81,15 +81,15 @@ const SupplierManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Supplier Management</h1>
-          <p className="text-gray-200 mt-1">Manage your supplier network and categories</p>
+          <h1 className="text-3xl font-bold text-white">Vendor Management</h1>
+          <p className="text-gray-200 mt-1">Manage your vendor network and service categories</p>
         </div>
         <button
           onClick={handleAdd}
           className="flex items-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
         >
           <Plus className="h-4 w-4" />
-          <span>Add Supplier</span>
+          <span>Add Vendor</span>
         </button>
       </div>
 
@@ -111,7 +111,7 @@ const SupplierManagement: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Users className="h-6 w-6 text-teal-300" />
               <h2 className="text-xl font-semibold text-white">
-                Active Suppliers
+                Active Vendors
                 {filterStats.isFiltered || Boolean(selectedCity) ? (
                   <span className="text-gray-200 font-normal">
                     {' '}({cityFilteredSuppliers.length} of {filterStats.totalSuppliers})
@@ -125,7 +125,7 @@ const SupplierManagement: React.FC = () => {
             </div>
             {(filterStats.isFiltered || Boolean(selectedCity)) && (
               <div className="text-sm text-gray-300">
-                {cityFilteredSuppliers.length === 0 ? 'No suppliers match your filters' : 'Filtered results'}
+                {cityFilteredSuppliers.length === 0 ? 'No vendors match your filters' : 'Filtered results'}
               </div>
             )}
           </div>
@@ -218,7 +218,7 @@ const SupplierManagement: React.FC = () => {
                         handleEdit(supplier);
                       }}
                       className="p-2 text-gray-300 hover:text-teal-300 hover:bg-teal-500/20 rounded transition-colors"
-                      title="Edit Supplier"
+                      title="Edit Vendor"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
@@ -228,7 +228,7 @@ const SupplierManagement: React.FC = () => {
                         handleDelete(supplier.id);
                       }}
                       className="p-2 text-gray-300 hover:text-red-400 hover:bg-red-500/20 rounded transition-colors"
-                      title="Delete Supplier"
+                      title="Delete Vendor"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -244,18 +244,18 @@ const SupplierManagement: React.FC = () => {
             <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             {suppliers.length === 0 ? (
               <>
-                <h3 className="text-lg font-medium text-white mb-2">No suppliers yet</h3>
-                <p className="text-gray-200 mb-4">Add your first supplier to start managing your network</p>
+                <h3 className="text-lg font-medium text-white mb-2">No vendors yet</h3>
+                <p className="text-gray-200 mb-4">Add your first vendor to start building your network</p>
                 <button
                   onClick={handleAdd}
                   className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
                 >
-                  Add First Supplier
+                  Add First Vendor
                 </button>
               </>
             ) : (
               <>
-                <h3 className="text-lg font-medium text-white mb-2">No suppliers match your filters</h3>
+                <h3 className="text-lg font-medium text-white mb-2">No vendors match your filters</h3>
                 <p className="text-gray-200 mb-4">
                   Try adjusting your search criteria or clearing some filters
                 </p>

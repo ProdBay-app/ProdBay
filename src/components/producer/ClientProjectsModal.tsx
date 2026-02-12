@@ -132,7 +132,7 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
               <FolderOpen className="w-5 h-5 text-teal-300" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">Client Projects</h3>
+              <h3 className="text-xl font-bold text-white">Couple's Weddings</h3>
               <p className="text-sm text-gray-300">{clientName}</p>
             </div>
           </div>
@@ -152,8 +152,8 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
           {loading && (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-12 h-12 text-teal-400 animate-spin mb-4" />
-              <p className="text-gray-200 text-lg">Loading projects...</p>
-              <p className="text-gray-400 text-sm mt-2">Fetching all projects for {clientName}</p>
+              <p className="text-gray-200 text-lg">Loading weddings...</p>
+              <p className="text-gray-400 text-sm mt-2">Fetching all weddings for {clientName}</p>
             </div>
           )}
 
@@ -163,7 +163,7 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
               <div className="bg-red-500/20 rounded-full p-4 mb-4">
                 <AlertCircle className="w-10 h-10 text-red-400" />
               </div>
-              <h4 className="text-lg font-semibold text-white mb-2">Failed to Load Projects</h4>
+              <h4 className="text-lg font-semibold text-white mb-2">Failed to Load Weddings</h4>
               <p className="text-gray-300 text-center mb-4">{error}</p>
               <button
                 onClick={() => window.location.reload()}
@@ -180,9 +180,9 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
               <div className="bg-gray-500/20 rounded-full p-4 mb-4">
                 <FolderOpen className="w-10 h-10 text-gray-400" />
               </div>
-              <h4 className="text-lg font-semibold text-white mb-2">No Projects Found</h4>
+              <h4 className="text-lg font-semibold text-white mb-2">No Weddings Found</h4>
               <p className="text-gray-300 text-center">
-                No projects found for <span className="font-medium">{clientName}</span>
+                No weddings found for <span className="font-medium">{clientName}</span>
               </p>
             </div>
           )}
@@ -193,7 +193,7 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
               {/* Header info */}
               <div className="mb-4">
                 <p className="text-sm text-gray-300">
-                  Found <span className="font-semibold text-white">{projects.length}</span> {projects.length === 1 ? 'project' : 'projects'}
+                  Found <span className="font-semibold text-white">{projects.length}</span> {projects.length === 1 ? 'wedding' : 'weddings'}
                 </p>
               </div>
 
@@ -266,7 +266,7 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
         {!loading && !error && projects.length > 0 && (
           <div className="px-6 py-4 border-t border-white/20 bg-black/10">
             <p className="text-xs text-gray-400 text-center">
-              Click on a project to view its details
+              Click on a wedding to view its details
             </p>
           </div>
         )}

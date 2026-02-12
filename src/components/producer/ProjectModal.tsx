@@ -111,10 +111,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
         <div className="p-4 sm:p-6 pb-4 border-b border-white/20 flex-shrink-0 flex items-start justify-between">
           <div>
             <h3 className="text-lg sm:text-xl font-semibold text-white">
-              {isEditing ? 'Edit Project' : 'Create New Project'}
+              {isEditing ? 'Edit Wedding' : 'Create New Wedding'}
             </h3>
             <p className="text-gray-300 text-sm">
-              {isEditing ? 'Update project details and save changes.' : 'Upload your project brief to get started.'}
+              {isEditing ? 'Update wedding details and save changes.' : 'Upload your wedding brief to get started.'}
             </p>
           </div>
           {!isEditing && (
@@ -144,13 +144,13 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 disabled: isAnalyzingBrief || !projectForm.brief_description || projectForm.brief_description.trim().length === 0 || isSubmitting,
                 className: 'disabled:opacity-50 disabled:cursor-not-allowed'
               }}
-              completeButtonText={isSubmitting ? 'Creating...' : 'Create Project'}
+              completeButtonText={isSubmitting ? 'Creating...' : 'Create Wedding'}
             >
               {/* Step 1: Upload Brief */}
               <Step>
                 <div className="space-y-6">
                   <div className="text-center">
-                    <h4 className="text-lg font-medium text-white mb-2">Upload Your Project Brief</h4>
+                    <h4 className="text-lg font-medium text-white mb-2">Upload Your Wedding Brief</h4>
                     <p className="text-gray-300 text-sm">
                       Upload a PDF brief and the system will analyze the content to extract key information.
                     </p>
@@ -229,16 +229,16 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               <Step>
                 <div className="space-y-5">
                   <div className="text-center mb-6">
-                    <h4 className="text-lg font-medium text-white mb-2">Confirm Project Details</h4>
+                    <h4 className="text-lg font-medium text-white mb-2">Confirm Wedding Details</h4>
                     <p className="text-gray-300 text-sm">
-                      Review the extracted information and make any necessary adjustments before creating your project.
+                      Review the extracted information and make any necessary adjustments before creating your wedding.
                     </p>
                   </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1 flex items-center gap-2">
-                  Project Name *
+                  Wedding Name *
                   {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-400 animate-spin" />}
                 </label>
                 <input
@@ -252,7 +252,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1 flex items-center gap-2">
-                  Client Name *
+                  Couple Name *
                   {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-400 animate-spin" />}
                 </label>
                 <input
@@ -267,14 +267,14 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-200 mb-1">Project Brief *</label>
+              <label className="block text-sm font-medium text-gray-200 mb-1">Wedding Brief *</label>
               <textarea
                 name="brief_description"
                 value={projectForm.brief_description}
                 onChange={handleInputChange}
                 required
                 rows={4}
-                placeholder="Project brief description..."
+                placeholder="Wedding brief description..."
                 className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               />
             </div>
@@ -282,7 +282,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1 flex items-center gap-2">
-                  Physical Parameters
+                  Venue Details
                   {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-400 animate-spin" />}
                 </label>
                 <input
@@ -310,7 +310,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1 flex items-center gap-2">
-                  Event Date
+                  Wedding Date
                   {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-400 animate-spin" />}
                 </label>
                 <input
@@ -340,11 +340,11 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   <div className="mt-4 p-4 bg-purple-500/20 border border-purple-400/30 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Sparkles className="w-5 h-5 text-purple-300" />
-                      <span className="text-sm font-medium text-purple-200">Smart Asset Allocation</span>
+                      <span className="text-sm font-medium text-purple-200">Smart Service Matching</span>
                     </div>
                     <p className="text-sm text-purple-300">
-                      This project will use smart allocation to automatically identify and create assets based on your brief. 
-                      The system will analyze your requirements and generate detailed asset specifications with confidence scores.
+                      This wedding will use smart matching to automatically identify and create services based on your brief. 
+                      The system will analyze your requirements and generate detailed service specifications with confidence scores.
                     </p>
                   </div>
                 </div>
@@ -357,7 +357,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1 flex items-center gap-2">
-                  Project Name *
+                  Wedding Name *
                   {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-400 animate-spin" />}
                 </label>
                 <input
@@ -371,7 +371,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1 flex items-center gap-2">
-                  Client Name *
+                  Couple Name *
                   {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-400 animate-spin" />}
                 </label>
                 <input
@@ -386,7 +386,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-200 mb-1">Project Brief *</label>
+              <label className="block text-sm font-medium text-gray-200 mb-1">Wedding Brief *</label>
               
               {/* PDF Upload Dropzone */}
               <div className="mb-3">
@@ -461,7 +461,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               onChange={handleInputChange}
               required
               rows={4}
-              placeholder="Enter project brief manually or upload a PDF above..."
+              placeholder="Enter wedding brief manually or upload a PDF above..."
               className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
             
@@ -487,7 +487,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   )}
                 </button>
                 <p className="text-xs text-gray-300 mt-1">
-                  Will extract project name, client name, budget, deadline, and other details
+                  Will extract wedding name, couple name, budget, deadline, and other details
                 </p>
               </div>
             )}
@@ -551,7 +551,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
           </div>
 
           <div className="space-y-3">
-            <p className="text-sm font-medium text-gray-200">Asset Allocation Method:</p>
+            <p className="text-sm font-medium text-gray-200">Service Matching Method:</p>
             
             <div className="space-y-2">
               <label className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg border transition-colors ${
@@ -568,8 +568,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   className="w-4 h-4 text-teal-600 focus:ring-teal-500 focus:ring-2"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-200">Static Allocation</span>
-                  <p className="text-xs text-gray-300">Rule-based asset identification using keyword matching</p>
+                  <span className="text-sm font-medium text-gray-200">Standard Matching</span>
+                  <p className="text-xs text-gray-300">Rule-based service identification using keyword matching</p>
                 </div>
               </label>
               
@@ -587,8 +587,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   className="w-4 h-4 text-purple-600 focus:ring-purple-500 focus:ring-2"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-200">Smart Allocation</span>
-                  <p className="text-xs text-gray-300">Automatically analyzes your brief to identify assets with detailed specifications</p>
+                  <span className="text-sm font-medium text-gray-200">Smart Matching</span>
+                  <p className="text-xs text-gray-300">Automatically analyzes your brief to identify wedding services with detailed specifications</p>
                 </div>
               </label>
             </div>
@@ -596,8 +596,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             {allocationMethod === 'ai' && (
               <div className="mt-3 p-3 bg-purple-500/20 border border-purple-400/30 rounded-lg">
                 <p className="text-sm text-purple-200">
-                  ✨ The system will analyze your brief to identify assets, create detailed specifications, 
-                  and suggest optimal supplier allocations with confidence scores.
+                  ✨ The system will analyze your brief to identify wedding services, create detailed specifications, 
+                  and suggest optimal vendor matches with confidence scores.
                 </p>
               </div>
             )}

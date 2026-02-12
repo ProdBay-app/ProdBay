@@ -619,7 +619,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                   id="brief-description"
                   value={editedBriefDescription}
                   onChange={handleBriefDescriptionChange}
-                  placeholder="Enter project description..."
+                  placeholder="Enter wedding description..."
                   className="
                     w-full px-4 py-3 
                     bg-black/20 border border-white/20 rounded-lg
@@ -639,14 +639,14 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                   htmlFor="physical-parameters" 
                   className="block text-sm font-semibold text-gray-200 mb-2"
                 >
-                  Physical Parameters
+                  Venue Details
                 </label>
                 <textarea
                   ref={physicalTextareaRef}
                   id="physical-parameters"
                   value={editedPhysicalParameters}
                   onChange={handlePhysicalParametersChange}
-                  placeholder="Enter physical parameters..."
+                  placeholder="Enter venue details..."
                   className="
                     w-full px-4 py-3 
                     bg-black/20 border border-white/20 rounded-lg
@@ -709,7 +709,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
               {physicalParameters && (
                 <div className="mb-6">
                   <h3 className="block text-sm font-semibold text-gray-200 mb-2">
-                    Physical Parameters
+                    Venue Details
                   </h3>
                   <div className="px-4 py-3 bg-black/20 border border-white/20 rounded-lg text-gray-200 leading-relaxed whitespace-pre-wrap">
                     {renderInteractiveContent(physicalParameters)}

@@ -82,7 +82,7 @@ const ClientDashboardContainer: React.FC = () => {
       setProjects(data || []);
     } catch (error) {
       console.error('Error loading projects:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load projects';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load weddings';
       setError(errorMessage);
       showError(errorMessage);
     } finally {
@@ -125,7 +125,7 @@ const ClientDashboardContainer: React.FC = () => {
       }
     } catch (error) {
       console.error('Error loading project details:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load project details';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load wedding details';
       setError(errorMessage);
       showError(errorMessage);
     }

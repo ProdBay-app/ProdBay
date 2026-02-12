@@ -1,7 +1,7 @@
 /**
- * Asset Tag Management System
- * Provides predefined tags with unique colors for asset categorization
- * Comprehensive 50-tag taxonomy for Event Production industry
+ * Service Tag Management System
+ * Provides predefined tags with unique colors for wedding service categorization
+ * Comprehensive taxonomy for Wedding Planning industry
  */
 
 export interface AssetTag {
@@ -10,277 +10,272 @@ export interface AssetTag {
   description: string;
 }
 
-// Predefined asset tags with unique colors
-// Organized by category: Audio, Visual, Lighting, Staging, Catering, Staffing, Logistics, Branding, Decor, Digital
+// Predefined service tags with unique colors
+// Organized by category for Wedding Planning: Venue, Catering, Photo/Video, Music, Florals, Attire, Beauty, Stationery, Transport, Cake, Ceremony, Reception, Lighting, Planning, Rentals
 export const PREDEFINED_ASSET_TAGS: AssetTag[] = [
-  // AUDIO & SOUND (7 tags)
+  // VENUE & SPACES (6 tags)
   {
-    name: 'Audio Equipment',
+    name: 'Venue',
     color: '#8B5CF6', // Purple-500
-    description: 'Speakers, amplifiers, mixers, sound systems'
+    description: 'Ceremony and reception venues, indoor and outdoor spaces'
   },
   {
-    name: 'Microphones',
+    name: 'Ceremony Site',
     color: '#A855F7', // Purple-600
-    description: 'Wireless, wired, handheld, lapel, podium mics'
+    description: 'Church, garden, beach, or other ceremony locations'
   },
   {
-    name: 'Sound Reinforcement',
+    name: 'Reception Venue',
     color: '#9333EA', // Purple-700
-    description: 'PA systems, monitors, subwoofers'
+    description: 'Ballrooms, banquet halls, estates, restaurants'
   },
   {
-    name: 'Audio Recording',
+    name: 'Outdoor Spaces',
     color: '#7C3AED', // Purple-800
-    description: 'Recording equipment, multi-track systems'
+    description: 'Gardens, terraces, courtyards, marquees'
   },
   {
-    name: 'Wireless Systems',
+    name: 'Getting Ready Suite',
     color: '#6366F1', // Indigo-500
-    description: 'RF transmitters, receivers, intercom systems'
+    description: 'Bridal suite, groom\'s room, preparation areas'
   },
   {
-    name: 'Audio Visual',
+    name: 'Cocktail Area',
     color: '#4F46E5', // Indigo-600
-    description: 'Integrated AV systems, video walls with sound'
-  },
-  {
-    name: 'Backstage Audio',
-    color: '#4338CA', // Indigo-700
-    description: 'Monitor mixes, green room audio'
+    description: 'Pre-reception drinks area, lounge spaces'
   },
 
-  // VISUAL & DISPLAYS (8 tags)
+  // CATERING & DINING (6 tags)
   {
-    name: 'LED Screens',
-    color: '#3B82F6', // Blue-500
-    description: 'LED walls, video walls, display panels'
+    name: 'Catering',
+    color: '#EF4444', // Red-500
+    description: 'Full-service catering, meal planning, chef services'
   },
   {
-    name: 'Projection',
-    color: '#2563EB', // Blue-600
-    description: 'Projectors, projection mapping, screen rentals'
+    name: 'Beverages & Bar',
+    color: '#EC4899', // Pink-500
+    description: 'Bar service, cocktails, wine, champagne toast'
   },
   {
-    name: 'Video Production',
-    color: '#1D4ED8', // Blue-700
-    description: 'Video cameras, live streaming, broadcast'
+    name: 'Wedding Cake',
+    color: '#DB2777', // Pink-600
+    description: 'Wedding cake design, tasting, delivery, and setup'
   },
+  {
+    name: 'Dessert Table',
+    color: '#BE185D', // Pink-700
+    description: 'Dessert bars, sweet stations, pastries, candy buffet'
+  },
+  {
+    name: 'Tableware & Linens',
+    color: '#F43F5E', // Rose-500
+    description: 'China, glassware, flatware, table linens, napkins'
+  },
+  {
+    name: 'Food Stations',
+    color: '#E11D48', // Rose-600
+    description: 'Buffet stations, carving stations, food trucks'
+  },
+
+  // PHOTOGRAPHY & VIDEOGRAPHY (5 tags)
   {
     name: 'Photography',
-    color: '#10B981', // Emerald-500
-    description: 'Event photography, photo booths, cameras'
+    color: '#3B82F6', // Blue-500
+    description: 'Wedding photographer, engagement shoots, portraits'
   },
   {
-    name: 'Graphics & Banners',
+    name: 'Videography',
+    color: '#2563EB', // Blue-600
+    description: 'Wedding videographer, highlight reels, cinematic films'
+  },
+  {
+    name: 'Photo Booth',
+    color: '#1D4ED8', // Blue-700
+    description: 'Photo booth rental, props, instant prints'
+  },
+  {
+    name: 'Drone Coverage',
+    color: '#10B981', // Emerald-500
+    description: 'Aerial photography and videography'
+  },
+  {
+    name: 'Live Streaming',
     color: '#059669', // Emerald-600
-    description: 'Custom graphics, banners, backdrops'
+    description: 'Virtual ceremony streaming for remote guests'
+  },
+
+  // MUSIC & ENTERTAINMENT (5 tags)
+  {
+    name: 'DJ Services',
+    color: '#F59E0B', // Amber-500
+    description: 'Wedding DJ, MC services, sound system'
+  },
+  {
+    name: 'Live Band',
+    color: '#D97706', // Amber-600
+    description: 'Live band, musicians, string quartet, jazz ensemble'
+  },
+  {
+    name: 'Ceremony Music',
+    color: '#F97316', // Orange-500
+    description: 'Processional, recessional, ceremony musicians'
+  },
+  {
+    name: 'Entertainment',
+    color: '#EA580C', // Orange-600
+    description: 'Dancers, performers, fireworks, sparkler exits'
+  },
+  {
+    name: 'Sound System',
+    color: '#C2410C', // Orange-700
+    description: 'PA system, microphones, speakers for ceremony and reception'
+  },
+
+  // FLORALS & DECOR (6 tags)
+  {
+    name: 'Bridal Bouquet',
+    color: '#F472B6', // Pink-400
+    description: 'Bridal bouquet, bridesmaids bouquets, boutonnieres'
+  },
+  {
+    name: 'Ceremony Florals',
+    color: '#FB7185', // Rose-400
+    description: 'Altar arrangements, aisle flowers, petal scatter'
+  },
+  {
+    name: 'Reception Florals',
+    color: '#A78BFA', // Violet-400
+    description: 'Centerpieces, table garlands, hanging installations'
+  },
+  {
+    name: 'Decor & Styling',
+    color: '#8B5A2B', // Brown
+    description: 'Table settings, place cards, candles, decorative elements'
+  },
+  {
+    name: 'Linens & Draping',
+    color: '#84CC16', // Lime-500
+    description: 'Ceiling drapes, fabric treatments, chair covers'
+  },
+  {
+    name: 'Furniture Rentals',
+    color: '#65A30D', // Lime-600
+    description: 'Tables, chairs, lounge furniture, arches, arbors'
+  },
+
+  // LIGHTING & AMBIANCE (4 tags)
+  {
+    name: 'Lighting Design',
+    color: '#DC2626', // Red-600
+    description: 'Uplighting, string lights, chandeliers, spotlights'
+  },
+  {
+    name: 'Candles & Lanterns',
+    color: '#B91C1C', // Red-700
+    description: 'Candle arrangements, lanterns, luminaries'
+  },
+  {
+    name: 'Special Effects',
+    color: '#991B1B', // Red-800
+    description: 'Fog machines, sparklers, confetti, fireworks'
   },
   {
     name: 'Signage',
     color: '#047857', // Emerald-700
-    description: 'Wayfinding, directional signs, informational displays'
+    description: 'Welcome signs, seating charts, directional signs'
   },
+
+  // WEDDING ATTIRE & BEAUTY (5 tags)
   {
-    name: 'Digital Displays',
+    name: 'Bridal Attire',
     color: '#06B6D4', // Cyan-500
-    description: 'Touchscreens, interactive displays, kiosks'
+    description: 'Wedding dress, veil, accessories, alterations'
   },
   {
-    name: 'Exhibition Displays',
+    name: 'Groom Attire',
     color: '#0891B2', // Cyan-600
-    description: 'Trade show booths, modular displays'
+    description: 'Suit or tuxedo, accessories, groomsmen attire'
+  },
+  {
+    name: 'Hair & Makeup',
+    color: '#0E7490', // Cyan-700
+    description: 'Bridal hair, makeup artist, bridal party styling'
+  },
+  {
+    name: 'Accessories',
+    color: '#155E75', // Cyan-800
+    description: 'Jewelry, shoes, ties, cufflinks, veils, headpieces'
+  },
+  {
+    name: 'Wedding Rings',
+    color: '#164E63', // Cyan-900
+    description: 'Wedding bands, ring engraving, ring bearer accessories'
   },
 
-  // LIGHTING (6 tags)
+  // STATIONERY & PRINT (4 tags)
   {
-    name: 'Stage Lighting',
-    color: '#F59E0B', // Amber-500
-    description: 'Stage wash, spotlights, moving lights'
-  },
-  {
-    name: 'Atmospheric Lighting',
-    color: '#D97706', // Amber-600
-    description: 'Uplighting, color washes, ambiance'
-  },
-  {
-    name: 'LED Lighting',
-    color: '#F97316', // Orange-500
-    description: 'LED strips, panels, color-changing systems'
-  },
-  {
-    name: 'Special Effects',
-    color: '#EA580C', // Orange-600
-    description: 'Fog machines, lasers, pyrotechnics'
-  },
-  {
-    name: 'Power & Distribution',
-    color: '#C2410C', // Orange-700
-    description: 'Power distribution, dimmers, control systems'
-  },
-  {
-    name: 'Lighting Design',
-    color: '#DC2626', // Red-600
-    description: 'Lighting programming, design services'
-  },
-
-  // STAGING & STRUCTURES (5 tags)
-  {
-    name: 'Stages',
-    color: '#84CC16', // Lime-500
-    description: 'Main stages, platforms, risers, decking'
-  },
-  {
-    name: 'Rigging',
-    color: '#65A30D', // Lime-600
-    description: 'Rigging points, truss, chain hoists, safety'
-  },
-  {
-    name: 'Scenic Elements',
+    name: 'Invitations',
     color: '#16A34A', // Green-600
-    description: 'Set construction, backdrops, props'
+    description: 'Wedding invitations, save-the-dates, RSVP cards'
   },
   {
-    name: 'Platforms & Risers',
+    name: 'Day-of Stationery',
     color: '#15803D', // Green-700
-    description: 'Stage extensions, speaker platforms'
+    description: 'Programs, menus, place cards, table numbers'
   },
   {
-    name: 'Tents & Structures',
+    name: 'Thank You Cards',
     color: '#166534', // Green-800
-    description: 'Temporary structures, tenting, canopies'
+    description: 'Post-wedding thank you notes and correspondence'
+  },
+  {
+    name: 'Guest Book',
+    color: '#0F766E', // Teal-700
+    description: 'Guest book, alternative guest book ideas'
   },
 
-  // CATERING & FOOD SERVICE (4 tags)
-  {
-    name: 'Catering',
-    color: '#EF4444', // Red-500
-    description: 'Food service, meal planning, kitchen equipment'
-  },
-  {
-    name: 'Beverages',
-    color: '#EC4899', // Pink-500
-    description: 'Bar service, beverage stations, drink service'
-  },
-  {
-    name: 'Tableware',
-    color: '#DB2777', // Pink-600
-    description: 'Linens, china, glassware, flatware'
-  },
-  {
-    name: 'Food Stations',
-    color: '#BE185D', // Pink-700
-    description: 'Buffet stations, carving stations, dessert bars'
-  },
-
-  // STAFFING & SERVICES (5 tags)
-  {
-    name: 'Event Staff',
-    color: '#F97316', // Orange-500 (different shade)
-    description: 'General event staff, setup crew'
-  },
-  {
-    name: 'Security',
-    color: '#7F1D1D', // Red-900
-    description: 'Security personnel, crowd management'
-  },
-  {
-    name: 'Hospitality',
-    color: '#B91C1C', // Red-700
-    description: 'Guest services, concierge, greeters'
-  },
-  {
-    name: 'Technical Staff',
-    color: '#991B1B', // Red-800
-    description: 'AV technicians, lighting operators'
-  },
-  {
-    name: 'Medical Services',
-    color: '#DC2626', // Red-600
-    description: 'First aid, medical personnel'
-  },
-
-  // LOGISTICS & OPERATIONS (5 tags)
+  // TRANSPORTATION & LOGISTICS (4 tags)
   {
     name: 'Transportation',
     color: '#0891B2', // Cyan-600
-    description: 'Vehicle rentals, shuttles, delivery'
+    description: 'Limousines, vintage cars, shuttle buses, valet'
   },
   {
-    name: 'Loading & Setup',
-    color: '#0E7490', // Cyan-700
-    description: 'Loading dock, freight, equipment delivery'
-  },
-  {
-    name: 'Storage',
-    color: '#155E75', // Cyan-800
-    description: 'Warehousing, equipment storage, staging areas'
+    name: 'Accommodation',
+    color: '#7F1D1D', // Red-900
+    description: 'Hotel room blocks, guest accommodations'
   },
   {
     name: 'Permits & Licenses',
-    color: '#164E63', // Cyan-900
-    description: 'Event permits, licenses, approvals'
-  },
-  {
-    name: 'Waste Management',
-    color: '#0F766E', // Teal-700
-    description: 'Trash removal, recycling, cleanup'
-  },
-
-  // BRANDING & MARKETING (4 tags)
-  {
-    name: 'Branding',
-    color: '#EC4899', // Pink-500
-    description: 'Logo application, brand identity, color schemes'
-  },
-  {
-    name: 'Print Materials',
-    color: '#F43F5E', // Rose-500
-    description: 'Brochures, flyers, programs, handouts'
-  },
-  {
-    name: 'Promotional Items',
-    color: '#E11D48', // Rose-600
-    description: 'Swag, giveaways, branded merchandise'
-  },
-  {
-    name: 'Social Media',
-    color: '#BE185D', // Pink-700
-    description: 'Content creation, live posting, coverage'
-  },
-
-  // DECOR & FLORAL (4 tags)
-  {
-    name: 'Floral',
-    color: '#F472B6', // Pink-400
-    description: 'Flower arrangements, centerpieces, installations'
-  },
-  {
-    name: 'Decor',
-    color: '#FB7185', // Rose-400
-    description: 'Decorative elements, props, themed decorations'
-  },
-  {
-    name: 'Furniture',
-    color: '#8B5A2B', // Brown (custom)
-    description: 'Rental furniture, tables, chairs, lounge seating'
-  },
-  {
-    name: 'Linens & Draping',
-    color: '#A78BFA', // Violet-400
-    description: 'Table linens, drapes, fabric treatments'
-  },
-
-  // DIGITAL & TECHNOLOGY (2 tags)
-  {
-    name: 'Digital Assets',
-    color: '#3B82F6', // Blue-500
-    description: 'Websites, apps, online platforms, registration systems'
-  },
-  {
-    name: 'Technology Infrastructure',
     color: '#60A5FA', // Blue-400
-    description: 'WiFi, networking, IT support, charging stations'
+    description: 'Marriage license, venue permits, insurance'
+  },
+  {
+    name: 'Welcome Bags',
+    color: '#3B82F6', // Blue-500
+    description: 'Guest welcome bags, out-of-town guest gifts'
+  },
+
+  // PLANNING & COORDINATION (4 tags)
+  {
+    name: 'Day-of Coordination',
+    color: '#F97316', // Orange-500
+    description: 'Day-of wedding coordinator, timeline management'
+  },
+  {
+    name: 'Rehearsal Dinner',
+    color: '#7F1D1D', // Red-900
+    description: 'Rehearsal dinner venue, catering, coordination'
+  },
+  {
+    name: 'Officiant',
+    color: '#DC2626', // Red-600
+    description: 'Wedding officiant, ceremony planning, vows'
+  },
+  {
+    name: 'Wedding Favors',
+    color: '#BE185D', // Pink-700
+    description: 'Guest favors, personalized gifts, charitable donations'
   }
 ];
 

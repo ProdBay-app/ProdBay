@@ -131,7 +131,7 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                     onChange={() => onHasContactPersonsChange(null)}
                     className="text-teal-600 focus:ring-teal-500"
                   />
-                  <span className="text-sm text-gray-200">All suppliers</span>
+                  <span className="text-sm text-gray-200">All vendors</span>
                 </label>
                 <label className="flex items-center space-x-2">
                   <input

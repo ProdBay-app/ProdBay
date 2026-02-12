@@ -114,7 +114,7 @@ const BudgetAssetsModal: React.FC<BudgetAssetsModalProps> = ({
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900">Budget Breakdown</h3>
-              <p className="text-sm text-gray-600">Assets with accepted quotes</p>
+              <p className="text-sm text-gray-600">Services with accepted quotes</p>
             </div>
           </div>
           <button
@@ -134,7 +134,7 @@ const BudgetAssetsModal: React.FC<BudgetAssetsModalProps> = ({
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-12 h-12 text-green-600 animate-spin mb-4" />
               <p className="text-gray-600 text-lg">Loading budget breakdown...</p>
-              <p className="text-gray-500 text-sm mt-2">Fetching assets with accepted quotes</p>
+              <p className="text-gray-500 text-sm mt-2">Fetching services with accepted quotes</p>
             </div>
           )}
 
@@ -163,7 +163,7 @@ const BudgetAssetsModal: React.FC<BudgetAssetsModalProps> = ({
               </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-2">No Accepted Quotes</h4>
               <p className="text-gray-600 text-center">
-                This project doesn't have any assets with accepted quotes yet.
+                This wedding doesn't have any services with accepted quotes yet.
               </p>
               <p className="text-gray-500 text-sm mt-2">
                 Once quotes are accepted, they'll appear here.
@@ -177,7 +177,7 @@ const BudgetAssetsModal: React.FC<BudgetAssetsModalProps> = ({
               {/* Info header */}
               <div className="mb-4">
                 <p className="text-sm text-gray-600">
-                  Showing <span className="font-semibold text-gray-900">{assets.length}</span> {assets.length === 1 ? 'asset' : 'assets'} with accepted quotes
+                  Showing <span className="font-semibold text-gray-900">{assets.length}</span> {assets.length === 1 ? 'service' : 'services'} with accepted quotes
                 </p>
               </div>
 
@@ -212,7 +212,7 @@ const BudgetAssetsModal: React.FC<BudgetAssetsModalProps> = ({
                     {/* Supplier */}
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                      <span className="text-gray-600">Supplier:</span>
+                      <span className="text-gray-600">Vendor:</span>
                       <span className="font-medium text-gray-900">
                         {asset.acceptedQuote.supplier.supplier_name}
                       </span>

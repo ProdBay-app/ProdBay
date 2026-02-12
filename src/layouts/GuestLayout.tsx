@@ -36,8 +36,8 @@ const GuestLayout: React.FC = () => {
                 title="Go to Home"
               >
                 <Package className="h-6 w-6 sm:h-8 sm:w-8 text-blue-300 drop-shadow-lg" />
-                <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">ProdBay</h1>
-                <span className="text-sm opacity-75 text-white/90 drop-shadow-md">| Supplier Portal</span>
+                <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">WedBay</h1>
+                <span className="text-sm opacity-75 text-white/90 drop-shadow-md">| Vendor Portal</span>
               </Link>
             </div>
           </div>

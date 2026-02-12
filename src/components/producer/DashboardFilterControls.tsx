@@ -26,7 +26,7 @@ const DashboardFilterControls: React.FC<DashboardFilterControlsProps> = ({
       value: 'mostRecent' as ProjectSortOption,
       label: 'Most Recent',
       icon: Calendar,
-      description: 'Newest projects first'
+      description: 'Newest weddings first'
     },
     {
       value: 'nearingDeadline' as ProjectSortOption,

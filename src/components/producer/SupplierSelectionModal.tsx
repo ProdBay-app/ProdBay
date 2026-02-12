@@ -180,9 +180,9 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
         <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
           <div className="flex items-start justify-between">
             <div className="flex-1 pr-4">
-              <h3 className="text-2xl font-bold text-white mb-1">Select Suppliers</h3>
+              <h3 className="text-2xl font-bold text-white mb-1">Select Vendors</h3>
               <p className="text-purple-100 text-sm">
-                Choose suppliers to request quotes for "{asset?.asset_name}"
+                Choose vendors to request quotes for "{asset?.asset_name}"
               </p>
             </div>
             <button
@@ -203,7 +203,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300" />
               <input
                 type="text"
-                placeholder="Search suppliers by name..."
+                placeholder="Search vendors by name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-12 py-3 text-base bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
@@ -271,7 +271,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
-              <span className="ml-2 text-gray-300">Loading suppliers...</span>
+              <span className="ml-2 text-gray-300">Loading vendors...</span>
             </div>
           ) : (
             <>
@@ -280,10 +280,10 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                 <div className="flex items-center justify-between mb-3">
                   <div className="text-sm text-gray-300">
                     {filteredSuppliers.length === suggestedSuppliers.length ? (
-                      <span>{suggestedSuppliers.length} supplier{suggestedSuppliers.length !== 1 ? 's' : ''} available</span>
+                      <span>{suggestedSuppliers.length} vendor{suggestedSuppliers.length !== 1 ? 's' : ''} available</span>
                     ) : (
                       <span>
-                        {filteredSuppliers.length} of {suggestedSuppliers.length} supplier{filteredSuppliers.length !== 1 ? 's' : ''} shown
+                        {filteredSuppliers.length} of {suggestedSuppliers.length} vendor{filteredSuppliers.length !== 1 ? 's' : ''} shown
                       </span>
                     )}
                   </div>
@@ -300,12 +300,12 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                       <Package className="h-12 w-12 mx-auto mb-2 text-gray-400" />
                       {suggestedSuppliers.length === 0 ? (
                         <>
-                          <p>No relevant suppliers found for this asset.</p>
-                          <p className="text-sm text-gray-400">Try adding more suppliers or check the asset specifications.</p>
+                          <p>No relevant vendors found for this service.</p>
+                          <p className="text-sm text-gray-400">Try adding more vendors or check the service specifications.</p>
                         </>
                       ) : (
                         <>
-                          <p>No suppliers match your current filters.</p>
+                          <p>No vendors match your current filters.</p>
                           <p className="text-sm text-gray-400">Try adjusting your search or filter criteria.</p>
                           <button
                             onClick={clearFilters}
@@ -325,7 +325,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                           <div className="flex items-center gap-2">
                             <Star className="w-5 h-5 text-teal-400 fill-teal-400" />
                             <h4 className="text-sm font-semibold text-white">
-                              Recommended for this Asset ({recommendedSuppliers.length})
+                              Recommended for this Service ({recommendedSuppliers.length})
                             </h4>
                           </div>
                           <button
@@ -427,7 +427,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                         )}
                         <div className="flex items-center gap-2 mb-3">
                           <h4 className="text-sm font-medium text-gray-300">
-                            Other Suppliers ({otherSuppliers.length})
+                            Other Vendors ({otherSuppliers.length})
                           </h4>
                         </div>
                         <div className="space-y-3">
@@ -501,7 +501,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
             <div className="text-sm text-gray-300">
               {selectedSupplierIds.length > 0 && (
                 <span>
-                  {selectedSupplierIds.length} supplier{selectedSupplierIds.length !== 1 ? 's' : ''} selected
+                  {selectedSupplierIds.length} vendor{selectedSupplierIds.length !== 1 ? 's' : ''} selected
                 </span>
               )}
             </div>

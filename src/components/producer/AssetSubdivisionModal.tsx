@@ -91,7 +91,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
     for (let i = 0; i < subAssets.length; i++) {
       const asset = subAssets[i];
       if (!asset.asset_name.trim()) {
-        showError(`Asset ${i + 1} must have a name`);
+        showError(`Service ${i + 1} must have a name`);
         return false;
       }
     }
@@ -122,7 +122,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
       }
 
       onAssetsCreated(createdAssets);
-      showSuccess(`Successfully created ${createdAssets.length} sub-asset${createdAssets.length > 1 ? 's' : ''}`);
+      showSuccess(`Successfully created ${createdAssets.length} sub-service${createdAssets.length > 1 ? 's' : ''}`);
       onClose();
     } catch (err) {
       console.error('Error creating sub-assets:', err);
@@ -158,11 +158,11 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                   <div className="flex items-center gap-3 mb-2">
                     <Copy className="w-6 h-6 text-white" />
                     <h2 className="text-2xl font-bold text-white">
-                      Subdivide Asset
+                      Subdivide Service
                     </h2>
                   </div>
                   <p className="text-purple-100 text-sm">
-                    Split "{originalAsset.asset_name}" into multiple assets
+                    Split "{originalAsset.asset_name}" into multiple services
                   </p>
                 </div>
                 
@@ -181,7 +181,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
             <div className="p-6 space-y-6">
               {/* Original Asset Info */}
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Original Asset</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Original Service</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium text-gray-700">Name:</span>
@@ -210,7 +210,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Sub-Assets ({subAssets.length})
+                    Sub-Services ({subAssets.length})
                   </h3>
                   <div className="flex items-center gap-2">
                     <button
@@ -225,7 +225,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                       className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                     >
                       <Plus className="w-4 h-4" />
-                      Add Asset
+                      Add Service
                     </button>
                   </div>
                 </div>
@@ -234,12 +234,12 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                   {subAssets.map((subAsset, index) => (
                     <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-medium text-gray-900">Asset {index + 1}</h4>
+                        <h4 className="font-medium text-gray-900">Service {index + 1}</h4>
                         {subAssets.length > 1 && (
                           <button
                             onClick={() => removeSubAsset(index)}
                             className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                            title="Remove this asset"
+                            title="Remove this service"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -250,14 +250,14 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                         {/* Asset Name */}
                         <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Asset Name *
+                            Service Name *
                           </label>
                           <input
                             type="text"
                             value={subAsset.asset_name}
                             onChange={(e) => updateSubAsset(index, 'asset_name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            placeholder="Enter asset name"
+                            placeholder="Enter service name"
                             required
                           />
                         </div>
@@ -287,7 +287,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                             onChange={(e) => updateSubAsset(index, 'specifications', e.target.value)}
                             rows={3}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            placeholder="Asset specifications"
+                            placeholder="Service specifications"
                           />
                         </div>
                       </div>
@@ -319,7 +319,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      Create {subAssets.length} Asset{subAssets.length > 1 ? 's' : ''}
+                      Create {subAssets.length} Service{subAssets.length > 1 ? 's' : ''}
                     </>
                   )}
                 </button>

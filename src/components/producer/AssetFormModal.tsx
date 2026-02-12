@@ -167,12 +167,12 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">
-                {mode === 'edit' ? 'Edit Asset' : 'Add New Asset'}
+                {mode === 'edit' ? 'Edit Service' : 'Add New Service'}
               </h3>
               <p className="text-purple-100 text-sm">
                 {mode === 'edit' 
-                  ? 'Update asset name and specifications' 
-                  : 'Create a new asset for this project'}
+                  ? 'Update service name and specifications' 
+                  : 'Create a new service for this wedding'}
               </p>
             </div>
           </div>
@@ -192,7 +192,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
           {/* Asset Name */}
           <div>
             <label htmlFor="asset_name" className="block text-sm font-semibold text-gray-200 mb-2">
-              Asset Name <span className="text-red-400">*</span>
+              Service Name <span className="text-red-400">*</span>
             </label>
             <input
               id="asset_name"
@@ -207,7 +207,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
               autoFocus
             />
             <p className="mt-1 text-xs text-gray-300">
-              Provide a clear, descriptive name for this asset
+              Provide a clear, descriptive name for this service
             </p>
           </div>
 
@@ -224,10 +224,10 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
               disabled={isSubmitting}
               rows={5}
               className="w-full px-4 py-3 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed"
-              placeholder="Describe the asset requirements, dimensions, materials, or any other specifications..."
+              placeholder="Describe the service requirements, dimensions, materials, or any other specifications..."
             />
             <p className="mt-1 text-xs text-gray-300">
-              Add detailed specifications to help guide production
+              Add detailed specifications to help guide planning
             </p>
           </div>
 
@@ -253,7 +253,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
               />
             </div>
             <p className="mt-1 text-xs text-gray-300">
-              Specify the quantity or amount needed for this asset
+              Specify the quantity or amount needed for this service
             </p>
           </div>
 
@@ -351,7 +351,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
               )}
             </div>
             <p className="mt-1 text-xs text-gray-300">
-              Categorize your asset with predefined tags for better organization
+              Categorize your service with predefined tags for better organization
             </p>
           </div>
 
@@ -359,7 +359,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
           {mode === 'create' && (
             <div className="bg-purple-500/20 border border-purple-400/30 rounded-lg p-4">
               <p className="text-sm text-purple-200">
-                <span className="font-semibold">Note:</span> New assets can be updated with timeline and supplier assignments later.
+                <span className="font-semibold">Note:</span> New services can be updated with timeline and vendor assignments later.
               </p>
             </div>
           )}
@@ -367,8 +367,8 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
           {mode === 'edit' && (
             <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-4">
               <p className="text-sm text-blue-200">
-                <span className="font-semibold">Note:</span> This will update the asset's name and specifications. 
-                Timeline and supplier assignments will remain unchanged.
+                <span className="font-semibold">Note:</span> This will update the service's name and specifications. 
+                Timeline and vendor assignments will remain unchanged.
               </p>
             </div>
           )}
@@ -403,7 +403,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                   ) : (
                     <>
                       <Package className="w-4 h-4" />
-                      Create Asset
+                      Create Service
                     </>
                   )}
                 </>

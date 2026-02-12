@@ -59,7 +59,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({
                   <div>
                     <div className="flex items-center space-x-2 mb-1">
                       <FileText className="h-4 w-4 text-orange-600" />
-                      <span className="font-medium text-gray-900">{q.asset?.asset_name || 'Asset'}</span>
+                      <span className="font-medium text-gray-900">{q.asset?.asset_name || 'Service'}</span>
                     </div>
                     <p className="text-sm text-gray-600">
                       {q.project?.project_name} {q.project?.client_name ? `• ${q.project?.client_name}` : ''}

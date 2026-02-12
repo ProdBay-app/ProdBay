@@ -244,10 +244,10 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
         <div className="flex items-start justify-between p-6 border-b border-white/20">
           <div>
             <h2 className="text-xl font-semibold text-white">
-              {isEditing ? 'Edit Supplier' : 'Add New Supplier'}
+              {isEditing ? 'Edit Vendor' : 'Add New Vendor'}
             </h2>
             <p className="text-sm text-gray-300 mt-1">
-              {isEditing ? 'Update supplier details and coverage areas.' : 'Create a supplier profile with coverage areas.'}
+              {isEditing ? 'Update vendor details and coverage areas.' : 'Create a vendor profile with coverage areas.'}
             </p>
           </div>
           <button
@@ -255,7 +255,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
             onClick={onClose}
             disabled={isSubmitting}
             className="text-gray-300 hover:text-white transition-colors disabled:opacity-50"
-            aria-label="Close supplier form"
+            aria-label="Close vendor form"
           >
             <X className="h-5 w-5" />
           </button>
@@ -265,7 +265,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="supplier_name" className="block text-sm font-medium text-gray-200 mb-1">
-                Supplier Name *
+                Vendor Name *
               </label>
               <input
                 id="supplier_name"
@@ -286,7 +286,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                 type="email"
                 value={formState.contact_email}
                 onChange={(e) => setFormState(prev => ({ ...prev, contact_email: e.target.value }))}
-                placeholder="supplier@example.com"
+                placeholder="vendor@example.com"
                 className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               />
             </div>
@@ -389,7 +389,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                               }));
                             }
                           }}
-                          placeholder="contact@supplier.com"
+                          placeholder="contact@vendor.com"
                           className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         />
                       </div>
@@ -508,7 +508,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
             disabled={isSubmitting || !formState.supplier_name.trim()}
             className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50"
           >
-            {isSubmitting ? 'Saving...' : isEditing ? 'Update Supplier' : 'Add Supplier'}
+            {isSubmitting ? 'Saving...' : isEditing ? 'Update Vendor' : 'Add Vendor'}
           </button>
         </div>
       </div>

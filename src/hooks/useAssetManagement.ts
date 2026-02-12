@@ -68,7 +68,7 @@ export const useAssetManagement = (currentProject: Project | null): UseAssetMana
       setQuotes(quotesData);
     } catch (error) {
       console.error('Error loading project details:', error);
-      showError('Failed to load project details');
+      showError('Failed to load wedding details');
     } finally {
       setIsLoading(false);
     }
@@ -130,11 +130,11 @@ export const useAssetManagement = (currentProject: Project | null): UseAssetMana
       if (isEditingAsset && assetForm.id) {
         // Update existing asset
         await ProducerService.updateAsset(assetForm.id, assetForm);
-        showSuccess('Asset updated successfully');
+        showSuccess('Service updated successfully');
       } else {
         // Create new asset
         await ProducerService.createAsset(currentProject.id, assetForm);
-        showSuccess('Asset created successfully');
+        showSuccess('Service created successfully');
       }
       
       // Refresh project details
@@ -142,7 +142,7 @@ export const useAssetManagement = (currentProject: Project | null): UseAssetMana
       closeAssetModal();
     } catch (err) {
       console.error('Failed to save asset', err);
-      showError('Failed to save asset');
+      showError('Failed to save service');
     } finally {
       setIsSubmittingAsset(false);
     }
@@ -165,10 +165,10 @@ export const useAssetManagement = (currentProject: Project | null): UseAssetMana
       if (currentProject) {
         await loadProjectDetails(currentProject.id);
       }
-      showSuccess('Asset deleted successfully');
+      showSuccess('Service deleted successfully');
     } catch (err) {
       console.error('Failed to delete asset', err);
-      showError('Failed to delete asset');
+      showError('Failed to delete service');
     }
   }, [currentProject, loadProjectDetails, showConfirm, showSuccess, showError]);
 

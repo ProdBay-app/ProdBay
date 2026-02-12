@@ -78,10 +78,10 @@ const OnboardingPage: React.FC = () => {
     <div className="min-h-[75vh] flex items-center justify-center px-4">
       <div className="w-full max-w-3xl bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg p-6 md:p-8">
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-          Welcome to ProdBay! Let&apos;s get you set up.
+          Welcome to WedBay! Let&apos;s get you set up.
         </h1>
         <p className="text-gray-200 mb-6">
-          Complete these steps to unlock your full producer workflow.
+          Complete these steps to unlock your full planner workflow.
         </p>
 
         <div className="mb-6">
@@ -105,7 +105,7 @@ const OnboardingPage: React.FC = () => {
             description={
               profileDone
                 ? 'Company name found in your account profile.'
-                : 'Add your company name to complete your producer profile.'
+                : 'Add your company name to complete your planner profile.'
             }
             ctaLabel="Edit Profile"
             ctaTo="/producer/settings"
@@ -114,27 +114,27 @@ const OnboardingPage: React.FC = () => {
 
           <OnboardingItem
             icon={<Users className="w-5 h-5 text-purple-300" />}
-            title="Add Suppliers"
+            title="Add Vendors"
             done={suppliersDone}
             description={
               suppliersDone
-                ? `${status.supplierCount} supplier${status.supplierCount === 1 ? '' : 's'} available.`
-                : 'Add at least one supplier so you can request quotes.'
+                ? `${status.supplierCount} vendor${status.supplierCount === 1 ? '' : 's'} available.`
+                : 'Add at least one vendor so you can request quotes.'
             }
-            ctaLabel="Add Supplier"
+            ctaLabel="Add Vendor"
             ctaTo="/producer/suppliers"
           />
 
           <OnboardingItem
             icon={<FolderPlus className="w-5 h-5 text-teal-300" />}
-            title="Create First Project"
+            title="Create First Wedding"
             done={projectsDone}
             description={
               projectsDone
-                ? `${status.projectCount} project${status.projectCount === 1 ? '' : 's'} created.`
-                : 'Create your first project to start managing production assets.'
+                ? `${status.projectCount} wedding${status.projectCount === 1 ? '' : 's'} created.`
+                : 'Create your first wedding to start managing wedding services.'
             }
-            ctaLabel="Create Project"
+            ctaLabel="Create Wedding"
             ctaTo="/producer/dashboard"
           />
         </div>

@@ -81,7 +81,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({
         onChange={handleChange}
         disabled={disabled}
         className={`${baseClasses} ${className}`}
-        aria-label="Asset status"
+        aria-label="Service status"
       >
         {statusOptions.map((status) => (
           <option key={status} value={status}>

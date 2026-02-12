@@ -117,7 +117,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
       
       // Show success message
       const supplier = suppliers.find(s => s.id === selectedSupplierId);
-      showSuccess(`Quote requested from ${supplier?.supplier_name || 'supplier'}`);
+      showSuccess(`Quote requested from ${supplier?.supplier_name || 'vendor'}`);
       
       // Close modal
       onClose();
@@ -157,7 +157,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                     Request Quote
                   </h2>
                   <p className="text-purple-100 text-sm">
-                    Select a supplier to request a quote for "{assetName}"
+                    Select a vendor to request a quote for "{assetName}"
                   </p>
                 </div>
                 
@@ -177,14 +177,14 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-12">
                   <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-4" />
-                  <p className="text-gray-600">Loading suppliers...</p>
+                  <p className="text-gray-600">Loading vendors...</p>
                 </div>
               ) : suppliers.length === 0 ? (
                 <div className="text-center py-12">
                   <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 font-medium mb-2">No suppliers available</p>
+                  <p className="text-gray-600 font-medium mb-2">No vendors available</p>
                   <p className="text-gray-500 text-sm">
-                    Please add suppliers before requesting quotes.
+                    Please add vendors before requesting quotes.
                   </p>
                 </div>
               ) : (
@@ -301,7 +301,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
               <div className="text-sm text-gray-600">
                 {selectedSupplierId && (
                   <span>
-                    1 supplier selected
+                    1 vendor selected
                   </span>
                 )}
               </div>

@@ -24,16 +24,16 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
 
   // 10 visual steps representing the project creation process
   const steps = [
-    { icon: Database, text: "Initializing project database", color: "text-blue-400", borderColor: "border-blue-400" },
-    { icon: FileText, text: "Processing project brief", color: "text-purple-400", borderColor: "border-purple-400" },
+    { icon: Database, text: "Initializing wedding database", color: "text-blue-400", borderColor: "border-blue-400" },
+    { icon: FileText, text: "Processing wedding brief", color: "text-purple-400", borderColor: "border-purple-400" },
     { icon: Cpu, text: "Running analysis", color: "text-indigo-400", borderColor: "border-indigo-400" },
     { icon: Target, text: "Identifying key requirements", color: "text-pink-400", borderColor: "border-pink-400" },
-    { icon: Users, text: "Analyzing supplier capabilities", color: "text-green-400", borderColor: "border-green-400" },
-    { icon: Zap, text: "Generating asset recommendations", color: "text-yellow-400", borderColor: "border-yellow-400" },
+    { icon: Users, text: "Analyzing vendor capabilities", color: "text-green-400", borderColor: "border-green-400" },
+    { icon: Zap, text: "Generating service recommendations", color: "text-yellow-400", borderColor: "border-yellow-400" },
     { icon: Clock, text: "Calculating timelines", color: "text-orange-400", borderColor: "border-orange-400" },
     { icon: Sparkles, text: "Optimizing resource allocation", color: "text-teal-400", borderColor: "border-teal-400" },
-    { icon: Rocket, text: "Finalizing project setup", color: "text-red-400", borderColor: "border-red-400" },
-    { icon: CheckCircle, text: "Project creation complete!", color: "text-emerald-400", borderColor: "border-emerald-400" }
+    { icon: Rocket, text: "Finalizing wedding setup", color: "text-red-400", borderColor: "border-red-400" },
+    { icon: CheckCircle, text: "Wedding creation complete!", color: "text-emerald-400", borderColor: "border-emerald-400" }
   ];
 
 
@@ -69,7 +69,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
   return (
     <div 
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm"
-      aria-label="Creating project, please wait"
+      aria-label="Creating wedding, please wait"
       role="dialog"
       aria-modal="true"
     >

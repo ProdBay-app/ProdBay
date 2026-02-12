@@ -66,7 +66,7 @@ const AssetCard: React.FC<AssetCardProps> = ({
             onEdit(asset);
           }}
           className="p-1.5 bg-white/20 hover:bg-white/30 rounded backdrop-blur-sm transition-colors"
-          aria-label="Edit asset"
+          aria-label="Edit service"
         >
           <Edit className="w-3 h-3 text-white" />
         </button>
@@ -78,7 +78,7 @@ const AssetCard: React.FC<AssetCardProps> = ({
             onDelete(asset);
           }}
           className="p-1.5 bg-white/20 hover:bg-red-500 rounded backdrop-blur-sm transition-colors"
-          aria-label="Delete asset"
+          aria-label="Delete service"
         >
           <Trash2 className="w-3 h-3 text-white" />
         </button>

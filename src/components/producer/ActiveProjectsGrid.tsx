@@ -604,7 +604,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400 mx-auto mb-4"></div>
-          <p className="text-gray-200">Loading projects...</p>
+          <p className="text-gray-200">Loading weddings...</p>
         </div>
       </div>
     );
@@ -615,7 +615,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="text-red-400 text-lg font-semibold mb-2">Error Loading Projects</div>
+          <div className="text-red-400 text-lg font-semibold mb-2">Error Loading Weddings</div>
           <p className="text-gray-200 mb-4">{error}</p>
           <button
             onClick={loadProjects}
@@ -638,12 +638,12 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-white">
-                {projectLimit ? 'Dashboard' : 'Projects'}
+                {projectLimit ? 'Dashboard' : 'Weddings'}
               </h1>
               <p className="text-gray-200 mt-1">
                 {projectLimit 
-                  ? 'Your active projects at a glance'
-                  : 'Manage and track all your production projects'
+                  ? 'Your active weddings at a glance'
+                  : 'Manage and track all your weddings'
                 }
               </p>
             </div>
@@ -652,7 +652,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
               className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
             >
               <Plus className="w-5 h-5" />
-              New Project
+              New Wedding
             </button>
           </div>
           
@@ -664,7 +664,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                 <SearchBar 
                   value={searchQuery}
                   onChange={setSearchQuery}
-                  placeholder="Search by project name, client, or keywords..."
+                  placeholder="Search by wedding name, couple, or keywords..."
                 />
               </div>
               
@@ -715,15 +715,15 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
               {searchQuery || selectedStatus !== 'all' ? (
                 <>
                   <h3 className="text-lg font-semibold text-white mb-2">
-                    No active projects found
+                    No active weddings found
                   </h3>
                   <p className="text-gray-200 mb-4">
                     {searchQuery && selectedStatus !== 'all' ? (
-                      <>No active projects match "<span className="font-medium">{searchQuery}</span>" with status "<span className="font-medium">{selectedStatus}</span>"</>
+                      <>No active weddings match "<span className="font-medium">{searchQuery}</span>" with status "<span className="font-medium">{selectedStatus}</span>"</>
                     ) : searchQuery ? (
-                      <>No active projects match "<span className="font-medium">{searchQuery}</span>"</>
+                      <>No active weddings match "<span className="font-medium">{searchQuery}</span>"</>
                     ) : (
-                      <>No active projects with status "<span className="font-medium">{selectedStatus}</span>"</>
+                      <>No active weddings with status "<span className="font-medium">{selectedStatus}</span>"</>
                     )}
                   </p>
                   <button
@@ -738,14 +738,14 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                 </>
               ) : (
                 <>
-                  <h3 className="text-lg font-semibold text-white mb-2">No active projects</h3>
-                  <p className="text-gray-200 mb-4">Get started by creating your first project</p>
+                  <h3 className="text-lg font-semibold text-white mb-2">No active weddings</h3>
+                  <p className="text-gray-200 mb-4">Get started by creating your first wedding</p>
                   <button
                     onClick={openCreateProject}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
                   >
                     <Plus className="w-5 h-5" />
-                    Create Project
+                    Create Wedding
                   </button>
                 </>
               )}

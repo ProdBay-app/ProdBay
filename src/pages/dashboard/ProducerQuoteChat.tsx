@@ -336,7 +336,7 @@ const ProducerQuoteChat: React.FC = () => {
                 </div>
               ) : quoteData ? (
                 <h1 className="text-2xl font-bold text-white">
-                  Chat with {quoteData.supplier?.supplier_name || 'Supplier'} - {quoteData.asset?.asset_name || 'Quote'}
+                  Chat with {quoteData.supplier?.supplier_name || 'Vendor'} - {quoteData.asset?.asset_name || 'Quote'}
                 </h1>
               ) : (
                 <h1 className="text-2xl font-bold text-white">Chat</h1>
@@ -385,7 +385,7 @@ const ProducerQuoteChat: React.FC = () => {
                     <div>
                       <h2 className="text-lg font-semibold text-white">Conversation</h2>
                       <p className="text-sm text-gray-300">
-                        {quoteData.supplier?.supplier_name || 'Supplier'} • {quoteData.asset?.asset_name || 'Quote'}
+                        {quoteData.supplier?.supplier_name || 'Vendor'} • {quoteData.asset?.asset_name || 'Quote'}
                       </p>
                     </div>
                   </div>
@@ -429,7 +429,7 @@ const ProducerQuoteChat: React.FC = () => {
                           <div className="flex items-center space-x-2 mb-1">
                             <User className="h-4 w-4" />
                             <span className="text-xs font-medium">
-                              {isInitialRequest ? 'Original Request' : isProducer ? 'Me' : quoteData.supplier?.supplier_name || 'Supplier'}
+                              {isInitialRequest ? 'Original Request' : isProducer ? 'Me' : quoteData.supplier?.supplier_name || 'Vendor'}
                             </span>
                             <span className={`text-xs ${isProducer || isInitialRequest ? 'text-blue-100' : 'text-gray-400'}`}>
                               {formatTime(message.created_at)}

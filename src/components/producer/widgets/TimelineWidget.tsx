@@ -86,7 +86,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
             <Calendar className="w-5 h-5 text-blue-300" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">Project Timeline</h3>
+            <h3 className="text-lg font-semibold text-white">Wedding Timeline</h3>
             <p className="text-sm text-gray-300">
               {totalCount > 0 
                 ? `${completedCount} of ${totalCount} milestones completed`
@@ -240,7 +240,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
               <div className="flex-1">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="font-bold text-white">Project Deadline</h4>
+                    <h4 className="font-bold text-white">Wedding Deadline</h4>
                     <p className="text-sm text-gray-300 mt-1">
                       Final delivery date
                     </p>
@@ -265,7 +265,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
           <Circle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-300 font-medium">No milestones yet</p>
           <p className="text-sm text-gray-400 mt-1">
-            Add milestones to track project progress
+            Add milestones to track wedding progress
           </p>
           {deadline && (
             <div className="mt-4 p-3 bg-blue-500/20 border border-blue-400/30 rounded-lg inline-block">

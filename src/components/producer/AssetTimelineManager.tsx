@@ -57,7 +57,7 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
         {
           id: '1',
           asset_id: asset.id,
-          event_name: 'Asset Created',
+          event_name: 'Service Created',
           event_date: asset.created_at,
           description: 'Initial asset creation',
           created_at: asset.created_at,
@@ -246,7 +246,7 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
                 value={newEvent.event_name}
                 onChange={(e) => setNewEvent(prev => ({ ...prev, event_name: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="e.g., Design Review, Production Start"
+                placeholder="e.g., Design Review, Planning Start"
               />
             </div>
             <div>

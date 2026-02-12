@@ -119,7 +119,7 @@ export const useSupplierManagement = (): UseSupplierManagementReturn => {
       setSuppliers(data);
     } catch (error) {
       console.error('Error loading suppliers:', error);
-      showError('Failed to load suppliers');
+      showError('Failed to load vendors');
     } finally {
       setLoading(false);
     }
@@ -143,17 +143,17 @@ export const useSupplierManagement = (): UseSupplierManagementReturn => {
       setFormData(INITIAL_FORM_DATA);
       
       await loadSuppliers();
-      showSuccess(editingSupplier ? 'Supplier updated successfully' : 'Supplier added successfully');
+      showSuccess(editingSupplier ? 'Vendor updated successfully' : 'Vendor added successfully');
     } catch (error) {
       console.error('Error saving supplier:', error);
-      showError('Failed to save supplier');
+      showError('Failed to save vendor');
     }
   };
   
   const handleDelete = async (supplierId: string): Promise<void> => {
     const confirmed = await showConfirm({
-      title: 'Delete Supplier',
-      message: 'Are you sure you want to delete this supplier?',
+      title: 'Delete Vendor',
+      message: 'Are you sure you want to delete this vendor?',
       variant: 'danger',
       confirmText: 'Delete',
       cancelText: 'Cancel'
@@ -164,10 +164,10 @@ export const useSupplierManagement = (): UseSupplierManagementReturn => {
     try {
       await SupplierService.deleteSupplier(supplierId);
       await loadSuppliers();
-      showSuccess('Supplier deleted successfully');
+      showSuccess('Vendor deleted successfully');
     } catch (error) {
       console.error('Error deleting supplier:', error);
-      showError('Failed to delete supplier');
+      showError('Failed to delete vendor');
     }
   };
   

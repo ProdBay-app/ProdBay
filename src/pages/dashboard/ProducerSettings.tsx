@@ -78,7 +78,7 @@ const ProducerSettings: React.FC = () => {
       <div className="bg-transparent border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <h1 className="text-3xl font-bold text-white">Settings</h1>
-          <p className="text-gray-200 mt-1">Update your producer profile details.</p>
+          <p className="text-gray-200 mt-1">Update your planner profile details.</p>
         </div>
       </div>
 

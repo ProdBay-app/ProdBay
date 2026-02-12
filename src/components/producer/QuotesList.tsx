@@ -190,7 +190,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h4 className="font-semibold text-white">
-                  {quote.supplier?.supplier_name || 'Unknown Supplier'}
+                  {quote.supplier?.supplier_name || 'Unknown Vendor'}
                 </h4>
                 {isWinner && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/30 text-green-200 border border-green-400/50">
@@ -221,7 +221,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
             {isPending ? (
               <div className="flex items-center gap-2 text-amber-300">
                 <Clock className="w-4 h-4" />
-                <span className="text-sm font-medium">Awaiting supplier response</span>
+                <span className="text-sm font-medium">Awaiting vendor response</span>
               </div>
             ) : quote.cost > 0 ? (
               <div className="flex items-center gap-2">
@@ -372,7 +372,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
           <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-white font-medium mb-1">No quote requests yet</p>
           <p className="text-gray-300 text-sm mb-4">
-            Request quotes from suppliers to get pricing for this asset
+            Request quotes from vendors to get pricing for this service
           </p>
           <button
             onClick={onOpenRequestModal}

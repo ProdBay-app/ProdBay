@@ -17,7 +17,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
   return (
     <div className="lg:col-span-1">
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Active Projects</h2>
+        <h2 className="text-xl font-semibold mb-4">Upcoming Weddings</h2>
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {projects.map((project) => (
             <div

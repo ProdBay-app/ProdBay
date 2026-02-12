@@ -415,7 +415,7 @@ const ProducerDashboardContainer: React.FC = () => {
         const updateEndTime = performance.now();
         const updateDuration = Math.round(updateEndTime - updateStartTime);
         console.log(`✅ [PROJECT UPDATE] Project update completed in ${updateDuration}ms`);
-        showSuccess('Project updated successfully');
+        showSuccess('Wedding updated successfully');
       } else {
         // Create new project
         const supabaseStartTime = performance.now();
@@ -448,18 +448,18 @@ const ProducerDashboardContainer: React.FC = () => {
             
             if (!briefResult.success) {
               console.warn('Brief processing failed:', briefResult.error?.message);
-              showWarning(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
+              showWarning(`Wedding created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually add services later.`);
             } else {
               console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
               const methodText = allocationMethod === 'ai' ? 'smart' : 'static';
-              showSuccess(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated using ${methodText} allocation.`, { duration: 6000 });
+              showSuccess(`Wedding created successfully! ${briefResult.data?.createdAssets.length} services were automatically matched using ${methodText} matching.`, { duration: 6000 });
             }
           } catch (briefError) {
             console.error('Brief processing error:', briefError);
-            showWarning('Project created successfully, but brief processing failed. You can manually create assets later.');
+            showWarning('Wedding created successfully, but brief processing failed. You can manually add services later.');
           }
         } else {
-          showSuccess('Project created successfully');
+          showSuccess('Wedding created successfully');
         }
         
         // Refresh projects and select the new one
@@ -503,7 +503,7 @@ const ProducerDashboardContainer: React.FC = () => {
       } else {
         console.error(`❌ [PROJECT CREATION] FAILED after ${totalDuration}ms (${(totalDuration / 1000).toFixed(2)}s):`, err);
       }
-      showError('Failed to save project');
+      showError('Failed to save wedding');
     } finally {
       setIsSubmittingProject(false);
       setIsCreatingProject(false);
@@ -527,10 +527,10 @@ const ProducerDashboardContainer: React.FC = () => {
       await ProducerService.deleteProject(selectedProject.id);
       await loadProjects();
       setSelectedProject(null);
-      showSuccess('Project deleted successfully');
+      showSuccess('Wedding deleted successfully');
     } catch (err) {
       console.error('Failed to delete project', err);
-      showError('Failed to delete project');
+      showError('Failed to delete wedding');
     }
   }, [selectedProject, loadProjects, showConfirm, showSuccess, showError]);
 
@@ -586,11 +586,11 @@ const ProducerDashboardContainer: React.FC = () => {
       if (isEditingAsset && assetForm.id) {
         // Update existing asset
         await ProducerService.updateAsset(assetForm.id, assetForm);
-        showSuccess('Asset updated successfully');
+        showSuccess('Service updated successfully');
       } else {
         // Create new asset
         await ProducerService.createAsset(selectedProject.id, assetForm);
-        showSuccess('Asset created successfully');
+        showSuccess('Service created successfully');
       }
       
       // Refresh project details
@@ -598,7 +598,7 @@ const ProducerDashboardContainer: React.FC = () => {
       closeAssetModal();
     } catch (err) {
       console.error('Failed to save asset', err);
-      showError('Failed to save asset');
+      showError('Failed to save service');
     } finally {
       setIsSubmittingAsset(false);
     }
@@ -620,10 +620,10 @@ const ProducerDashboardContainer: React.FC = () => {
       if (selectedProject) {
         await loadProjectDetails(selectedProject.id);
       }
-      showSuccess('Asset deleted successfully');
+      showSuccess('Service deleted successfully');
     } catch (err) {
       console.error('Failed to delete asset', err);
-      showError('Failed to delete asset');
+      showError('Failed to delete service');
     }
   }, [selectedProject, loadProjectDetails, showConfirm, showSuccess, showError]);
 
@@ -642,7 +642,7 @@ const ProducerDashboardContainer: React.FC = () => {
       setSuggestedSuppliers(response.suggestedSuppliers);
     } catch (error) {
       console.error('Failed to load suggested suppliers:', error);
-      showError('Failed to load supplier suggestions');
+      showError('Failed to load vendor suggestions');
     } finally {
       setLoadingSuppliers(false);
     }
@@ -686,7 +686,7 @@ const ProducerDashboardContainer: React.FC = () => {
       }
 
       const from = {
-        name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Producer',
+        name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Planner',
         email: user.email
       };
 
@@ -700,7 +700,7 @@ const ProducerDashboardContainer: React.FC = () => {
       await loadProjectDetails(selectedProject!.id);
       
       if (result.data.successful_requests > 0) {
-        showSuccess(`Quote requests sent to ${result.data.successful_requests} supplier(s) for ${previewAsset.asset_name}`);
+        showSuccess(`Quote requests sent to ${result.data.successful_requests} vendor(s) for ${previewAsset.asset_name}`);
       }
       
       if (result.data.failed_requests > 0) {
@@ -795,7 +795,7 @@ const ProducerDashboardContainer: React.FC = () => {
       setShowAIAllocationModal(false);
       setAiSuggestions(null);
       setAiAllocationCompleted(true);
-      showSuccess('Suggestions applied successfully! Smart allocation is now complete.', { duration: 6000 });
+        showSuccess('Suggestions applied successfully! Smart matching is now complete.', { duration: 6000 });
     } catch (error) {
       console.error('Error applying AI suggestions:', error);
       showError('Failed to apply suggestions. Please try again.');

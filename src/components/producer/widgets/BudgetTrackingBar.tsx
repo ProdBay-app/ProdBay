@@ -162,7 +162,7 @@ const BudgetTrackingBar: React.FC<BudgetTrackingBarProps> = ({
             <p className="text-sm font-semibold text-red-200">Budget Exceeded</p>
             <p className="text-xs text-red-300">
               This project is over budget by {formatCurrency(Math.abs(remaining))}. 
-              Review expenses and consider client consultation.
+              Review expenses and consider couple consultation.
             </p>
           </div>
         </div>

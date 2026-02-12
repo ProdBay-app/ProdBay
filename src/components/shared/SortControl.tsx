@@ -54,7 +54,7 @@ const SortControl: React.FC<SortControlProps> = ({
         value={value}
         onChange={(e) => onChange(e.target.value as ProjectSortOption)}
         className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer md:hidden"
-        aria-label="Sort projects"
+        aria-label="Sort weddings"
       >
         {sortOptions.map((option) => (
           <option key={option.value} value={option.value}>

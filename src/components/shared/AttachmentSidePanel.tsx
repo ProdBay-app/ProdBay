@@ -195,7 +195,7 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
                 onClick={() => setShowProducer((prev) => !prev)}
                 className="w-full flex items-center justify-between px-4 py-3 text-white/90"
               >
-                <span className="text-sm font-semibold">Producer Uploads</span>
+                <span className="text-sm font-semibold">Planner Uploads</span>
                 {showProducer ? (
                   <ChevronDown className="h-4 w-4" />
                 ) : (
@@ -205,7 +205,7 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
               {showProducer && (
                 <div className="px-4 pb-3 space-y-3">
                   {producerAttachments.length === 0 ? (
-                    <p className="text-xs text-gray-400">No producer attachments.</p>
+                    <p className="text-xs text-gray-400">No planner attachments.</p>
                   ) : (
                     producerAttachments.map((attachment) => {
                       const attachmentUrl = attachment.storage_url || attachment.public_url;
@@ -253,7 +253,7 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
                 onClick={() => setShowSupplier((prev) => !prev)}
                 className="w-full flex items-center justify-between px-4 py-3 text-white/90"
               >
-                <span className="text-sm font-semibold">Supplier Uploads</span>
+                <span className="text-sm font-semibold">Vendor Uploads</span>
                 {showSupplier ? (
                   <ChevronDown className="h-4 w-4" />
                 ) : (
@@ -263,7 +263,7 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
               {showSupplier && (
                 <div className="px-4 pb-3 space-y-3">
                   {supplierAttachments.length === 0 ? (
-                    <p className="text-xs text-gray-400">No supplier attachments.</p>
+                    <p className="text-xs text-gray-400">No vendor attachments.</p>
                   ) : (
                     supplierAttachments.map((attachment) => {
                       const attachmentUrl = attachment.storage_url || attachment.public_url;

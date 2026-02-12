@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
           {/* Copyright notice */}
           <div className="text-sm text-white/80 drop-shadow-sm">
-            © {currentYear} ProdBay. All rights reserved.
+            © {currentYear} WedBay. All rights reserved.
           </div>
           
           {/* Legal links */}

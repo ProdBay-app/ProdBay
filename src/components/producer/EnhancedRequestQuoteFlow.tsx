@@ -80,7 +80,7 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
 
   // User signature (could be fetched from user profile in production)
   const [signature] = useState({
-    name: 'Production Manager',
+    name: 'Wedding Planner',
     company: 'Your Company Name',
     email: 'manager@yourcompany.com',
     phone: '+1 (555) 123-4567'
@@ -274,9 +274,9 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
 
     const body = `Dear ${contactName},
 
-We would like to request a quote for the following asset:
+We would like to request a quote for the following service:
 
-Asset: ${assetName}
+Service: ${assetName}
 Specifications: ${asset?.specifications || 'See project brief for details'}
 ${asset?.timeline ? `Timeline: ${new Date(asset.timeline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : ''}
 
@@ -428,7 +428,7 @@ ${signature.phone}`;
       }
 
       const from = {
-        name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Producer',
+        name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Planner',
         email: user.email
       };
 
@@ -520,7 +520,7 @@ ${signature.phone}`;
 
       // Show success message with details from backend
       if (result.data.failed_requests === 0) {
-        showSuccess(`Quote requests sent to ${result.data.successful_requests} supplier${result.data.successful_requests !== 1 ? 's' : ''}!`);
+        showSuccess(`Quote requests sent to ${result.data.successful_requests} vendor${result.data.successful_requests !== 1 ? 's' : ''}!`);
       } else {
         const failedDetails = result.data.errors.map(e => `${e.supplier_name}: ${e.error}`).join('; ');
         showError(`Sent ${result.data.successful_requests} request${result.data.successful_requests !== 1 ? 's' : ''}, but ${result.data.failed_requests} failed. ${failedDetails}`);
@@ -591,12 +591,12 @@ ${signature.phone}`;
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-4">
                   <h2 className="text-2xl font-bold text-white mb-1">
-                    {currentStep === 'selection' ? 'Select Suppliers' : 'Customize Quote Requests'}
+                    {currentStep === 'selection' ? 'Select Vendors' : 'Customize Quote Requests'}
                   </h2>
                   <p className="text-purple-100 text-sm">
                     {currentStep === 'selection' 
-                      ? `Choose suppliers to request quotes for "${assetName}"`
-                      : `Preview and customize emails for each supplier (${currentSupplierIndex + 1} of ${customizedEmails.length})`
+                      ? `Choose vendors to request quotes for "${assetName}"`
+                      : `Preview and customize emails for each vendor (${currentSupplierIndex + 1} of ${customizedEmails.length})`
                     }
                   </p>
                 </div>
@@ -620,14 +620,14 @@ ${signature.phone}`;
                   {loading ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <Loader2 className="w-12 h-12 text-purple-400 animate-spin mb-4" />
-                      <p className="text-gray-300">Loading suppliers...</p>
+                      <p className="text-gray-300">Loading vendors...</p>
                     </div>
                   ) : suppliers.length === 0 ? (
                     <div className="text-center py-12">
                       <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <p className="text-white font-medium mb-2">No suppliers available</p>
+                      <p className="text-white font-medium mb-2">No vendors available</p>
                       <p className="text-gray-300 text-sm">
-                        Please add suppliers before requesting quotes.
+                        Please add vendors before requesting quotes.
                       </p>
                     </div>
                   ) : (
@@ -638,7 +638,7 @@ ${signature.phone}`;
                           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-300" />
                           <input
                             type="text"
-                            placeholder="Search suppliers by name..."
+                            placeholder="Search vendors by name..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-12 pr-12 py-3 text-base bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
@@ -696,7 +696,7 @@ ${signature.phone}`;
                             <div className="flex items-center gap-2">
                               <Star className="w-5 h-5 text-purple-400 fill-purple-400" />
                               <h4 className="text-sm font-semibold text-white">
-                                Recommended for this Asset ({recommendedSuppliers.length})
+                                Recommended for this Service ({recommendedSuppliers.length})
                               </h4>
                             </div>
                             <button
@@ -816,7 +816,7 @@ ${signature.phone}`;
                           )}
                           <div className="flex items-center gap-2 mb-3">
                             <h4 className="text-sm font-medium text-gray-300">
-                              Other Suppliers ({otherSuppliers.length})
+                              Other Vendors ({otherSuppliers.length})
                             </h4>
                           </div>
                         <div className="space-y-3">
@@ -1095,7 +1095,7 @@ ${signature.phone}`;
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-300">
                   {currentStep === 'selection' 
-                    ? `${selectedSupplierIds.length} supplier${selectedSupplierIds.length !== 1 ? 's' : ''} selected`
+                    ? `${selectedSupplierIds.length} vendor${selectedSupplierIds.length !== 1 ? 's' : ''} selected`
                     : `${customizedEmails.length} email${customizedEmails.length !== 1 ? 's' : ''} will be sent`
                   }
                 </div>

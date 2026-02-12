@@ -232,7 +232,7 @@ const ProjectDetailPage: React.FC = () => {
       setAssets(prev => [...prev, newAsset]);
 
       // Show success feedback before closing modal
-      showSuccess(`Asset "${newAsset.asset_name}" created successfully!`);
+      showSuccess(`Service "${newAsset.asset_name}" created successfully!`);
 
       // Close modal
       setIsAddModalOpen(false);
@@ -292,7 +292,7 @@ const ProjectDetailPage: React.FC = () => {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Project Brief - ${project.id}</title>
+          <title>Wedding Brief - ${project.id}</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -352,7 +352,7 @@ const ProjectDetailPage: React.FC = () => {
         </head>
         <body>
           <div class="header">
-            <div class="title">Project Brief</div>
+            <div class="title">Wedding Brief</div>
             <div class="project-id">Project ID: ${project.id}</div>
           </div>
           
@@ -363,7 +363,7 @@ const ProjectDetailPage: React.FC = () => {
           
           ${currentPhysicalParameters ? `
           <div class="section">
-            <div class="section-title">Physical Parameters</div>
+            <div class="section-title">Venue Details</div>
             <div class="content">${currentPhysicalParameters}</div>
           </div>
           ` : ''}
@@ -405,7 +405,7 @@ const ProjectDetailPage: React.FC = () => {
       <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-400 mx-auto mb-4"></div>
-          <p className="text-gray-200 text-lg">Loading project details...</p>
+          <p className="text-gray-200 text-lg">Loading wedding details...</p>
         </div>
       </div>
     );
@@ -420,17 +420,17 @@ const ProjectDetailPage: React.FC = () => {
             <AlertCircle className="w-10 h-10 text-red-400" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">
-            {error || 'Project Not Found'}
+            {error || 'Wedding Not Found'}
           </h2>
           <p className="text-gray-200 mb-6">
-            The project you're looking for doesn't exist or has been removed.
+            The wedding you're looking for doesn't exist or has been removed.
           </p>
           <button
             onClick={() => navigate('/producer/projects')}
             className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back to Projects
+            Back to Weddings
           </button>
         </div>
       </div>
@@ -472,11 +472,11 @@ const ProjectDetailPage: React.FC = () => {
                 <User className="w-5 h-5 text-purple-300" />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-300 mb-1">Client</p>
+                <p className="text-sm text-gray-300 mb-1">Couple</p>
                 <button
                   onClick={() => setIsClientModalOpen(true)}
                   className="text-lg font-semibold text-teal-300 hover:text-teal-200 hover:underline transition-colors text-left"
-                  title={`View all projects for ${project.client_name}`}
+                  title={`View all weddings for ${project.client_name}`}
                 >
                   {project.client_name}
                 </button>
@@ -546,7 +546,7 @@ const ProjectDetailPage: React.FC = () => {
                       }
                     `}
                   >
-                    Assets ({assets.length})
+                    Services ({assets.length})
                   </button>
                   
                   {/* Brief Tab */}
@@ -592,7 +592,7 @@ const ProjectDetailPage: React.FC = () => {
                           </svg>
                         }
                       >
-                        Add Asset
+                        Add Service
                       </Button>
                     </>
                   )}
@@ -612,7 +612,7 @@ const ProjectDetailPage: React.FC = () => {
                           onClick={() => setShowHighlights(prev => !prev)}
                           variant={showHighlights ? 'secondary' : 'outline'}
                           icon={showHighlights ? <Highlighter className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                          title={showHighlights ? 'Hide asset highlights' : 'Show asset highlights'}
+                          title={showHighlights ? 'Hide service highlights' : 'Show service highlights'}
                         >
                           {showHighlights ? 'Highlights' : 'Hide'}
                         </Button>

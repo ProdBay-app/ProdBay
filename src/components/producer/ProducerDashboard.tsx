@@ -248,8 +248,8 @@ const ProducerDashboard: React.FC<ProducerDashboardProps> = ({
           ) : (
             <div className="bg-white rounded-lg shadow p-6 text-center">
               <Eye className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Project</h3>
-              <p className="text-gray-600">Choose a project from the list to view details and manage assets</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Wedding</h3>
+              <p className="text-gray-600">Choose a wedding from the list to view details and manage services</p>
             </div>
           )}
         </div>

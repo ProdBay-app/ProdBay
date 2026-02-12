@@ -76,7 +76,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
     try {
       await ProducerService.acceptQuote(targetQuote.id);
       
-      showSuccess('Quote accepted successfully! The asset has been updated and other quotes have been rejected.');
+      showSuccess('Quote accepted successfully! The service has been updated and other quotes have been rejected.');
       
       // Reload quote data to reflect the new status
       await loadQuoteData();
@@ -218,7 +218,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
               </div>
               {quoteData && (
                 <p className="text-purple-100 text-sm">
-                  {quoteData.asset?.asset_name || 'Asset'} • {quoteData.supplier?.supplier_name || 'Supplier'}
+                  {quoteData.asset?.asset_name || 'Service'} • {quoteData.supplier?.supplier_name || 'Vendor'}
                 </p>
               )}
             </div>
@@ -259,12 +259,12 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                 <section>
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <Building2 className="w-5 h-5 text-purple-300" />
-                    Supplier Information
+                    Vendor Information
                   </h3>
                   <div className="bg-black/20 rounded-lg p-4 border border-white/20 space-y-3">
                     <div>
                       <label className="block text-sm font-semibold text-gray-200 mb-1">
-                        Supplier Name
+                        Vendor Name
                       </label>
                       <p className="text-white">{quoteData.supplier?.supplier_name || 'Unknown'}</p>
                     </div>
@@ -437,8 +437,8 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                   <div className="flex-1 min-w-0 h-full">
                     <QuoteChat
                       quoteId={quote.id}
-                      supplierName={quoteData.supplier?.supplier_name || quote.supplier?.supplier_name || 'Supplier'}
-                      assetName={quoteData.asset?.asset_name || 'Asset'}
+                      supplierName={quoteData.supplier?.supplier_name || quote.supplier?.supplier_name || 'Vendor'}
+                      assetName={quoteData.asset?.asset_name || 'Service'}
                       onMessageSent={onQuoteUpdate}
                       externalSelectedFiles={selectedChatFiles}
                       onSelectedFilesChange={setSelectedChatFiles}

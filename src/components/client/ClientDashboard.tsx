@@ -51,14 +51,14 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Project Dashboard</h1>
-          <p className="text-gray-600 mt-1">Monitor your project progress and costs</p>
+          <h1 className="text-3xl font-bold text-gray-900">Wedding Dashboard</h1>
+          <p className="text-gray-600 mt-1">Monitor your wedding progress and costs</p>
         </div>
       </div>
 
       {/* Project Selection */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Your Projects</h2>
+        <h2 className="text-xl font-semibold mb-4">Your Weddings</h2>
         <div className="space-y-3">
           {projects.map((project) => (
             <div
@@ -105,7 +105,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({
               <div className="flex items-center">
                 <Package className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
-                  <h3 className="text-lg font-semibold">Assets</h3>
+                  <h3 className="text-lg font-semibold">Services</h3>
                   <p className="text-2xl font-bold text-green-600">{assets.length}</p>
                 </div>
               </div>
@@ -141,11 +141,11 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({
 
           {/* Project Brief */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Project Brief</h2>
+            <h2 className="text-xl font-semibold mb-4">Wedding Brief</h2>
             <p className="text-gray-700 whitespace-pre-wrap">{selectedProject.brief_description}</p>
             {selectedProject.physical_parameters && (
               <div className="mt-4">
-                <h3 className="font-medium text-gray-900 mb-2">Physical Parameters</h3>
+                <h3 className="font-medium text-gray-900 mb-2">Venue Details</h3>
                 <p className="text-gray-600">{selectedProject.physical_parameters}</p>
               </div>
             )}
@@ -153,7 +153,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({
 
           {/* Asset Status */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Asset Status</h2>
+            <h2 className="text-xl font-semibold mb-4">Service Status</h2>
             <div className="space-y-4">
               {assets.map((asset) => (
                 <div key={asset.id} className="border rounded-lg p-4">
@@ -195,10 +195,10 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({
 
           {/* Producer Notes Section */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Producer Notes</h2>
+            <h2 className="text-xl font-semibold mb-4">Planner Notes</h2>
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-gray-700 italic">
-                Project is being processed. Your assigned producer will update this section with progress notes and any important updates.
+                Wedding is being processed. Your assigned planner will update this section with progress notes and any important updates.
               </p>
             </div>
           </div>

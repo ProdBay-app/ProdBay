@@ -134,7 +134,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
   if (assets.length === 0) {
     return (
       <div className="bg-white/5 border-2 border-dashed border-white/30 rounded-lg p-12 text-center">
-        <p className="text-gray-300">No assets to display</p>
+        <p className="text-gray-300">No services to display</p>
       </div>
     );
   }
@@ -162,7 +162,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
               Tags
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-white">
-              Supplier Status
+              Vendor Status
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               # Quote Requests
@@ -244,7 +244,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
                     <button
                       onClick={() => onEdit(asset)}
                       className="p-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 rounded backdrop-blur-sm transition-colors"
-                      aria-label="Edit asset"
+                      aria-label="Edit service"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
@@ -253,7 +253,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
                     <button
                       onClick={() => onDelete(asset)}
                       className="p-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded backdrop-blur-sm transition-colors"
-                      aria-label="Delete asset"
+                      aria-label="Delete service"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

@@ -108,7 +108,7 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center">
             <Package className="h-8 w-8 text-blue-600" />
             <div className="ml-4">
-              <h3 className="text-lg font-semibold">Total Projects</h3>
+              <h3 className="text-lg font-semibold">Total Weddings</h3>
               <p className="text-2xl font-bold text-blue-600">{stats.totalProjects}</p>
             </div>
           </div>
@@ -118,7 +118,7 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center">
             <Users className="h-8 w-8 text-teal-600" />
             <div className="ml-4">
-              <h3 className="text-lg font-semibold">Suppliers</h3>
+              <h3 className="text-lg font-semibold">Vendors</h3>
               <p className="text-2xl font-bold text-teal-600">{stats.totalSuppliers}</p>
             </div>
           </div>
@@ -128,7 +128,7 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center">
             <BarChart3 className="h-8 w-8 text-purple-600" />
             <div className="ml-4">
-              <h3 className="text-lg font-semibold">Total Assets</h3>
+              <h3 className="text-lg font-semibold">Total Services</h3>
               <p className="text-2xl font-bold text-purple-600">{stats.totalAssets}</p>
             </div>
           </div>
@@ -150,17 +150,17 @@ const AdminDashboard: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center space-x-2 mb-4">
             <Activity className="h-6 w-6 text-gray-700" />
-            <h2 className="text-xl font-semibold">Project Status Overview</h2>
+            <h2 className="text-xl font-semibold">Wedding Status Overview</h2>
           </div>
           
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-              <span className="font-medium text-yellow-800">Active Projects</span>
+              <span className="font-medium text-yellow-800">Active Weddings</span>
               <span className="text-2xl font-bold text-yellow-600">{stats.activeProjects}</span>
             </div>
             
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <span className="font-medium text-green-800">Completed Projects</span>
+              <span className="font-medium text-green-800">Completed Weddings</span>
               <span className="text-2xl font-bold text-green-600">{stats.completedProjects}</span>
             </div>
           </div>
@@ -190,15 +190,15 @@ const AdminDashboard: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center space-x-2 mb-4">
           <Database className="h-6 w-6 text-gray-700" />
-          <h2 className="text-xl font-semibold">Recent Projects</h2>
+          <h2 className="text-xl font-semibold">Recent Weddings</h2>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Project Name</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Client</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-700">Wedding Name</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-700">Couple</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-700">Budget</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-700">Created</th>
@@ -233,7 +233,7 @@ const AdminDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div>
             <span className="font-medium text-gray-700">Platform:</span>
-            <span className="ml-2 text-gray-600">ProdBay Production Management</span>
+            <span className="ml-2 text-gray-600">WedBay Wedding Management</span>
           </div>
           <div>
             <span className="font-medium text-gray-700">Version:</span>

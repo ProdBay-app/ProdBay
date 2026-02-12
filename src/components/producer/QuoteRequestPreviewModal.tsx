@@ -83,10 +83,10 @@ const QuoteRequestPreviewModal: React.FC<QuoteRequestPreviewModalProps> = ({
         const subject = `Quote Request: ${asset.asset_name}`;
         const body = `Dear ${contactName},
 
-We would like to request a quote for the following asset:
+We would like to request a quote for the following service:
 
-Asset: ${asset.asset_name}
-Specifications: ${asset.specifications || 'See project brief for details'}
+Service: ${asset.asset_name}
+Specifications: ${asset.specifications || 'See wedding brief for details'}
 Timeline: ${asset.timeline || 'To be discussed'}
 
 Please provide your quote by visiting the link below and submitting your proposal.
@@ -181,7 +181,7 @@ Best regards,
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Preview Quote Request Emails</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Asset: {asset.asset_name} • {suppliers.length} supplier(s) selected
+              Service: {asset.asset_name} • {suppliers.length} vendor(s) selected
             </p>
           </div>
           <button

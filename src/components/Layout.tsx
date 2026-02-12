@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useLocation, Link, useNavigate } from 'react-router-dom';
-import { Users, Package, FileText, BarChart3 } from 'lucide-react';
+import { Users, Heart, FileText, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Footer from './Footer';
 import DarkVeil from './DarkVeil';
@@ -38,13 +38,13 @@ const Layout: React.FC = () => {
     if (isClientPath) {
       return [
         { to: '/client/dashboard', label: 'Dashboard', icon: BarChart3 },
-        { to: '/client/new-project', label: 'New Project', icon: FileText }
+        { to: '/client/new-project', label: 'New Wedding', icon: FileText }
       ];
     }
     if (isProducerPath) {
       return [
         { to: '/producer/dashboard', label: 'Dashboard', icon: BarChart3 },
-        { to: '/producer/suppliers', label: 'Suppliers', icon: Users }
+        { to: '/producer/suppliers', label: 'Vendors', icon: Users }
       ];
     }
     if (isSupplierPath) {
@@ -62,11 +62,11 @@ const Layout: React.FC = () => {
   };
 
   const getUserTypeLabel = () => {
-    if (isClientPath) return 'Client Portal';
-    if (isProducerPath) return 'Producer Portal';
+    if (isClientPath) return 'Couple Portal';
+    if (isProducerPath) return 'Planner Portal';
     if (isAdminPath) return 'Admin Portal';
-    if (isSupplierPath) return 'Supplier Portal';
-    return 'ProdBay';
+    if (isSupplierPath) return 'Vendor Portal';
+    return 'WedBay';
   };
 
   const navLinks = getNavLinks();
@@ -99,8 +99,8 @@ const Layout: React.FC = () => {
                 className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
                 title="Go to Home"
               >
-                  <Package className="h-6 w-6 sm:h-8 sm:w-8 text-blue-300 drop-shadow-lg" />
-                  <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">ProdBay</h1>
+                  <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-pink-300 drop-shadow-lg" />
+                  <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">WedBay</h1>
                   {!isLandingPage && (
                     <span className="text-sm opacity-75 text-white/90 drop-shadow-md">| {userTypeLabel}</span>
                   )}
@@ -170,7 +170,7 @@ const Layout: React.FC = () => {
             {/* Subtitle - only show on app pages */}
             {!isLandingPage && (
               <div className="text-sm opacity-75 text-white/90 drop-shadow-md hidden sm:block">
-                Production Management System
+                Wedding Planning Platform
               </div>
             )}
           </div>

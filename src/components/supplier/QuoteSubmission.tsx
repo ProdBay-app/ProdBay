@@ -181,8 +181,8 @@ const QuoteSubmission: React.FC = () => {
           >
             <Package className="h-8 w-8" />
             <div>
-              <h1 className="text-2xl font-bold">ProdBay Quote Request</h1>
-              <p className="opacity-90">Supplier Portal</p>
+              <h1 className="text-2xl font-bold">WedBay Quote Request</h1>
+              <p className="opacity-90">Vendor Portal</p>
             </div>
           </div>
         </div>
@@ -195,13 +195,13 @@ const QuoteSubmission: React.FC = () => {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Quote Submitted Successfully!</h2>
             <p className="text-gray-600 mb-6">
-              Thank you for your quote. The producer will review your submission and contact you if your quote is selected.
+              Thank you for your quote. The planner will review your submission and contact you if your quote is selected.
             </p>
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="font-semibold text-gray-900 mb-2">Your Quote Summary:</h3>
               <div className="text-left space-y-2">
                 <p><span className="font-medium">Cost:</span> ${formData.cost.toFixed(2)}</p>
-                <p><span className="font-medium">Asset:</span> {asset.asset_name}</p>
+                <p><span className="font-medium">Service:</span> {asset.asset_name}</p>
                 {formData.notes_capacity && (
                   <p><span className="font-medium">Notes:</span> <span className="whitespace-pre-wrap">{formData.notes_capacity}</span></p>
                 )}
@@ -215,15 +215,15 @@ const QuoteSubmission: React.FC = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <Building2 className="h-6 w-6 text-orange-600" />
-                <h2 className="text-xl font-semibold">Project Information</h2>
+                <h2 className="text-xl font-semibold">Wedding Information</h2>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-2">Project Details</h3>
+                  <h3 className="font-medium text-gray-900 mb-2">Wedding Details</h3>
                   <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Project:</span> {asset.project?.project_name}</p>
-                    <p><span className="font-medium">Client:</span> {asset.project?.client_name}</p>
+                    <p><span className="font-medium">Wedding:</span> {asset.project?.project_name}</p>
+                    <p><span className="font-medium">Couple:</span> {asset.project?.client_name}</p>
                     {asset.timeline && (
                       <p><span className="font-medium">Deadline:</span> {new Date(asset.timeline).toLocaleDateString()}</p>
                     )}
@@ -245,7 +245,7 @@ const QuoteSubmission: React.FC = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <Package className="h-6 w-6 text-orange-600" />
-                <h2 className="text-xl font-semibold">Asset Requirements</h2>
+                <h2 className="text-xl font-semibold">Service Requirements</h2>
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4">
@@ -254,7 +254,7 @@ const QuoteSubmission: React.FC = () => {
                 
                 {asset.project?.brief_description && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Project Brief Context:</h4>
+                    <h4 className="font-medium text-gray-900 mb-2">Wedding Brief Context:</h4>
                     <p className="text-gray-700 text-sm whitespace-pre-wrap">{asset.project.brief_description}</p>
                   </div>
                 )}
@@ -351,7 +351,7 @@ const QuoteSubmission: React.FC = () => {
                     <li>• Please provide your best competitive pricing</li>
                     <li>• Include all costs (materials, labor, delivery, etc.)</li>
                     <li>• Specify any terms or conditions in the notes section</li>
-                    <li>• The producer will review all quotes and contact selected suppliers</li>
+                    <li>• The planner will review all quotes and contact selected vendors</li>
                   </ul>
                 </div>
               </div>

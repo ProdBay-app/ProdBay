@@ -225,7 +225,7 @@ const SupplierSubmitQuote: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Package className="h-5 w-5 text-gray-600" />
               <span className="text-sm font-medium text-gray-800">
-                You have no pending quote requests. Check back later or contact the producer.
+                You have no pending quote requests. Check back later or contact the planner.
               </span>
             </div>
           </div>
@@ -233,7 +233,7 @@ const SupplierSubmitQuote: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Asset *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Service *</label>
             <select
               value={formData.asset_id}
               onChange={(e) => setFormData((p) => ({ ...p, asset_id: e.target.value }))}
@@ -243,10 +243,10 @@ const SupplierSubmitQuote: React.FC = () => {
             >
               <option value="">
                 {loading 
-                  ? 'Loading assets...' 
+                  ? 'Loading services...' 
                   : assets.length === 0 
-                    ? 'No quotable assets available' 
-                    : 'Select an asset'
+                    ? 'No quotable services available' 
+                    : 'Select a service'
                 }
               </option>
               {assets.map((asset) => (
@@ -257,7 +257,7 @@ const SupplierSubmitQuote: React.FC = () => {
             </select>
             {assets.length > 0 && (
               <p className="mt-1 text-xs text-gray-500">
-                {assets.length} asset{assets.length !== 1 ? 's' : ''} available for quoting
+                {assets.length} service{assets.length !== 1 ? 's' : ''} available for quoting
               </p>
             )}
           </div>

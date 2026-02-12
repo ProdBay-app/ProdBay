@@ -1,13 +1,13 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  Package, 
+  Heart, 
   Users, 
   ArrowRight, 
   CheckCircle,
   FileText, 
   DollarSign,
-  Clock
+  Calendar
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import RotatingText from './RotatingText';
@@ -36,9 +36,9 @@ const Home: React.FC = () => {
         <div className="min-h-[95vh] flex items-center justify-center relative">
           <div className="text-center max-w-7xl mx-auto px-4">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 drop-shadow-lg">
-              Production Management{' '}
+              Wedding Planning{' '}
               <RotatingText
-                texts={['Simplified', 'Automated', 'Optimized', 'Coordinated']}
+                texts={['Simplified', 'Curated', 'Perfected', 'Coordinated']}
                 mainClassName="px-2 text-white overflow-hidden py-0.5 rounded-lg inline-block"
                 style={{ backgroundColor: '#0d9488' }}
                 staggerFrom={"last"}
@@ -52,8 +52,8 @@ const Home: React.FC = () => {
               />
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 max-w-3xl mx-auto drop-shadow-md px-2">
-              Streamline your production workflow from initial brief to final delivery. 
-              Connect clients, producers, and suppliers in one comprehensive platform.
+              Streamline your wedding planning from initial brief to the big day. 
+              Connect couples, planners, and vendors in one beautiful platform.
             </p>
             
             {/* Hero CTA Buttons - Elegant auth entry points */}
@@ -117,7 +117,7 @@ const Home: React.FC = () => {
                 <FileText className="h-12 w-12 sm:h-16 sm:w-16 text-blue-600 mb-3 sm:mb-4" />
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Smart Brief Parsing</h3>
                 <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
-                  Automatically identify required assets from project descriptions with intelligent parsing
+                  Automatically identify required services from wedding briefs with intelligent parsing
                 </p>
               </div>
             </ScrollStackItem>
@@ -125,9 +125,9 @@ const Home: React.FC = () => {
             <ScrollStackItem itemClassName="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200">
               <div className="flex flex-col items-center justify-center h-full">
                 <Users className="h-12 w-12 sm:h-16 sm:w-16 text-teal-600 mb-3 sm:mb-4" />
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Supplier Network</h3>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Vendor Network</h3>
                 <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
-                  Intelligent matching with relevant suppliers based on requirements and capabilities
+                  Intelligent matching with the perfect wedding vendors based on your vision and needs
                 </p>
               </div>
             </ScrollStackItem>
@@ -137,17 +137,17 @@ const Home: React.FC = () => {
                 <DollarSign className="h-12 w-12 sm:h-16 sm:w-16 text-green-600 mb-3 sm:mb-4" />
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Quote Management</h3>
                 <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
-                  Streamlined quote collection and comparison process for efficient decision making
+                  Collect and compare vendor quotes effortlessly to stay within your wedding budget
                 </p>
               </div>
             </ScrollStackItem>
 
             <ScrollStackItem itemClassName="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200">
               <div className="flex flex-col items-center justify-center h-full">
-                <Clock className="h-12 w-12 sm:h-16 sm:w-16 text-orange-600 mb-3 sm:mb-4" />
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Real-time Tracking</h3>
+                <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-orange-600 mb-3 sm:mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Timeline Tracking</h3>
                 <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
-                  Monitor project progress and status updates in real-time with comprehensive dashboards
+                  Track every detail of your wedding planning timeline with real-time status updates
                 </p>
               </div>
             </ScrollStackItem>
@@ -161,34 +161,34 @@ const Home: React.FC = () => {
               {/* Producer Portal */}
               <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm rounded-lg shadow-xl overflow-hidden transform transition-all hover:shadow-2xl">
                 <div className="bg-teal-600 text-white p-6 sm:p-8">
-                  <Package className="h-12 w-12 sm:h-16 sm:w-16 mb-4 sm:mb-5" />
-                  <h3 className="text-2xl sm:text-3xl font-bold">Producer Portal</h3>
-                  <p className="opacity-90 mt-2 text-base sm:text-lg">Manage projects and suppliers</p>
+                  <Heart className="h-12 w-12 sm:h-16 sm:w-16 mb-4 sm:mb-5" />
+                  <h3 className="text-2xl sm:text-3xl font-bold">Planner Portal</h3>
+                  <p className="opacity-90 mt-2 text-base sm:text-lg">Manage weddings and vendors</p>
                 </div>
                 <div className="p-6 sm:p-8">
                   <ul className="space-y-3 sm:space-y-4 mb-8">
                     <li className="flex items-center space-x-3">
                       <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-700 text-base sm:text-lg">Project oversight dashboard</span>
+                      <span className="text-gray-700 text-base sm:text-lg">Wedding overview dashboard</span>
                     </li>
                     <li className="flex items-center space-x-3">
                       <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-700 text-base sm:text-lg">Asset management</span>
+                      <span className="text-gray-700 text-base sm:text-lg">Service coordination</span>
                     </li>
                     <li className="flex items-center space-x-3">
                       <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-700 text-base sm:text-lg">Supplier coordination</span>
+                      <span className="text-gray-700 text-base sm:text-lg">Vendor management</span>
                     </li>
                     <li className="flex items-center space-x-3">
                       <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-700 text-base sm:text-lg">Quote review and acceptance</span>
+                      <span className="text-gray-700 text-base sm:text-lg">Quote review and booking</span>
                     </li>
                   </ul>
                   <Link
                     to="/producer/dashboard"
                     className="w-full bg-teal-600 text-white py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors text-center block font-medium text-base sm:text-lg shadow-md hover:shadow-lg"
                   >
-                    Access Producer Dashboard
+                    Access Planner Dashboard
                   </Link>
                 </div>
               </div>
@@ -201,7 +201,7 @@ const Home: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4">
             <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-16">
               <h3 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-6 sm:mb-8">
-                Automated Production Workflow
+                Seamless Wedding Planning Workflow
               </h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
@@ -209,9 +209,9 @@ const Home: React.FC = () => {
                   <div className="bg-blue-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     <span className="text-xl sm:text-2xl font-bold text-blue-600">1</span>
                   </div>
-                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Brief Submission</h4>
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Wedding Brief</h4>
                   <p className="text-gray-600 text-xs sm:text-sm">
-                    Client submits project brief with requirements and parameters
+                    Couple submits their wedding brief with vision, requirements, and details
                   </p>
                 </div>
 
@@ -219,9 +219,9 @@ const Home: React.FC = () => {
                   <div className="bg-teal-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     <span className="text-xl sm:text-2xl font-bold text-teal-600">2</span>
                   </div>
-                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Auto Processing</h4>
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Smart Processing</h4>
                   <p className="text-gray-600 text-xs sm:text-sm">
-                    System parses brief and automatically creates required assets
+                    System parses the brief and identifies all required wedding services
                   </p>
                 </div>
 
@@ -229,9 +229,9 @@ const Home: React.FC = () => {
                   <div className="bg-orange-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     <span className="text-xl sm:text-2xl font-bold text-orange-600">3</span>
                   </div>
-                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Supplier Matching</h4>
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Vendor Matching</h4>
                   <p className="text-gray-600 text-xs sm:text-sm">
-                    Relevant suppliers automatically receive quote requests via email
+                    Matched vendors automatically receive quote requests via email
                   </p>
                 </div>
 
@@ -239,9 +239,9 @@ const Home: React.FC = () => {
                   <div className="bg-green-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
                     <span className="text-xl sm:text-2xl font-bold text-green-600">4</span>
                   </div>
-                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Quote Management</h4>
+                  <h4 className="font-semibold mb-2 text-sm sm:text-base">Quote & Booking</h4>
                   <p className="text-gray-600 text-xs sm:text-sm">
-                    Producer reviews quotes and manages project through to completion
+                    Planner reviews quotes and manages the wedding through to the big day
                   </p>
                 </div>
               </div>
@@ -254,10 +254,10 @@ const Home: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4">
             <div className="text-center px-2">
               <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4 drop-shadow-lg">
-                Ready to streamline your production process?
+                Ready to plan the perfect wedding?
               </h3>
               <p className="text-base sm:text-lg text-white/90 mb-6 sm:mb-8 drop-shadow-md">
-                Get started with ProdBay and transform your production workflow today
+                Get started with WedBay and bring your dream wedding to life
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link

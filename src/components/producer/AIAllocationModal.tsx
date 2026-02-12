@@ -36,12 +36,12 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
           <div className="flex items-center space-x-3 mb-2">
             <Brain className="h-6 w-6 text-purple-600" />
             <h3 className="text-xl font-semibold">
-              Asset Analysis
+              Service Analysis
             </h3>
             <Sparkles className="h-5 w-5 text-purple-500" />
           </div>
           <p className="text-gray-600 text-sm">
-            Analyze the project brief to identify and suggest optimal assets with detailed specifications.
+            Analyze the wedding brief to identify and suggest optimal services with detailed specifications.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
             {loading ? (
               <div className="flex flex-col items-center space-y-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                <p className="text-gray-600">Analyzing your project...</p>
+                <p className="text-gray-600">Analyzing your wedding...</p>
                 <p className="text-sm text-gray-500">This may take a few moments</p>
               </div>
             ) : (
@@ -58,7 +58,7 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
                 <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
                   <h4 className="font-semibold text-gray-900 mb-2">Ready to analyze</h4>
                   <p className="text-sm text-gray-600 mb-4">
-                    Click the button below to start analyzing your project.
+                    Click the button below to start analyzing your wedding.
                   </p>
                   <button
                     onClick={onAnalyze}
@@ -99,7 +99,7 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
             {/* Asset Suggestions */}
             {aiSuggestions.assets.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Suggested Assets ({aiSuggestions.assets.length})</h4>
+                <h4 className="font-semibold text-gray-900 mb-3">Suggested Services ({aiSuggestions.assets.length})</h4>
                 <div className="space-y-3">
                   {aiSuggestions.assets.map((asset, index) => (
                     <div key={index} className="border border-gray-200 rounded-lg p-4">

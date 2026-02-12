@@ -27,14 +27,14 @@ const TagSelectionModal: React.FC<TagSelectionModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
         <div className="mb-4">
-          <h3 className="text-xl font-semibold">Filter Suppliers by Tags</h3>
-          <p className="text-gray-600 text-sm">Select tags to filter suppliers who will receive this request.</p>
+          <h3 className="text-xl font-semibold">Filter Vendors by Tags</h3>
+          <p className="text-gray-600 text-sm">Select tags to filter vendors who will receive this request.</p>
         </div>
 
         <div className="mb-4">
           <div className="flex flex-wrap gap-2">
             {availableTags.length === 0 && (
-              <span className="text-sm text-gray-500">No tags available. All relevant suppliers will be selected.</span>
+              <span className="text-sm text-gray-500">No tags available. All relevant vendors will be selected.</span>
             )}
             {availableTags.map(tag => {
               const active = selectedTags.includes(tag);

@@ -339,7 +339,7 @@ const QuotePortal: React.FC = () => {
               {error || 'The quote request link you\'re trying to access is no longer valid or has expired.'}
             </p>
             <p className="text-sm text-gray-400">
-              Please contact the producer for a new quote request link.
+              Please contact the planner for a new quote request link.
             </p>
           </div>
         </div>
@@ -404,14 +404,14 @@ const QuotePortal: React.FC = () => {
             <div className="bg-white/5 border border-white/10 rounded-xl p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Briefcase className="h-5 w-5 text-purple-300" />
-                <h2 className="text-lg font-semibold text-white">Project Context</h2>
+                <h2 className="text-lg font-semibold text-white">Wedding Context</h2>
               </div>
               <div className="space-y-4 text-sm">
                 {/* Event Date */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-300 mb-1 flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
-                    Event Date
+                    Wedding Date
                   </label>
                   <p className="text-white">{formatProjectDate(project.event_date || undefined)}</p>
                 </div>
@@ -498,7 +498,7 @@ const QuotePortal: React.FC = () => {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="text-lg font-semibold text-white">Conversation</h2>
-                    <p className="text-sm text-gray-400">Chat with the producer about this quote</p>
+                    <p className="text-sm text-gray-400">Chat with the planner about this quote</p>
                   </div>
                   <button
                     type="button"
@@ -536,7 +536,7 @@ const QuotePortal: React.FC = () => {
                           <div className="flex items-center space-x-2 mb-1">
                             <User className="h-4 w-4" />
                             <span className="text-xs font-medium">
-                              {isSupplier ? 'Me' : 'Producer'}
+                              {isSupplier ? 'Me' : 'Planner'}
                             </span>
                             <span className={`text-xs ${isSupplier ? 'text-purple-100' : 'text-gray-400'}`}>
                               {formatTime(message.created_at)}

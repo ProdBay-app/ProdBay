@@ -70,7 +70,7 @@ export const useProjectManagement = (): UseProjectManagementReturn => {
       }
     } catch (error) {
       console.error('Error loading projects:', error);
-      showError('Failed to load projects');
+      showError('Failed to load weddings');
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +144,7 @@ export const useProjectManagement = (): UseProjectManagementReturn => {
         // Update existing project
         await ProducerService.updateProject(currentProject.id, projectForm);
         await loadProjects();
-        showSuccess('Project updated successfully');
+        showSuccess('Wedding updated successfully');
       } else {
         // Create new project
         const createdProject = await ProducerService.createProject(projectForm);
@@ -167,17 +167,17 @@ export const useProjectManagement = (): UseProjectManagementReturn => {
             
             if (!briefResult.success) {
               console.warn('Brief processing failed:', briefResult.error?.message);
-              showWarning(`Project created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually create assets later.`);
+              showWarning(`Wedding created successfully, but brief processing failed: ${briefResult.error?.message}. You can manually add services later.`);
             } else {
-              console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'assets created');
-              showSuccess(`Project created successfully! ${briefResult.data?.createdAssets.length} assets were automatically generated using smart allocation.`, { duration: 6000 });
+              console.log('Brief processed successfully:', briefResult.data?.createdAssets.length, 'services created');
+              showSuccess(`Wedding created successfully! ${briefResult.data?.createdAssets.length} services were automatically matched using smart matching.`, { duration: 6000 });
             }
           } catch (briefError) {
             console.error('Brief processing error:', briefError);
-            showWarning('Project created successfully, but brief processing failed. You can manually create assets later.');
+            showWarning('Wedding created successfully, but brief processing failed. You can manually add services later.');
           }
         } else {
-          showSuccess('Project created successfully');
+          showSuccess('Wedding created successfully');
         }
         
         // Refresh projects and select the new one
@@ -193,7 +193,7 @@ export const useProjectManagement = (): UseProjectManagementReturn => {
       closeProjectModal();
     } catch (err) {
       console.error('Failed to submit project form', err);
-      showError('Failed to save project');
+      showError('Failed to save wedding');
     } finally {
       setIsSubmittingProject(false);
     }
@@ -217,10 +217,10 @@ export const useProjectManagement = (): UseProjectManagementReturn => {
       await ProducerService.deleteProject(currentProject.id);
       await loadProjects();
       setCurrentProject(null);
-      showSuccess('Project deleted successfully');
+      showSuccess('Wedding deleted successfully');
     } catch (err) {
       console.error('Failed to delete project', err);
-      showError('Failed to delete project');
+      showError('Failed to delete wedding');
     }
   }, [currentProject, loadProjects, showConfirm, showSuccess, showError]);
 

@@ -101,7 +101,7 @@ const AssetList: React.FC<AssetListProps> = ({
       // Close modal and show success
       setIsEditModalOpen(false);
       setEditingAsset(null);
-      showSuccess(`Asset "${assetData.asset_name}" updated successfully!`);
+      showSuccess(`Service "${assetData.asset_name}" updated successfully!`);
     } catch (err) {
       console.error('Error updating asset:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to update asset';
@@ -132,7 +132,7 @@ const AssetList: React.FC<AssetListProps> = ({
       // Close modal and show success
       setIsDeleteModalOpen(false);
       setDeletingAsset(null);
-      showSuccess(`Asset "${deletingAsset.asset_name}" deleted successfully!`);
+      showSuccess(`Service "${deletingAsset.asset_name}" deleted successfully!`);
     } catch (err) {
       console.error('Error deleting asset:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete asset';
@@ -271,11 +271,11 @@ const AssetList: React.FC<AssetListProps> = ({
   if (isLoading) {
     return (
       <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Assets</h2>
+        <h2 className="text-2xl font-bold text-white mb-6">Services</h2>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
-            <p className="text-gray-300">Loading assets...</p>
+            <p className="text-gray-300">Loading services...</p>
           </div>
         </div>
       </section>
@@ -286,12 +286,12 @@ const AssetList: React.FC<AssetListProps> = ({
   if (assets.length === 0) {
     return (
       <section className="bg-white/10 backdrop-blur-md rounded-lg shadow-sm border border-white/20 p-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Assets</h2>
+        <h2 className="text-2xl font-bold text-white mb-6">Services</h2>
         <div className="bg-white/5 border-2 border-dashed border-white/30 rounded-lg p-12 text-center">
           <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">No assets yet</h3>
+          <h3 className="text-lg font-semibold text-white mb-2">No services yet</h3>
           <p className="text-gray-300">
-            Assets will appear here once they are created for this project.
+            Services will appear here once they are created for this wedding.
           </p>
         </div>
       </section>
@@ -313,7 +313,7 @@ const AssetList: React.FC<AssetListProps> = ({
             </div>
             <input
               type="text"
-              placeholder="Search assets by name, specifications, or tags..."
+              placeholder="Search services by name, specifications, or tags..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -357,7 +357,7 @@ const AssetList: React.FC<AssetListProps> = ({
                   </button>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-400 italic">No tags used in this project</p>
+                  <p className="text-sm text-gray-400 italic">No tags used in this wedding</p>
                 )}
               </div>
             </div>
@@ -446,7 +446,7 @@ const AssetList: React.FC<AssetListProps> = ({
         // Empty state - no assets match filters (but search/filter controls remain visible above)
         <div className="bg-white/5 border-2 border-dashed border-white/30 rounded-lg p-12 text-center">
           <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">No assets match your filters</h3>
+          <h3 className="text-lg font-semibold text-white mb-2">No services match your filters</h3>
           <p className="text-gray-300 mb-4">
             Try adjusting your search terms or filters to see more results.
           </p>
@@ -489,7 +489,7 @@ const AssetList: React.FC<AssetListProps> = ({
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={isDeleteModalOpen}
-        title="Delete Asset"
+        title="Delete Service"
         message={`Are you sure you want to delete "${deletingAsset?.asset_name}"? This action cannot be undone and will also remove any related quotes.`}
         confirmText="Delete"
         cancelText="Cancel"

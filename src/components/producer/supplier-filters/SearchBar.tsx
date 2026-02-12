@@ -10,7 +10,7 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({
   searchTerm,
   onSearchChange,
-  placeholder = "Search suppliers by name..."
+  placeholder = "Search vendors by name..."
 }) => {
   return (
     <div className="relative flex-1 max-w-md">

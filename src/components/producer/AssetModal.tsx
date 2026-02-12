@@ -39,17 +39,17 @@ const AssetModal: React.FC<AssetModalProps> = ({
       <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6">
         <div className="mb-4">
           <h3 className="text-xl font-semibold">
-            {isEditing ? 'Edit Asset' : 'Create New Asset'}
+            {isEditing ? 'Edit Service' : 'Create New Service'}
           </h3>
           <p className="text-gray-600 text-sm">
-            {isEditing ? 'Update asset details and save changes.' : 'Add an asset to this project.'}
+            {isEditing ? 'Update service details and save changes.' : 'Add a service to this wedding.'}
           </p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Asset Name *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Service Name *</label>
               <input
                 name="asset_name"
                 value={assetForm.asset_name}
@@ -100,7 +100,7 @@ const AssetModal: React.FC<AssetModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Supplier</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Assigned Vendor</label>
               <select
                 name="assigned_supplier_id"
                 value={assetForm.assigned_supplier_id || ''}
@@ -128,7 +128,7 @@ const AssetModal: React.FC<AssetModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
             >
-              {isSubmitting ? (isEditing ? 'Saving...' : 'Creating...') : (isEditing ? 'Save Changes' : 'Create Asset')}
+              {isSubmitting ? (isEditing ? 'Saving...' : 'Creating...') : (isEditing ? 'Save Changes' : 'Create Service')}
             </button>
           </div>
         </form>

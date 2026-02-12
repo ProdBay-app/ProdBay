@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, DollarSign, Clock, Pencil, Trash } from 'lucide-react';
+import { Heart, DollarSign, Clock, Pencil, Trash } from 'lucide-react';
 import type { Project, Asset } from '@/lib/supabase';
 
 interface ProjectOverviewProps {
@@ -44,9 +44,9 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div className="flex items-center space-x-2">
-          <Package className="h-5 w-5 text-gray-500" />
+          <Heart className="h-5 w-5 text-gray-500" />
           <span className="text-sm text-gray-600">
-            {assets.length} Assets
+            {assets.length} Services
           </span>
         </div>
         <div className="flex items-center space-x-2">
@@ -67,7 +67,7 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
       </div>
 
       <div>
-        <h3 className="font-medium text-gray-900 mb-2">Project Brief</h3>
+        <h3 className="font-medium text-gray-900 mb-2">Wedding Brief</h3>
         <p className="text-gray-700 text-sm whitespace-pre-wrap">{project.brief_description}</p>
       </div>
     </div>

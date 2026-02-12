@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
-  Package, 
+  Heart, 
   ArrowRight,
   Eye,
   EyeOff,
@@ -90,10 +90,10 @@ const LoginPage: React.FC = () => {
             onClick={handleLogoClick}
             title="Go to Home"
           >
-            <Package className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 drop-shadow-lg" />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 drop-shadow-lg">ProdBay</h1>
+            <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-pink-500 drop-shadow-lg" />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 drop-shadow-lg">WedBay</h1>
           </div>
-          <p className="text-center text-gray-600 mt-2 text-sm sm:text-base drop-shadow-md">Production Management Platform</p>
+          <p className="text-center text-gray-600 mt-2 text-sm sm:text-base drop-shadow-md">Wedding Planning Platform</p>
         </div>
       </div>
 
@@ -105,7 +105,7 @@ const LoginPage: React.FC = () => {
               Welcome Back
             </h2>
             <p className="text-gray-600">
-              Sign in to access your ProdBay dashboard
+              Sign in to access your WedBay dashboard
             </p>
           </div>
 
