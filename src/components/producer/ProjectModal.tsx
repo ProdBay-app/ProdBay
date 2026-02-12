@@ -4,6 +4,7 @@ import { Upload, FileText, Loader2, CheckCircle, XCircle, Sparkles, Download, Ar
 import type { ProjectFormData } from '@/services/producerService';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import Stepper, { Step } from '@/components/ui/Stepper';
+import UploadGuidelinesPanel from '@/components/shared/UploadGuidelinesPanel';
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -151,7 +152,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   <div className="text-center">
                     <h4 className="text-lg font-medium text-white mb-2">Upload Your Project Brief</h4>
                     <p className="text-gray-300 text-sm">
-                      Upload a PDF brief or enter your project details manually. The system will analyze the content to extract key information.
+                      Upload a PDF brief and the system will analyze the content to extract key information.
                     </p>
                   </div>
 
@@ -221,21 +222,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               </div>
             )}
 
-                  {/* Manual Brief Entry */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-200 mb-2">
-                      Or enter your project brief manually
-                    </label>
-                    <textarea
-                      name="brief_description"
-                      value={projectForm.brief_description}
-                      onChange={handleInputChange}
-                      required
-                      rows={6}
-                      placeholder="Describe your project requirements, goals, and specifications..."
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                    />
-                  </div>
+            {/* Upload Guidelines */}
+            <UploadGuidelinesPanel />
                 </div>
               </Step>
 
@@ -467,6 +455,9 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 )}
               </div>
             )}
+
+              {/* Upload Guidelines */}
+              <UploadGuidelinesPanel />
 
             <textarea
               name="brief_description"
