@@ -72,6 +72,14 @@ export interface ProducerDashboardProps {
   submitProjectForm: (e: React.FormEvent) => Promise<void>;
   deleteProject: () => Promise<void>;
   
+  // PDF upload props
+  onPdfUpload: (file: File) => void;
+  isUploadingPdf: boolean;
+  uploadError: string | null;
+  uploadedFilename: string | null;
+  uploadedPdfFile: File | null;
+  onPdfDownload: (file: File) => void;
+  
   openCreateAsset: () => Promise<void>;
   openEditAsset: (asset: Asset) => Promise<void>;
   closeAssetModal: () => void;
@@ -157,6 +165,13 @@ const ProducerDashboard: React.FC<ProducerDashboardProps> = ({
   setAllocationMethod,
   submitProjectForm,
   deleteProject,
+  
+  onPdfUpload,
+  isUploadingPdf,
+  uploadError,
+  uploadedFilename,
+  uploadedPdfFile,
+  onPdfDownload,
   
   openCreateAsset,
   openEditAsset,
@@ -250,6 +265,12 @@ const ProducerDashboard: React.FC<ProducerDashboardProps> = ({
         onSubmit={submitProjectForm}
         onFormChange={updateProjectForm}
         onAllocationMethodChange={setAllocationMethod}
+        onPdfUpload={onPdfUpload}
+        isUploadingPdf={isUploadingPdf}
+        uploadError={uploadError}
+        uploadedFilename={uploadedFilename}
+        uploadedPdfFile={uploadedPdfFile}
+        onPdfDownload={onPdfDownload}
       />
 
       <AssetModal
