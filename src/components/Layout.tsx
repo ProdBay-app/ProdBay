@@ -75,7 +75,7 @@ const Layout: React.FC = () => {
 
   return (
     <div className="relative min-h-screen flex flex-col">
-      {/* Dark Veil Background */}
+      {/* Dark Veil Background with wedding tint overlay */}
       <div className="fixed inset-0 w-full h-full z-0">
         <DarkVeil
           speed={animationSpeed}
@@ -84,6 +84,11 @@ const Layout: React.FC = () => {
           scanlineFrequency={1.8}
           scanlineIntensity={0.16}
           warpAmount={5}
+        />
+        {/* Wedding palette tint overlay */}
+        <div 
+          className="absolute inset-0 pointer-events-none bg-gradient-to-br from-wedding-primary/8 via-transparent to-wedding-secondary/10"
+          aria-hidden
         />
       </div>
 
@@ -99,7 +104,7 @@ const Layout: React.FC = () => {
                 className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
                 title="Go to Home"
               >
-                  <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-pink-300 drop-shadow-lg" />
+                  <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-wedding-accent drop-shadow-lg" />
                   <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">WedBay</h1>
                   {!isLandingPage && (
                     <span className="text-sm opacity-75 text-white/90 drop-shadow-md">| {userTypeLabel}</span>
@@ -114,10 +119,10 @@ const Layout: React.FC = () => {
                     key={to}
                     to={to}
                     className={({ isActive }) =>
-                      `flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      `flex items-center space-x-1 px-3 py-2 rounded-wedding text-sm font-medium transition-colors ${
                         isActive
-                          ? 'bg-white/20 text-white'
-                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                          ? 'bg-wedding-primary/30 text-white'
+                          : 'text-white/80 hover:text-white hover:bg-wedding-secondary/20'
                       }`
                     }
                   >
@@ -157,7 +162,7 @@ const Layout: React.FC = () => {
                       </Link>
                       <Link
                         to="/signup"
-                        className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors rounded-lg shadow-md hover:shadow-lg"
+                        className="px-4 py-2 text-sm font-medium text-white bg-wedding-primary hover:bg-wedding-primary-hover transition-colors rounded-wedding-lg shadow-wedding hover:shadow-wedding-md"
                       >
                         Sign Up
                       </Link>

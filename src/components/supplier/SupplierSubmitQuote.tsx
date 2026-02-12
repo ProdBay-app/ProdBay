@@ -176,10 +176,10 @@ const SupplierSubmitQuote: React.FC = () => {
 
         {/* Supplier Context Indicator */}
         {isImpersonating && impersonatedSupplier ? (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-6 p-4 bg-wedding-secondary/50 border border-wedding-primary/30 rounded-lg">
             <div className="flex items-center space-x-2">
               <Package className="h-5 w-5 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">
+              <span className="text-sm font-medium text-wedding-slate">
                 Submitting quote as: <strong>{impersonatedSupplier.supplier_name}</strong>
               </span>
             </div>
@@ -197,10 +197,10 @@ const SupplierSubmitQuote: React.FC = () => {
 
         {/* Loading State */}
         {loading && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-6 p-4 bg-wedding-secondary/50 border border-wedding-primary/30 rounded-lg">
             <div className="flex items-center space-x-2">
               <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
-              <span className="text-sm font-medium text-blue-800">
+              <span className="text-sm font-medium text-wedding-slate">
                 Loading your quotable assets...
               </span>
             </div>

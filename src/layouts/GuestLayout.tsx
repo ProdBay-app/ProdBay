@@ -12,7 +12,7 @@ import Footer from '@/components/Footer';
 const GuestLayout: React.FC = () => {
   return (
     <div className="relative min-h-screen flex flex-col">
-      {/* Dark Veil Background */}
+      {/* Dark Veil Background with wedding tint overlay */}
       <div className="fixed inset-0 w-full h-full z-0">
         <DarkVeil
           speed={0.04}
@@ -21,6 +21,10 @@ const GuestLayout: React.FC = () => {
           scanlineFrequency={1.8}
           scanlineIntensity={0.16}
           warpAmount={5}
+        />
+        <div 
+          className="absolute inset-0 pointer-events-none bg-gradient-to-br from-wedding-primary/8 via-transparent to-wedding-secondary/10"
+          aria-hidden
         />
       </div>
 
@@ -35,7 +39,7 @@ const GuestLayout: React.FC = () => {
                 className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
                 title="Go to Home"
               >
-                <Package className="h-6 w-6 sm:h-8 sm:w-8 text-blue-300 drop-shadow-lg" />
+                <Package className="h-6 w-6 sm:h-8 sm:w-8 text-wedding-accent drop-shadow-lg" />
                 <h1 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg">WedBay</h1>
                 <span className="text-sm opacity-75 text-white/90 drop-shadow-md">| Vendor Portal</span>
               </Link>

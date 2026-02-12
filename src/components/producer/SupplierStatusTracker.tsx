@@ -140,8 +140,8 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
         return {
           icon: <CheckCircle className="w-4 h-4" />,
           color: 'text-blue-300',
-          bgColor: 'bg-blue-500/20',
-          borderColor: 'border-blue-400/50'
+          bgColor: 'bg-wedding-primary/20',
+          borderColor: 'border-wedding-primary-light/50'
         };
       case 'Assigned':
         return {
@@ -173,7 +173,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-wedding-primary-light"></div>
         <span className="ml-2 text-gray-300">Loading vendor status...</span>
       </div>
     );
@@ -186,7 +186,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
         <div className="flex items-center gap-2">
           <Building2 className="w-5 h-5 text-purple-300" />
           <h3 className="text-lg font-semibold text-white">Vendor Status</h3>
-          <span className="px-2 py-1 bg-purple-500/30 text-purple-200 text-sm font-semibold rounded-full">
+          <span className="px-2 py-1 bg-wedding-primary/30 text-wedding-primary-light text-sm font-semibold rounded-full">
             {suppliersWithStatus.length}
           </span>
         </div>

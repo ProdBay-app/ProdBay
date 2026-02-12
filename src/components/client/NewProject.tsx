@@ -111,7 +111,7 @@ const NewProject: React.FC = () => {
                 value={formData.project_name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 placeholder="Enter wedding name"
               />
             </div>
@@ -127,7 +127,7 @@ const NewProject: React.FC = () => {
                 value={formData.client_name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 placeholder="Enter couple name"
               />
             </div>
@@ -144,13 +144,13 @@ const NewProject: React.FC = () => {
               onChange={handleInputChange}
               required
               rows={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
               placeholder="Describe your wedding in detail. Include requirements for venue, catering, photography, floral, music, or other services..."
             />
           </div>
 
           {/* AI Allocation Toggle */}
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+          <div className="bg-gradient-to-r from-wedding-secondary to-wedding-neutral border border-wedding-primary/30 rounded-lg p-6">
             <div className="flex items-center space-x-3 mb-3">
               <Brain className="h-6 w-6 text-purple-600" />
               <h3 className="text-lg font-semibold text-gray-900">Smart Service Allocation</h3>
@@ -170,7 +170,7 @@ const NewProject: React.FC = () => {
                     value="static"
                     checked={allocationMethod === 'static'}
                     onChange={(e) => setAllocationMethod(e.target.value as 'static' | 'ai')}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2"
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-wedding-primary focus:ring-2"
                   />
                   <div>
                     <span className="text-sm font-medium text-gray-700">Static Allocation</span>
@@ -185,7 +185,7 @@ const NewProject: React.FC = () => {
                     value="ai"
                     checked={allocationMethod === 'ai'}
                     onChange={(e) => setAllocationMethod(e.target.value as 'static' | 'ai')}
-                    className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2"
+                    className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-wedding-primary focus:ring-2"
                   />
                   <div>
                     <span className="text-sm font-medium text-gray-700">Smart Allocation</span>
@@ -195,7 +195,7 @@ const NewProject: React.FC = () => {
               </div>
               
               {allocationMethod === 'ai' && (
-                <div className="mt-3 p-3 bg-purple-100 rounded-lg">
+                <div className="mt-3 p-3 bg-wedding-secondary rounded-lg">
                   <p className="text-sm text-purple-800">
                     ✨ The system will analyze your brief to identify services, create detailed specifications, 
                     and suggest optimal vendor allocations with confidence scores.
@@ -217,7 +217,7 @@ const NewProject: React.FC = () => {
                 name="physical_parameters"
                 value={formData.physical_parameters}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 placeholder="Venue, size, capacity, etc."
               />
             </div>
@@ -235,7 +235,7 @@ const NewProject: React.FC = () => {
                 onChange={handleInputChange}
                 min="0"
                 step="0.01"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 placeholder="0.00"
               />
             </div>
@@ -251,7 +251,7 @@ const NewProject: React.FC = () => {
                 name="timeline_deadline"
                 value={formData.timeline_deadline}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
               />
             </div>
           </div>
@@ -260,7 +260,7 @@ const NewProject: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center space-x-2 px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center space-x-2 px-8 py-3 bg-wedding-primary text-white rounded-lg font-medium hover:bg-wedding-primary-hover focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="h-4 w-4" />
               <span>

@@ -211,7 +211,7 @@ const BudgetAssetsModal: React.FC<BudgetAssetsModalProps> = ({
                   <div className="flex flex-wrap items-center gap-4 text-sm mt-3 pt-3 border-t border-gray-100">
                     {/* Supplier */}
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-wedding-secondary/500 rounded-full"></div>
                       <span className="text-gray-600">Vendor:</span>
                       <span className="font-medium text-gray-900">
                         {asset.acceptedQuote.supplier.supplier_name}
@@ -220,9 +220,9 @@ const BudgetAssetsModal: React.FC<BudgetAssetsModalProps> = ({
 
                     {/* Status badge */}
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-wedding-primary rounded-full"></div>
                       <span className="text-gray-600">Status:</span>
-                      <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                      <span className="px-2 py-0.5 bg-wedding-primary/20 text-wedding-slate rounded-full text-xs font-medium">
                         {asset.status}
                       </span>
                     </div>

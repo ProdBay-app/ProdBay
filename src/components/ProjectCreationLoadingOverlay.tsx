@@ -24,14 +24,14 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
 
   // 10 visual steps representing the project creation process
   const steps = [
-    { icon: Database, text: "Initializing wedding database", color: "text-blue-400", borderColor: "border-blue-400" },
-    { icon: FileText, text: "Processing wedding brief", color: "text-purple-400", borderColor: "border-purple-400" },
+    { icon: Database, text: "Initializing wedding database", color: "text-blue-400", borderColor: "border-wedding-primary-light" },
+    { icon: FileText, text: "Processing wedding brief", color: "text-purple-400", borderColor: "border-wedding-primary-light" },
     { icon: Cpu, text: "Running analysis", color: "text-indigo-400", borderColor: "border-indigo-400" },
     { icon: Target, text: "Identifying key requirements", color: "text-pink-400", borderColor: "border-pink-400" },
     { icon: Users, text: "Analyzing vendor capabilities", color: "text-green-400", borderColor: "border-green-400" },
     { icon: Zap, text: "Generating service recommendations", color: "text-yellow-400", borderColor: "border-yellow-400" },
     { icon: Clock, text: "Calculating timelines", color: "text-orange-400", borderColor: "border-orange-400" },
-    { icon: Sparkles, text: "Optimizing resource allocation", color: "text-teal-400", borderColor: "border-teal-400" },
+    { icon: Sparkles, text: "Optimizing resource allocation", color: "text-wedding-primary-light", borderColor: "border-wedding-primary-light" },
     { icon: Rocket, text: "Finalizing wedding setup", color: "text-red-400", borderColor: "border-red-400" },
     { icon: CheckCircle, text: "Wedding creation complete!", color: "text-emerald-400", borderColor: "border-emerald-400" }
   ];
@@ -92,7 +92,7 @@ const ProjectCreationLoadingOverlay: React.FC<ProjectCreationLoadingOverlayProps
           </div>
           <div className="w-full bg-white/20 rounded-full h-2">
             <div 
-              className="bg-gradient-to-r from-teal-400 to-emerald-400 h-2 rounded-full transition-all duration-1000 ease-out"
+              className="bg-gradient-to-r from-wedding-primary to-wedding-primary-light h-2 rounded-full transition-all duration-1000 ease-out"
               style={{ width: `${progressPercentage}%` }}
             ></div>
           </div>

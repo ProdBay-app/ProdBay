@@ -587,7 +587,7 @@ ${signature.phone}`;
               onClick={(e) => e.stopPropagation()}
             >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-wedding-primary to-wedding-primary-hover px-6 py-5">
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-4">
                   <h2 className="text-2xl font-bold text-white mb-1">
@@ -641,7 +641,7 @@ ${signature.phone}`;
                             placeholder="Search vendors by name..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-12 pr-12 py-3 text-base bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                            className="w-full pl-12 pr-12 py-3 text-base bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-purple-500 transition-colors"
                             autoFocus
                           />
                           {searchTerm && (
@@ -664,7 +664,7 @@ ${signature.phone}`;
                             {(searchTerm.trim().length > 0 || selectedCategories.length > 0) && (
                               <button
                                 onClick={clearFilters}
-                                className="text-xs text-purple-300 hover:text-purple-200 font-medium transition-colors"
+                                className="text-xs text-purple-300 hover:text-wedding-primary-light font-medium transition-colors"
                               >
                                 Clear all filters
                               </button>
@@ -677,7 +677,7 @@ ${signature.phone}`;
                                 onClick={() => toggleCategory(category)}
                                 className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
                                   selectedCategories.includes(category)
-                                    ? 'bg-purple-500/30 text-purple-200 border-purple-400/50 font-medium shadow-sm'
+                                    ? 'bg-wedding-primary/30 text-wedding-primary-light border-wedding-primary-light/50 font-medium shadow-sm'
                                     : 'bg-white/5 text-gray-300 border-white/20 hover:bg-white/10 hover:border-white/30'
                                 }`}
                               >
@@ -701,7 +701,7 @@ ${signature.phone}`;
                             </div>
                             <button
                               onClick={handleSelectAllRecommended}
-                              className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-purple-500/30 text-purple-200 rounded-lg hover:bg-purple-500/40 transition-colors font-medium"
+                              className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-wedding-primary/30 text-wedding-primary-light rounded-lg hover:bg-wedding-secondary/500/40 transition-colors font-medium"
                             >
                               {allRecommendedSelected ? (
                                 <>
@@ -728,8 +728,8 @@ ${signature.phone}`;
                                   key={supplier.id}
                                   className={`
                                     border rounded-lg p-4 transition-all duration-200
-                                    ${isSelected ? 'border-purple-400/50 bg-purple-500/20 ring-2 ring-purple-400/50' : 'border-white/20'}
-                                    ${isAlreadyContacted ? 'opacity-60' : 'hover:border-purple-400/50 cursor-pointer'}
+                                    ${isSelected ? 'border-wedding-primary-light/50 bg-wedding-primary/20 ring-2 ring-wedding-primary/50' : 'border-white/20'}
+                                    ${isAlreadyContacted ? 'opacity-60' : 'hover:border-wedding-primary-light/50 cursor-pointer'}
                                   `}
                                   onClick={() => !isAlreadyContacted && toggleSupplierSelection(supplier.id)}
                                 >
@@ -742,7 +742,7 @@ ${signature.phone}`;
                                         checked={isSelected}
                                         onChange={() => toggleSupplierSelection(supplier.id)}
                                         disabled={isAlreadyContacted}
-                                        className="w-4 h-4 accent-purple-600 focus:ring-purple-500 border-white/30 rounded cursor-pointer"
+                                        className="w-4 h-4 accent-purple-600 focus:ring-wedding-primary border-white/30 rounded cursor-pointer"
                                       />
                                     </div>
 
@@ -757,7 +757,7 @@ ${signature.phone}`;
                                           {supplier.supplier_name}
                                         </label>
                                         {supplier.relevance.score === maxScore && maxScore > 0 && (
-                                          <span className="px-2 py-0.5 text-xs bg-purple-500/50 text-white rounded-full font-bold border border-purple-400 flex items-center gap-1">
+                                          <span className="px-2 py-0.5 text-xs bg-wedding-primary/50 text-white rounded-full font-bold border border-wedding-primary-light flex items-center gap-1">
                                             <Trophy className="w-3 h-3 fill-white" />
                                             Best Match
                                           </span>
@@ -787,7 +787,7 @@ ${signature.phone}`;
                                                   key={idx}
                                                   className={`px-2 py-0.5 text-xs rounded ${
                                                     isMatching
-                                                      ? 'bg-purple-500/30 text-purple-200 font-semibold border border-purple-400/50'
+                                                      ? 'bg-wedding-primary/30 text-wedding-primary-light font-semibold border border-wedding-primary-light/50'
                                                       : 'bg-white/10 text-gray-200'
                                                   }`}
                                                   aria-label={isMatching ? `Matching category: ${category}` : category}
@@ -830,8 +830,8 @@ ${signature.phone}`;
                                   key={supplier.id}
                                   className={`
                                     border rounded-lg p-4 transition-all duration-200
-                                    ${isSelected ? 'border-purple-400/50 bg-purple-500/20 ring-2 ring-purple-400/50' : 'border-white/20'}
-                                    ${isAlreadyContacted ? 'opacity-60' : 'hover:border-purple-400/50 cursor-pointer'}
+                                    ${isSelected ? 'border-wedding-primary-light/50 bg-wedding-primary/20 ring-2 ring-wedding-primary/50' : 'border-white/20'}
+                                    ${isAlreadyContacted ? 'opacity-60' : 'hover:border-wedding-primary-light/50 cursor-pointer'}
                                   `}
                                   onClick={() => !isAlreadyContacted && toggleSupplierSelection(supplier.id)}
                                 >
@@ -844,7 +844,7 @@ ${signature.phone}`;
                                         checked={isSelected}
                                         onChange={() => toggleSupplierSelection(supplier.id)}
                                         disabled={isAlreadyContacted}
-                                        className="w-4 h-4 accent-purple-600 focus:ring-purple-500 border-white/30 rounded cursor-pointer"
+                                        className="w-4 h-4 accent-purple-600 focus:ring-wedding-primary border-white/30 rounded cursor-pointer"
                                       />
                                     </div>
 
@@ -946,7 +946,7 @@ ${signature.phone}`;
                         type="text"
                         value={currentEmail.subject}
                         onChange={(e) => updateCurrentEmail('subject', e.target.value)}
-                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                         placeholder="Enter email subject"
                       />
                     </div>
@@ -960,7 +960,7 @@ ${signature.phone}`;
                         value={currentEmail.body}
                         onChange={(e) => updateCurrentEmail('body', e.target.value)}
                         rows={14}
-                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none font-mono text-sm"
+                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent resize-none font-mono text-sm"
                         placeholder="Enter email message"
                       />
                     </div>
@@ -974,7 +974,7 @@ ${signature.phone}`;
                         type="text"
                         value={currentEmail.ccEmails}
                         onChange={(e) => updateCurrentEmail('ccEmails', e.target.value)}
-                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                         placeholder="cc@example.com, another@example.com"
                       />
                     </div>
@@ -988,7 +988,7 @@ ${signature.phone}`;
                         type="text"
                         value={currentEmail.bccEmails}
                         onChange={(e) => updateCurrentEmail('bccEmails', e.target.value)}
-                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                         placeholder="bcc@example.com"
                       />
                     </div>
@@ -1127,7 +1127,7 @@ ${signature.phone}`;
                         px-5 py-2 rounded-lg font-medium transition-all duration-200
                         ${selectedSupplierIds.length === 0
                           ? 'bg-gray-500/50 cursor-not-allowed text-white'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow'
+                          : 'bg-wedding-primary hover:bg-wedding-primary-hover text-white shadow-sm hover:shadow'
                         }
                       `}
                     >
@@ -1141,7 +1141,7 @@ ${signature.phone}`;
                         px-5 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2
                         ${submitting
                           ? 'bg-gray-500/50 cursor-not-allowed text-white'
-                          : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow'
+                          : 'bg-wedding-primary hover:bg-wedding-primary-hover text-white shadow-sm hover:shadow'
                         }
                       `}
                     >

@@ -152,7 +152,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-wedding-primary to-wedding-primary-hover px-6 py-5 rounded-t-xl">
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-4">
                   <div className="flex items-center gap-3 mb-2">
@@ -222,7 +222,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                     </button>
                     <button
                       onClick={addSubAsset}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       Add Service
@@ -256,7 +256,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                             type="text"
                             value={subAsset.asset_name}
                             onChange={(e) => updateSubAsset(index, 'asset_name', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                             placeholder="Enter service name"
                             required
                           />
@@ -272,7 +272,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                             min="1"
                             value={subAsset.quantity || ''}
                             onChange={(e) => updateSubAsset(index, 'quantity', e.target.value ? parseInt(e.target.value, 10) : undefined)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                             placeholder="Optional"
                           />
                         </div>
@@ -286,7 +286,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                             value={subAsset.specifications}
                             onChange={(e) => updateSubAsset(index, 'specifications', e.target.value)}
                             rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                             placeholder="Service specifications"
                           />
                         </div>
@@ -309,7 +309,7 @@ const AssetSubdivisionModal: React.FC<AssetSubdivisionModalProps> = ({
                 <button
                   onClick={handleCreateAssets}
                   disabled={isCreating}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isCreating ? (
                     <>

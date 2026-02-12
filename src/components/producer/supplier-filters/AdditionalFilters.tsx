@@ -84,12 +84,12 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm transition-colors md:cursor-pointer"
+        className="flex items-center space-x-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 focus:ring-2 focus:ring-wedding-primary focus:border-transparent text-sm transition-colors md:cursor-pointer"
       >
         <span className="text-gray-200">
           More
           {hasAdditionalFilters && (
-            <span className="ml-1 px-2 py-0.5 bg-teal-500/30 text-teal-200 rounded-full text-xs">
+            <span className="ml-1 px-2 py-0.5 bg-wedding-primary/30 text-wedding-primary-light rounded-full text-xs">
               {[hasContactPersons !== null, dateRange.start, dateRange.end].filter(Boolean).length}
             </span>
           )}
@@ -129,7 +129,7 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                     name="hasContactPersons"
                     checked={hasContactPersons === null}
                     onChange={() => onHasContactPersonsChange(null)}
-                    className="text-teal-600 focus:ring-teal-500"
+                    className="text-wedding-primary focus:ring-wedding-primary"
                   />
                   <span className="text-sm text-gray-200">All vendors</span>
                 </label>
@@ -139,7 +139,7 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                     name="hasContactPersons"
                     checked={hasContactPersons === true}
                     onChange={() => onHasContactPersonsChange(true)}
-                    className="text-teal-600 focus:ring-teal-500"
+                    className="text-wedding-primary focus:ring-wedding-primary"
                   />
                   <span className="text-sm text-gray-200">With contact persons</span>
                 </label>
@@ -149,7 +149,7 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                     name="hasContactPersons"
                     checked={hasContactPersons === false}
                     onChange={() => onHasContactPersonsChange(false)}
-                    className="text-teal-600 focus:ring-teal-500"
+                    className="text-wedding-primary focus:ring-wedding-primary"
                   />
                   <span className="text-sm text-gray-200">Without contact persons</span>
                 </label>
@@ -207,7 +207,7 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                         ...dateRange,
                         start: e.target.value ? new Date(e.target.value) : null
                       })}
-                      className="w-full px-2 py-1 text-xs bg-black/20 border border-white/20 rounded text-white focus:ring-1 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-2 py-1 text-xs bg-black/20 border border-white/20 rounded text-white focus:ring-1 focus:ring-wedding-primary focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -219,7 +219,7 @@ const AdditionalFilters: React.FC<AdditionalFiltersProps> = ({
                         ...dateRange,
                         end: e.target.value ? new Date(e.target.value) : null
                       })}
-                      className="w-full px-2 py-1 text-xs bg-black/20 border border-white/20 rounded text-white focus:ring-1 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-2 py-1 text-xs bg-black/20 border border-white/20 rounded text-white focus:ring-1 focus:ring-wedding-primary focus:border-transparent"
                     />
                   </div>
                 </div>

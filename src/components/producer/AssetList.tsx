@@ -274,7 +274,7 @@ const AssetList: React.FC<AssetListProps> = ({
         <h2 className="text-2xl font-bold text-white mb-6">Services</h2>
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-wedding-primary-light mx-auto mb-4"></div>
             <p className="text-gray-300">Loading services...</p>
           </div>
         </div>
@@ -316,7 +316,7 @@ const AssetList: React.FC<AssetListProps> = ({
               placeholder="Search services by name, specifications, or tags..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
             />
             {searchTerm && (
               <button
@@ -368,7 +368,7 @@ const AssetList: React.FC<AssetListProps> = ({
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-wedding-primary focus:border-transparent text-sm"
               >
                 <option value="">All Statuses</option>
                 {availableStatuses.map(status => (
@@ -393,7 +393,7 @@ const AssetList: React.FC<AssetListProps> = ({
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as 'name' | 'date' | 'quantity')}
-                  className="flex-1 px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  className="flex-1 px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-wedding-primary focus:border-transparent text-sm"
                 >
                   <option value="date">Date Added</option>
                   <option value="name">Name</option>
@@ -403,7 +403,7 @@ const AssetList: React.FC<AssetListProps> = ({
                   onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
                   className={`p-2 border rounded-lg transition-colors ${
                     sortOrder === 'asc' 
-                      ? 'border-purple-400/50 bg-purple-500/20 text-purple-200' 
+                      ? 'border-wedding-primary-light/50 bg-wedding-primary/20 text-wedding-primary-light' 
                       : 'border-white/20 hover:bg-white/10'
                   }`}
                   title={`Sort ${sortOrder === 'asc' ? 'Descending' : 'Ascending'}`}
@@ -456,7 +456,7 @@ const AssetList: React.FC<AssetListProps> = ({
               setSelectedTags([]);
               setSelectedStatus('');
             }}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors"
           >
             Clear all filters
           </button>

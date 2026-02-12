@@ -199,7 +199,7 @@ const SupplierQuoteModal: React.FC<SupplierQuoteModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-wedding-primary to-wedding-primary-hover px-6 py-5 rounded-t-xl">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-white">Submit Your Quote</h2>
             <button
@@ -248,7 +248,7 @@ const SupplierQuoteModal: React.FC<SupplierQuoteModalProps> = ({
                         href={quote.quote_document_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-300 hover:text-purple-200 underline"
+                        className="text-purple-300 hover:text-wedding-primary-light underline"
                       >
                         {selectedFile.name}
                       </a>
@@ -272,7 +272,7 @@ const SupplierQuoteModal: React.FC<SupplierQuoteModalProps> = ({
                       value={quoteCurrency}
                       onChange={(e) => setQuoteCurrency(e.target.value)}
                       disabled={submittingQuote}
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed"
+                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed"
                     >
                       <option value="USD" className="bg-[#0A0A0A]">USD</option>
                       <option value="EUR" className="bg-[#0A0A0A]">EUR</option>
@@ -288,7 +288,7 @@ const SupplierQuoteModal: React.FC<SupplierQuoteModalProps> = ({
                       step="0.01"
                       disabled={submittingQuote}
                       required
-                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed"
+                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -314,12 +314,12 @@ const SupplierQuoteModal: React.FC<SupplierQuoteModalProps> = ({
                         ? 'border-white/10 text-gray-500 cursor-not-allowed'
                         : selectedFile
                         ? 'border-green-400/50 text-green-300 hover:border-green-400'
-                        : 'border-white/20 text-gray-300 hover:border-purple-400/50 hover:text-purple-300'
+                        : 'border-white/20 text-gray-300 hover:border-wedding-primary-light/50 hover:text-purple-300'
                     }`}
                   >
                     {uploadingFile ? (
                       <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-400"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-wedding-primary-light"></div>
                         <span>Uploading...</span>
                       </>
                     ) : (
@@ -360,7 +360,7 @@ const SupplierQuoteModal: React.FC<SupplierQuoteModalProps> = ({
                   placeholder="Add any additional information about your quote..."
                   rows={3}
                   disabled={submittingQuote}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent disabled:bg-white/5 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -370,7 +370,7 @@ const SupplierQuoteModal: React.FC<SupplierQuoteModalProps> = ({
                   type="button"
                   onClick={handleSubmitQuote}
                   disabled={submittingQuote || uploadingFile || quotePrice <= 0}
-                  className="w-full bg-purple-600 text-white rounded-lg px-6 py-3 font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                  className="w-full bg-wedding-primary text-white rounded-lg px-6 py-3 font-semibold hover:bg-wedding-primary-hover transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-600 disabled:cursor-not-allowed"
                 >
                   {uploadingFile ? (
                     <>

@@ -65,13 +65,13 @@ const RoleFilter: React.FC<RoleFilterProps> = ({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm transition-colors md:cursor-pointer"
+        className="flex items-center space-x-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 focus:ring-2 focus:ring-wedding-primary focus:border-transparent text-sm transition-colors md:cursor-pointer"
       >
         <User className="h-4 w-4 text-gray-300" />
         <span className="text-gray-200">
           Contact Roles
           {selectedRoles.length > 0 && (
-            <span className="ml-1 px-2 py-0.5 bg-teal-500/30 text-teal-200 rounded-full text-xs">
+            <span className="ml-1 px-2 py-0.5 bg-wedding-primary/30 text-wedding-primary-light rounded-full text-xs">
               {selectedRoles.length}
             </span>
           )}
@@ -86,7 +86,7 @@ const RoleFilter: React.FC<RoleFilterProps> = ({
               <h4 className="text-sm font-medium text-white">Contact Roles</h4>
               <button
                 onClick={handleSelectAll}
-                className="text-xs text-teal-300 hover:text-teal-200 transition-colors"
+                className="text-xs text-wedding-primary-light hover:text-wedding-primary-light transition-colors"
               >
                 {selectedRoles.length === availableRoles.length ? 'Deselect All' : 'Select All'}
               </button>
@@ -107,7 +107,7 @@ const RoleFilter: React.FC<RoleFilterProps> = ({
                     />
                     <div className={`w-4 h-4 border-2 rounded flex items-center justify-center ${
                       selectedRoles.includes(role)
-                        ? 'bg-teal-600 border-teal-600'
+                        ? 'bg-wedding-primary border-wedding-primary'
                         : 'border-white/30'
                     }`}>
                       {selectedRoles.includes(role) && (

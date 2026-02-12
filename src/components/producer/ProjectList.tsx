@@ -25,7 +25,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
               onClick={() => onProjectSelect(project)}
               className={`p-4 rounded-lg border cursor-pointer transition-colors ${
                 selectedProject?.id === project.id
-                  ? 'border-teal-500 bg-teal-50'
+                  ? 'border-wedding-primary bg-wedding-primary/10'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >

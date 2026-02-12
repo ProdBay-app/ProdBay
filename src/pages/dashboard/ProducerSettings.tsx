@@ -97,7 +97,7 @@ const ProducerSettings: React.FC = () => {
                   type="text"
                   value={form.firstName}
                   onChange={(e) => handleChange('firstName', e.target.value)}
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                   placeholder="Enter first name"
                 />
               </div>
@@ -111,7 +111,7 @@ const ProducerSettings: React.FC = () => {
                   type="text"
                   value={form.lastName}
                   onChange={(e) => handleChange('lastName', e.target.value)}
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                   placeholder="Enter last name"
                 />
               </div>
@@ -127,7 +127,7 @@ const ProducerSettings: React.FC = () => {
                 required
                 value={form.companyName}
                 onChange={(e) => handleChange('companyName', e.target.value)}
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 placeholder="Enter company name"
               />
             </div>
@@ -141,7 +141,7 @@ const ProducerSettings: React.FC = () => {
                 type="tel"
                 value={form.phoneNumber}
                 onChange={(e) => handleChange('phoneNumber', e.target.value)}
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 placeholder="Enter phone number"
               />
             </div>
@@ -151,7 +151,7 @@ const ProducerSettings: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-600 text-white font-medium hover:bg-teal-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-wedding-primary text-white font-medium hover:bg-wedding-primary-hover transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4" />
                   {isSaving ? 'Saving...' : 'Save Changes'}

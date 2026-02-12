@@ -29,7 +29,7 @@ const ActionCounter: React.FC<ActionCounterProps> = ({
   count,
   icon: Icon,
   iconColor = 'text-blue-300',
-  bgColor = 'bg-blue-500/20',
+  bgColor = 'bg-wedding-primary/20',
   description,
   onClick
 }) => {

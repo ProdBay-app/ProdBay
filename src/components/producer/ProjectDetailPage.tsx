@@ -169,9 +169,9 @@ const ProjectDetailPage: React.FC = () => {
   const getStatusBadgeColor = (status: Project['project_status']): string => {
     switch (status) {
       case 'New':
-        return 'bg-blue-500/30 text-blue-200 border-blue-400/50';
+        return 'bg-wedding-primary/30 text-wedding-primary-light border-wedding-primary-light/50';
       case 'In Progress':
-        return 'bg-purple-500/30 text-purple-200 border-purple-400/50';
+        return 'bg-wedding-primary/30 text-wedding-primary-light border-wedding-primary-light/50';
       case 'Quoting':
         return 'bg-yellow-500/30 text-yellow-200 border-yellow-400/50';
       case 'Completed':
@@ -404,7 +404,7 @@ const ProjectDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-400 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-wedding-primary-light mx-auto mb-4"></div>
           <p className="text-gray-200 text-lg">Loading wedding details...</p>
         </div>
       </div>
@@ -427,7 +427,7 @@ const ProjectDetailPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate('/producer/projects')}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors shadow-sm"
           >
             <ArrowLeft className="w-5 h-5" />
             Back to Weddings
@@ -468,14 +468,14 @@ const ProjectDetailPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Client Name */}
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-purple-500/20 rounded-lg">
+              <div className="p-2 bg-wedding-primary/20 rounded-lg">
                 <User className="w-5 h-5 text-purple-300" />
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-300 mb-1">Couple</p>
                 <button
                   onClick={() => setIsClientModalOpen(true)}
-                  className="text-lg font-semibold text-teal-300 hover:text-teal-200 hover:underline transition-colors text-left"
+                  className="text-lg font-semibold text-wedding-primary-light hover:text-wedding-primary-light hover:underline transition-colors text-left"
                   title={`View all weddings for ${project.client_name}`}
                 >
                   {project.client_name}
@@ -498,7 +498,7 @@ const ProjectDetailPage: React.FC = () => {
 
             {/* Deadline */}
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-blue-500/20 rounded-lg">
+              <div className="p-2 bg-wedding-primary/20 rounded-lg">
                 <Calendar className="w-5 h-5 text-blue-300" />
               </div>
               <div className="flex-1">
@@ -541,7 +541,7 @@ const ProjectDetailPage: React.FC = () => {
                       flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
                       ${
                         activeView === 'assets'
-                          ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
+                          ? 'bg-wedding-primary/30 text-white border border-wedding-primary-light/50 shadow-sm'
                           : 'text-gray-300 hover:text-white hover:bg-white/5'
                       }
                     `}
@@ -556,7 +556,7 @@ const ProjectDetailPage: React.FC = () => {
                       flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
                       ${
                         activeView === 'brief'
-                          ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
+                          ? 'bg-wedding-primary/30 text-white border border-wedding-primary-light/50 shadow-sm'
                           : 'text-gray-300 hover:text-white hover:bg-white/5'
                       }
                     `}

@@ -126,7 +126,7 @@ const AssetModal: React.FC<AssetModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
+              className="px-4 py-2 rounded bg-wedding-primary text-white hover:bg-wedding-primary-hover disabled:opacity-50"
             >
               {isSubmitting ? (isEditing ? 'Saving...' : 'Creating...') : (isEditing ? 'Save Changes' : 'Create Service')}
             </button>

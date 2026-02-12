@@ -14,7 +14,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onCreateProject }) =>
       </div>
       <button
         onClick={onCreateProject}
-        className="flex items-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
+        className="flex items-center space-x-2 px-4 py-2 bg-wedding-primary text-white rounded hover:bg-wedding-primary-hover"
       >
         <Plus className="h-4 w-4" />
         <span>New Wedding</span>

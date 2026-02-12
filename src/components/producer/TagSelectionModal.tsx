@@ -43,7 +43,7 @@ const TagSelectionModal: React.FC<TagSelectionModalProps> = ({
                   key={tag}
                   type="button"
                   onClick={() => onTagToggle(tag)}
-                  className={`px-3 py-1 rounded-full text-sm border ${active ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-gray-800 border-gray-300'}`}
+                  className={`px-3 py-1 rounded-full text-sm border ${active ? 'bg-wedding-primary text-white border-wedding-primary' : 'bg-white text-gray-800 border-gray-300'}`}
                 >
                   {tag}
                 </button>
@@ -63,7 +63,7 @@ const TagSelectionModal: React.FC<TagSelectionModalProps> = ({
           <button
             type="button"
             onClick={onConfirm}
-            className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700"
+            className="px-4 py-2 rounded bg-wedding-primary text-white hover:bg-wedding-primary-hover"
           >
             Send Requests
           </button>

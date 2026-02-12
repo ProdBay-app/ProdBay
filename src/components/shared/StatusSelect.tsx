@@ -47,9 +47,9 @@ const StatusSelect: React.FC<StatusSelectProps> = ({
       case 'Approved':
         return 'bg-green-500';
       case 'In Production':
-        return 'bg-blue-500';
+        return 'bg-wedding-primary';
       case 'Delivered':
-        return 'bg-purple-500';
+        return 'bg-wedding-secondary/500';
       default:
         return 'bg-gray-500';
     }
@@ -69,7 +69,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({
     w-full px-3 py-2.5 
     border border-gray-300 rounded-lg 
     bg-white text-gray-900
-    focus:ring-2 focus:ring-purple-500 focus:border-transparent
+    focus:ring-2 focus:ring-wedding-primary focus:border-transparent
     transition-all duration-200
     ${disabled ? 'opacity-60 cursor-not-allowed bg-gray-50' : 'cursor-pointer hover:border-gray-400'}
   `.trim().replace(/\s+/g, ' ');

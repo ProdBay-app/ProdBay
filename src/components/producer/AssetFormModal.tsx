@@ -156,7 +156,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
     >
       <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-xl w-full max-w-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-wedding-primary to-wedding-primary-hover px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-2 rounded-lg">
               {mode === 'edit' ? (
@@ -202,7 +202,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
               onChange={handleInputChange}
               required
               disabled={isSubmitting}
-              className="w-full px-4 py-3 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-all disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed"
               placeholder="e.g., Exhibition Booth Design, Marketing Brochure"
               autoFocus
             />
@@ -223,7 +223,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
               onChange={handleInputChange}
               disabled={isSubmitting}
               rows={5}
-              className="w-full px-4 py-3 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-all resize-none disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed"
               placeholder="Describe the service requirements, dimensions, materials, or any other specifications..."
             />
             <p className="mt-1 text-xs text-gray-300">
@@ -248,7 +248,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                 value={formData.quantity || ''}
                 onChange={handleInputChange}
                 disabled={isSubmitting}
-                className="w-full pl-10 pr-4 py-3 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed"
+                className="w-full pl-10 pr-4 py-3 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-all disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed"
                 placeholder="Enter quantity (e.g., 100)"
               />
             </div>
@@ -294,7 +294,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                 type="button"
                 onClick={() => setShowTagSelector(!showTagSelector)}
                 disabled={isSubmitting}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 text-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed text-left flex items-center gap-2"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 text-gray-200 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-all disabled:bg-white/5 disabled:text-gray-400 disabled:cursor-not-allowed text-left flex items-center gap-2"
               >
                 <Tag className="w-5 h-5 text-gray-300" />
                 <span>
@@ -312,7 +312,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                       placeholder="Search tags..."
                       value={tagSearchTerm}
                       onChange={(e) => setTagSearchTerm(e.target.value)}
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-md text-sm focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                     />
                   </div>
 
@@ -329,7 +329,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
                           type="button"
                           onClick={() => handleTagToggle(tag.name)}
                           className={`w-full px-3 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2 ${
-                            formData.tags.includes(tag.name) ? 'bg-purple-500/20' : ''
+                            formData.tags.includes(tag.name) ? 'bg-wedding-primary/20' : ''
                           }`}
                         >
                           <div
@@ -357,16 +357,16 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
 
           {/* Info Box - Conditional based on mode */}
           {mode === 'create' && (
-            <div className="bg-purple-500/20 border border-purple-400/30 rounded-lg p-4">
-              <p className="text-sm text-purple-200">
+            <div className="bg-wedding-primary/20 border border-wedding-primary-light/30 rounded-lg p-4">
+              <p className="text-sm text-wedding-primary-light">
                 <span className="font-semibold">Note:</span> New services can be updated with timeline and vendor assignments later.
               </p>
             </div>
           )}
 
           {mode === 'edit' && (
-            <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-4">
-              <p className="text-sm text-blue-200">
+            <div className="bg-wedding-primary/20 border border-wedding-primary-light/30 rounded-lg p-4">
+              <p className="text-sm text-wedding-primary-light">
                 <span className="font-semibold">Note:</span> This will update the service's name and specifications. 
                 Timeline and vendor assignments will remain unchanged.
               </p>
@@ -386,7 +386,7 @@ const AssetFormModal: React.FC<AssetFormModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting || !formData.asset_name.trim()}
-              className="px-5 py-2.5 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-5 py-2.5 rounded-lg bg-wedding-primary text-white font-medium hover:bg-wedding-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>

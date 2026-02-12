@@ -50,8 +50,8 @@ const AssetCard: React.FC<AssetCardProps> = ({
 
   return (
     <div 
-      className={`h-24 flex flex-col justify-between bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] p-3 text-white relative group cursor-pointer ${
-        isHighlighted ? 'ring-4 ring-teal-400 ring-offset-2 scale-[1.05] shadow-xl' : ''
+      className={`h-24 flex flex-col justify-between bg-gradient-to-br from-wedding-primary to-wedding-primary-hover rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] p-3 text-white relative group cursor-pointer ${
+        isHighlighted ? 'ring-4 ring-wedding-primary ring-offset-2 scale-[1.05] shadow-xl' : ''
       }`}
       onClick={() => onClick(asset)}
       onMouseEnter={onMouseEnter}

@@ -83,7 +83,7 @@ const SupplierFilters: React.FC<SupplierFiltersProps> = ({
             suppliers={suppliers}
           />
 
-          <div className="relative flex items-center space-x-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 focus-within:ring-2 focus-within:ring-teal-500 focus-within:border-transparent text-sm transition-colors md:cursor-pointer">
+          <div className="relative flex items-center space-x-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 focus-within:ring-2 focus-within:ring-wedding-primary focus-within:border-transparent text-sm transition-colors md:cursor-pointer">
             <MapPin className="h-4 w-4 text-gray-300" />
             <select
               value={selectedCity}

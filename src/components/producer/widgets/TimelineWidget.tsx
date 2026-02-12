@@ -82,7 +82,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-500/20 rounded-lg">
+          <div className="p-2 bg-wedding-primary/20 rounded-lg">
             <Calendar className="w-5 h-5 text-blue-300" />
           </div>
           <div>
@@ -102,7 +102,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
             <button
               type="button"
               onClick={onAddMilestone}
-              className="flex items-center gap-2 px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-3 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
               <span>Add Milestone</span>
@@ -167,7 +167,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
                             e.stopPropagation();
                             onEditMilestone(milestone);
                           }}
-                          className="p-1.5 bg-white/10 border border-white/30 hover:bg-blue-500/20 hover:border-blue-400/50 rounded-lg transition-colors shadow-sm"
+                          className="p-1.5 bg-white/10 border border-white/30 hover:bg-wedding-primary/20 hover:border-wedding-primary-light/50 rounded-lg transition-colors shadow-sm"
                           aria-label="Edit milestone"
                         >
                           <Edit className="w-4 h-4 text-gray-200 hover:text-blue-300" />
@@ -211,7 +211,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
                       <span className={`text-xs font-medium px-2 py-1 rounded ${
                         isCompleted ? 'bg-green-500/30 text-green-200' :
                         isCancelled ? 'bg-white/20 text-gray-300' :
-                        'bg-blue-500/30 text-blue-200'
+                        'bg-wedding-primary/30 text-wedding-primary-light'
                       }`}>
                         {formatDate(milestone.milestone_date)}
                       </span>
@@ -231,7 +231,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
                     ? 'bg-red-500' 
                     : daysRemaining && daysRemaining <= 7 
                     ? 'bg-orange-500' 
-                    : 'bg-blue-500'
+                    : 'bg-wedding-primary'
                 }`}>
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
@@ -250,7 +250,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
                       ? 'bg-red-500/30 text-red-200' 
                       : daysRemaining && daysRemaining <= 7 
                       ? 'bg-orange-500/30 text-orange-200' 
-                      : 'bg-blue-500/30 text-blue-200'
+                      : 'bg-wedding-primary/30 text-wedding-primary-light'
                   }`}>
                     {formatDate(deadline)}
                   </span>
@@ -268,7 +268,7 @@ const TimelineWidget: React.FC<TimelineWidgetProps> = ({
             Add milestones to track wedding progress
           </p>
           {deadline && (
-            <div className="mt-4 p-3 bg-blue-500/20 border border-blue-400/30 rounded-lg inline-block">
+            <div className="mt-4 p-3 bg-wedding-primary/20 border border-wedding-primary-light/30 rounded-lg inline-block">
               <p className="text-sm text-gray-200">
                 <span className="font-semibold">Deadline:</span> {formatDate(deadline)}
               </p>

@@ -219,13 +219,13 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
         <div className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-purple-600" />
           <h3 className="text-lg font-semibold text-gray-900">Timeline Events</h3>
-          <span className="px-2 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full">
+          <span className="px-2 py-1 bg-wedding-secondary text-wedding-slate text-sm font-semibold rounded-full">
             {timelineEvents.length}
           </span>
         </div>
         <button
           onClick={() => setIsAddingEvent(true)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+          className="flex items-center gap-2 px-3 py-1.5 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors text-sm font-medium"
         >
           <Plus className="w-4 h-4" />
           Add Event
@@ -234,7 +234,7 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
 
       {/* Add New Event Form */}
       {isAddingEvent && (
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <div className="bg-wedding-secondary/50 border border-wedding-primary/30 rounded-lg p-4">
           <h4 className="font-medium text-gray-900 mb-3">Add New Timeline Event</h4>
           <div className="space-y-3">
             <div>
@@ -245,7 +245,7 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
                 type="text"
                 value={newEvent.event_name}
                 onChange={(e) => setNewEvent(prev => ({ ...prev, event_name: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 placeholder="e.g., Design Review, Planning Start"
               />
             </div>
@@ -257,7 +257,7 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
                 type="date"
                 value={newEvent.event_date}
                 onChange={(e) => setNewEvent(prev => ({ ...prev, event_date: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
               />
             </div>
             <div>
@@ -268,14 +268,14 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
                 value={newEvent.description}
                 onChange={(e) => setNewEvent(prev => ({ ...prev, description: e.target.value }))}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 placeholder="Additional details about this event"
               />
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleAddEvent}
-                className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-3 py-1.5 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors text-sm font-medium"
               >
                 <Check className="w-4 h-4" />
                 Add Event
@@ -324,7 +324,7 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
                       type="text"
                       value={editingEvent.event_name}
                       onChange={(e) => setEditingEvent(prev => ({ ...prev, event_name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -335,7 +335,7 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
                       type="date"
                       value={editingEvent.event_date}
                       onChange={(e) => setEditingEvent(prev => ({ ...prev, event_date: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -346,7 +346,7 @@ const AssetTimelineManager: React.FC<AssetTimelineManagerProps> = ({
                       value={editingEvent.description}
                       onChange={(e) => setEditingEvent(prev => ({ ...prev, description: e.target.value }))}
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                     />
                   </div>
                   <div className="flex items-center gap-2">

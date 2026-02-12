@@ -103,7 +103,7 @@ const SignUpPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-wedding-secondary/50 via-wedding-neutral to-wedding-primary/20">
       {/* Fogged-out Header */}
       <div className="sticky top-0 bg-transparent backdrop-blur-sm shadow-sm z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -112,21 +112,21 @@ const SignUpPage: React.FC = () => {
             onClick={handleLogoClick}
             title="Go to Home"
           >
-            <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-pink-500 drop-shadow-lg" />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 drop-shadow-lg">WedBay</h1>
+            <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-wedding-accent drop-shadow-lg" />
+            <h1 className="text-xl sm:text-2xl font-bold text-wedding-slate drop-shadow-lg">WedBay</h1>
           </div>
-          <p className="text-center text-gray-600 mt-2 text-sm sm:text-base drop-shadow-md">Wedding Planning Platform</p>
+          <p className="text-center text-wedding-slate-muted mt-2 text-sm sm:text-base drop-shadow-md">Wedding Planning Platform</p>
         </div>
       </div>
 
       <div className="max-w-md mx-auto px-4 py-16">
         {/* Sign Up Form */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white rounded-wedding-lg shadow-wedding-lg p-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-wedding-slate mb-2">
               Create an Account
             </h2>
-            <p className="text-gray-600">
+            <p className="text-wedding-slate-muted">
               Sign up to get started with WedBay
             </p>
           </div>
@@ -135,25 +135,25 @@ const SignUpPage: React.FC = () => {
             /* Success Message */
             <div className="text-center">
               <div className="mb-6 flex justify-center">
-                <div className="rounded-full bg-green-100 p-4">
-                  <CheckCircle2 className="h-12 w-12 text-green-600" />
+                <div className="rounded-full bg-wedding-primary/20 p-4">
+                  <CheckCircle2 className="h-12 w-12 text-wedding-primary" />
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-wedding-slate mb-3">
                 Check Your Email
               </h3>
-              <p className="text-gray-700 mb-2">
+              <p className="text-wedding-slate mb-2">
                 We've sent a confirmation link to:
               </p>
-              <p className="text-gray-900 font-medium mb-6 break-all">
+              <p className="text-wedding-slate font-medium mb-6 break-all">
                 {successEmail}
               </p>
-              <p className="text-gray-600 text-sm mb-6">
+              <p className="text-wedding-slate-muted text-sm mb-6">
                 Click the link in the email to verify your account and complete the sign-up process.
               </p>
               <Link
                 to="/login"
-                className="block w-full bg-teal-600 text-white py-3 px-4 rounded-lg hover:bg-teal-700 transition-colors text-center font-medium"
+                className="block w-full bg-wedding-primary text-white py-3 px-4 rounded-wedding hover:bg-wedding-primary-hover transition-colors text-center font-medium"
               >
                 Go to Login
               </Link>
@@ -163,17 +163,17 @@ const SignUpPage: React.FC = () => {
               <div className="space-y-6">
                 {/* Email Field */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-wedding-slate mb-2">
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-wedding-slate-muted" />
                     <input
                       id="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full pl-10 pr-3 py-2 border border-wedding-secondary rounded-wedding focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                       placeholder="Enter your email"
                       required
                       disabled={isLoading}
@@ -183,7 +183,7 @@ const SignUpPage: React.FC = () => {
 
                 {/* Password Field */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="password" className="block text-sm font-medium text-wedding-slate mb-2">
                     Password
                   </label>
                   <div className="relative">
@@ -192,7 +192,7 @@ const SignUpPage: React.FC = () => {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 pr-10 border border-wedding-secondary rounded-wedding focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                       placeholder="Enter your password (min. 6 characters)"
                       required
                       disabled={isLoading}
@@ -205,20 +205,20 @@ const SignUpPage: React.FC = () => {
                       disabled={isLoading}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-4 w-4 text-wedding-slate-muted" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye className="h-4 w-4 text-wedding-slate-muted" />
                       )}
                     </button>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-wedding-slate-muted">
                     Must be at least 6 characters long
                   </p>
                 </div>
 
                 {/* Confirm Password Field */}
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-wedding-slate mb-2">
                     Confirm Password
                   </label>
                   <div className="relative">
@@ -227,7 +227,7 @@ const SignUpPage: React.FC = () => {
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 pr-10 border border-wedding-secondary rounded-wedding focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                       placeholder="Confirm your password"
                       required
                       disabled={isLoading}
@@ -240,9 +240,9 @@ const SignUpPage: React.FC = () => {
                       disabled={isLoading}
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-4 w-4 text-wedding-slate-muted" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye className="h-4 w-4 text-wedding-slate-muted" />
                       )}
                     </button>
                   </div>
@@ -250,7 +250,7 @@ const SignUpPage: React.FC = () => {
 
                 {/* Error Message */}
                 {error && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-wedding">
                     <p className="text-sm text-red-800">{error}</p>
                   </div>
                 )}
@@ -259,7 +259,7 @@ const SignUpPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  className="w-full bg-wedding-primary text-white py-3 px-4 rounded-wedding hover:bg-wedding-primary-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {isLoading ? (
                     <>
@@ -273,11 +273,11 @@ const SignUpPage: React.FC = () => {
 
                 {/* Link to Login */}
                 <div className="text-center">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-wedding-slate-muted">
                     Already have an account?{' '}
                     <Link
                       to="/login"
-                      className="text-teal-600 hover:text-teal-700 font-medium"
+                      className="text-wedding-primary hover:text-wedding-primary-hover font-medium"
                     >
                       Sign in
                     </Link>
@@ -289,7 +289,7 @@ const SignUpPage: React.FC = () => {
         </div>
       </div>
       
-      <Footer />
+      <Footer variant="light" />
     </div>
   );
 };

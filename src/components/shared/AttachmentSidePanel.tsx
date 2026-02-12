@@ -107,7 +107,7 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
     messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     messageElement.classList.add(
       'ring-2',
-      'ring-purple-400',
+      'ring-wedding-primary',
       'ring-offset-2',
       'ring-offset-transparent',
       'animate-pulse'
@@ -116,7 +116,7 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
     window.setTimeout(() => {
       messageElement.classList.remove(
         'ring-2',
-        'ring-purple-400',
+        'ring-wedding-primary',
         'ring-offset-2',
         'ring-offset-transparent',
         'animate-pulse'
@@ -234,7 +234,7 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
                             <button
                               type="button"
                               onClick={() => handleJumpToMessage(attachment.message_id)}
-                              className="text-purple-300 hover:text-purple-200"
+                              className="text-purple-300 hover:text-wedding-primary-light"
                             >
                               Jump to Message
                             </button>
@@ -292,7 +292,7 @@ const AttachmentSidePanel: React.FC<AttachmentSidePanelProps> = ({
                             <button
                               type="button"
                               onClick={() => handleJumpToMessage(attachment.message_id)}
-                              className="text-purple-300 hover:text-purple-200"
+                              className="text-purple-300 hover:text-wedding-primary-light"
                             >
                               Jump to Message
                             </button>

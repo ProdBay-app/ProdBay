@@ -177,7 +177,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header - Purple gradient matching other modals */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-wedding-primary to-wedding-primary-hover px-6 py-5 rounded-t-xl">
           <div className="flex items-start justify-between">
             <div className="flex-1 pr-4">
               <h3 className="text-2xl font-bold text-white mb-1">Select Vendors</h3>
@@ -206,7 +206,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                 placeholder="Search vendors by name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-12 py-3 text-base bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                className="w-full pl-12 pr-12 py-3 text-base bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-purple-500 transition-colors"
                 autoFocus
               />
               {searchTerm && (
@@ -229,7 +229,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="text-xs text-purple-300 hover:text-purple-200 font-medium transition-colors"
+                    className="text-xs text-purple-300 hover:text-wedding-primary-light font-medium transition-colors"
                   >
                     Clear all filters
                   </button>
@@ -242,7 +242,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                     onClick={() => toggleCategory(category)}
                     className={`px-3 py-1.5 text-sm rounded-full border transition-all ${
                       selectedCategories.includes(category)
-                        ? 'bg-purple-500/30 text-purple-200 border-purple-400/50 font-medium shadow-sm'
+                        ? 'bg-wedding-primary/30 text-wedding-primary-light border-wedding-primary-light/50 font-medium shadow-sm'
                         : 'bg-white/5 text-gray-300 border-white/20 hover:bg-white/10 hover:border-white/30'
                     }`}
                   >
@@ -257,7 +257,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
           <div className="mb-4 flex justify-end">
             <button
               onClick={handleSelectAll}
-              className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-500/20 text-purple-200 border border-purple-400/50 rounded-lg hover:bg-purple-500/30 transition-colors font-medium"
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-wedding-primary/20 text-wedding-primary-light border border-wedding-primary-light/50 rounded-lg hover:bg-wedding-primary/30 transition-colors font-medium"
             >
               {allVisibleSelected ? (
                 <CheckSquare className="w-4 h-4" />
@@ -270,7 +270,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-wedding-primary-light"></div>
               <span className="ml-2 text-gray-300">Loading vendors...</span>
             </div>
           ) : (
@@ -309,7 +309,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                           <p className="text-sm text-gray-400">Try adjusting your search or filter criteria.</p>
                           <button
                             onClick={clearFilters}
-                            className="mt-2 px-3 py-1 text-sm bg-purple-500/20 text-purple-200 border border-purple-400/50 rounded-lg hover:bg-purple-500/30 transition-colors"
+                            className="mt-2 px-3 py-1 text-sm bg-wedding-primary/20 text-wedding-primary-light border border-wedding-primary-light/50 rounded-lg hover:bg-wedding-primary/30 transition-colors"
                           >
                             Clear Filters
                           </button>
@@ -323,14 +323,14 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                       <div>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <Star className="w-5 h-5 text-teal-400 fill-teal-400" />
+                            <Star className="w-5 h-5 text-wedding-primary-light fill-wedding-primary-light" />
                             <h4 className="text-sm font-semibold text-white">
                               Recommended for this Service ({recommendedSuppliers.length})
                             </h4>
                           </div>
                           <button
                             onClick={handleSelectAllRecommended}
-                            className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-teal-500/20 text-teal-200 border border-teal-400/50 rounded-lg hover:bg-teal-500/30 transition-colors font-medium"
+                            className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-wedding-primary/20 text-wedding-primary-light border border-wedding-primary-light/50 rounded-lg hover:bg-wedding-primary/30 transition-colors font-medium"
                           >
                             {allRecommendedSelected ? (
                               <>
@@ -355,7 +355,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                               <div
                                 key={supplier.id}
                                 className={`border rounded-lg p-4 transition-colors ${
-                                  isSelected ? 'border-teal-400 bg-teal-500/20' : 'border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/30'
+                                  isSelected ? 'border-wedding-primary-light bg-wedding-primary/20' : 'border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/30'
                                 } ${isAlreadyContacted ? 'opacity-75' : ''}`}
                               >
                                 <div className="flex items-center space-x-3">
@@ -365,7 +365,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                                     checked={isSelected}
                                     onChange={() => onSupplierToggle(supplier.id)}
                                     disabled={isAlreadyContacted}
-                                    className="h-4 w-4 text-teal-400 focus:ring-teal-400 border-white/30 rounded bg-black/20"
+                                    className="h-4 w-4 text-wedding-primary-light focus:ring-wedding-primary border-white/30 rounded bg-black/20"
                                   />
                                   <div className="flex-1">
                                     <div className="flex items-center space-x-2 flex-wrap">
@@ -376,8 +376,8 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                                         {supplier.supplier_name}
                                       </label>
                                       {supplier.relevance.score === maxScore && maxScore > 0 && (
-                                        <span className="px-2 py-0.5 text-xs bg-teal-500/30 text-teal-200 rounded-full font-bold border border-teal-400/50 flex items-center gap-1">
-                                          <Trophy className="w-3 h-3 fill-teal-200" />
+                                        <span className="px-2 py-0.5 text-xs bg-wedding-primary/30 text-wedding-primary-light rounded-full font-bold border border-wedding-primary-light/50 flex items-center gap-1">
+                                          <Trophy className="w-3 h-3 fill-wedding-primary-light" />
                                           Best Match
                                         </span>
                                       )}
@@ -399,7 +399,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                                               key={index}
                                               className={`px-2 py-1 text-xs rounded ${
                                                 isMatching
-                                                  ? 'bg-teal-500/30 text-teal-200 font-semibold border border-teal-400/50'
+                                                  ? 'bg-wedding-primary/30 text-wedding-primary-light font-semibold border border-wedding-primary-light/50'
                                                   : 'bg-white/5 text-gray-300 border border-white/10'
                                               }`}
                                               aria-label={isMatching ? `Matching category: ${category}` : category}
@@ -439,7 +439,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                               <div
                                 key={supplier.id}
                                 className={`border rounded-lg p-4 transition-colors ${
-                                  isSelected ? 'border-teal-400 bg-teal-500/20' : 'border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/30'
+                                  isSelected ? 'border-wedding-primary-light bg-wedding-primary/20' : 'border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/30'
                                 } ${isAlreadyContacted ? 'opacity-75' : ''}`}
                               >
                                 <div className="flex items-center space-x-3">
@@ -449,7 +449,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                                     checked={isSelected}
                                     onChange={() => onSupplierToggle(supplier.id)}
                                     disabled={isAlreadyContacted}
-                                    className="h-4 w-4 text-teal-400 focus:ring-teal-400 border-white/30 rounded bg-black/20"
+                                    className="h-4 w-4 text-wedding-primary-light focus:ring-wedding-primary border-white/30 rounded bg-black/20"
                                   />
                                   <div className="flex-1">
                                     <div className="flex items-center space-x-2">
@@ -520,7 +520,7 @@ const SupplierSelectionModal: React.FC<SupplierSelectionModalProps> = ({
                 className={`px-4 py-2 rounded text-white transition-colors ${
                   selectedSupplierIds.length === 0
                     ? 'bg-gray-500/50 cursor-not-allowed'
-                    : 'bg-teal-600 hover:bg-teal-700'
+                    : 'bg-wedding-primary hover:bg-wedding-primary-hover'
                 }`}
               >
                 Send Quote Requests{selectedSupplierIds.length > 0 ? ` (${selectedSupplierIds.length})` : ''}

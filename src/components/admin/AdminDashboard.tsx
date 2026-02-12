@@ -116,10 +116,10 @@ const AdminDashboard: React.FC = () => {
 
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
-            <Users className="h-8 w-8 text-teal-600" />
+            <Users className="h-8 w-8 text-wedding-primary" />
             <div className="ml-4">
               <h3 className="text-lg font-semibold">Vendors</h3>
-              <p className="text-2xl font-bold text-teal-600">{stats.totalSuppliers}</p>
+              <p className="text-2xl font-bold text-wedding-primary">{stats.totalSuppliers}</p>
             </div>
           </div>
         </div>
@@ -173,8 +173,8 @@ const AdminDashboard: React.FC = () => {
           </div>
           
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-              <span className="font-medium text-blue-800">Pending Quotes</span>
+            <div className="flex items-center justify-between p-3 bg-wedding-secondary/50 rounded-lg">
+              <span className="font-medium text-wedding-slate">Pending Quotes</span>
               <span className="text-2xl font-bold text-blue-600">{stats.pendingQuotes}</span>
             </div>
             

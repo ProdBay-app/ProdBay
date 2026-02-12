@@ -40,7 +40,7 @@ const Home: React.FC = () => {
               <RotatingText
                 texts={['Simplified', 'Curated', 'Perfected', 'Coordinated']}
                 mainClassName="px-2 text-white overflow-hidden py-0.5 rounded-lg inline-block"
-                style={{ backgroundColor: '#0d9488' }}
+                style={{ backgroundColor: '#87A38D' }}
                 staggerFrom={"last"}
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
@@ -63,14 +63,14 @@ const Home: React.FC = () => {
                   <>
                     <Link
                       to="/producer/dashboard"
-                      className="px-6 py-3 sm:px-8 sm:py-4 bg-teal-600/90 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-teal-600 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-teal-500/20"
+                      className="px-6 py-3 sm:px-8 sm:py-4 bg-wedding-primary/90 backdrop-blur-sm text-white rounded-wedding-lg font-medium hover:bg-wedding-primary transition-colors text-base sm:text-lg shadow-wedding-lg hover:shadow-wedding-md border border-wedding-primary/30"
                     >
                       Dashboard
                       <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-white/20 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-white/20"
+                      className="px-6 py-3 sm:px-8 sm:py-4 bg-wedding-secondary/20 backdrop-blur-sm text-white rounded-wedding-lg font-medium hover:bg-wedding-secondary/30 transition-colors text-base sm:text-lg shadow-wedding hover:shadow-wedding-md border border-wedding-secondary/40"
                     >
                       Logout
                     </button>
@@ -79,14 +79,14 @@ const Home: React.FC = () => {
                   <>
                     <Link
                       to="/login"
-                      className="px-6 py-3 sm:px-8 sm:py-4 bg-white/10 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-white/20 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-white/20"
+                      className="px-6 py-3 sm:px-8 sm:py-4 bg-wedding-secondary/20 backdrop-blur-sm text-white rounded-wedding-lg font-medium hover:bg-wedding-secondary/30 transition-colors text-base sm:text-lg shadow-wedding hover:shadow-wedding-md border border-wedding-secondary/40"
                     >
                       Login
                       <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
                     </Link>
                     <Link
                       to="/signup"
-                      className="px-6 py-3 sm:px-8 sm:py-4 bg-teal-600/90 backdrop-blur-sm text-white rounded-lg font-medium hover:bg-teal-600 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl border border-teal-500/20"
+                      className="px-6 py-3 sm:px-8 sm:py-4 bg-wedding-primary/90 backdrop-blur-sm text-white rounded-wedding-lg font-medium hover:bg-wedding-primary transition-colors text-base sm:text-lg shadow-wedding-lg hover:shadow-wedding-md border border-wedding-primary/30"
                     >
                       Sign Up
                       <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />
@@ -112,41 +112,41 @@ const Home: React.FC = () => {
             rotationAmount={0}
             blurAmount={1.5}
           >
-            <ScrollStackItem itemClassName="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
+            <ScrollStackItem itemClassName="bg-gradient-to-br from-wedding-secondary to-wedding-neutral border border-wedding-primary/30">
               <div className="flex flex-col items-center justify-center h-full">
-                <FileText className="h-12 w-12 sm:h-16 sm:w-16 text-blue-600 mb-3 sm:mb-4" />
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Smart Brief Parsing</h3>
-                <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
+                <FileText className="h-12 w-12 sm:h-16 sm:w-16 text-wedding-primary mb-3 sm:mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-wedding-slate mb-2 sm:mb-3">Smart Brief Parsing</h3>
+                <p className="text-wedding-slate-muted text-center text-sm sm:text-base lg:text-lg">
                   Automatically identify required services from wedding briefs with intelligent parsing
                 </p>
               </div>
             </ScrollStackItem>
 
-            <ScrollStackItem itemClassName="bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200">
+            <ScrollStackItem itemClassName="bg-gradient-to-br from-wedding-primary/10 to-wedding-secondary border border-wedding-primary/30">
               <div className="flex flex-col items-center justify-center h-full">
-                <Users className="h-12 w-12 sm:h-16 sm:w-16 text-teal-600 mb-3 sm:mb-4" />
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Vendor Network</h3>
-                <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
+                <Users className="h-12 w-12 sm:h-16 sm:w-16 text-wedding-primary mb-3 sm:mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-wedding-slate mb-2 sm:mb-3">Vendor Network</h3>
+                <p className="text-wedding-slate-muted text-center text-sm sm:text-base lg:text-lg">
                   Intelligent matching with the perfect wedding vendors based on your vision and needs
                 </p>
               </div>
             </ScrollStackItem>
 
-            <ScrollStackItem itemClassName="bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
+            <ScrollStackItem itemClassName="bg-gradient-to-br from-wedding-secondary to-wedding-neutral border border-wedding-accent/40">
               <div className="flex flex-col items-center justify-center h-full">
-                <DollarSign className="h-12 w-12 sm:h-16 sm:w-16 text-green-600 mb-3 sm:mb-4" />
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Quote Management</h3>
-                <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
+                <DollarSign className="h-12 w-12 sm:h-16 sm:w-16 text-wedding-accent mb-3 sm:mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-wedding-slate mb-2 sm:mb-3">Quote Management</h3>
+                <p className="text-wedding-slate-muted text-center text-sm sm:text-base lg:text-lg">
                   Collect and compare vendor quotes effortlessly to stay within your wedding budget
                 </p>
               </div>
             </ScrollStackItem>
 
-            <ScrollStackItem itemClassName="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200">
+            <ScrollStackItem itemClassName="bg-gradient-to-br from-wedding-primary/10 to-wedding-secondary border border-wedding-accent/40">
               <div className="flex flex-col items-center justify-center h-full">
-                <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-orange-600 mb-3 sm:mb-4" />
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Timeline Tracking</h3>
-                <p className="text-gray-700 text-center text-sm sm:text-base lg:text-lg">
+                <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-wedding-accent mb-3 sm:mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-wedding-slate mb-2 sm:mb-3">Timeline Tracking</h3>
+                <p className="text-wedding-slate-muted text-center text-sm sm:text-base lg:text-lg">
                   Track every detail of your wedding planning timeline with real-time status updates
                 </p>
               </div>
@@ -159,8 +159,8 @@ const Home: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex justify-center mb-8 sm:mb-16">
               {/* Producer Portal */}
-              <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm rounded-lg shadow-xl overflow-hidden transform transition-all hover:shadow-2xl">
-                <div className="bg-teal-600 text-white p-6 sm:p-8">
+              <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm rounded-wedding-xl shadow-wedding-lg overflow-hidden transform transition-all hover:shadow-wedding-lg">
+                <div className="bg-wedding-primary text-white p-6 sm:p-8">
                   <Heart className="h-12 w-12 sm:h-16 sm:w-16 mb-4 sm:mb-5" />
                   <h3 className="text-2xl sm:text-3xl font-bold">Planner Portal</h3>
                   <p className="opacity-90 mt-2 text-base sm:text-lg">Manage weddings and vendors</p>
@@ -168,25 +168,25 @@ const Home: React.FC = () => {
                 <div className="p-6 sm:p-8">
                   <ul className="space-y-3 sm:space-y-4 mb-8">
                     <li className="flex items-center space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-700 text-base sm:text-lg">Wedding overview dashboard</span>
+                      <CheckCircle className="h-5 w-5 text-wedding-primary flex-shrink-0" />
+                      <span className="text-wedding-slate text-base sm:text-lg">Wedding overview dashboard</span>
                     </li>
                     <li className="flex items-center space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-700 text-base sm:text-lg">Service coordination</span>
+                      <CheckCircle className="h-5 w-5 text-wedding-primary flex-shrink-0" />
+                      <span className="text-wedding-slate text-base sm:text-lg">Service coordination</span>
                     </li>
                     <li className="flex items-center space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-700 text-base sm:text-lg">Vendor management</span>
+                      <CheckCircle className="h-5 w-5 text-wedding-primary flex-shrink-0" />
+                      <span className="text-wedding-slate text-base sm:text-lg">Vendor management</span>
                     </li>
                     <li className="flex items-center space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-700 text-base sm:text-lg">Quote review and booking</span>
+                      <CheckCircle className="h-5 w-5 text-wedding-primary flex-shrink-0" />
+                      <span className="text-wedding-slate text-base sm:text-lg">Quote review and booking</span>
                     </li>
                   </ul>
                   <Link
                     to="/producer/dashboard"
-                    className="w-full bg-teal-600 text-white py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors text-center block font-medium text-base sm:text-lg shadow-md hover:shadow-lg"
+                    className="w-full bg-wedding-primary text-white py-3 px-6 rounded-wedding hover:bg-wedding-primary-hover transition-colors text-center block font-medium text-base sm:text-lg shadow-wedding hover:shadow-wedding-md"
                   >
                     Access Planner Dashboard
                   </Link>
@@ -199,48 +199,48 @@ const Home: React.FC = () => {
         {/* Workflow Section */}
         <div className="relative z-10 py-12 sm:py-16">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 sm:p-6 md:p-8 mb-16">
-              <h3 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-6 sm:mb-8">
+            <div className="bg-white/95 backdrop-blur-sm rounded-wedding-lg shadow-wedding p-4 sm:p-6 md:p-8 mb-16">
+              <h3 className="text-xl sm:text-2xl font-bold text-center text-wedding-slate mb-6 sm:mb-8">
                 Seamless Wedding Planning Workflow
               </h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                 <div className="text-center">
-                  <div className="bg-blue-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <span className="text-xl sm:text-2xl font-bold text-blue-600">1</span>
+                  <div className="bg-wedding-primary/20 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-xl sm:text-2xl font-bold text-wedding-primary">1</span>
                   </div>
                   <h4 className="font-semibold mb-2 text-sm sm:text-base">Wedding Brief</h4>
-                  <p className="text-gray-600 text-xs sm:text-sm">
+                  <p className="text-wedding-slate-muted text-xs sm:text-sm">
                     Couple submits their wedding brief with vision, requirements, and details
                   </p>
                 </div>
 
                 <div className="text-center">
-                  <div className="bg-teal-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <span className="text-xl sm:text-2xl font-bold text-teal-600">2</span>
+                  <div className="bg-wedding-primary/20 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-xl sm:text-2xl font-bold text-wedding-primary">2</span>
                   </div>
                   <h4 className="font-semibold mb-2 text-sm sm:text-base">Smart Processing</h4>
-                  <p className="text-gray-600 text-xs sm:text-sm">
+                  <p className="text-wedding-slate-muted text-xs sm:text-sm">
                     System parses the brief and identifies all required wedding services
                   </p>
                 </div>
 
                 <div className="text-center">
-                  <div className="bg-orange-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <span className="text-xl sm:text-2xl font-bold text-orange-600">3</span>
+                  <div className="bg-wedding-accent/20 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-xl sm:text-2xl font-bold text-wedding-accent">3</span>
                   </div>
                   <h4 className="font-semibold mb-2 text-sm sm:text-base">Vendor Matching</h4>
-                  <p className="text-gray-600 text-xs sm:text-sm">
+                  <p className="text-wedding-slate-muted text-xs sm:text-sm">
                     Matched vendors automatically receive quote requests via email
                   </p>
                 </div>
 
                 <div className="text-center">
-                  <div className="bg-green-100 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <span className="text-xl sm:text-2xl font-bold text-green-600">4</span>
+                  <div className="bg-wedding-primary/20 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                    <span className="text-xl sm:text-2xl font-bold text-wedding-primary">4</span>
                   </div>
                   <h4 className="font-semibold mb-2 text-sm sm:text-base">Quote & Booking</h4>
-                  <p className="text-gray-600 text-xs sm:text-sm">
+                  <p className="text-wedding-slate-muted text-xs sm:text-sm">
                     Planner reviews quotes and manages the wedding through to the big day
                   </p>
                 </div>
@@ -262,7 +262,7 @@ const Home: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/login"
-                  className="px-6 py-3 sm:px-8 sm:py-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-base sm:text-lg shadow-lg hover:shadow-xl"
+                  className="px-6 py-3 sm:px-8 sm:py-4 bg-wedding-primary text-white rounded-wedding font-medium hover:bg-wedding-primary-hover transition-colors text-base sm:text-lg shadow-wedding hover:shadow-wedding-md"
                 >
                   Get Started
                   <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 inline ml-2" />

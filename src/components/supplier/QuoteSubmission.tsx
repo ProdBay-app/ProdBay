@@ -342,10 +342,10 @@ const QuoteSubmission: React.FC = () => {
             </div>
 
             {/* Information Notice */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-wedding-secondary/50 border border-wedding-primary/30 rounded-lg p-4">
               <div className="flex items-start space-x-3">
                 <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div className="text-sm text-blue-800">
+                <div className="text-sm text-wedding-slate">
                   <p className="font-medium mb-1">Important Information:</p>
                   <ul className="space-y-1 text-blue-700">
                     <li>• Please provide your best competitive pricing</li>

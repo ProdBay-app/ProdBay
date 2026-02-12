@@ -57,9 +57,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       case 'info':
         return {
           icon: 'text-blue-600',
-          iconBg: 'bg-blue-100',
-          button: 'bg-blue-600 hover:bg-blue-700',
-          border: 'border-blue-200'
+          iconBg: 'bg-wedding-primary/20',
+          button: 'bg-wedding-primary hover:bg-wedding-primary-hover',
+          border: 'border-wedding-primary/30'
         };
       default:
         return {

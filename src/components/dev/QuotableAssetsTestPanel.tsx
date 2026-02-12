@@ -332,18 +332,18 @@ const QuotableAssetsTestPanel: React.FC = () => {
 
         {/* API Response Details */}
         {apiResponse && (
-          <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="bg-wedding-secondary/50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">API Response Details</h4>
-            <pre className="text-xs text-blue-800 overflow-auto max-h-40">
+            <pre className="text-xs text-wedding-slate overflow-auto max-h-40">
               {JSON.stringify(apiResponse, null, 2)}
             </pre>
           </div>
         )}
 
         {/* Instructions */}
-        <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="bg-wedding-secondary/50 p-4 rounded-lg">
           <h4 className="font-medium text-blue-900 mb-2">Testing Instructions</h4>
-          <ul className="text-sm text-blue-800 space-y-1">
+          <ul className="text-sm text-wedding-slate space-y-1">
             <li>• Select a supplier using the impersonation panel above</li>
             <li>• Run the quotable assets tests to verify the system</li>
             <li>• Check that the API returns only authorized assets</li>

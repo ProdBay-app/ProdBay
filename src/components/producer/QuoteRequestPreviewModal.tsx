@@ -195,7 +195,7 @@ Best regards,
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="flex items-center space-x-3">
-              <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
+              <Loader2 className="h-6 w-6 animate-spin text-wedding-primary" />
               <span className="text-gray-600">Generating email previews...</span>
             </div>
           </div>
@@ -267,7 +267,7 @@ Best regards,
                       type="text"
                       value={currentEmail.subject}
                       onChange={(e) => updateEmailContent(currentSupplier.id, 'subject', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                     />
                   </div>
 
@@ -280,7 +280,7 @@ Best regards,
                       value={currentEmail.body}
                       onChange={(e) => updateEmailContent(currentSupplier.id, 'body', e.target.value)}
                       rows={12}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent resize-none"
                     />
                   </div>
 
@@ -336,7 +336,7 @@ Best regards,
                 <button
                   onClick={handleSend}
                   disabled={sending || suppliers.length === 0}
-                  className="flex items-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center space-x-2 px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {sending ? (
                     <>

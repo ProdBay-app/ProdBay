@@ -250,7 +250,7 @@ const OwnershipTestPanel: React.FC = () => {
           <button
             onClick={runAllTests}
             disabled={isRunningTests}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-wedding-primary text-white rounded-md hover:bg-wedding-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isRunningTests ? 'Running Tests...' : 'Run All Tests'}
           </button>
@@ -303,9 +303,9 @@ const OwnershipTestPanel: React.FC = () => {
         )}
 
         {/* Instructions */}
-        <div className="bg-blue-50 p-4 rounded-lg">
+        <div className="bg-wedding-secondary/50 p-4 rounded-lg">
           <h4 className="font-medium text-blue-900 mb-2">Testing Instructions</h4>
-          <ul className="text-sm text-blue-800 space-y-1">
+          <ul className="text-sm text-wedding-slate space-y-1">
             <li>• Select a supplier using the impersonation panel above</li>
             <li>• Run the ownership tests to verify security layers</li>
             <li>• Check that all tests pass for proper ownership enforcement</li>

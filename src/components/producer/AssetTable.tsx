@@ -188,9 +188,9 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 key={asset.id}
                 className={`
                   h-[72px] bg-white/5 border-b border-white/10 
-                  hover:bg-white/10 hover:border-purple-400/30 
+                  hover:bg-white/10 hover:border-wedding-primary-light/30 
                   transition-all duration-200 cursor-pointer
-                  ${isHighlighted ? 'ring-2 ring-purple-400/50 bg-white/15' : ''}
+                  ${isHighlighted ? 'ring-2 ring-wedding-primary/50 bg-white/15' : ''}
                 `}
                 onClick={() => handleRowClick(asset)}
                 onMouseEnter={() => onAssetHover && onAssetHover(asset.id)}
@@ -243,7 +243,7 @@ const AssetTable: React.FC<AssetTableProps> = ({
                     {/* Edit Button */}
                     <button
                       onClick={() => onEdit(asset)}
-                      className="p-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 rounded backdrop-blur-sm transition-colors"
+                      className="p-1.5 bg-wedding-primary/20 hover:bg-wedding-primary/30 text-wedding-primary-light rounded backdrop-blur-sm transition-colors"
                       aria-label="Edit service"
                     >
                       <Edit className="w-4 h-4" />

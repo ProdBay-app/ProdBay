@@ -62,8 +62,8 @@ const DashboardFilterControls: React.FC<DashboardFilterControlsProps> = ({
                 ${index === sortOptions.length - 1 ? 'rounded-r-lg' : ''}
                 ${index > 0 ? 'border-l border-white/20' : ''}
                 ${isActive
-                  ? 'bg-teal-600 text-white shadow-sm z-10'
-                  : 'bg-transparent text-gray-200 hover:bg-white/10 hover:text-teal-300'
+                  ? 'bg-wedding-primary text-white shadow-sm z-10'
+                  : 'bg-transparent text-gray-200 hover:bg-white/10 hover:text-wedding-primary-light'
                 }
               `}
               title={option.description}
@@ -73,7 +73,7 @@ const DashboardFilterControls: React.FC<DashboardFilterControlsProps> = ({
               
               {/* Active indicator dot */}
               {isActive && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-teal-400 rounded-full border-2 border-white" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-wedding-primary-light rounded-full border-2 border-white" />
               )}
             </button>
           );

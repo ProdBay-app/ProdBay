@@ -273,7 +273,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                 required
                 value={formState.supplier_name}
                 onChange={(e) => setFormState(prev => ({ ...prev, supplier_name: e.target.value }))}
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
               />
             </div>
 
@@ -287,7 +287,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                 value={formState.contact_email}
                 onChange={(e) => setFormState(prev => ({ ...prev, contact_email: e.target.value }))}
                 placeholder="vendor@example.com"
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
               />
             </div>
           </div>
@@ -302,7 +302,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
               value={formState.address}
               onChange={(e) => setFormState(prev => ({ ...prev, address: e.target.value }))}
               placeholder="Street, suburb, city, postcode"
-              className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
             />
           </div>
 
@@ -318,7 +318,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
               onKeyDown={handleCityKeyDown}
               onBlur={handleCityBlur}
               placeholder="Type a city/region and press Enter"
-              className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
             />
             {sortedCities.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
@@ -348,7 +348,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
               <button
                 type="button"
                 onClick={addContactPerson}
-                className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-teal-500/30 text-teal-200 rounded-lg hover:bg-teal-500/40 transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-wedding-primary/30 text-wedding-primary-light rounded-lg hover:bg-wedding-primary/40 transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add Contact</span>
@@ -371,7 +371,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                           value={person.name}
                           onChange={(e) => updateContactPerson(index, 'name', e.target.value)}
                           placeholder="Contact name"
-                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                         />
                       </div>
                       <div>
@@ -390,7 +390,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                             }
                           }}
                           placeholder="contact@vendor.com"
-                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                         />
                       </div>
                       <div>
@@ -400,7 +400,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                           value={person.phone ?? ''}
                           onChange={(e) => updateContactPerson(index, 'phone', e.target.value)}
                           placeholder="+1-555-0123"
-                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                         />
                       </div>
                       <div>
@@ -410,7 +410,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                           value={person.role}
                           onChange={(e) => updateContactPerson(index, 'role', e.target.value)}
                           placeholder="Billing, Sales, Operations"
-                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 text-sm bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -422,7 +422,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                           name="primary_contact"
                           checked={Boolean(person.is_primary)}
                           onChange={() => setPrimaryContact(index)}
-                          className="h-4 w-4 text-teal-400 border-white/30 bg-black/20 focus:ring-teal-500"
+                          className="h-4 w-4 text-wedding-primary-light border-white/30 bg-black/20 focus:ring-wedding-primary"
                         />
                         <span>Primary contact</span>
                       </label>
@@ -445,7 +445,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                               type="checkbox"
                               checked={Boolean(person.default_cc)}
                               onChange={(e) => updateContactPerson(index, 'is_cc', e.target.checked)}
-                              className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
+                              className="h-4 w-4 rounded border-white/30 bg-black/20 text-wedding-primary-light focus:ring-wedding-primary"
                             />
                             <span>Always CC on Quote Requests</span>
                           </label>
@@ -454,7 +454,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                               type="checkbox"
                               checked={Boolean(person.default_bcc)}
                               onChange={(e) => updateContactPerson(index, 'is_bcc', e.target.checked)}
-                              className="h-4 w-4 rounded border-white/30 bg-black/20 text-teal-400 focus:ring-teal-500"
+                              className="h-4 w-4 rounded border-white/30 bg-black/20 text-wedding-primary-light focus:ring-wedding-primary"
                             />
                             <span>Always BCC on Quote Requests</span>
                           </label>
@@ -479,7 +479,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
                   onClick={() => toggleCategory(category)}
                   className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
                     formState.service_categories.includes(category)
-                      ? 'bg-teal-500/30 border-teal-400/50 text-teal-200'
+                      ? 'bg-wedding-primary/30 border-wedding-primary-light/50 text-wedding-primary-light'
                       : 'bg-white/10 border-white/20 text-gray-200 hover:bg-white/20'
                   }`}
                 >
@@ -506,7 +506,7 @@ const SupplierFormModal: React.FC<SupplierFormModalProps> = ({
             type="submit"
             form="supplier-form-modal"
             disabled={isSubmitting || !formState.supplier_name.trim()}
-            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors disabled:opacity-50"
           >
             {isSubmitting ? 'Saving...' : isEditing ? 'Update Vendor' : 'Add Vendor'}
           </button>

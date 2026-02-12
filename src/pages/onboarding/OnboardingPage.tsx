@@ -91,7 +91,7 @@ const OnboardingPage: React.FC = () => {
           </div>
           <div className="h-2 rounded-full bg-white/10 overflow-hidden">
             <div
-              className="h-full bg-teal-500 transition-all duration-300"
+              className="h-full bg-wedding-primary transition-all duration-300"
               style={{ width: `${(completedSteps / 3) * 100}%` }}
             />
           </div>
@@ -126,7 +126,7 @@ const OnboardingPage: React.FC = () => {
           />
 
           <OnboardingItem
-            icon={<FolderPlus className="w-5 h-5 text-teal-300" />}
+            icon={<FolderPlus className="w-5 h-5 text-wedding-primary-light" />}
             title="Create First Wedding"
             done={projectsDone}
             description={
@@ -153,7 +153,7 @@ const OnboardingPage: React.FC = () => {
           {allDone && (
             <Link
               to="/producer/dashboard"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-600 text-white font-medium hover:bg-teal-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-wedding-primary text-white font-medium hover:bg-wedding-primary-hover transition-colors"
             >
               Go to Dashboard
               <ArrowRight className="w-4 h-4" />

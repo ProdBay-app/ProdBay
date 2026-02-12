@@ -72,7 +72,7 @@ const SupplierManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-400"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-wedding-primary-light"></div>
       </div>
     );
   }
@@ -86,7 +86,7 @@ const SupplierManagement: React.FC = () => {
         </div>
         <button
           onClick={handleAdd}
-          className="flex items-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+          className="flex items-center space-x-2 px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover"
         >
           <Plus className="h-4 w-4" />
           <span>Add Vendor</span>
@@ -109,7 +109,7 @@ const SupplierManagement: React.FC = () => {
         <div className="p-6 border-b border-white/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Users className="h-6 w-6 text-teal-300" />
+              <Users className="h-6 w-6 text-wedding-primary-light" />
               <h2 className="text-xl font-semibold text-white">
                 Active Vendors
                 {filterStats.isFiltered || Boolean(selectedCity) ? (
@@ -217,7 +217,7 @@ const SupplierManagement: React.FC = () => {
                         e.stopPropagation();
                         handleEdit(supplier);
                       }}
-                      className="p-2 text-gray-300 hover:text-teal-300 hover:bg-teal-500/20 rounded transition-colors"
+                      className="p-2 text-gray-300 hover:text-wedding-primary-light hover:bg-wedding-primary/20 rounded transition-colors"
                       title="Edit Vendor"
                     >
                       <Edit className="h-4 w-4" />
@@ -248,7 +248,7 @@ const SupplierManagement: React.FC = () => {
                 <p className="text-gray-200 mb-4">Add your first vendor to start building your network</p>
                 <button
                   onClick={handleAdd}
-                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                  className="px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors"
                 >
                   Add First Vendor
                 </button>

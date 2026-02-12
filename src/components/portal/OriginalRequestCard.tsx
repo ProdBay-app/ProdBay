@@ -69,7 +69,7 @@ const OriginalRequestCard: React.FC<OriginalRequestCardProps> = ({
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                   <FileText className="h-4 w-4 text-purple-300 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white truncate group-hover:text-purple-200 transition-colors">
+                    <p className="text-sm text-white truncate group-hover:text-wedding-primary-light transition-colors">
                       {attachment.filename}
                     </p>
                     <p className="text-xs text-gray-400">

@@ -55,7 +55,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
             : 'p-4 hover:shadow-md'
         } ${
           isActive 
-            ? 'bg-teal-500/20 border-teal-400/50 shadow-md backdrop-blur-md' 
+            ? 'bg-wedding-primary/20 border-wedding-primary-light/50 shadow-md backdrop-blur-md' 
             : 'bg-white/10 backdrop-blur-md border-white/20 hover:border-white/30'
         }`}
         onClick={onClick}
@@ -126,7 +126,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
               isMobile 
                 ? 'text-2xl' 
                 : 'text-4xl'
-            } text-teal-200`}
+            } text-wedding-primary-light`}
           >
             {title}
           </h3>

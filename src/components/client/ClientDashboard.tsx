@@ -66,7 +66,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({
               onClick={() => selectProject(project)}
               className={`p-4 rounded-lg border cursor-pointer transition-colors ${
                 selectedProject?.id === project.id
-                  ? 'border-blue-500 bg-blue-50'
+                  ? 'border-blue-500 bg-wedding-secondary/50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >

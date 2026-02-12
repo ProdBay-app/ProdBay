@@ -420,9 +420,9 @@ const ProducerQuoteChat: React.FC = () => {
                         <div
                           className={`max-w-[75%] rounded-lg p-3 ${
                             isInitialRequest
-                              ? 'bg-purple-600/80 border-2 border-purple-400 text-white'
+                              ? 'bg-wedding-primary/80 border-2 border-wedding-primary-light text-white'
                               : isProducer
-                              ? 'bg-blue-600 text-white'
+                              ? 'bg-wedding-primary text-white'
                               : 'bg-gray-700 text-gray-100'
                           }`}
                         >
@@ -511,7 +511,7 @@ const ProducerQuoteChat: React.FC = () => {
                             }}
                             placeholder="Add a note for this attachment..."
                             rows={2}
-                            className="w-full resize-none rounded-md bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            className="w-full resize-none rounded-md bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wedding-primary"
                           />
                         </div>
                       );
@@ -541,14 +541,14 @@ const ProducerQuoteChat: React.FC = () => {
                     onChange={(e) => setMessageInput(e.target.value)}
                     onKeyDown={handleMessageKeyDown}
                     placeholder="Type your message..."
-                    className="flex-1 resize-none bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="flex-1 resize-none bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                     rows={2}
                     disabled={sendingMessage}
                   />
                   <button
                     onClick={sendMessage}
                     disabled={(!messageInput.trim() && selectedFiles.length === 0) || sendingMessage}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                    className="px-6 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                   >
                     {sendingMessage ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

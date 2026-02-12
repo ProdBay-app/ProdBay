@@ -479,7 +479,7 @@ const QuotePortal: React.FC = () => {
             <div className="text-sm">
               <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                 quote.status === 'Submitted' ? 'bg-green-500/30 text-green-200 border border-green-400/50' :
-                quote.status === 'Accepted' ? 'bg-blue-500/30 text-blue-200 border-blue-400/50' :
+                quote.status === 'Accepted' ? 'bg-wedding-primary/30 text-wedding-primary-light border-wedding-primary-light/50' :
                 quote.status === 'Rejected' ? 'bg-red-500/30 text-red-200 border border-red-400/50' :
                 'bg-gray-500/30 text-gray-200 border border-gray-400/50'
               }`}>
@@ -529,7 +529,7 @@ const QuotePortal: React.FC = () => {
                         <div
                           className={`max-w-[75%] rounded-lg p-3 ${
                             isSupplier
-                              ? 'bg-purple-600 text-white'
+                              ? 'bg-wedding-primary text-white'
                               : 'bg-white/10 text-gray-100 border border-white/20'
                           }`}
                         >
@@ -608,7 +608,7 @@ const QuotePortal: React.FC = () => {
                             }}
                             placeholder="Add a note for this attachment..."
                             rows={2}
-                            className="w-full resize-none rounded-md bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            className="w-full resize-none rounded-md bg-white/5 border border-white/10 px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wedding-primary"
                           />
                         </div>
                       );
@@ -638,14 +638,14 @@ const QuotePortal: React.FC = () => {
                     onChange={(e) => setMessageInput(e.target.value)}
                     onKeyDown={handleMessageKeyDown}
                     placeholder="Type your message..."
-                    className="flex-1 resize-none bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="flex-1 resize-none bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                     rows={2}
                     disabled={sendingMessage}
                   />
                   <button
                     onClick={sendMessage}
                     disabled={(!messageInput.trim() && selectedFiles.length === 0) || sendingMessage}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                    className="px-6 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                   >
                     <Send className="h-4 w-4" />
                     <span>Send</span>
@@ -674,7 +674,7 @@ const QuotePortal: React.FC = () => {
         <div className="mt-6 flex justify-center">
           <button
             onClick={() => setShowSubmitModal(true)}
-            className="bg-purple-600 text-white rounded-lg px-8 py-3 font-semibold hover:bg-purple-700 transition-colors flex items-center space-x-2 shadow-lg"
+            className="bg-wedding-primary text-white rounded-lg px-8 py-3 font-semibold hover:bg-wedding-primary-hover transition-colors flex items-center space-x-2 shadow-lg"
           >
             <Package className="h-5 w-5" />
             <span>Submit Quote</span>

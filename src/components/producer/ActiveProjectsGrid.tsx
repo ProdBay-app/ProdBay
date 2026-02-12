@@ -603,7 +603,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-400 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-wedding-primary-light mx-auto mb-4"></div>
           <p className="text-gray-200">Loading weddings...</p>
         </div>
       </div>
@@ -619,7 +619,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
           <p className="text-gray-200 mb-4">{error}</p>
           <button
             onClick={loadProjects}
-            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+            className="px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors"
           >
             Try Again
           </button>
@@ -649,7 +649,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
             </div>
             <button
               onClick={openCreateProject}
-              className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors shadow-sm"
             >
               <Plus className="w-5 h-5" />
               New Wedding
@@ -704,7 +704,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
           <div className="flex items-center gap-2 mb-6">
             <FolderOpen className="w-6 h-6 text-purple-300" />
             <h2 className="text-2xl font-bold text-white">Active</h2>
-            <span className="ml-2 px-2 py-1 bg-purple-500/20 text-purple-200 text-sm font-semibold rounded-full backdrop-blur-sm border border-purple-400/30">
+            <span className="ml-2 px-2 py-1 bg-wedding-primary/20 text-wedding-primary-light text-sm font-semibold rounded-full backdrop-blur-sm border border-wedding-primary-light/30">
               {activeProjects.length}
             </span>
           </div>
@@ -742,7 +742,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                   <p className="text-gray-200 mb-4">Get started by creating your first wedding</p>
                   <button
                     onClick={openCreateProject}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors"
                   >
                     <Plus className="w-5 h-5" />
                     Create Wedding
@@ -767,7 +767,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                 <div className="mt-6 text-center">
                   <Link
                     to="/producer/projects"
-                    className="inline-flex items-center gap-2 px-4 py-2 text-teal-300 hover:text-teal-200 font-medium transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-wedding-primary-light hover:text-wedding-primary-light font-medium transition-colors"
                   >
                     View All {allActiveProjects.length} Active Projects
                     <ArrowRight className="w-4 h-4" />

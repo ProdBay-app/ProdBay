@@ -213,16 +213,16 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
                       ${comparisonMetrics.highest_cost.toFixed(2)}
                     </p>
                   </div>
-                  <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="bg-wedding-secondary/50 rounded-lg p-4">
                     <div className="flex items-center">
                       <DollarSign className="h-5 w-5 text-blue-600" />
-                      <span className="ml-2 text-sm font-medium text-blue-800">Average Cost</span>
+                      <span className="ml-2 text-sm font-medium text-wedding-slate">Average Cost</span>
                     </div>
                     <p className="text-2xl font-bold text-blue-900 mt-1">
                       ${comparisonMetrics.average_cost.toFixed(2)}
                     </p>
                   </div>
-                  <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="bg-wedding-secondary/50 rounded-lg p-4">
                     <div className="flex items-center">
                       <TrendingUp className="h-5 w-5 text-purple-600" />
                       <span className="ml-2 text-sm font-medium text-purple-800">Quote Count</span>
@@ -269,7 +269,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
                       quote.cost === comparisonMetrics?.lowest_cost
                         ? 'border-green-300 bg-green-50'
                         : quote.status === 'Accepted'
-                        ? 'border-blue-300 bg-blue-50'
+                        ? 'border-wedding-primary bg-wedding-secondary/50'
                         : 'border-gray-200 bg-white'
                     }`}
                   >
@@ -325,7 +325,7 @@ const QuoteComparisonModal: React.FC<QuoteComparisonModalProps> = ({
                     {/* Expandable Details */}
                     <button
                       onClick={() => toggleQuoteExpansion(quote.id)}
-                      className="w-full flex items-center justify-between text-sm text-blue-600 hover:text-blue-800 mb-3"
+                      className="w-full flex items-center justify-between text-sm text-blue-600 hover:text-wedding-slate mb-3"
                     >
                       <span>Details</span>
                       {expandedQuotes.has(quote.id) ? (

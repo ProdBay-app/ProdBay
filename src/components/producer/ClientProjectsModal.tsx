@@ -102,9 +102,9 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
   const getStatusBadgeColor = (status: Project['project_status']): string => {
     switch (status) {
       case 'New':
-        return 'bg-blue-500/30 text-blue-200 border-blue-400/50';
+        return 'bg-wedding-primary/30 text-wedding-primary-light border-wedding-primary-light/50';
       case 'In Progress':
-        return 'bg-purple-500/30 text-purple-200 border-purple-400/50';
+        return 'bg-wedding-primary/30 text-wedding-primary-light border-wedding-primary-light/50';
       case 'Quoting':
         return 'bg-yellow-500/30 text-yellow-200 border-yellow-400/50';
       case 'Completed':
@@ -128,8 +128,8 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
         {/* Header with close button */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/20">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-teal-500/20 rounded-lg">
-              <FolderOpen className="w-5 h-5 text-teal-300" />
+            <div className="p-2 bg-wedding-primary/20 rounded-lg">
+              <FolderOpen className="w-5 h-5 text-wedding-primary-light" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-white">Couple's Weddings</h3>
@@ -151,7 +151,7 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
           {/* Loading State */}
           {loading && (
             <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-12 h-12 text-teal-400 animate-spin mb-4" />
+              <Loader2 className="w-12 h-12 text-wedding-primary-light animate-spin mb-4" />
               <p className="text-gray-200 text-lg">Loading weddings...</p>
               <p className="text-gray-400 text-sm mt-2">Fetching all weddings for {clientName}</p>
             </div>
@@ -167,7 +167,7 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
               <p className="text-gray-300 text-center mb-4">{error}</p>
               <button
                 onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                className="px-4 py-2 bg-wedding-primary text-white rounded-wedding hover:bg-wedding-primary-hover transition-colors"
               >
                 Reload Page
               </button>
@@ -210,16 +210,16 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
                     className={`
                       relative rounded-lg border-2 p-4 transition-all text-left w-full
                       ${isCurrentProject 
-                        ? 'border-teal-400/50 bg-teal-500/10 shadow-md cursor-default' 
-                        : 'border-white/10 bg-white/5 hover:border-teal-400/50 hover:bg-white/10 cursor-pointer'
+                        ? 'border-wedding-primary/50 bg-wedding-primary/10 shadow-md cursor-default' 
+                        : 'border-white/10 bg-white/5 hover:border-wedding-primary/50 hover:bg-white/10 cursor-pointer'
                       }
-                      ${!isCurrentProject && 'focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-gray-900'}
+                      ${!isCurrentProject && 'focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:ring-offset-2 focus:ring-offset-gray-900'}
                     `}
                   >
                     {/* Current project badge */}
                     {isCurrentProject && (
                       <div className="absolute top-3 right-3">
-                        <div className="flex items-center gap-1 px-2 py-1 bg-teal-600 text-white rounded-full text-xs font-semibold">
+                        <div className="flex items-center gap-1 px-2 py-1 bg-wedding-primary text-white rounded-full text-xs font-semibold">
                           <CheckCircle className="w-3 h-3" />
                           <span>Current</span>
                         </div>

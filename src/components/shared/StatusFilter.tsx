@@ -74,7 +74,7 @@ const StatusFilter: React.FC<StatusFilterProps> = ({
       {/* 2. VISUAL TRIGGER BUTTON (Shared Look) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full pl-10 pr-10 py-2.5 bg-black/20 border border-white/20 rounded-lg text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors md:cursor-pointer"
+        className="flex items-center justify-between w-full pl-10 pr-10 py-2.5 bg-black/20 border border-white/20 rounded-lg text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-colors md:cursor-pointer"
       >
         <div className="flex items-center space-x-2 flex-1">
           {/* Filter Icon */}
@@ -98,7 +98,7 @@ const StatusFilter: React.FC<StatusFilterProps> = ({
               }}
               className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
                 option.value === value
-                  ? 'bg-teal-500/20 text-teal-200'
+                  ? 'bg-wedding-primary/20 text-wedding-primary-light'
                   : 'text-gray-300 hover:bg-white/10 hover:text-white'
               }`}
             >

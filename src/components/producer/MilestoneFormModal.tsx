@@ -154,10 +154,10 @@ const MilestoneFormModal: React.FC<MilestoneFormModalProps> = ({
     >
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-wedding-secondary/50 to-white">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Calendar className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-wedding-primary/20 rounded-lg">
+              <Calendar className="w-5 h-5 text-wedding-primary" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900">
@@ -196,7 +196,7 @@ const MilestoneFormModal: React.FC<MilestoneFormModalProps> = ({
               onChange={handleInputChange}
               disabled={isSubmitting}
               placeholder="e.g., Venue Confirmed, Catering Finalized"
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.milestone_name ? 'border-red-500' : 'border-gray-300'
               }`}
             />
@@ -217,7 +217,7 @@ const MilestoneFormModal: React.FC<MilestoneFormModalProps> = ({
               value={formData.milestone_date}
               onChange={handleInputChange}
               disabled={isSubmitting}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 errors.milestone_date ? 'border-red-500' : 'border-gray-300'
               }`}
             />
@@ -239,7 +239,7 @@ const MilestoneFormModal: React.FC<MilestoneFormModalProps> = ({
               disabled={isSubmitting}
               rows={3}
               placeholder="Add additional details about this milestone..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed resize-none"
             />
           </div>
 
@@ -255,7 +255,7 @@ const MilestoneFormModal: React.FC<MilestoneFormModalProps> = ({
                 value={formData.status}
                 onChange={handleInputChange}
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="pending">Pending</option>
                 <option value="completed">Completed</option>
@@ -280,7 +280,7 @@ const MilestoneFormModal: React.FC<MilestoneFormModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-wedding-primary text-white rounded-wedding hover:bg-wedding-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>

@@ -575,7 +575,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
           className={`
             cursor-pointer transition-all duration-200 rounded px-1
             ${isHovered
-              ? 'bg-teal-500/30 border-b-2 border-teal-400 font-semibold'
+              ? 'bg-wedding-primary/30 border-b-2 border-wedding-primary-light font-semibold'
               : 'bg-yellow-500/30 hover:bg-yellow-500/40 border-b border-yellow-400/50'
             }
           `}
@@ -624,7 +624,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                     w-full px-4 py-3 
                     bg-black/20 border border-white/20 rounded-lg
                     text-white placeholder-gray-400 leading-relaxed
-                    focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                    focus:ring-2 focus:ring-wedding-primary focus:border-transparent
                     resize-y overflow-hidden
                     transition-all duration-200
                   "
@@ -651,7 +651,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                     w-full px-4 py-3 
                     bg-black/20 border border-white/20 rounded-lg
                     text-white placeholder-gray-400 leading-relaxed
-                    focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                    focus:ring-2 focus:ring-wedding-primary focus:border-transparent
                     resize-y overflow-hidden
                     transition-all duration-200
                   "
@@ -671,7 +671,7 @@ const EditableBrief: React.FC<EditableBriefProps> = ({
                       font-medium transition-all duration-200
                       ${isSaving
                         ? 'bg-gray-400 cursor-not-allowed text-white'
-                        : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow'
+                        : 'bg-wedding-primary hover:bg-wedding-primary-hover text-white shadow-sm hover:shadow'
                       }
                     `}
                   >

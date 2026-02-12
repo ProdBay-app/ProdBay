@@ -81,7 +81,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-wedding-secondary/50 via-wedding-neutral to-wedding-primary/20">
       {/* Fogged-out Header */}
       <div className="sticky top-0 bg-transparent backdrop-blur-sm shadow-sm z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -90,21 +90,21 @@ const LoginPage: React.FC = () => {
             onClick={handleLogoClick}
             title="Go to Home"
           >
-            <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-pink-500 drop-shadow-lg" />
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 drop-shadow-lg">WedBay</h1>
+            <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-wedding-accent drop-shadow-lg" />
+            <h1 className="text-xl sm:text-2xl font-bold text-wedding-slate drop-shadow-lg">WedBay</h1>
           </div>
-          <p className="text-center text-gray-600 mt-2 text-sm sm:text-base drop-shadow-md">Wedding Planning Platform</p>
+          <p className="text-center text-wedding-slate-muted mt-2 text-sm sm:text-base drop-shadow-md">Wedding Planning Platform</p>
         </div>
       </div>
 
       <div className="max-w-md mx-auto px-4 py-16">
         {/* Login Form */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="bg-white rounded-wedding-lg shadow-wedding-lg p-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-wedding-slate mb-2">
               Welcome Back
             </h2>
-            <p className="text-gray-600">
+            <p className="text-wedding-slate-muted">
               Sign in to access your WedBay dashboard
             </p>
           </div>
@@ -113,17 +113,17 @@ const LoginPage: React.FC = () => {
             <div className="space-y-6">
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-wedding-slate mb-2">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-wedding-slate-muted" />
                   <input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full pl-10 pr-3 py-2 border border-wedding-secondary rounded-wedding focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                     placeholder="Enter your email"
                     required
                     disabled={isLoading}
@@ -133,7 +133,7 @@ const LoginPage: React.FC = () => {
 
               {/* Password Field */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-wedding-slate mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -142,7 +142,7 @@ const LoginPage: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full px-3 py-2 pr-10 border border-wedding-secondary rounded-wedding focus:outline-none focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                     placeholder="Enter your password"
                     required
                     disabled={isLoading}
@@ -154,9 +154,9 @@ const LoginPage: React.FC = () => {
                     disabled={isLoading}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
+                      <EyeOff className="h-4 w-4 text-wedding-slate-muted" />
                     ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
+                      <Eye className="h-4 w-4 text-wedding-slate-muted" />
                     )}
                   </button>
                 </div>
@@ -173,7 +173,7 @@ const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="w-full bg-wedding-primary text-white py-3 px-4 rounded-wedding hover:bg-wedding-primary-hover transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
                   <>
@@ -190,11 +190,11 @@ const LoginPage: React.FC = () => {
 
               {/* Link to Sign Up */}
               <div className="text-center">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-wedding-slate-muted">
                   Don't have an account?{' '}
                   <Link
                     to="/signup"
-                    className="text-teal-600 hover:text-teal-700 font-medium"
+                    className="text-wedding-primary hover:text-wedding-primary-hover font-medium"
                   >
                     Sign up
                   </Link>
@@ -205,7 +205,7 @@ const LoginPage: React.FC = () => {
         </div>
       </div>
       
-      <Footer />
+      <Footer variant="light" />
     </div>
   );
 };

@@ -39,7 +39,7 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
         <div className="flex items-center space-x-2">
           <button
             onClick={onCreateAsset}
-            className="flex items-center space-x-2 px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
+            className="flex items-center space-x-2 px-3 py-1 bg-wedding-primary text-white rounded text-sm hover:bg-wedding-primary-hover"
           >
             <Plus className="h-4 w-4" />
             <span>New Service</span>
@@ -52,7 +52,7 @@ const AssetManagement: React.FC<AssetManagementProps> = ({
           ) : (
             <div className="relative group">
               <button
-                className="flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded text-sm hover:from-purple-700 hover:to-blue-700"
+                className="flex items-center space-x-2 px-3 py-1 bg-gradient-to-r from-wedding-primary to-wedding-accent text-white rounded text-sm hover:from-wedding-primary-hover hover:to-wedding-accent-hover"
               >
                 <Brain className="h-4 w-4" />
                 <span>Smart Matching</span>

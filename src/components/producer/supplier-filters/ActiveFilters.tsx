@@ -61,11 +61,11 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
           <div className="flex flex-wrap gap-2">
             {/* Search Term */}
             {searchTerm && (
-              <span className="inline-flex items-center px-2 py-1 bg-teal-500/30 text-teal-200 text-xs rounded-full">
+              <span className="inline-flex items-center px-2 py-1 bg-wedding-primary/30 text-wedding-primary-light text-xs rounded-full">
                 Name: "{searchTerm}"
                 <button
                   onClick={onClearSearch}
-                  className="ml-1 text-teal-300 hover:text-teal-200 transition-colors"
+                  className="ml-1 text-wedding-primary-light hover:text-wedding-primary-light transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -74,11 +74,11 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 
             {/* Categories */}
             {selectedCategories.length > 0 && (
-              <span className="inline-flex items-center px-2 py-1 bg-blue-500/30 text-blue-200 text-xs rounded-full">
+              <span className="inline-flex items-center px-2 py-1 bg-wedding-primary/30 text-wedding-primary-light text-xs rounded-full">
                 Categories: {selectedCategories.length}
                 <button
                   onClick={onClearCategories}
-                  className="ml-1 text-blue-300 hover:text-blue-200 transition-colors"
+                  className="ml-1 text-blue-300 hover:text-wedding-primary-light transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -87,11 +87,11 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 
             {/* Roles */}
             {selectedRoles.length > 0 && (
-              <span className="inline-flex items-center px-2 py-1 bg-purple-500/30 text-purple-200 text-xs rounded-full">
+              <span className="inline-flex items-center px-2 py-1 bg-wedding-primary/30 text-wedding-primary-light text-xs rounded-full">
                 Roles: {selectedRoles.length}
                 <button
                   onClick={onClearRoles}
-                  className="ml-1 text-purple-300 hover:text-purple-200 transition-colors"
+                  className="ml-1 text-purple-300 hover:text-wedding-primary-light transition-colors"
                 >
                   <X className="h-3 w-3" />
                 </button>

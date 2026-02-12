@@ -33,7 +33,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   return (
     <div
       onClick={() => onClick(project)}
-      className="group relative overflow-hidden rounded-lg shadow-md transition-all duration-300 cursor-pointer bg-purple-500/10 backdrop-blur-md border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-500/30 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+      className="group relative overflow-hidden rounded-lg shadow-md transition-all duration-300 cursor-pointer bg-wedding-primary/10 backdrop-blur-md border border-wedding-primary/20 hover:bg-wedding-primary/20 hover:border-wedding-primary/30 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
     >
       {/* Card Content */}
       <div className="p-6">

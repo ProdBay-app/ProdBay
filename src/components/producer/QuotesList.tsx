@@ -125,7 +125,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
       };
     } else if (status === 'Submitted') {
       return {
-        className: 'bg-blue-500/30 text-blue-200 border-blue-400/50',
+        className: 'bg-wedding-primary/30 text-wedding-primary-light border-wedding-primary-light/50',
         text: 'Quote Submitted',
         icon: <FileText className="w-3.5 h-3.5" />
       };
@@ -242,7 +242,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
             {/* View Details Button */}
             <button
               onClick={() => onQuoteClick?.(quote)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors text-sm font-medium"
               title="View quote details and chat"
             >
               <MessageCircle className="w-4 h-4" />
@@ -268,7 +268,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
               href={quote.quote_document_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="inline-flex items-center gap-2 px-3 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors text-sm font-medium"
               title="View quote PDF document"
             >
               <FileText className="w-4 h-4" />
@@ -284,7 +284,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
               {quote.supplier.service_categories.map((category, idx) => (
                 <span
                   key={idx}
-                  className="px-2 py-0.5 text-xs bg-purple-500/20 text-purple-200 rounded border border-purple-400/50"
+                  className="px-2 py-0.5 text-xs bg-wedding-primary/20 text-wedding-primary-light rounded border border-wedding-primary-light/50"
                 >
                   {category}
                 </span>
@@ -317,7 +317,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
         <p className="text-gray-300 text-sm mb-4">{error}</p>
         <button
           onClick={fetchQuotes}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          className="px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors"
         >
           Try Again
         </button>
@@ -335,7 +335,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
             Quote Requests
           </h3>
           {quotes.length > 0 && (
-            <span className="ml-2 px-2.5 py-0.5 bg-purple-500/30 text-purple-200 text-sm font-semibold rounded-full">
+            <span className="ml-2 px-2.5 py-0.5 bg-wedding-primary/30 text-wedding-primary-light text-sm font-semibold rounded-full">
               {quotes.length}
             </span>
           )}
@@ -347,7 +347,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
           {hasMultipleSubmittedQuotes && (
             <button
               onClick={() => setIsComparisonModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors shadow-sm font-medium text-sm"
             >
               <BarChart3 className="w-4 h-4" />
               Compare Quotes
@@ -357,7 +357,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
           {/* Request Quote Button */}
           <button
             onClick={onOpenRequestModal}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm font-medium text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors shadow-sm font-medium text-sm"
           >
             <Plus className="w-4 h-4" />
             Request Quote
@@ -376,7 +376,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
           </p>
           <button
             onClick={onOpenRequestModal}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors font-medium"
           >
             <Plus className="w-4 h-4" />
             Request Your First Quote

@@ -29,7 +29,7 @@ const getNotificationStyles = (type: string) => {
       };
     case 'info':
       return {
-        container: 'bg-blue-50 border-blue-200 text-blue-800',
+        container: 'bg-wedding-secondary/50 border-wedding-primary/30 text-wedding-slate',
         icon: 'text-blue-600',
         iconComponent: Info,
       };
@@ -51,13 +51,13 @@ const getNotificationStyles = (type: string) => {
 const getButtonStyles = (variant?: string) => {
   switch (variant) {
     case 'primary':
-      return 'bg-teal-600 text-white hover:bg-teal-700';
+      return 'bg-wedding-primary text-white hover:bg-wedding-primary-hover';
     case 'danger':
       return 'bg-red-600 text-white hover:bg-red-700';
     case 'secondary':
       return 'bg-gray-200 text-gray-800 hover:bg-gray-300';
     default:
-      return 'bg-teal-600 text-white hover:bg-teal-700';
+      return 'bg-wedding-primary text-white hover:bg-wedding-primary-hover';
   }
 };
 
@@ -106,7 +106,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
           </div>
           <div className="ml-4 flex-shrink-0 flex">
             <button
-              className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+              className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wedding-primary"
               onClick={() => onRemove(notification.id)}
               aria-label="Close notification"
             >

@@ -162,7 +162,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   {...getRootProps()}
                   className={`
                     border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                    ${isDragActive ? 'border-teal-400 bg-teal-500/20' : 'border-white/20 hover:border-teal-400/50 hover:bg-white/10'}
+                    ${isDragActive ? 'border-wedding-primary-light bg-wedding-primary/20' : 'border-white/20 hover:border-wedding-primary-light/50 hover:bg-white/10'}
                     ${isUploadingPdf ? 'opacity-50 cursor-wait' : ''}
                   `}
                 >
@@ -170,7 +170,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   
                   {isUploadingPdf ? (
                     <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-12 h-12 text-teal-400 animate-spin" />
+                      <Loader2 className="w-12 h-12 text-wedding-primary-light animate-spin" />
                       <p className="text-lg text-gray-200">Extracting text from PDF...</p>
                     </div>
                   ) : uploadedFilename ? (
@@ -185,7 +185,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                           <button
                             type="button"
                             onClick={() => onPdfDownload(uploadedPdfFile)}
-                            className="flex items-center gap-1 px-3 py-1 text-sm text-teal-300 hover:text-teal-200 hover:bg-teal-500/20 rounded transition-colors"
+                            className="flex items-center gap-1 px-3 py-1 text-sm text-wedding-primary-light hover:text-wedding-primary-light hover:bg-wedding-primary/20 rounded transition-colors"
                             title="Download PDF"
                           >
                             <Download className="w-4 h-4" />
@@ -200,10 +200,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                       <Upload className="w-12 h-12 text-gray-300" />
                       <p className="text-lg text-gray-200">
                         {isDragActive ? (
-                          <span className="text-teal-300 font-medium">Drop PDF here...</span>
+                          <span className="text-wedding-primary-light font-medium">Drop PDF here...</span>
                         ) : (
                           <>
-                            <span className="text-teal-300 font-medium">Drop a PDF brief here</span> or click to browse
+                            <span className="text-wedding-primary-light font-medium">Drop a PDF brief here</span> or click to browse
                           </>
                         )}
                       </p>
@@ -247,7 +247,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   onChange={handleInputChange}
                   required
                   type="text"
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 />
               </div>
               <div>
@@ -261,7 +261,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   onChange={handleInputChange}
                   required
                   type="text"
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 />
               </div>
             </div>
@@ -275,7 +275,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 required
                 rows={4}
                 placeholder="Wedding brief description..."
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
               />
             </div>
 
@@ -290,7 +290,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   value={projectForm.physical_parameters}
                   onChange={handleInputChange}
                   type="text"
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 />
               </div>
               <div>
@@ -305,7 +305,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   type="number"
                   min="0"
                   step="0.01"
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 />
               </div>
               <div>
@@ -318,7 +318,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   value={projectForm.event_date}
                   onChange={handleInputChange}
                   type="date"
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 />
               </div>
               <div>
@@ -331,16 +331,16 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   value={projectForm.timeline_deadline}
                   onChange={handleInputChange}
                   type="date"
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 />
               </div>
             </div>
 
                   {/* AI Allocation Notice for New Projects */}
-                  <div className="mt-4 p-4 bg-purple-500/20 border border-purple-400/30 rounded-lg">
+                  <div className="mt-4 p-4 bg-wedding-primary/20 border border-wedding-primary-light/30 rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
                       <Sparkles className="w-5 h-5 text-purple-300" />
-                      <span className="text-sm font-medium text-purple-200">Smart Service Matching</span>
+                      <span className="text-sm font-medium text-wedding-primary-light">Smart Service Matching</span>
                     </div>
                     <p className="text-sm text-purple-300">
                       This wedding will use smart matching to automatically identify and create services based on your brief. 
@@ -366,7 +366,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   onChange={handleInputChange}
                   required
                   type="text"
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 />
               </div>
               <div>
@@ -380,7 +380,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   onChange={handleInputChange}
                   required
                   type="text"
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                 />
               </div>
             </div>
@@ -394,7 +394,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   {...getRootProps()}
                   className={`
                     border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
-                    ${isDragActive ? 'border-teal-400 bg-teal-500/20' : 'border-white/20 hover:border-teal-400/50 hover:bg-white/10'}
+                    ${isDragActive ? 'border-wedding-primary-light bg-wedding-primary/20' : 'border-white/20 hover:border-wedding-primary-light/50 hover:bg-white/10'}
                     ${isUploadingPdf ? 'opacity-50 cursor-wait' : ''}
                   `}
                 >
@@ -402,7 +402,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   
                   {isUploadingPdf ? (
                     <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
+                      <Loader2 className="w-8 h-8 text-wedding-primary-light animate-spin" />
                       <p className="text-sm text-gray-200">Extracting text from PDF...</p>
                     </div>
                   ) : uploadedFilename ? (
@@ -417,7 +417,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                           <button
                             type="button"
                             onClick={() => onPdfDownload(uploadedPdfFile)}
-                            className="flex items-center gap-1 px-2 py-1 text-xs text-teal-300 hover:text-teal-200 hover:bg-teal-500/20 rounded transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 text-xs text-wedding-primary-light hover:text-wedding-primary-light hover:bg-wedding-primary/20 rounded transition-colors"
                             title="Download PDF"
                           >
                             <Download className="w-3 h-3" />
@@ -432,10 +432,10 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                       <Upload className="w-8 h-8 text-gray-300" />
                       <p className="text-sm text-gray-200">
                         {isDragActive ? (
-                          <span className="text-teal-300 font-medium">Drop PDF here...</span>
+                          <span className="text-wedding-primary-light font-medium">Drop PDF here...</span>
                         ) : (
                           <>
-                            <span className="text-teal-300 font-medium">Drop a PDF brief here</span> or click to browse
+                            <span className="text-wedding-primary-light font-medium">Drop a PDF brief here</span> or click to browse
                           </>
                         )}
                       </p>
@@ -462,7 +462,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               required
               rows={4}
               placeholder="Enter wedding brief manually or upload a PDF above..."
-              className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
             />
             
             {/* AI Analyze Brief Button */}
@@ -472,7 +472,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   type="button"
                   onClick={onAnalyzeBrief}
                   disabled={isAnalyzingBrief || !projectForm.brief_description || projectForm.brief_description.trim().length === 0}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isAnalyzingBrief ? (
                     <>
@@ -504,7 +504,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 value={projectForm.physical_parameters}
                 onChange={handleInputChange}
                 type="text"
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
               />
             </div>
             <div>
@@ -519,7 +519,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 type="number"
                 min="0"
                 step="0.01"
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
               />
             </div>
             <div>
@@ -532,7 +532,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 value={projectForm.event_date}
                 onChange={handleInputChange}
                 type="date"
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
               />
             </div>
             <div>
@@ -545,7 +545,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 value={projectForm.timeline_deadline}
                 onChange={handleInputChange}
                 type="date"
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
               />
             </div>
           </div>
@@ -556,7 +556,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             <div className="space-y-2">
               <label className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg border transition-colors ${
                 allocationMethod === 'static' 
-                  ? 'bg-teal-500/20 border-teal-400/50' 
+                  ? 'bg-wedding-primary/20 border-wedding-primary-light/50' 
                   : 'bg-white/10 border-white/20 hover:bg-white/20'
               }`}>
                 <input
@@ -565,7 +565,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   value="static"
                   checked={allocationMethod === 'static'}
                   onChange={() => onAllocationMethodChange('static')}
-                  className="w-4 h-4 text-teal-600 focus:ring-teal-500 focus:ring-2"
+                  className="w-4 h-4 text-wedding-primary focus:ring-wedding-primary focus:ring-2"
                 />
                 <div>
                   <span className="text-sm font-medium text-gray-200">Standard Matching</span>
@@ -575,7 +575,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               
               <label className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg border transition-colors ${
                 allocationMethod === 'ai' 
-                  ? 'bg-teal-500/20 border-teal-400/50' 
+                  ? 'bg-wedding-primary/20 border-wedding-primary-light/50' 
                   : 'bg-white/10 border-white/20 hover:bg-white/20'
               }`}>
                 <input
@@ -584,7 +584,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   value="ai"
                   checked={allocationMethod === 'ai'}
                   onChange={() => onAllocationMethodChange('ai')}
-                  className="w-4 h-4 text-purple-600 focus:ring-purple-500 focus:ring-2"
+                  className="w-4 h-4 text-purple-600 focus:ring-wedding-primary focus:ring-2"
                 />
                 <div>
                   <span className="text-sm font-medium text-gray-200">Smart Matching</span>
@@ -594,8 +594,8 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             </div>
             
             {allocationMethod === 'ai' && (
-              <div className="mt-3 p-3 bg-purple-500/20 border border-purple-400/30 rounded-lg">
-                <p className="text-sm text-purple-200">
+              <div className="mt-3 p-3 bg-wedding-primary/20 border border-wedding-primary-light/30 rounded-lg">
+                <p className="text-sm text-wedding-primary-light">
                   ✨ The system will analyze your brief to identify wedding services, create detailed specifications, 
                   and suggest optimal vendor matches with confidence scores.
                 </p>
@@ -624,7 +624,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                 type="button"
                 onClick={onSubmit}
                 disabled={isSubmitting}
-                className="w-full sm:w-auto px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                className="w-full sm:w-auto px-4 py-2 rounded bg-wedding-primary text-white hover:bg-wedding-primary-hover disabled:opacity-50 transition-colors"
               >
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>

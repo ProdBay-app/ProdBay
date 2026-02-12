@@ -34,11 +34,11 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
       <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
         <div className="mb-6">
           <div className="flex items-center space-x-3 mb-2">
-            <Brain className="h-6 w-6 text-purple-600" />
+            <Brain className="h-6 w-6 text-wedding-accent" />
             <h3 className="text-xl font-semibold">
               Service Analysis
             </h3>
-            <Sparkles className="h-5 w-5 text-purple-500" />
+            <Sparkles className="h-5 w-5 text-wedding-accent" />
           </div>
           <p className="text-gray-600 text-sm">
             Analyze the wedding brief to identify and suggest optimal services with detailed specifications.
@@ -49,20 +49,20 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
           <div className="text-center py-8">
             {loading ? (
               <div className="flex flex-col items-center space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-wedding-primary"></div>
                 <p className="text-gray-600">Analyzing your wedding...</p>
                 <p className="text-sm text-gray-500">This may take a few moments</p>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+                <div className="bg-gradient-to-r from-wedding-secondary/50 to-wedding-neutral border border-wedding-primary/30 rounded-lg p-6">
                   <h4 className="font-semibold text-gray-900 mb-2">Ready to analyze</h4>
                   <p className="text-sm text-gray-600 mb-4">
                     Click the button below to start analyzing your wedding.
                   </p>
                   <button
                     onClick={onAnalyze}
-                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 mx-auto"
+                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-wedding-primary to-wedding-accent text-white rounded-lg hover:from-wedding-primary-hover hover:to-wedding-accent-hover mx-auto"
                   >
                     <Brain className="h-5 w-5" />
                     <span>Start Analysis</span>
@@ -75,7 +75,7 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
         ) : (
           <div className="space-y-6">
             {/* AI Results Summary */}
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-green-50 to-wedding-neutral border border-green-200 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-semibold text-gray-900">Analysis Complete</h4>
@@ -125,7 +125,7 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
               <button
                 type="button"
                 onClick={onApply}
-                className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700"
+                className="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-wedding-primary to-wedding-accent text-white rounded-lg hover:from-wedding-primary-hover hover:to-wedding-accent-hover"
               >
                 <Brain className="h-4 w-4" />
                 <span>Apply Suggestions</span>

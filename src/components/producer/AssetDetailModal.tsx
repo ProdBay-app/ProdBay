@@ -355,7 +355,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
           >
 
             {/* Header - Purple gradient matching brand */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-wedding-primary to-wedding-primary-hover px-6 py-5 rounded-t-xl">
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-4">
                   <div className="flex items-center gap-3 mb-2">
@@ -419,7 +419,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       value={editingData.asset_name}
                       onChange={(e) => handleFieldChange('asset_name', e.target.value)}
                       onBlur={handleBlur}
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-all"
                       placeholder="Enter service name"
                     />
                   </div>
@@ -434,7 +434,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       onChange={(e) => handleFieldChange('specifications', e.target.value)}
                       onBlur={handleBlur}
                       rows={4}
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-y"
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-all resize-y"
                       placeholder="Enter service specifications"
                     />
                   </div>
@@ -451,7 +451,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                       value={editingData.quantity || ''}
                       onChange={(e) => handleFieldChange('quantity', e.target.value ? parseInt(e.target.value, 10) : undefined)}
                       onBlur={handleBlur}
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent transition-all"
                       placeholder="Optional"
                     />
                   </div>
@@ -511,7 +511,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                             placeholder="Search predefined tags..."
                             value={tagSearchTerm}
                             onChange={(e) => setTagSearchTerm(e.target.value)}
-                            className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-md text-sm focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                             autoFocus
                           />
                         </div>

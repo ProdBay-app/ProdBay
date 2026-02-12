@@ -150,7 +150,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-wedding-primary to-wedding-primary-hover px-6 py-5">
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-4">
                   <h2 className="text-2xl font-bold text-white mb-1">
@@ -199,7 +199,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                         key={supplier.id}
                         className={`
                           border rounded-lg p-4 transition-all duration-200
-                          ${isSelected ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' : 'border-gray-200'}
+                          ${isSelected ? 'border-purple-500 bg-wedding-secondary/50 ring-2 ring-wedding-primary/30' : 'border-gray-200'}
                           ${alreadyContacted ? 'opacity-60 cursor-not-allowed' : 'hover:border-purple-300 cursor-pointer'}
                         `}
                         onClick={() => !alreadyContacted && setSelectedSupplierId(supplier.id)}
@@ -214,7 +214,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                               checked={isSelected}
                               onChange={() => setSelectedSupplierId(supplier.id)}
                               disabled={alreadyContacted}
-                              className="w-4 h-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                              className="w-4 h-4 text-purple-600 focus:ring-wedding-primary border-gray-300"
                             />
                           </div>
 
@@ -276,7 +276,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                       type="text"
                       value={ccEmails}
                       onChange={(e) => setCcEmails(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                       placeholder="cc@example.com, another@example.com"
                     />
                   </div>
@@ -288,7 +288,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                       type="text"
                       value={bccEmails}
                       onChange={(e) => setBccEmails(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-wedding-primary focus:border-transparent"
                       placeholder="bcc@example.com"
                     />
                   </div>
@@ -320,7 +320,7 @@ const RequestQuoteModal: React.FC<RequestQuoteModalProps> = ({
                     px-5 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2
                     ${!selectedSupplierId || submitting
                       ? 'bg-gray-400 cursor-not-allowed text-white'
-                      : 'bg-purple-600 hover:bg-purple-700 text-white shadow-sm hover:shadow'
+                      : 'bg-wedding-primary hover:bg-wedding-primary-hover text-white shadow-sm hover:shadow'
                     }
                   `}
                 >

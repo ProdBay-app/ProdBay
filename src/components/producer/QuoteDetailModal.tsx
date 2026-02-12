@@ -159,7 +159,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
         };
       case 'Submitted':
         return {
-          className: 'bg-blue-500/30 text-blue-200 border-blue-400/50',
+          className: 'bg-wedding-primary/30 text-wedding-primary-light border-wedding-primary-light/50',
           text: 'Quote Submitted',
           icon: <FileText className="w-3.5 h-3.5" />
         };
@@ -207,7 +207,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 rounded-t-xl">
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-wedding-primary to-wedding-primary-hover px-6 py-5 rounded-t-xl">
           <div className="flex items-start justify-between">
             <div className="flex-1 pr-4">
               <div className="flex items-center gap-3 mb-2">
@@ -329,7 +329,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                           href={currentQuote.quote_document_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-wedding-primary text-white rounded-lg hover:bg-wedding-primary-hover transition-colors text-sm font-medium"
                           title="View quote PDF document"
                         >
                           <FileText className="w-4 h-4" />
@@ -348,7 +348,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                           {quoteData.supplier.service_categories.map((category: string, idx: number) => (
                             <span
                               key={idx}
-                              className="px-2 py-1 text-xs bg-purple-500/20 text-purple-200 rounded border border-purple-400/50"
+                              className="px-2 py-1 text-xs bg-wedding-primary/20 text-wedding-primary-light rounded border border-wedding-primary-light/50"
                             >
                               {category}
                             </span>
@@ -381,7 +381,7 @@ const QuoteDetailModal: React.FC<QuoteDetailModalProps> = ({
                     <button
                       onClick={handleAcceptQuote}
                       disabled={accepting}
-                      className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg px-6 py-4 font-semibold hover:from-purple-700 hover:to-purple-800 transition-all flex items-center justify-center space-x-2 disabled:bg-gray-600 disabled:cursor-not-allowed shadow-lg"
+                      className="w-full bg-gradient-to-r from-wedding-primary to-wedding-primary-hover text-white rounded-lg px-6 py-4 font-semibold hover:from-wedding-primary-hover hover:to-wedding-primary-hover transition-all flex items-center justify-center space-x-2 disabled:bg-gray-600 disabled:cursor-not-allowed shadow-lg"
                     >
                       {accepting ? (
                         <>
