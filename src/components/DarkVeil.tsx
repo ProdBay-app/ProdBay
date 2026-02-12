@@ -21,6 +21,7 @@ uniform float uNoise;
 uniform float uScan;
 uniform float uScanFreq;
 uniform float uWarp;
+uniform float uWeddingTint;
 
 #define iTime uTime
 #define iResolution uResolution
@@ -49,6 +50,29 @@ vec3 hueShiftRGB(vec3 col, float deg) {
   float cosh = cos(rad), sinh = sin(rad);
   vec3 yiqShift = vec3(yiq.x, yiq.y * cosh - yiq.z * sinh, yiq.y * sinh + yiq.z * cosh);
   return clamp(yiq2rgb * yiqShift, 0.0, 1.0);
+}
+
+// Wedding palette: Sage #87A38D, Champagne #F7E7CE, Gold #C5A059, Slate #2D3436, Neutral #FAF9F6
+vec3 weddingRemap(vec3 col) {
+  float L = dot(col, vec3(0.299, 0.587, 0.114));
+  float chroma = max(max(col.r, col.g), col.b) - min(min(col.r, col.g), col.b);
+  vec3 slate = vec3(0.176, 0.204, 0.212);      // #2D3436
+  vec3 primary = vec3(0.529, 0.639, 0.553);    // #87A38D sage
+  vec3 secondary = vec3(0.969, 0.906, 0.808);  // #F7E7CE champagne
+  vec3 accent = vec3(0.773, 0.627, 0.349);     // #C5A059 gold
+  vec3 neutral = vec3(0.980, 0.976, 0.965);    // #FAF9F6 off-white
+  vec3 wedding;
+  if (L < 0.25) {
+    wedding = mix(slate, primary, L * 4.0);
+  } else if (L < 0.5) {
+    wedding = mix(primary, mix(primary, secondary, (L - 0.25) * 4.0), 0.7);
+  } else if (L < 0.75) {
+    wedding = mix(secondary, neutral, (L - 0.5) * 4.0);
+  } else {
+    wedding = mix(neutral, secondary, (1.0 - L) * 2.0);
+  }
+  wedding += accent * chroma * 0.15;
+  return clamp(wedding, 0.0, 1.0);
 }
 
 vec4 sigmoid(vec4 x) {
@@ -288,6 +312,9 @@ void main() {
   
   col.rgb = hueShiftRGB(col.rgb, uHueShift);
   
+  vec3 weddingCol = weddingRemap(col.rgb);
+  col.rgb = mix(col.rgb, weddingCol, uWeddingTint);
+  
   float scanline_val = sin(gl_FragCoord.y * uScanFreq) * 0.5 + 0.5;
   col.rgb *= 1. - (scanline_val * scanline_val) * uScan;
   
@@ -305,6 +332,8 @@ type Props = {
   scanlineFrequency?: number;
   warpAmount?: number;
   resolutionScale?: number;
+  /** 0–1: blend toward wedding palette. 1 = full wedding colors. */
+  weddingTint?: number;
 };
 
 export default function DarkVeil({
@@ -314,7 +343,8 @@ export default function DarkVeil({
   speed = 0.5,
   scanlineFrequency = 0,
   warpAmount = 0,
-  resolutionScale = 1
+  resolutionScale = 1,
+  weddingTint = 1
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -340,7 +370,8 @@ export default function DarkVeil({
         uNoise: { value: noiseIntensity },
         uScan: { value: scanlineIntensity },
         uScanFreq: { value: scanlineFrequency },
-        uWarp: { value: warpAmount }
+        uWarp: { value: warpAmount },
+        uWeddingTint: { value: weddingTint }
       }
     });
     
@@ -366,6 +397,7 @@ export default function DarkVeil({
       program.uniforms.uScan.value = scanlineIntensity;
       program.uniforms.uScanFreq.value = scanlineFrequency;
       program.uniforms.uWarp.value = warpAmount;
+      program.uniforms.uWeddingTint.value = weddingTint;
       
       renderer.render({ scene: mesh });
       frame = requestAnimationFrame(loop);
@@ -377,7 +409,7 @@ export default function DarkVeil({
       cancelAnimationFrame(frame);
       window.removeEventListener('resize', resize);
     };
-  }, [hueShift, noiseIntensity, scanlineIntensity, speed, scanlineFrequency, warpAmount, resolutionScale]);
+  }, [hueShift, noiseIntensity, scanlineIntensity, speed, scanlineFrequency, warpAmount, resolutionScale, weddingTint]);
 
   return <canvas ref={ref} className="darkveil-canvas" />;
 }
