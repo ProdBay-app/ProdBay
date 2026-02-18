@@ -7,6 +7,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    date: '2026-02-18',
+    version: 'v0.8.5',
+    title: 'Email delivery rate-limit hardening for supplier workflows',
+    bulletPoints: [
+      'Added centralized email send throttling to keep outbound Resend requests safely below platform limits.',
+      'Introduced bounded retry with exponential backoff for temporary 429 and 5xx email delivery failures.',
+      'Improved quote-request email reliability in bulk supplier sends without changing producer-facing flow.'
+    ]
+  },
+  {
     date: '2026-02-15',
     version: 'v0.8.4',
     title: 'Asset workspace polish and reliability improvements',
