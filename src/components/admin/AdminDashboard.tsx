@@ -67,20 +67,6 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed':
-        return 'bg-green-100 text-green-800';
-      case 'In Progress':
-      case 'Quoting':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -199,7 +185,6 @@ const AdminDashboard: React.FC = () => {
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 font-medium text-gray-700">Project Name</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-700">Client</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-700">Budget</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-700">Created</th>
               </tr>
@@ -209,11 +194,6 @@ const AdminDashboard: React.FC = () => {
                 <tr key={project.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-4 font-medium text-gray-900">{project.project_name}</td>
                   <td className="py-3 px-4 text-gray-600">{project.client_name}</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.project_status)}`}>
-                      {project.project_status}
-                    </span>
-                  </td>
                   <td className="py-3 px-4 text-gray-600">
                     ${project.financial_parameters?.toFixed(2) || '0.00'}
                   </td>

@@ -184,24 +184,6 @@ const ProjectDetailPage: React.FC = () => {
     });
   };
 
-  // Get status badge color
-  const getStatusBadgeColor = (status: Project['project_status']): string => {
-    switch (status) {
-      case 'New':
-        return 'bg-blue-500/30 text-blue-200 border-blue-400/50';
-      case 'In Progress':
-        return 'bg-purple-500/30 text-purple-200 border-purple-400/50';
-      case 'Quoting':
-        return 'bg-yellow-500/30 text-yellow-200 border-yellow-400/50';
-      case 'Completed':
-        return 'bg-green-500/30 text-green-200 border-green-400/50';
-      case 'Cancelled':
-        return 'bg-white/20 text-gray-200 border-white/30';
-      default:
-        return 'bg-white/20 text-gray-200 border-white/30';
-    }
-  };
-
   // ========================================
   // INTERACTIVE BRIEF FUNCTIONS
   // ========================================
@@ -539,19 +521,10 @@ const ProjectDetailPage: React.FC = () => {
       <div className="bg-transparent border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Page title */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white">
-                {project.project_name}
-              </h1>
-            </div>
-            
-            {/* Status badge */}
-            <span 
-              className={`px-4 py-2 rounded-full text-sm font-semibold border ${getStatusBadgeColor(project.project_status)}`}
-            >
-              {project.project_status}
-            </span>
+          <div>
+            <h1 className="text-3xl font-bold text-white">
+              {project.project_name}
+            </h1>
           </div>
         </div>
       </div>

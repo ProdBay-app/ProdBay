@@ -98,24 +98,6 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
     });
   };
 
-  // Get status badge color
-  const getStatusBadgeColor = (status: Project['project_status']): string => {
-    switch (status) {
-      case 'New':
-        return 'bg-blue-500/30 text-blue-200 border-blue-400/50';
-      case 'In Progress':
-        return 'bg-purple-500/30 text-purple-200 border-purple-400/50';
-      case 'Quoting':
-        return 'bg-yellow-500/30 text-yellow-200 border-yellow-400/50';
-      case 'Completed':
-        return 'bg-green-500/30 text-green-200 border-green-400/50';
-      case 'Cancelled':
-        return 'bg-white/20 text-gray-200 border-white/30';
-      default:
-        return 'bg-white/20 text-gray-200 border-white/30';
-    }
-  };
-
   // Don't render if not open
   if (!isOpen) return null;
 
@@ -233,11 +215,6 @@ const ClientProjectsModal: React.FC<ClientProjectsModalProps> = ({
                       </h4>
                       
                       <div className="flex flex-wrap items-center gap-3 text-sm">
-                        {/* Status badge */}
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(project.project_status)}`}>
-                          {project.project_status}
-                        </span>
-
                         {/* Created date */}
                         <div className="flex items-center gap-1 text-gray-300">
                           <Calendar className="w-4 h-4" />
