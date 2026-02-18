@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Building2, Mail, Clock, CheckCircle, AlertCircle, Radio } from 'lucide-react';
+import { Building2, Mail, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import type { Asset, Quote, Supplier } from '@/lib/supabase';
@@ -72,6 +72,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       );
 
       setSuppliersWithStatus(suppliers);
+      onStatusUpdate?.();
     } catch (err) {
       console.error('Error loading supplier status:', err);
       showError('Failed to load supplier status');
@@ -79,7 +80,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [asset.id, asset.assigned_supplier_id, showError]);
+  }, [asset.id, asset.assigned_supplier_id, showError, onStatusUpdate]);
 
   // Load suppliers and their status with auto-refresh polling
   useEffect(() => {
@@ -160,16 +161,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
     }
   };
 
-  // Format date for display
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -189,13 +180,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
           <span className="px-2 py-1 bg-purple-500/30 text-purple-200 text-sm font-semibold rounded-full">
             {suppliersWithStatus.length}
           </span>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Auto-refresh indicator */}
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
-            <Radio className="w-3 h-3 text-green-400" />
-            <span>Auto-refresh active</span>
-          </div>
         </div>
       </div>
 
@@ -233,7 +217,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                     <p className="text-sm">No suppliers in this status</p>
                   </div>
                 ) : (
-                  suppliers.map(({ supplier, quote, lastActivity }) => {
+                  suppliers.map(({ supplier, quote }) => {
                     const supplierEmail = getSupplierPrimaryEmail(supplier);
 
                     return (
@@ -260,9 +244,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                                 <span>{supplierEmail}</span>
                               </div>
                             )}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {formatDate(lastActivity)}
                           </div>
                         </div>
                       </div>

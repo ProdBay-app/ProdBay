@@ -192,11 +192,6 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
                 <h4 className="font-semibold text-white">
                   {quote.supplier?.supplier_name || 'Unknown Supplier'}
                 </h4>
-                {isWinner && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500/30 text-green-200 border border-green-400/50">
-                    Winner
-                  </span>
-                )}
               </div>
               {supplierEmail && (
                 <div className="flex items-center gap-1.5 text-sm text-gray-300 mt-0.5">
