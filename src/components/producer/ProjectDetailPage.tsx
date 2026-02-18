@@ -11,7 +11,11 @@ import {
   Edit3,
   Eye,
   EyeOff,
-  Highlighter
+  Highlighter,
+  Pencil,
+  Trash2,
+  X,
+  Loader2
 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
@@ -21,6 +25,7 @@ import EditableBrief from './EditableBrief';
 import ClientProjectsModal from './ClientProjectsModal';
 import AssetDetailModal from './AssetDetailModal';
 import AssetFormModal from './AssetFormModal';
+import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { toTitleCase } from '@/utils/textFormatters';
 import type { Project, Asset } from '@/lib/supabase';
 
@@ -70,6 +75,19 @@ const ProjectDetailPage: React.FC = () => {
   const [briefIsDirty, setBriefIsDirty] = useState(false);
   const [briefIsSaving, setBriefIsSaving] = useState(false);
   const [showHighlights, setShowHighlights] = useState(true);
+
+  // Overview edit state
+  const [isOverviewEditModalOpen, setIsOverviewEditModalOpen] = useState(false);
+  const [isOverviewSaving, setIsOverviewSaving] = useState(false);
+  const [overviewEditForm, setOverviewEditForm] = useState({
+    client_name: '',
+    financial_parameters: 0,
+    timeline_deadline: '',
+  });
+
+  // Delete project state
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
 
 
@@ -398,6 +416,74 @@ const ProjectDetailPage: React.FC = () => {
   // END INTERACTIVE BRIEF
   // ========================================
 
+  // ========================================
+  // OVERVIEW EDIT & DELETE HANDLERS
+  // ========================================
+
+  const openOverviewEditModal = () => {
+    if (!project) return;
+    const deadline = project.timeline_deadline ?? '';
+    const deadlineForInput = deadline ? deadline.split('T')[0] : '';
+    setOverviewEditForm({
+      client_name: project.client_name,
+      financial_parameters: project.financial_parameters ?? 0,
+      timeline_deadline: deadlineForInput,
+    });
+    setIsOverviewEditModalOpen(true);
+  };
+
+  const handleOverviewSave = async () => {
+    if (!project || !projectId) return;
+
+    setIsOverviewSaving(true);
+    try {
+      await ProducerService.updateProject(projectId, {
+        project_name: project.project_name,
+        client_name: overviewEditForm.client_name.trim(),
+        brief_description: project.brief_description,
+        physical_parameters: project.physical_parameters ?? '',
+        financial_parameters: overviewEditForm.financial_parameters || undefined,
+        timeline_deadline: overviewEditForm.timeline_deadline.trim() || '',
+        event_date: project.event_date ?? '',
+      });
+
+      setProject((prev) =>
+        prev
+          ? {
+              ...prev,
+              client_name: overviewEditForm.client_name.trim(),
+              financial_parameters: overviewEditForm.financial_parameters || undefined,
+              timeline_deadline: overviewEditForm.timeline_deadline.trim() || null,
+            }
+          : null,
+      );
+
+      showSuccess('Overview updated');
+      setIsOverviewEditModalOpen(false);
+    } catch (err) {
+      console.error('Failed to update overview:', err);
+      showError(err instanceof Error ? err.message : 'Failed to update overview');
+    } finally {
+      setIsOverviewSaving(false);
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!projectId) return;
+
+    setIsDeleting(true);
+    try {
+      await ProducerService.deleteProject(projectId);
+      showSuccess('Project deleted');
+      setIsDeleteConfirmOpen(false);
+      navigate('/producer/projects');
+    } catch (err) {
+      console.error('Failed to delete project:', err);
+      showError(err instanceof Error ? err.message : 'Failed to delete project');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Loading state
   if (loading) {
@@ -462,9 +548,29 @@ const ProjectDetailPage: React.FC = () => {
       </div>
 
       {/* Overview Section - Full Width Glass Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-bold text-white mb-6">Overview</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">Overview</h2>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={openOverviewEditModal}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <Pencil className="w-4 h-4" />
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDeleteConfirmOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-200 hover:text-white bg-red-500/20 hover:bg-red-600/30 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Client Name */}
             <div className="flex items-start gap-3">
@@ -720,6 +826,110 @@ const ProjectDetailPage: React.FC = () => {
         onSubmit={handleCreateAsset}
         mode="create"
         isSubmitting={isCreatingAsset}
+      />
+
+      {/* Overview Edit Modal - Client, Budget, Deadline only */}
+      {isOverviewEditModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={(e) => e.target === e.currentTarget && !isOverviewSaving && setIsOverviewEditModalOpen(false)}
+        >
+          <div
+            className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-xl w-full max-w-md p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-white">Edit Overview</h3>
+              <button
+                type="button"
+                onClick={() => !isOverviewSaving && setIsOverviewEditModalOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Client</label>
+                <input
+                  type="text"
+                  value={overviewEditForm.client_name}
+                  onChange={(e) =>
+                    setOverviewEditForm((prev) => ({ ...prev, client_name: e.target.value }))
+                  }
+                  className="w-full px-4 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Client name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Budget</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={overviewEditForm.financial_parameters || ''}
+                  onChange={(e) =>
+                    setOverviewEditForm((prev) => ({
+                      ...prev,
+                      financial_parameters: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  className="w-full px-4 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Deadline</label>
+                <input
+                  type="date"
+                  value={overviewEditForm.timeline_deadline}
+                  onChange={(e) =>
+                    setOverviewEditForm((prev) => ({ ...prev, timeline_deadline: e.target.value }))
+                  }
+                  className="w-full px-4 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => !isOverviewSaving && setIsOverviewEditModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-200 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleOverviewSave}
+                disabled={isOverviewSaving}
+                className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              >
+                {isOverviewSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Project Confirmation */}
+      <ConfirmationModal
+        isOpen={isDeleteConfirmOpen}
+        title="Delete Project"
+        message={`Are you sure you want to delete "${project.project_name}"? This will also delete all assets and quotes associated with this project.`}
+        confirmText={isDeleting ? 'Deleting...' : 'Delete'}
+        cancelText="Cancel"
+        onConfirm={handleDeleteProject}
+        onCancel={() => !isDeleting && setIsDeleteConfirmOpen(false)}
+        isConfirming={isDeleting}
+        variant="danger"
       />
     </>
   );
