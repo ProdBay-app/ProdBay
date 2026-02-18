@@ -26,6 +26,168 @@ class EmailService {
     } else {
       this.fromEmail = fromEmailEnv;
     }
+
+    // Promise-chain queue for outbound email sends.
+    // Each send request is appended to this chain so network calls are
+    // serialized and spaced out, preventing Resend rate-limit bursts.
+    this.sendQueue = Promise.resolve();
+    this.minSendIntervalMs = 600;
+    this.maxRetryAttempts = 3;
+  }
+
+  /**
+   * Delay helper used by throttling and retry logic
+   * @param {number} ms - Milliseconds to wait
+   * @returns {Promise<void>}
+   */
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Extract HTTP status code from various error shapes
+   * @param {Object|Error} error
+   * @returns {number|null}
+   */
+  getErrorStatusCode(error) {
+    const candidates = [
+      error?.statusCode,
+      error?.status,
+      error?.response?.status,
+      error?.originalError?.statusCode,
+      error?.originalError?.status
+    ];
+
+    for (const value of candidates) {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Parse Retry-After header into milliseconds if present
+   * Supports integer-seconds and HTTP-date formats
+   * @param {Object|Error} error
+   * @returns {number|null}
+   */
+  getRetryAfterMs(error) {
+    const headers =
+      error?.headers ||
+      error?.response?.headers ||
+      error?.originalError?.headers ||
+      error?.originalError?.response?.headers;
+
+    if (!headers) return null;
+
+    const retryAfterRaw =
+      headers['retry-after'] ||
+      headers['Retry-After'] ||
+      (typeof headers.get === 'function' ? headers.get('retry-after') : null);
+
+    if (!retryAfterRaw) return null;
+
+    const retryAfterValue = Array.isArray(retryAfterRaw) ? retryAfterRaw[0] : retryAfterRaw;
+
+    const asSeconds = Number(retryAfterValue);
+    if (Number.isFinite(asSeconds)) {
+      return Math.max(0, Math.round(asSeconds * 1000));
+    }
+
+    const asDateMs = new Date(retryAfterValue).getTime();
+    if (Number.isFinite(asDateMs)) {
+      return Math.max(0, asDateMs - Date.now());
+    }
+
+    return null;
+  }
+
+  /**
+   * Determine whether an error should be retried
+   * Retries only on 429 and 5xx responses
+   * @param {Object|Error} error
+   * @returns {boolean}
+   */
+  isRetriableError(error) {
+    const statusCode = this.getErrorStatusCode(error);
+    return statusCode === 429 || (statusCode >= 500 && statusCode <= 599);
+  }
+
+  /**
+   * Normalize Resend error object into an Error with status metadata
+   * @param {Object} resendError
+   * @param {string} context
+   * @returns {Error}
+   */
+  createSendError(resendError, context) {
+    const wrappedError = new Error(resendError?.message || `Failed to ${context}`);
+    wrappedError.statusCode = this.getErrorStatusCode(resendError);
+    wrappedError.headers = resendError?.headers || resendError?.response?.headers;
+    wrappedError.originalError = resendError;
+    return wrappedError;
+  }
+
+  /**
+   * Generic retry helper with exponential backoff
+   * Retry policy: 429 and 5xx only, max 3 attempts.
+   * If Retry-After exists, it is honored for the next wait.
+   * @param {Function} operation - async send operation
+   * @param {string} context - logging context
+   * @returns {Promise<any>}
+   */
+  async retryWithBackoff(operation, context = 'send email') {
+    let attempt = 0;
+    let backoffMs = 1000;
+
+    while (attempt < this.maxRetryAttempts) {
+      attempt += 1;
+
+      try {
+        return await operation();
+      } catch (error) {
+        const retriable = this.isRetriableError(error);
+        const isLastAttempt = attempt >= this.maxRetryAttempts;
+        const statusCode = this.getErrorStatusCode(error);
+
+        if (!retriable || isLastAttempt) {
+          throw error;
+        }
+
+        const retryAfterMs = this.getRetryAfterMs(error);
+        const waitMs = retryAfterMs !== null ? retryAfterMs : backoffMs;
+
+        console.warn(
+          `[EmailService] ${context} failed (status ${statusCode ?? 'unknown'}) on attempt ${attempt}/${this.maxRetryAttempts}. Retrying in ${waitMs}ms...`
+        );
+
+        await this.delay(waitMs);
+        backoffMs *= 2;
+      }
+    }
+  }
+
+  /**
+   * Queue and throttle email send operations via a promise chain.
+   * Every request appends to sendQueue:
+   *   sendQueue -> delay(600ms) -> performSend -> return result
+   * A catch on the queue tail prevents one failure from breaking the chain.
+   * @param {Function} performSend - async function that performs the network call
+   * @param {string} context - logging context
+   * @returns {Promise<any>}
+   */
+  enqueueSend(performSend, context = 'send email') {
+    const queuedSend = this.sendQueue
+      .then(() => this.delay(this.minSendIntervalMs))
+      .then(() => this.retryWithBackoff(performSend, context));
+
+    this.sendQueue = queuedSend.catch((error) => {
+      console.error(`[EmailService] Queue error during ${context}:`, error?.message || error);
+    });
+
+    return queuedSend;
   }
 
   /**
@@ -208,23 +370,19 @@ class EmailService {
         emailPayload.attachments = resendAttachments;
       }
 
-      const { data, error } = await this.resend.emails.send(emailPayload);
+      const { data } = await this.enqueueSend(async () => {
+        const { data: sendData, error: sendError } = await this.resend.emails.send(emailPayload);
+        if (sendError) {
+          throw this.createSendError(sendError, 'send quote request email');
+        }
+        return { data: sendData };
+      }, 'send quote request email');
 
       // Log Resend API response
       console.log('[EmailService] Resend API call completed');
-      console.log('[EmailService] Success:', !error);
+      console.log('[EmailService] Success:', true);
       if (data) {
         console.log('[EmailService] Message ID:', data.id);
-      }
-      if (error) {
-        console.error('[EmailService] Resend API error:', JSON.stringify(error, null, 2));
-      }
-
-      if (error) {
-        return {
-          success: false,
-          error: error.message || 'Failed to send email via Resend'
-        };
       }
 
       console.log(`✅ Quote request email sent to ${to} (Message ID: ${data?.id || 'N/A'})`);
@@ -237,6 +395,9 @@ class EmailService {
 
     } catch (error) {
       console.error('Error in sendQuoteRequest:', error);
+      if (error?.originalError) {
+        console.error('[EmailService] Resend API error:', JSON.stringify(error.originalError, null, 2));
+      }
       return {
         success: false,
         error: error.message || 'Unknown error occurred while sending email'
@@ -342,30 +503,28 @@ class EmailService {
 
       // Send email via Resend
       console.log('[EmailService] Calling Resend API...');
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
-        reply_to: [replyTo],
-        subject: emailSubject,
-        text: emailBody,
-        html: htmlBody
-      });
+      const { data } = await this.enqueueSend(async () => {
+        const { data: sendData, error: sendError } = await this.resend.emails.send({
+          from: this.fromEmail,
+          to: [to],
+          reply_to: [replyTo],
+          subject: emailSubject,
+          text: emailBody,
+          html: htmlBody
+        });
+
+        if (sendError) {
+          throw this.createSendError(sendError, 'send quote received notification');
+        }
+
+        return { data: sendData };
+      }, 'send quote received notification');
 
       // Log Resend API response
       console.log('[EmailService] Resend API call completed');
-      console.log('[EmailService] Success:', !error);
+      console.log('[EmailService] Success:', true);
       if (data) {
         console.log('[EmailService] Message ID:', data.id);
-      }
-      if (error) {
-        console.error('[EmailService] Resend API error:', JSON.stringify(error, null, 2));
-      }
-
-      if (error) {
-        return {
-          success: false,
-          error: error.message || 'Failed to send email via Resend'
-        };
       }
 
       console.log(`✅ Quote received notification sent to ${to} (Message ID: ${data?.id || 'N/A'})`);
@@ -378,6 +537,9 @@ class EmailService {
 
     } catch (error) {
       console.error('Error in sendQuoteReceivedNotification:', error);
+      if (error?.originalError) {
+        console.error('[EmailService] Resend API error:', JSON.stringify(error.originalError, null, 2));
+      }
       return {
         success: false,
         error: error.message || 'Unknown error occurred while sending email'
@@ -454,30 +616,28 @@ class EmailService {
 
       // Send email via Resend
       console.log('[EmailService] Calling Resend API...');
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [to],
-        reply_to: [replyTo],
-        subject: emailSubject,
-        text: emailBody,
-        html: htmlBody
-      });
+      const { data } = await this.enqueueSend(async () => {
+        const { data: sendData, error: sendError } = await this.resend.emails.send({
+          from: this.fromEmail,
+          to: [to],
+          reply_to: [replyTo],
+          subject: emailSubject,
+          text: emailBody,
+          html: htmlBody
+        });
+
+        if (sendError) {
+          throw this.createSendError(sendError, 'send new message notification');
+        }
+
+        return { data: sendData };
+      }, 'send new message notification');
 
       // Log Resend API response
       console.log('[EmailService] Resend API call completed');
-      console.log('[EmailService] Success:', !error);
+      console.log('[EmailService] Success:', true);
       if (data) {
         console.log('[EmailService] Message ID:', data.id);
-      }
-      if (error) {
-        console.error('[EmailService] Resend API error:', JSON.stringify(error, null, 2));
-      }
-
-      if (error) {
-        return {
-          success: false,
-          error: error.message || 'Failed to send email via Resend'
-        };
       }
 
       console.log(`✅ New message notification sent to ${to} (Message ID: ${data?.id || 'N/A'})`);
@@ -490,6 +650,9 @@ class EmailService {
 
     } catch (error) {
       console.error('Error in sendNewMessageNotification:', error);
+      if (error?.originalError) {
+        console.error('[EmailService] Resend API error:', JSON.stringify(error.originalError, null, 2));
+      }
       return {
         success: false,
         error: error.message || 'Unknown error occurred while sending email'
@@ -547,20 +710,21 @@ class EmailService {
         footerText: 'ProdBay - Production Management Platform'
       });
 
-      const { data, error } = await this.resend.emails.send({
-        from: this.fromEmail,
-        to: [toEmail],
-        subject: emailSubject,
-        text: plainBody,
-        html: htmlBody
-      });
+      const { data } = await this.enqueueSend(async () => {
+        const { data: sendData, error: sendError } = await this.resend.emails.send({
+          from: this.fromEmail,
+          to: [toEmail],
+          subject: emailSubject,
+          text: plainBody,
+          html: htmlBody
+        });
 
-      if (error) {
-        return {
-          success: false,
-          error: error.message || 'Failed to send email via Resend'
-        };
-      }
+        if (sendError) {
+          throw this.createSendError(sendError, 'send quote accepted email');
+        }
+
+        return { data: sendData };
+      }, 'send quote accepted email');
 
       return {
         success: true,
@@ -569,6 +733,9 @@ class EmailService {
       };
     } catch (error) {
       console.error('Error in sendQuoteAcceptedEmail:', error);
+      if (error?.originalError) {
+        console.error('[EmailService] Resend API error:', JSON.stringify(error.originalError, null, 2));
+      }
       return {
         success: false,
         error: error.message || 'Unknown error occurred while sending email'
