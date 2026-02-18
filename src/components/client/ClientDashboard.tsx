@@ -70,17 +70,9 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-gray-900">{project.project_name}</h3>
-                  <p className="text-sm text-gray-600">{project.client_name}</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {renderStatusIcon(project.project_status)}
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.project_status)}`}>
-                    {project.project_status}
-                  </span>
-                </div>
+              <div>
+                <h3 className="font-medium text-gray-900">{project.project_name}</h3>
+                <p className="text-sm text-gray-600">{project.client_name}</p>
               </div>
             </div>
           ))}

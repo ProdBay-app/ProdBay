@@ -14,16 +14,12 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
   project,
   assets,
   onEdit,
-  onDelete,
-  getStatusColor
+  onDelete
 }) => {
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <h2 className="text-xl font-semibold">{project.project_name}</h2>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(project.project_status)}`}>
-          {project.project_status}
-        </span>
       </div>
       <div className="flex items-center space-x-2 mb-4">
         <button

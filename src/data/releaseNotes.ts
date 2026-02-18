@@ -8,6 +8,20 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     date: '2026-02-18',
+    version: 'v0.8.6',
+    title: 'Settings page and project dashboard refinements',
+    bulletPoints: [
+      'Added a comprehensive Settings page with vertical sidebar layout and Profile, Appearance, Notifications, and Billing tabs.',
+      'Profile settings: Name, Email, Bio, and 10 selectable avatar presets (initials-based). All profile data persists via Supabase Auth.',
+      'Settings link added to the header navigation for quick access.',
+      'Project dashboard: Search bar now always visible; removed status labels (New, In Progress, Quoting) from project cards for a cleaner layout.',
+      'Project cards made more compact with the arrow inline with the deadline.',
+      'Project detail Overview: Edit and Delete buttons (icon-only) in the Overview block header.',
+      'Overview edit modal supports Project Name, Client, Budget, and Deadline with persistence; Delete project with confirmation modal.'
+    ]
+  },
+  {
+    date: '2026-02-18',
     version: 'v0.8.5',
     title: 'Email delivery rate-limit hardening for supplier workflows',
     bulletPoints: [

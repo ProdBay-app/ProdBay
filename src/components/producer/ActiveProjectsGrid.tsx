@@ -656,19 +656,16 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
             </button>
           </div>
           
-          {/* Search, Filter, and Sort Controls - only show on All Projects page */}
-          {!projectLimit && (
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Search Bar - takes up more space */}
-              <div className="flex-1">
-                <SearchBar 
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder="Search by project name, client, or keywords..."
-                />
-              </div>
-              
-              {/* Status Filter and Sort Control - side by side on desktop */}
+          {/* Search Bar - always show; Filter and Sort only on All Projects page */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <SearchBar 
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search by project name, client, or keywords..."
+              />
+            </div>
+            {!projectLimit && (
               <div className="flex flex-col sm:flex-row gap-4 sm:w-auto">
                 <div className="sm:w-48">
                   <StatusFilter 
@@ -683,8 +680,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
                   />
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

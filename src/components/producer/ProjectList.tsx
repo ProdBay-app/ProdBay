@@ -11,8 +11,7 @@ interface ProjectListProps {
 const ProjectList: React.FC<ProjectListProps> = ({
   projects,
   selectedProject,
-  onProjectSelect,
-  getStatusColor
+  onProjectSelect
 }) => {
   return (
     <div className="lg:col-span-1">
@@ -29,13 +28,10 @@ const ProjectList: React.FC<ProjectListProps> = ({
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2">
                 <h3 className="font-medium text-gray-900 truncate">
                   {project.project_name}
                 </h3>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.project_status)}`}>
-                  {project.project_status}
-                </span>
               </div>
               <p className="text-sm text-gray-600">{project.client_name}</p>
               <p className="text-xs text-gray-500 mt-1">

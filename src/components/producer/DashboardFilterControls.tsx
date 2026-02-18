@@ -70,11 +70,6 @@ const DashboardFilterControls: React.FC<DashboardFilterControlsProps> = ({
             >
               <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-300'}`} />
               <span>{option.label}</span>
-              
-              {/* Active indicator dot */}
-              {isActive && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-teal-400 rounded-full border-2 border-white" />
-              )}
             </button>
           );
         })}
