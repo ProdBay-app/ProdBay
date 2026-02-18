@@ -83,7 +83,7 @@ const ProjectDetailPage: React.FC = () => {
     project_name: '',
     client_name: '',
     financial_parameters: 0,
-    timeline_deadline: '',
+    event_date: '',
   });
 
   // Delete project state
@@ -405,13 +405,13 @@ const ProjectDetailPage: React.FC = () => {
 
   const openOverviewEditModal = () => {
     if (!project) return;
-    const deadline = project.timeline_deadline ?? '';
-    const deadlineForInput = deadline ? deadline.split('T')[0] : '';
+    const eventDate = project.event_date ?? '';
+    const eventDateForInput = eventDate ? eventDate.split('T')[0] : '';
     setOverviewEditForm({
       project_name: project.project_name,
       client_name: project.client_name,
       financial_parameters: project.financial_parameters ?? 0,
-      timeline_deadline: deadlineForInput,
+      event_date: eventDateForInput,
     });
     setIsOverviewEditModalOpen(true);
   };
@@ -433,8 +433,8 @@ const ProjectDetailPage: React.FC = () => {
         brief_description: project.brief_description,
         physical_parameters: project.physical_parameters ?? '',
         financial_parameters: overviewEditForm.financial_parameters || undefined,
-        timeline_deadline: overviewEditForm.timeline_deadline.trim() || '',
-        event_date: project.event_date ?? '',
+        timeline_deadline: project.timeline_deadline ?? '',
+        event_date: overviewEditForm.event_date.trim() || '',
       });
 
       setProject((prev) =>
@@ -444,7 +444,7 @@ const ProjectDetailPage: React.FC = () => {
               project_name: trimmedName,
               client_name: overviewEditForm.client_name.trim(),
               financial_parameters: overviewEditForm.financial_parameters || undefined,
-              timeline_deadline: overviewEditForm.timeline_deadline.trim() || null,
+              event_date: overviewEditForm.event_date.trim() || null,
             }
           : null,
       );
@@ -584,18 +584,18 @@ const ProjectDetailPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Deadline */}
+            {/* Event Date */}
             <div className="flex items-start gap-3">
               <div className="p-2 bg-blue-500/20 rounded-lg">
                 <Calendar className="w-5 h-5 text-blue-300" />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-300 mb-1">Deadline</p>
+                <p className="text-sm text-gray-300 mb-1">Event Date</p>
                 <p className="text-lg font-semibold text-white">
-                  {formatDate(project.timeline_deadline ?? null)}
+                  {formatDate(project.event_date ?? null)}
                 </p>
               </div>
-              </div>
+            </div>
               
             {/* Created Date */}
             <div className="flex items-start gap-3">
@@ -810,7 +810,7 @@ const ProjectDetailPage: React.FC = () => {
         isSubmitting={isCreatingAsset}
       />
 
-      {/* Overview Edit Modal - Project Name, Client, Budget, Deadline */}
+      {/* Overview Edit Modal - Project Name, Client, Budget, Event Date */}
       {isOverviewEditModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -874,12 +874,12 @@ const ProjectDetailPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-200 mb-1">Deadline</label>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Event Date</label>
                 <input
                   type="date"
-                  value={overviewEditForm.timeline_deadline}
+                  value={overviewEditForm.event_date}
                   onChange={(e) =>
-                    setOverviewEditForm((prev) => ({ ...prev, timeline_deadline: e.target.value }))
+                    setOverviewEditForm((prev) => ({ ...prev, event_date: e.target.value }))
                   }
                   className="w-full px-4 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />

@@ -321,19 +321,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                   className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-1 flex items-center gap-2">
-                  Deadline
-                  {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-400 animate-spin" />}
-                </label>
-                <input
-                  name="timeline_deadline"
-                  value={projectForm.timeline_deadline}
-                  onChange={handleInputChange}
-                  type="date"
-                  className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
             </div>
 
                   {/* AI Allocation Notice for New Projects */}
@@ -530,19 +517,6 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               <input
                 name="event_date"
                 value={projectForm.event_date}
-                onChange={handleInputChange}
-                type="date"
-                className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-200 mb-1 flex items-center gap-2">
-                Deadline
-                {isAnalyzingBrief && <Loader2 className="w-3 h-3 text-purple-400 animate-spin" />}
-              </label>
-              <input
-                name="timeline_deadline"
-                value={projectForm.timeline_deadline}
                 onChange={handleInputChange}
                 type="date"
                 className="w-full px-3 py-2 bg-black/20 border border-white/20 rounded text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
