@@ -191,11 +191,11 @@ const ProfileSettings: React.FC = () => {
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="pt-2 pl-2 space-y-3 border-t border-white/10">
+                  <div className="pt-2 pl-2 pb-2 space-y-3 border-t border-white/10 overflow-visible">
                     <p className="text-sm text-gray-400">
                       Choose a style. Your avatar shows your initials.
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-3 py-3">
                       {AVATAR_PRESETS.map((preset) => {
                         const isSelected = form.avatarId === preset.id;
                         return (
