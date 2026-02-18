@@ -10,6 +10,7 @@ interface SupplierStatusTrackerProps {
   onStatusUpdate?: () => void;
   onQuoteClick?: (quote: Quote) => void;
   isVisible: boolean;
+  refreshTrigger?: number;
 }
 
 interface SupplierWithStatus {
@@ -33,7 +34,8 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   asset,
   onStatusUpdate,
   onQuoteClick,
-  isVisible
+  isVisible,
+  refreshTrigger
 }) => {
   const { showError } = useNotification();
   const [suppliersWithStatus, setSuppliersWithStatus] = useState<SupplierWithStatus[]>([]);
@@ -65,8 +67,8 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       quotes.forEach(quote => {
         if (quote.supplier) {
           const status: 'Requested' | 'Quoted' | 'Assigned' = 
-            asset.assigned_supplier_id === quote.supplier.id ? 'Assigned' :
-            (quote.status === 'Submitted' && Number(quote.cost || 0) > 0) || quote.status === 'Accepted' ? 'Quoted' :
+            quote.status === 'Accepted' || asset.assigned_supplier_id === quote.supplier.id ? 'Assigned' :
+            (quote.status === 'Submitted' && Number(quote.cost || 0) > 0) ? 'Quoted' :
             'Requested';
           
           supplierMap.set(quote.supplier.id, {
@@ -110,6 +112,13 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
     if (!isVisible) return;
     loadSupplierStatus({ background: hasLoadedOnceRef.current });
   }, [isVisible, loadSupplierStatus]);
+
+  // Refresh on demand from parent after quote updates
+  useEffect(() => {
+    if (refreshTrigger !== undefined && isVisible) {
+      loadSupplierStatus({ background: hasLoadedOnceRef.current });
+    }
+  }, [refreshTrigger, isVisible, loadSupplierStatus]);
 
   // Poll only while visible
   useEffect(() => {

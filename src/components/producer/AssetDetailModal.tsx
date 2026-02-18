@@ -606,6 +606,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     onStatusUpdate={handleStatusUpdate}
                     onQuoteClick={handleQuoteClick}
                     isVisible={activeAssetViewTab === 'status'}
+                    refreshTrigger={quotesRefreshKey}
                   />
                 </div>
               </section>
