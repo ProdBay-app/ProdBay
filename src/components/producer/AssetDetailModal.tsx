@@ -649,35 +649,6 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 )}
               </section>
 
-              {/* Future Features - Placeholders */}
-              <section className="border-t border-white/20 pt-6">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  Coming Soon
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Quotes Placeholder */}
-                  <div className="bg-white/5 rounded-lg p-5 border-2 border-dashed border-white/30 text-center">
-                    <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-white font-medium text-sm">Quotes Comparison</p>
-                    <p className="text-gray-300 text-xs mt-1">View and compare supplier quotes</p>
-                  </div>
-
-                  {/* Activity Placeholder */}
-                  <div className="bg-white/5 rounded-lg p-5 border-2 border-dashed border-white/30 text-center">
-                    <Clock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-white font-medium text-sm">Activity Log</p>
-                    <p className="text-gray-300 text-xs mt-1">Track changes and updates</p>
-                  </div>
-
-                  {/* Documents Placeholder */}
-                  <div className="bg-white/5 rounded-lg p-5 border-2 border-dashed border-white/30 text-center">
-                    <Package className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-white font-medium text-sm">Documents</p>
-                    <p className="text-gray-300 text-xs mt-1">Attach files and references</p>
-                  </div>
-                </div>
-              </section>
             </div>
 
             {/* Footer - Optional action buttons area for future use */}

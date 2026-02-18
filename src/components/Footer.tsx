@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -12,8 +13,14 @@ const Footer: React.FC = () => {
             © {currentYear} ProdBay. All rights reserved.
           </div>
           
-          {/* Legal links */}
+          {/* Footer links */}
           <div className="flex space-x-6">
+            <Link
+              to="/releases"
+              className="text-sm text-white/80 hover:text-white transition-colors drop-shadow-sm"
+            >
+              Release Notes
+            </Link>
             <a 
               href="#" 
               className="text-sm text-white/80 hover:text-white transition-colors drop-shadow-sm"

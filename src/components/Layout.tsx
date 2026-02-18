@@ -33,29 +33,34 @@ const Layout: React.FC = () => {
   const isProducerPath = currentPath.startsWith('/producer');
   const isAdminPath = currentPath.startsWith('/admin');
   const isSupplierPath = currentPath.startsWith('/supplier') || currentPath.startsWith('/quote');
+  const isReleaseNotesPath = currentPath.startsWith('/releases');
 
   const getNavLinks = () => {
     if (isClientPath) {
       return [
         { to: '/client/dashboard', label: 'Dashboard', icon: BarChart3 },
-        { to: '/client/new-project', label: 'New Project', icon: FileText }
+        { to: '/client/new-project', label: 'New Project', icon: FileText },
+        { to: '/releases', label: 'Release Notes', icon: FileText }
       ];
     }
-    if (isProducerPath) {
+    if (isProducerPath || isReleaseNotesPath) {
       return [
         { to: '/producer/dashboard', label: 'Dashboard', icon: BarChart3 },
-        { to: '/producer/suppliers', label: 'Suppliers', icon: Users }
+        { to: '/producer/suppliers', label: 'Suppliers', icon: Users },
+        { to: '/releases', label: 'Release Notes', icon: FileText }
       ];
     }
     if (isSupplierPath) {
       return [
         { to: '/supplier/quotes', label: 'My Quotes', icon: FileText },
-        { to: '/supplier/submit', label: 'Submit Quote', icon: FileText }
+        { to: '/supplier/submit', label: 'Submit Quote', icon: FileText },
+        { to: '/releases', label: 'Release Notes', icon: FileText }
       ];
     }
     if (isAdminPath) {
       return [
-        { to: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 }
+        { to: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },
+        { to: '/releases', label: 'Release Notes', icon: FileText }
       ];
     }
     return [];
@@ -63,7 +68,7 @@ const Layout: React.FC = () => {
 
   const getUserTypeLabel = () => {
     if (isClientPath) return 'Client Portal';
-    if (isProducerPath) return 'Producer Portal';
+    if (isProducerPath || isReleaseNotesPath) return 'Producer Portal';
     if (isAdminPath) return 'Admin Portal';
     if (isSupplierPath) return 'Supplier Portal';
     return 'ProdBay';
