@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Save, Camera, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotification } from '@/hooks/useNotification';
 import SettingsSection from './SettingsSection';
@@ -7,10 +7,32 @@ import SettingsSection from './SettingsSection';
 // Basic email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** 10 avatar presets: distinct colors; avatar shows user initials */
+const AVATAR_PRESETS = [
+  { id: 0, label: 'Teal', bgClass: 'bg-teal-500' },
+  { id: 1, label: 'Blue', bgClass: 'bg-blue-500' },
+  { id: 2, label: 'Violet', bgClass: 'bg-violet-500' },
+  { id: 3, label: 'Amber', bgClass: 'bg-amber-500' },
+  { id: 4, label: 'Rose', bgClass: 'bg-rose-500' },
+  { id: 5, label: 'Emerald', bgClass: 'bg-emerald-500' },
+  { id: 6, label: 'Sky', bgClass: 'bg-sky-500' },
+  { id: 7, label: 'Indigo', bgClass: 'bg-indigo-500' },
+  { id: 8, label: 'Orange', bgClass: 'bg-orange-500' },
+  { id: 9, label: 'Pink', bgClass: 'bg-pink-500' },
+] as const;
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 interface ProfileFormState {
   name: string;
   email: string;
   bio: string;
+  avatarId: number;
 }
 
 const ProfileSettings: React.FC = () => {
@@ -29,6 +51,7 @@ const ProfileSettings: React.FC = () => {
       name: fullName,
       email: user?.email ?? '',
       bio: '',
+      avatarId: 0,
     };
   }, [user]);
 
@@ -38,10 +61,9 @@ const ProfileSettings: React.FC = () => {
     setForm(getInitialState());
   }, [getInitialState]);
 
-  const handleChange = (field: keyof ProfileFormState, value: string) => {
+  const handleChange = (field: keyof ProfileFormState, value: string | number) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    // Clear field error when user edits
-    if (errors[field]) {
+    if (field in errors) {
       setErrors((prev) => {
         const next = { ...prev };
         delete next[field];
@@ -95,25 +117,41 @@ const ProfileSettings: React.FC = () => {
         description="Update your personal information and how others see you."
       >
         <div className="space-y-6">
-          {/* Avatar Upload Placeholder */}
-          <div className="flex items-start gap-6">
-            <div
-              className="flex-shrink-0 w-24 h-24 rounded-full bg-white/10 border-2 border-dashed border-white/30 flex items-center justify-center overflow-hidden cursor-pointer hover:border-teal-400/50 hover:bg-white/15 transition-all duration-200 group"
-              role="button"
-              tabIndex={0}
-              onClick={() => {}}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') e.preventDefault();
-              }}
-              aria-label="Upload avatar (placeholder)"
-            >
-              <Camera className="w-8 h-8 text-gray-400 group-hover:text-teal-400 transition-colors" />
-            </div>
-            <div className="flex-1 min-w-0 pt-2">
-              <p className="text-sm font-medium text-white">Profile photo</p>
-              <p className="text-sm text-gray-400 mt-0.5">
-                Click to upload a new avatar. JPG or PNG, max 2MB.
-              </p>
+          {/* Avatar picker: 10 presets, customised by initials */}
+          <div className="space-y-4">
+            <p className="text-sm font-medium text-white">Avatar</p>
+            <p className="text-sm text-gray-400">
+              Choose a style. Your avatar shows your initials and updates as you change your name.
+            </p>
+            <div className="flex flex-wrap items-center gap-6">
+              {/* Current avatar preview */}
+              <div
+                className={`flex-shrink-0 w-20 h-20 rounded-full ${AVATAR_PRESETS[form.avatarId].bgClass} flex items-center justify-center text-2xl font-bold text-white shadow-lg ring-2 ring-white/30`}
+                aria-hidden
+              >
+                {getInitials(form.name)}
+              </div>
+              {/* Grid of 10 options */}
+              <div className="flex flex-wrap gap-2">
+                {AVATAR_PRESETS.map((preset) => {
+                  const isSelected = form.avatarId === preset.id;
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleChange('avatarId', preset.id)}
+                      className={`flex-shrink-0 w-11 h-11 rounded-full ${preset.bgClass} flex items-center justify-center text-sm font-bold text-white transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent ${
+                        isSelected ? 'ring-2 ring-white ring-offset-2 ring-offset-transparent scale-110' : 'opacity-90 hover:opacity-100'
+                      }`}
+                      title={preset.label}
+                      aria-label={`Select ${preset.label} avatar`}
+                      aria-pressed={isSelected}
+                    >
+                      {getInitials(form.name)}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
