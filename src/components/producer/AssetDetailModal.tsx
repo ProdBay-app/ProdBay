@@ -590,21 +590,24 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   </div>
                 </div>
 
-                {activeAssetViewTab === 'quotes' ? (
+                <div className={activeAssetViewTab === 'quotes' ? 'block' : 'hidden'}>
                   <QuotesList
                     assetId={asset.id}
                     assetName={asset.asset_name}
                     onQuoteClick={handleQuoteClick}
                     onOpenRequestModal={handleOpenRequestModal}
                     refreshTrigger={quotesRefreshKey}
+                    isVisible={activeAssetViewTab === 'quotes'}
                   />
-                ) : (
+                </div>
+                <div className={activeAssetViewTab === 'status' ? 'block' : 'hidden'}>
                   <SupplierStatusTracker
                     asset={asset}
                     onStatusUpdate={handleStatusUpdate}
                     onQuoteClick={handleQuoteClick}
+                    isVisible={activeAssetViewTab === 'status'}
                   />
-                )}
+                </div>
               </section>
 
               {/* Metadata Section */}

@@ -12,6 +12,7 @@ interface QuotesListProps {
   onQuoteClick?: (quote: Quote) => void;
   onOpenRequestModal: () => void;
   refreshTrigger?: number;
+  isVisible: boolean;
 }
 
 /**
@@ -26,76 +27,108 @@ interface QuotesListProps {
  * - Loading and error states
  * - Empty state when no quotes exist
  */
-const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClick, onOpenRequestModal, refreshTrigger }) => {
+const QuotesList: React.FC<QuotesListProps> = ({
+  assetId,
+  assetName,
+  onQuoteClick,
+  onOpenRequestModal,
+  refreshTrigger,
+  isVisible
+}) => {
   const { showError } = useNotification();
   
   const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [showRejected, setShowRejected] = useState(false);
   
   // Polling refs
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const loadingRef = useRef(loading);
+  const isFetchingRef = useRef(false);
+  const hasLoadedOnceRef = useRef(false);
 
   // Fetch quotes with polling support
-  const fetchQuotes = useCallback(async () => {
-    loadingRef.current = true;
-    setLoading(true);
-    setError(null);
+  const fetchQuotes = useCallback(async (options?: { background?: boolean }) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
+    const isBackground = options?.background ?? hasLoadedOnceRef.current;
+    if (isBackground) {
+      setIsRefreshing(true);
+    } else {
+      setIsInitialLoading(true);
+      setError(null);
+    }
+
     try {
       const data = await ProducerService.getQuotesForAsset(assetId);
       setQuotes(data);
+      hasLoadedOnceRef.current = true;
+      setError(null);
     } catch (err) {
       console.error('Error fetching quotes:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load quotes';
       setError(errorMessage);
       showError(errorMessage);
     } finally {
-      loadingRef.current = false;
-      setLoading(false);
+      isFetchingRef.current = false;
+      setIsRefreshing(false);
+      setIsInitialLoading(false);
     }
   }, [assetId, showError]);
 
-  // Update loading ref when loading state changes
+  // Reset component state when asset changes
   useEffect(() => {
-    loadingRef.current = loading;
-  }, [loading]);
+    setQuotes([]);
+    setError(null);
+    hasLoadedOnceRef.current = false;
+    setIsInitialLoading(true);
+    setIsRefreshing(false);
+    isFetchingRef.current = false;
+  }, [assetId]);
 
-  // Set up polling interval for quotes (20 seconds)
+  // Fetch immediately when this panel becomes visible
   useEffect(() => {
-    // Initial load
-    fetchQuotes();
+    if (!isVisible) return;
+    fetchQuotes({ background: hasLoadedOnceRef.current });
+  }, [isVisible, fetchQuotes]);
 
-    // Set up polling interval (20 seconds)
-    intervalRef.current = setInterval(() => {
-      // Only poll if not currently loading to prevent overlapping requests
-      if (!loadingRef.current) {
-        fetchQuotes();
+  // Set up polling interval for quotes only while visible
+  useEffect(() => {
+    if (!isVisible) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
+      return;
+    }
+
+    intervalRef.current = setInterval(() => {
+      fetchQuotes({ background: true });
     }, 20000); // 20 seconds
 
-    // Cleanup: clear interval on unmount or when assetId changes
+    // Cleanup: clear interval on unmount or visibility change
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [fetchQuotes]);
+  }, [fetchQuotes, isVisible]);
 
   // Refresh on demand from parent (e.g., after accept in detail modal)
   useEffect(() => {
-    if (refreshTrigger !== undefined && !loadingRef.current) {
-      fetchQuotes();
+    if (refreshTrigger !== undefined && isVisible) {
+      fetchQuotes({ background: hasLoadedOnceRef.current });
     }
-  }, [refreshTrigger, fetchQuotes]);
+  }, [refreshTrigger, fetchQuotes, isVisible]);
 
   // Handle quote updates from comparison modal (accepts/rejects)
   const handleQuoteUpdate = () => {
     // Refresh quotes list after accept/reject actions
-    fetchQuotes();
+    fetchQuotes({ background: hasLoadedOnceRef.current });
   };
 
   const winnerQuote = quotes.find((quote) => quote.status === 'Accepted') || null;
@@ -292,7 +325,7 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
   };
 
   // Loading state
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <Loader2 className="w-10 h-10 text-purple-400 animate-spin mb-3" />
@@ -329,6 +362,9 @@ const QuotesList: React.FC<QuotesListProps> = ({ assetId, assetName, onQuoteClic
           <h3 className="text-lg font-semibold text-white">
             Quote Requests
           </h3>
+          {isRefreshing && (
+            <Loader2 className="w-4 h-4 text-purple-300 animate-spin" />
+          )}
           {quotes.length > 0 && (
             <span className="ml-2 px-2.5 py-0.5 bg-purple-500/30 text-purple-200 text-sm font-semibold rounded-full">
               {quotes.length}
