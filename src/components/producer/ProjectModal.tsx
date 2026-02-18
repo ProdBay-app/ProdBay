@@ -279,7 +279,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1 flex items-center gap-2">
                   Physical Parameters
@@ -480,7 +480,7 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-200 mb-1 flex items-center gap-2">
                 Physical Parameters
