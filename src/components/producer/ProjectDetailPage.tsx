@@ -80,6 +80,7 @@ const ProjectDetailPage: React.FC = () => {
   const [isOverviewEditModalOpen, setIsOverviewEditModalOpen] = useState(false);
   const [isOverviewSaving, setIsOverviewSaving] = useState(false);
   const [overviewEditForm, setOverviewEditForm] = useState({
+    project_name: '',
     client_name: '',
     financial_parameters: 0,
     timeline_deadline: '',
@@ -425,6 +426,7 @@ const ProjectDetailPage: React.FC = () => {
     const deadline = project.timeline_deadline ?? '';
     const deadlineForInput = deadline ? deadline.split('T')[0] : '';
     setOverviewEditForm({
+      project_name: project.project_name,
       client_name: project.client_name,
       financial_parameters: project.financial_parameters ?? 0,
       timeline_deadline: deadlineForInput,
@@ -435,10 +437,16 @@ const ProjectDetailPage: React.FC = () => {
   const handleOverviewSave = async () => {
     if (!project || !projectId) return;
 
+    const trimmedName = overviewEditForm.project_name.trim();
+    if (!trimmedName) {
+      showError('Project name is required');
+      return;
+    }
+
     setIsOverviewSaving(true);
     try {
       await ProducerService.updateProject(projectId, {
-        project_name: project.project_name,
+        project_name: trimmedName,
         client_name: overviewEditForm.client_name.trim(),
         brief_description: project.brief_description,
         physical_parameters: project.physical_parameters ?? '',
@@ -451,6 +459,7 @@ const ProjectDetailPage: React.FC = () => {
         prev
           ? {
               ...prev,
+              project_name: trimmedName,
               client_name: overviewEditForm.client_name.trim(),
               financial_parameters: overviewEditForm.financial_parameters || undefined,
               timeline_deadline: overviewEditForm.timeline_deadline.trim() || null,
@@ -552,22 +561,22 @@ const ProjectDetailPage: React.FC = () => {
         <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Overview</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={openOverviewEditModal}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                className="p-2 text-white/90 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                title="Edit"
               >
                 <Pencil className="w-4 h-4" />
-                Edit
               </button>
               <button
                 type="button"
                 onClick={() => setIsDeleteConfirmOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-200 hover:text-white bg-red-500/20 hover:bg-red-600/30 rounded-lg transition-colors"
+                className="p-2 text-red-200 hover:text-white bg-red-500/20 hover:bg-red-600/30 rounded-lg transition-colors"
+                title="Delete"
               >
                 <Trash2 className="w-4 h-4" />
-                Delete
               </button>
             </div>
           </div>
@@ -828,7 +837,7 @@ const ProjectDetailPage: React.FC = () => {
         isSubmitting={isCreatingAsset}
       />
 
-      {/* Overview Edit Modal - Client, Budget, Deadline only */}
+      {/* Overview Edit Modal - Project Name, Client, Budget, Deadline */}
       {isOverviewEditModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -850,6 +859,18 @@ const ProjectDetailPage: React.FC = () => {
               </button>
             </div>
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Project Name</label>
+                <input
+                  type="text"
+                  value={overviewEditForm.project_name}
+                  onChange={(e) =>
+                    setOverviewEditForm((prev) => ({ ...prev, project_name: e.target.value }))
+                  }
+                  className="w-full px-4 py-2 bg-black/20 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Project name"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-200 mb-1">Client</label>
                 <input
