@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, FileText, Clock, Package, Hash, Tag, Check, Loader2, Plus } from 'lucide-react';
+import { X, FileText, Clock, Package, Hash, Tag, Check, Loader2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
@@ -36,6 +36,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   const [activeQuote, setActiveQuote] = useState<Quote | null>(null);
   const [quotesRefreshKey, setQuotesRefreshKey] = useState(0);
   const [activeAssetViewTab, setActiveAssetViewTab] = useState<'quotes' | 'status'>('quotes');
+  const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [tagSearchTerm, setTagSearchTerm] = useState('');
   
@@ -112,6 +113,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
       setSaveStatus('idle');
       isInitialMount.current = true;
       pendingSaveAssetIdRef.current = null; // Reset pending save tracking
+      setIsMetadataExpanded(false); // Always default metadata to collapsed on asset change
     }
   }, [asset?.id, onAssetUpdate]); // Only sync when asset ID changes (switching assets), not on saves
 
@@ -611,26 +613,40 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
 
               {/* Metadata Section */}
               <section>
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-purple-300" />
-                  Metadata
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-black/20 rounded-lg p-4 border border-white/20">
-                    <label className="block text-sm font-semibold text-gray-200 mb-1">
-                      Created
-                    </label>
-                    <p className="text-white">{formattedCreatedAt}</p>
-                  </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMetadataExpanded(prev => !prev)}
+                  className="w-full flex items-center justify-between text-left mb-2 px-1 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                  aria-expanded={isMetadataExpanded}
+                >
+                  <span className="text-lg font-semibold text-white flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-purple-300" />
+                    Metadata
+                  </span>
+                  {isMetadataExpanded ? (
+                    <ChevronUp className="w-5 h-5 text-gray-300" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-300" />
+                  )}
+                </button>
 
-                  <div className="bg-black/20 rounded-lg p-4 border border-white/20">
-                    <label className="block text-sm font-semibold text-gray-200 mb-1">
-                      Last Updated
-                    </label>
-                    <p className="text-white">{formattedUpdatedAt}</p>
+                {isMetadataExpanded && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div className="bg-black/20 rounded-lg p-4 border border-white/20">
+                      <label className="block text-sm font-semibold text-gray-200 mb-1">
+                        Created
+                      </label>
+                      <p className="text-white">{formattedCreatedAt}</p>
+                    </div>
+
+                    <div className="bg-black/20 rounded-lg p-4 border border-white/20">
+                      <label className="block text-sm font-semibold text-gray-200 mb-1">
+                        Last Updated
+                      </label>
+                      <p className="text-white">{formattedUpdatedAt}</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </section>
 
               {/* Future Features - Placeholders */}
