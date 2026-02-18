@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, FileText, Clock, Package, Hash, Tag, Check, Loader2, Plus } from 'lucide-react';
+import { X, FileText, Clock, Package, Hash, Tag, Check, Loader2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
@@ -35,6 +35,8 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [activeQuote, setActiveQuote] = useState<Quote | null>(null);
   const [quotesRefreshKey, setQuotesRefreshKey] = useState(0);
+  const [activeAssetViewTab, setActiveAssetViewTab] = useState<'quotes' | 'status'>('quotes');
+  const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [tagSearchTerm, setTagSearchTerm] = useState('');
   
@@ -111,6 +113,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
       setSaveStatus('idle');
       isInitialMount.current = true;
       pendingSaveAssetIdRef.current = null; // Reset pending save tracking
+      setIsMetadataExpanded(false); // Always default metadata to collapsed on asset change
     }
   }, [asset?.id, onAssetUpdate]); // Only sync when asset ID changes (switching assets), not on saves
 
@@ -408,10 +411,10 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   Overview
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                   {/* Asset Name */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-200 mb-2">
+                  <div className="lg:col-span-8">
+                    <label className="block text-sm font-semibold text-gray-200 mb-1.5">
                       Asset Name
                     </label>
                     <input
@@ -424,24 +427,9 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     />
                   </div>
 
-                  {/* Specifications */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-200 mb-2">
-                      Specifications
-                    </label>
-                    <textarea
-                      value={editingData.specifications}
-                      onChange={(e) => handleFieldChange('specifications', e.target.value)}
-                      onBlur={handleBlur}
-                      rows={4}
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-y"
-                      placeholder="Enter asset specifications"
-                    />
-                  </div>
-
                   {/* Quantity */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-200 mb-2">
+                  <div className="lg:col-span-4">
+                    <label className="block text-sm font-semibold text-gray-200 mb-1.5">
                       <Hash className="w-4 h-4 inline mr-1.5 text-purple-300" />
                       Quantity
                     </label>
@@ -456,19 +444,32 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     />
                   </div>
 
-                  {/* Status - Interactive Dropdown */}
+                  {/* Specifications */}
+                  <div className="lg:col-span-12">
+                    <label className="block text-sm font-semibold text-gray-200 mb-1.5">
+                      Specifications
+                    </label>
+                    <textarea
+                      value={editingData.specifications}
+                      onChange={(e) => handleFieldChange('specifications', e.target.value)}
+                      onBlur={handleBlur}
+                      rows={3}
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-y"
+                      placeholder="Enter asset specifications"
+                    />
+                  </div>
                 </div>
 
                 {/* Tags Section */}
-                <div className="mt-6">
-                  <label className="block text-sm font-semibold text-gray-200 mb-3">
+                <div className="mt-4 bg-black/10 border border-white/10 rounded-lg p-4">
+                  <label className="block text-sm font-semibold text-gray-200 mb-2.5">
                     <Tag className="w-4 h-4 inline mr-1.5 text-purple-300" />
                     Tags
                   </label>
                   
                   {/* Existing Tags with Remove Buttons */}
                   {editingData.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-3">
+                    <div className="flex flex-wrap gap-2 mb-2.5">
                       {editingData.tags.map(tagName => (
                         <span
                           key={tagName}
@@ -550,48 +551,102 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 </div>
               </section>
 
-              {/* Supplier Status Tracking Section */}
+              {/* Supplier Status / Quote Requests - Tabbed Interface */}
               <section>
-                <SupplierStatusTracker 
-                  asset={asset}
-                  onStatusUpdate={handleStatusUpdate}
-                  onQuoteClick={handleQuoteClick}
-                />
-              </section>
+                <div className="mb-4">
+                  <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-sm p-1">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveAssetViewTab('quotes')}
+                        aria-selected={activeAssetViewTab === 'quotes'}
+                        className={`
+                          flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
+                          ${
+                            activeAssetViewTab === 'quotes'
+                              ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
+                              : 'text-gray-300 hover:text-white hover:bg-white/5'
+                          }
+                        `}
+                      >
+                        Quote Requests
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveAssetViewTab('status')}
+                        aria-selected={activeAssetViewTab === 'status'}
+                        className={`
+                          flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
+                          ${
+                            activeAssetViewTab === 'status'
+                              ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
+                              : 'text-gray-300 hover:text-white hover:bg-white/5'
+                          }
+                        `}
+                      >
+                        Supplier Status
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-        {/* Quotes Section */}
-        <section>
-          <QuotesList 
-            assetId={asset.id} 
-            assetName={asset.asset_name}
-            onQuoteClick={handleQuoteClick}
-            onOpenRequestModal={handleOpenRequestModal}
-            refreshTrigger={quotesRefreshKey}
-          />
-        </section>
+                <div className={activeAssetViewTab === 'quotes' ? 'block' : 'hidden'}>
+                  <QuotesList
+                    assetId={asset.id}
+                    assetName={asset.asset_name}
+                    onQuoteClick={handleQuoteClick}
+                    onOpenRequestModal={handleOpenRequestModal}
+                    refreshTrigger={quotesRefreshKey}
+                    isVisible={activeAssetViewTab === 'quotes'}
+                  />
+                </div>
+                <div className={activeAssetViewTab === 'status' ? 'block' : 'hidden'}>
+                  <SupplierStatusTracker
+                    asset={asset}
+                    onStatusUpdate={handleStatusUpdate}
+                    onQuoteClick={handleQuoteClick}
+                    isVisible={activeAssetViewTab === 'status'}
+                    refreshTrigger={quotesRefreshKey}
+                  />
+                </div>
+              </section>
 
               {/* Metadata Section */}
               <section>
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-purple-300" />
-                  Metadata
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-black/20 rounded-lg p-4 border border-white/20">
-                    <label className="block text-sm font-semibold text-gray-200 mb-1">
-                      Created
-                    </label>
-                    <p className="text-white">{formattedCreatedAt}</p>
-                  </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMetadataExpanded(prev => !prev)}
+                  className="w-full flex items-center justify-between text-left mb-2 px-1 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                  aria-expanded={isMetadataExpanded}
+                >
+                  <span className="text-lg font-semibold text-white flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-purple-300" />
+                    Metadata
+                  </span>
+                  {isMetadataExpanded ? (
+                    <ChevronUp className="w-5 h-5 text-gray-300" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-300" />
+                  )}
+                </button>
 
-                  <div className="bg-black/20 rounded-lg p-4 border border-white/20">
-                    <label className="block text-sm font-semibold text-gray-200 mb-1">
-                      Last Updated
-                    </label>
-                    <p className="text-white">{formattedUpdatedAt}</p>
+                {isMetadataExpanded && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div className="bg-black/20 rounded-lg p-4 border border-white/20">
+                      <label className="block text-sm font-semibold text-gray-200 mb-1">
+                        Created
+                      </label>
+                      <p className="text-white">{formattedCreatedAt}</p>
+                    </div>
+
+                    <div className="bg-black/20 rounded-lg p-4 border border-white/20">
+                      <label className="block text-sm font-semibold text-gray-200 mb-1">
+                        Last Updated
+                      </label>
+                      <p className="text-white">{formattedUpdatedAt}</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </section>
 
               {/* Future Features - Placeholders */}

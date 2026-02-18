@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Building2, Mail, Clock, CheckCircle, AlertCircle, Radio } from 'lucide-react';
+import { Building2, Mail, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import type { Asset, Quote, Supplier } from '@/lib/supabase';
@@ -9,6 +9,8 @@ interface SupplierStatusTrackerProps {
   asset: Asset;
   onStatusUpdate?: () => void;
   onQuoteClick?: (quote: Quote) => void;
+  isVisible: boolean;
+  refreshTrigger?: number;
 }
 
 interface SupplierWithStatus {
@@ -31,17 +33,29 @@ interface SupplierWithStatus {
 const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
   asset,
   onStatusUpdate,
-  onQuoteClick
+  onQuoteClick,
+  isVisible,
+  refreshTrigger
 }) => {
   const { showError } = useNotification();
   const [suppliersWithStatus, setSuppliersWithStatus] = useState<SupplierWithStatus[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const loadingRef = useRef(loading);
+  const isFetchingRef = useRef(false);
+  const hasLoadedOnceRef = useRef(false);
 
-  const loadSupplierStatus = useCallback(async () => {
-    loadingRef.current = true;
-    setLoading(true);
+  const loadSupplierStatus = useCallback(async (options?: { background?: boolean }) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
+    const isBackground = options?.background ?? hasLoadedOnceRef.current;
+    if (isBackground) {
+      setIsRefreshing(true);
+    } else {
+      setIsInitialLoading(true);
+    }
+
     try {
       // Get all quotes for this asset
       const quotes = await ProducerService.getQuotesForAsset(asset.id);
@@ -53,8 +67,8 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       quotes.forEach(quote => {
         if (quote.supplier) {
           const status: 'Requested' | 'Quoted' | 'Assigned' = 
-            asset.assigned_supplier_id === quote.supplier.id ? 'Assigned' :
-            (quote.status === 'Submitted' && Number(quote.cost || 0) > 0) || quote.status === 'Accepted' ? 'Quoted' :
+            quote.status === 'Accepted' || asset.assigned_supplier_id === quote.supplier.id ? 'Assigned' :
+            (quote.status === 'Submitted' && Number(quote.cost || 0) > 0) ? 'Quoted' :
             'Requested';
           
           supplierMap.set(quote.supplier.id, {
@@ -72,44 +86,62 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
       );
 
       setSuppliersWithStatus(suppliers);
+      hasLoadedOnceRef.current = true;
+      onStatusUpdate?.();
     } catch (err) {
       console.error('Error loading supplier status:', err);
       showError('Failed to load supplier status');
     } finally {
-      loadingRef.current = false;
-      setLoading(false);
+      isFetchingRef.current = false;
+      setIsRefreshing(false);
+      setIsInitialLoading(false);
     }
-  }, [asset.id, asset.assigned_supplier_id, showError]);
+  }, [asset.id, asset.assigned_supplier_id, showError, onStatusUpdate]);
 
-  // Load suppliers and their status with auto-refresh polling
+  // Reset state when the asset changes
   useEffect(() => {
-    // Update loading ref when loading state changes
-    loadingRef.current = loading;
-  }, [loading]);
+    setSuppliersWithStatus([]);
+    hasLoadedOnceRef.current = false;
+    setIsInitialLoading(true);
+    setIsRefreshing(false);
+    isFetchingRef.current = false;
+  }, [asset.id]);
 
-  // Set up polling interval (runs independently of loading state)
+  // Fetch immediately when this panel becomes visible
   useEffect(() => {
-    // Initial load
-    loadSupplierStatus();
+    if (!isVisible) return;
+    loadSupplierStatus({ background: hasLoadedOnceRef.current });
+  }, [isVisible, loadSupplierStatus]);
 
-    // Set up polling interval (20 seconds)
-    // Note: Using loadingRef to check current loading state without causing
-    // interval restarts when loading changes (creates consistent 20s interval)
-    intervalRef.current = setInterval(() => {
-      // Only poll if not currently loading to prevent overlapping requests
-      if (!loadingRef.current) {
-        loadSupplierStatus();
+  // Refresh on demand from parent after quote updates
+  useEffect(() => {
+    if (refreshTrigger !== undefined && isVisible) {
+      loadSupplierStatus({ background: hasLoadedOnceRef.current });
+    }
+  }, [refreshTrigger, isVisible, loadSupplierStatus]);
+
+  // Poll only while visible
+  useEffect(() => {
+    if (!isVisible) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
+      return;
+    }
+
+    intervalRef.current = setInterval(() => {
+      loadSupplierStatus({ background: true });
     }, 20000); // 20 seconds
 
-    // Cleanup: clear interval on unmount or when asset changes
+    // Cleanup: clear interval on unmount or visibility change
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [loadSupplierStatus]); // Only restart when asset changes (via loadSupplierStatus dependency)
+  }, [isVisible, loadSupplierStatus]);
 
   // Group suppliers by status
   const suppliersByStatus = useMemo(() => {
@@ -160,17 +192,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
     }
   };
 
-  // Format date for display
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  if (loading) {
+  if (isInitialLoading) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
@@ -186,16 +208,10 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
         <div className="flex items-center gap-2">
           <Building2 className="w-5 h-5 text-purple-300" />
           <h3 className="text-lg font-semibold text-white">Supplier Status</h3>
+          {isRefreshing && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-300"></div>}
           <span className="px-2 py-1 bg-purple-500/30 text-purple-200 text-sm font-semibold rounded-full">
             {suppliersWithStatus.length}
           </span>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Auto-refresh indicator */}
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
-            <Radio className="w-3 h-3 text-green-400" />
-            <span>Auto-refresh active</span>
-          </div>
         </div>
       </div>
 
@@ -233,7 +249,7 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                     <p className="text-sm">No suppliers in this status</p>
                   </div>
                 ) : (
-                  suppliers.map(({ supplier, quote, lastActivity }) => {
+                  suppliers.map(({ supplier, quote }) => {
                     const supplierEmail = getSupplierPrimaryEmail(supplier);
 
                     return (
@@ -260,9 +276,6 @@ const SupplierStatusTracker: React.FC<SupplierStatusTrackerProps> = ({
                                 <span>{supplierEmail}</span>
                               </div>
                             )}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {formatDate(lastActivity)}
                           </div>
                         </div>
                       </div>
