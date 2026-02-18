@@ -38,24 +38,28 @@ const Layout: React.FC = () => {
     if (isClientPath) {
       return [
         { to: '/client/dashboard', label: 'Dashboard', icon: BarChart3 },
-        { to: '/client/new-project', label: 'New Project', icon: FileText }
+        { to: '/client/new-project', label: 'New Project', icon: FileText },
+        { to: '/releases', label: 'Release Notes', icon: FileText }
       ];
     }
     if (isProducerPath) {
       return [
         { to: '/producer/dashboard', label: 'Dashboard', icon: BarChart3 },
-        { to: '/producer/suppliers', label: 'Suppliers', icon: Users }
+        { to: '/producer/suppliers', label: 'Suppliers', icon: Users },
+        { to: '/releases', label: 'Release Notes', icon: FileText }
       ];
     }
     if (isSupplierPath) {
       return [
         { to: '/supplier/quotes', label: 'My Quotes', icon: FileText },
-        { to: '/supplier/submit', label: 'Submit Quote', icon: FileText }
+        { to: '/supplier/submit', label: 'Submit Quote', icon: FileText },
+        { to: '/releases', label: 'Release Notes', icon: FileText }
       ];
     }
     if (isAdminPath) {
       return [
-        { to: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 }
+        { to: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },
+        { to: '/releases', label: 'Release Notes', icon: FileText }
       ];
     }
     return [];

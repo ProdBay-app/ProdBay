@@ -26,6 +26,7 @@ const AdminDashboard = lazy(() => import('@/components/admin/AdminDashboard'));
 const QuoteSubmission = lazy(() => import('@/components/supplier/QuoteSubmission'));
 const SupplierDashboard = lazy(() => import('@/components/supplier/SupplierDashboardContainer'));
 const SupplierSubmitQuote = lazy(() => import('@/components/supplier/SupplierSubmitQuote'));
+const ReleaseNotesPage = lazy(() => import('@/pages/releases/ReleaseNotesPage'));
 
 // Portal routes
 const GuestLayout = lazy(() => import('@/layouts/GuestLayout'));
@@ -70,6 +71,11 @@ function App() {
           
           {/* Sign up page - outside of layout */}
           <Route path="/signup" element={<SignUpPage />} />
+
+          {/* Release notes page */}
+          <Route path="/releases" element={<Layout />}>
+            <Route index element={<ReleaseNotesPage />} />
+          </Route>
           
           {/* Client routes */}
           <Route path="/client" element={<Layout />}>
