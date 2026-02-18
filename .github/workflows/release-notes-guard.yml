@@ -1,0 +1,83 @@
+name: Release Notes Guard
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+      - ready_for_review
+
+jobs:
+  enforce-release-notes:
+    name: Enforce release notes updates
+    if: ${{ github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate release notes update
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          RELEASE_NOTES_FILE="src/data/releaseNotes.ts"
+          RELEASE_NOTES_PAGE_FILE="src/pages/releases/ReleaseNotesPage.tsx"
+
+          echo "Comparing changes from $BASE_SHA to $HEAD_SHA"
+
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+
+          if [[ -z "$CHANGED_FILES" ]]; then
+            echo "No changed files detected. Skipping."
+            exit 0
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          PR_BODY="$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
+          if echo "$PR_BODY" | grep -Eiq '\[[xX]\][[:space:]]*Release notes not required'; then
+            echo "PR marked as 'Release notes not required'. Skipping release notes guard."
+            exit 0
+          fi
+
+          PRODUCT_CHANGES=false
+          RELEASE_NOTES_UPDATED=false
+
+          while IFS= read -r FILE; do
+            [[ -z "$FILE" ]] && continue
+
+            if [[ "$FILE" == "$RELEASE_NOTES_FILE" ]]; then
+              RELEASE_NOTES_UPDATED=true
+            fi
+
+            # Consider app and backend code paths as product-impacting.
+            if [[ "$FILE" =~ ^src/ || "$FILE" =~ ^railway-backend/ ]]; then
+              # Ignore docs, GitHub meta, and release notes files themselves.
+              if [[ "$FILE" =~ ^\.github/ || "$FILE" =~ \.md$ || "$FILE" == "$RELEASE_NOTES_FILE" || "$FILE" == "$RELEASE_NOTES_PAGE_FILE" ]]; then
+                continue
+              fi
+              PRODUCT_CHANGES=true
+            fi
+          done <<< "$CHANGED_FILES"
+
+          if [[ "$PRODUCT_CHANGES" == "true" && "$RELEASE_NOTES_UPDATED" != "true" ]]; then
+            echo "::error::Product-impacting changes were detected, but $RELEASE_NOTES_FILE was not updated."
+            echo "Add a new release note entry or explicitly mark 'Release notes not required' in the PR template with a reason."
+            exit 1
+          fi
+
+          echo "Release notes guard passed."

@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { RELEASE_NOTES } from '@/data/releaseNotes';
+
+const MAX_RELEASES_TO_SHOW = 20;
 
 const formatReleaseDate = (isoDate: string) =>
   new Date(`${isoDate}T00:00:00`).toLocaleDateString('en-US', {
@@ -14,6 +16,14 @@ const upcomingItems = [
     description: 'A high-level roadmap to preview upcoming platform milestones.'
   },
   {
+    title: 'Detailed Quote Comparisons',
+    description: 'Richer side-by-side supplier quote analysis with clearer decision support.'
+  },
+  {
+    title: 'Activity Log',
+    description: 'A chronological view of platform and workflow events for better traceability.'
+  },
+  {
     title: 'Release Filtering',
     description: 'Filter updates by area such as projects, assets, quotes, and suppliers.'
   },
@@ -24,7 +34,18 @@ const upcomingItems = [
 ];
 
 const ReleaseNotesPage: React.FC = () => {
-  const latestFiveReleases = RELEASE_NOTES.slice(0, 5);
+  const [showFullHistory, setShowFullHistory] = useState(false);
+
+  const sortedReleases = useMemo(
+    () => [...RELEASE_NOTES].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    []
+  );
+
+  const visibleReleases = showFullHistory
+    ? sortedReleases
+    : sortedReleases.slice(0, MAX_RELEASES_TO_SHOW);
+
+  const hasMoreThanDefault = sortedReleases.length > MAX_RELEASES_TO_SHOW;
 
   return (
     <div className="space-y-8">
@@ -37,10 +58,21 @@ const ReleaseNotesPage: React.FC = () => {
       </section>
 
       <section className="rounded-xl border border-white/20 bg-black/20 backdrop-blur-md p-6 sm:p-8">
-        <h2 className="text-xl sm:text-2xl font-semibold text-white mb-6">Last 5 Releases</h2>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-xl sm:text-2xl font-semibold text-white">Latest Releases</h2>
+          {hasMoreThanDefault && (
+            <button
+              type="button"
+              onClick={() => setShowFullHistory((prev) => !prev)}
+              className="self-start rounded-md border border-white/25 bg-white/10 px-3 py-1.5 text-xs sm:text-sm font-medium text-white hover:bg-white/20 transition-colors"
+            >
+              {showFullHistory ? `Show latest ${MAX_RELEASES_TO_SHOW}` : 'Show full history'}
+            </button>
+          )}
+        </div>
 
         <div className="space-y-5">
-          {latestFiveReleases.map((release) => (
+          {visibleReleases.map((release) => (
             <article
               key={`${release.version}-${release.date}`}
               className="rounded-lg border border-white/20 bg-white/5 p-5"

@@ -33,6 +33,7 @@ const Layout: React.FC = () => {
   const isProducerPath = currentPath.startsWith('/producer');
   const isAdminPath = currentPath.startsWith('/admin');
   const isSupplierPath = currentPath.startsWith('/supplier') || currentPath.startsWith('/quote');
+  const isReleaseNotesPath = currentPath.startsWith('/releases');
 
   const getNavLinks = () => {
     if (isClientPath) {
@@ -42,7 +43,7 @@ const Layout: React.FC = () => {
         { to: '/releases', label: 'Release Notes', icon: FileText }
       ];
     }
-    if (isProducerPath) {
+    if (isProducerPath || isReleaseNotesPath) {
       return [
         { to: '/producer/dashboard', label: 'Dashboard', icon: BarChart3 },
         { to: '/producer/suppliers', label: 'Suppliers', icon: Users },
@@ -67,7 +68,7 @@ const Layout: React.FC = () => {
 
   const getUserTypeLabel = () => {
     if (isClientPath) return 'Client Portal';
-    if (isProducerPath) return 'Producer Portal';
+    if (isProducerPath || isReleaseNotesPath) return 'Producer Portal';
     if (isAdminPath) return 'Admin Portal';
     if (isSupplierPath) return 'Supplier Portal';
     return 'ProdBay';
