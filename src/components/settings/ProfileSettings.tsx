@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Save, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Save, Loader2, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotification } from '@/hooks/useNotification';
+import { supabase } from '@/lib/supabase';
 import SettingsSection from './SettingsSection';
 
 // Basic email validation regex
@@ -39,6 +41,7 @@ const ProfileSettings: React.FC = () => {
   const { user } = useAuth();
   const { showSuccess, showError } = useNotification();
   const [isSaving, setIsSaving] = useState(false);
+  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileFormState, string>>>({});
 
   const getInitialState = useCallback((): ProfileFormState => {
@@ -46,12 +49,17 @@ const ProfileSettings: React.FC = () => {
     const firstName = typeof metadata.first_name === 'string' ? metadata.first_name : '';
     const lastName = typeof metadata.last_name === 'string' ? metadata.last_name : '';
     const fullName = [firstName, lastName].filter(Boolean).join(' ') || '';
+    const bio = typeof metadata.bio === 'string' ? metadata.bio : '';
+    const avatarId =
+      typeof metadata.avatar_id === 'number' && metadata.avatar_id >= 0 && metadata.avatar_id <= 9
+        ? metadata.avatar_id
+        : 0;
 
     return {
       name: fullName,
       email: user?.email ?? '',
-      bio: '',
-      avatarId: 0,
+      bio,
+      avatarId,
     };
   }, [user]);
 
@@ -89,19 +97,47 @@ const ProfileSettings: React.FC = () => {
     return Object.keys(next).length === 0;
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) return;
 
+    if (!user) {
+      showError('You must be logged in to update your profile.');
+      return;
+    }
+
     setIsSaving(true);
     setErrors({});
 
-    // Mock save - simulate API delay
-    setTimeout(() => {
+    try {
+      // Split name into first and last
+      const parts = form.name.trim().split(/\s+/).filter(Boolean);
+      const firstName = parts[0] ?? '';
+      const lastName = parts.slice(1).join(' ');
+
+      const { error } = await supabase.auth.updateUser({
+        email: form.email.trim(),
+        data: {
+          ...(user.user_metadata ?? {}),
+          first_name: firstName,
+          last_name: lastName,
+          bio: form.bio.trim(),
+          avatar_id: form.avatarId,
+        },
+      });
+
+      if (error) throw error;
+
       showSuccess('Settings saved');
+    } catch (err) {
+      console.error('[ProfileSettings] Failed to update profile:', err);
+      showError(
+        err instanceof Error ? err.message : 'Failed to update profile. Please try again.',
+      );
+    } finally {
       setIsSaving(false);
-    }, 600);
+    }
   };
 
   const inputBase =
@@ -117,42 +153,74 @@ const ProfileSettings: React.FC = () => {
         description="Update your personal information and how others see you."
       >
         <div className="space-y-6">
-          {/* Avatar picker: 10 presets, customised by initials */}
-          <div className="space-y-4">
+          {/* Avatar: click to open change section */}
+          <div className="space-y-3">
             <p className="text-sm font-medium text-white">Avatar</p>
-            <p className="text-sm text-gray-400">
-              Choose a style. Your avatar shows your initials and updates as you change your name.
-            </p>
-            <div className="flex flex-wrap items-center gap-6">
-              {/* Current avatar preview */}
+            <button
+              type="button"
+              onClick={() => setIsAvatarPickerOpen((prev) => !prev)}
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-transparent"
+              aria-expanded={isAvatarPickerOpen}
+              aria-controls="avatar-picker-section"
+              id="avatar-trigger"
+            >
               <div
-                className={`flex-shrink-0 w-20 h-20 rounded-full ${AVATAR_PRESETS[form.avatarId].bgClass} flex items-center justify-center text-2xl font-bold text-white shadow-lg ring-2 ring-white/30`}
-                aria-hidden
+                className={`flex-shrink-0 w-16 h-16 rounded-full ${AVATAR_PRESETS[form.avatarId].bgClass} flex items-center justify-center text-xl font-bold text-white shadow-lg ring-2 ring-white/30`}
               >
                 {getInitials(form.name)}
               </div>
-              {/* Grid of 10 options */}
-              <div className="flex flex-wrap gap-2">
-                {AVATAR_PRESETS.map((preset) => {
-                  const isSelected = form.avatarId === preset.id;
-                  return (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => handleChange('avatarId', preset.id)}
-                      className={`flex-shrink-0 w-11 h-11 rounded-full ${preset.bgClass} flex items-center justify-center text-sm font-bold text-white transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent ${
-                        isSelected ? 'ring-2 ring-white ring-offset-2 ring-offset-transparent scale-110' : 'opacity-90 hover:opacity-100'
-                      }`}
-                      title={preset.label}
-                      aria-label={`Select ${preset.label} avatar`}
-                      aria-pressed={isSelected}
-                    >
-                      {getInitials(form.name)}
-                    </button>
-                  );
-                })}
+              <div className="flex-1 min-w-0">
+                <span className="text-sm text-gray-300">Click to change</span>
               </div>
-            </div>
+              <ChevronDown
+                className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${
+                  isAvatarPickerOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+
+            <AnimatePresence>
+              {isAvatarPickerOpen && (
+                <motion.div
+                  id="avatar-picker-section"
+                  role="region"
+                  aria-labelledby="avatar-trigger"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-2 pl-2 space-y-3 border-t border-white/10">
+                    <p className="text-sm text-gray-400">
+                      Choose a style. Your avatar shows your initials.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {AVATAR_PRESETS.map((preset) => {
+                        const isSelected = form.avatarId === preset.id;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => handleChange('avatarId', preset.id)}
+                            className={`flex-shrink-0 w-11 h-11 rounded-full ${preset.bgClass} flex items-center justify-center text-sm font-bold text-white transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent ${
+                              isSelected
+                                ? 'ring-2 ring-white ring-offset-2 ring-offset-transparent scale-110'
+                                : 'opacity-90 hover:opacity-100'
+                            }`}
+                            title={preset.label}
+                            aria-label={`Select ${preset.label} avatar`}
+                            aria-pressed={isSelected}
+                          >
+                            {getInitials(form.name)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Name */}
