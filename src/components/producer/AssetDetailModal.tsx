@@ -35,6 +35,7 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [activeQuote, setActiveQuote] = useState<Quote | null>(null);
   const [quotesRefreshKey, setQuotesRefreshKey] = useState(0);
+  const [activeAssetViewTab, setActiveAssetViewTab] = useState<'quotes' | 'status'>('quotes');
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [tagSearchTerm, setTagSearchTerm] = useState('');
   
@@ -550,25 +551,61 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                 </div>
               </section>
 
-              {/* Supplier Status Tracking Section */}
+              {/* Supplier Status / Quote Requests - Tabbed Interface */}
               <section>
-                <SupplierStatusTracker 
-                  asset={asset}
-                  onStatusUpdate={handleStatusUpdate}
-                  onQuoteClick={handleQuoteClick}
-                />
-              </section>
+                <div className="mb-4">
+                  <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-sm p-1">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveAssetViewTab('quotes')}
+                        aria-selected={activeAssetViewTab === 'quotes'}
+                        className={`
+                          flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
+                          ${
+                            activeAssetViewTab === 'quotes'
+                              ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
+                              : 'text-gray-300 hover:text-white hover:bg-white/5'
+                          }
+                        `}
+                      >
+                        Quote Requests
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveAssetViewTab('status')}
+                        aria-selected={activeAssetViewTab === 'status'}
+                        className={`
+                          flex-1 px-6 py-3 rounded-md font-semibold text-sm transition-all duration-200
+                          ${
+                            activeAssetViewTab === 'status'
+                              ? 'bg-teal-600/30 text-white border border-teal-400/50 shadow-sm'
+                              : 'text-gray-300 hover:text-white hover:bg-white/5'
+                          }
+                        `}
+                      >
+                        Supplier Status
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-        {/* Quotes Section */}
-        <section>
-          <QuotesList 
-            assetId={asset.id} 
-            assetName={asset.asset_name}
-            onQuoteClick={handleQuoteClick}
-            onOpenRequestModal={handleOpenRequestModal}
-            refreshTrigger={quotesRefreshKey}
-          />
-        </section>
+                {activeAssetViewTab === 'quotes' ? (
+                  <QuotesList
+                    assetId={asset.id}
+                    assetName={asset.asset_name}
+                    onQuoteClick={handleQuoteClick}
+                    onOpenRequestModal={handleOpenRequestModal}
+                    refreshTrigger={quotesRefreshKey}
+                  />
+                ) : (
+                  <SupplierStatusTracker
+                    asset={asset}
+                    onStatusUpdate={handleStatusUpdate}
+                    onQuoteClick={handleQuoteClick}
+                  />
+                )}
+              </section>
 
               {/* Metadata Section */}
               <section>
