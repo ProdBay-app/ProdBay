@@ -409,10 +409,10 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   Overview
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                   {/* Asset Name */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-200 mb-2">
+                  <div className="lg:col-span-8">
+                    <label className="block text-sm font-semibold text-gray-200 mb-1.5">
                       Asset Name
                     </label>
                     <input
@@ -425,24 +425,9 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     />
                   </div>
 
-                  {/* Specifications */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-200 mb-2">
-                      Specifications
-                    </label>
-                    <textarea
-                      value={editingData.specifications}
-                      onChange={(e) => handleFieldChange('specifications', e.target.value)}
-                      onBlur={handleBlur}
-                      rows={4}
-                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-y"
-                      placeholder="Enter asset specifications"
-                    />
-                  </div>
-
                   {/* Quantity */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-200 mb-2">
+                  <div className="lg:col-span-4">
+                    <label className="block text-sm font-semibold text-gray-200 mb-1.5">
                       <Hash className="w-4 h-4 inline mr-1.5 text-purple-300" />
                       Quantity
                     </label>
@@ -457,19 +442,32 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     />
                   </div>
 
-                  {/* Status - Interactive Dropdown */}
+                  {/* Specifications */}
+                  <div className="lg:col-span-12">
+                    <label className="block text-sm font-semibold text-gray-200 mb-1.5">
+                      Specifications
+                    </label>
+                    <textarea
+                      value={editingData.specifications}
+                      onChange={(e) => handleFieldChange('specifications', e.target.value)}
+                      onBlur={handleBlur}
+                      rows={3}
+                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-y"
+                      placeholder="Enter asset specifications"
+                    />
+                  </div>
                 </div>
 
                 {/* Tags Section */}
-                <div className="mt-6">
-                  <label className="block text-sm font-semibold text-gray-200 mb-3">
+                <div className="mt-4 bg-black/10 border border-white/10 rounded-lg p-4">
+                  <label className="block text-sm font-semibold text-gray-200 mb-2.5">
                     <Tag className="w-4 h-4 inline mr-1.5 text-purple-300" />
                     Tags
                   </label>
                   
                   {/* Existing Tags with Remove Buttons */}
                   {editingData.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-3">
+                    <div className="flex flex-wrap gap-2 mb-2.5">
                       {editingData.tags.map(tagName => (
                         <span
                           key={tagName}
