@@ -7,6 +7,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    date: '2026-02-19',
+    version: 'v0.8.7',
+    title: 'Event date extraction and project modal polish',
+    bulletPoints: [
+      'Added event date extraction from briefs via BriefHighlightService; event date surfaced in ActiveProjectsGrid, ProjectDetailPage, and ProjectModal.',
+      'Adjusted ProjectModal grid layout for improved spacing.'
+    ]
+  },
+  {
     date: '2026-02-18',
     version: 'v0.8.6',
     title: 'Settings page and project dashboard refinements',

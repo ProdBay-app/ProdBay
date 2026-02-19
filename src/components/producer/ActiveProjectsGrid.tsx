@@ -410,7 +410,7 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
    * 
    * Flow:
    * 1. Sends brief text to Railway AI endpoint
-   * 2. AI analyzes and extracts: project name, client name, budget, deadline, physical parameters
+   * 2. AI analyzes and extracts: project name, client name, budget, event date, physical parameters
    * 3. Auto-populates form fields with extracted data
    * 4. Shows success/error notifications
    */
@@ -470,8 +470,8 @@ const ActiveProjectsGrid: React.FC<ActiveProjectsGridProps> = ({
         populatedCount++;
       }
       
-      if (highlights.deadline) {
-        updateProjectForm('timeline_deadline', highlights.deadline);
+      if (highlights.eventDate) {
+        updateProjectForm('event_date', highlights.eventDate);
         populatedCount++;
       }
       

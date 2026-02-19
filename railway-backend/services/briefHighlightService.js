@@ -180,6 +180,7 @@ The JSON object must conform to this exact schema:
   "clientName": string | null,
   "budget": number | null,
   "deadline": string | null,
+  "eventDate": string | null,
   "physicalParameters": string | null
 }
 
@@ -188,7 +189,8 @@ Extraction Rules:
 - For projectName: Extract the project/event name (ignore document titles and headers)
 - For clientName: Extract the client/company/organization name (ignore repeated branding)
 - For budget: Extract only numeric values (convert from any currency format to a number)
-- For deadline: Extract dates in YYYY-MM-DD format. If only month/year is given, use the last day of that month
+- For deadline: Extract submission or delivery deadlines in YYYY-MM-DD format. If only month/year is given, use the last day of that month
+- For eventDate: Extract the event/show/performance date (when the event happens) in YYYY-MM-DD format. If only one date is mentioned in the brief, use it for eventDate
 - For physicalParameters: Extract dimensions (standardize as 'X m x Y m'), venue details, capacity, and spatial layout. Focus on Event Specifications section.`;
 
       // Sanitize the brief text before sending to API
@@ -268,6 +270,7 @@ Extraction Rules:
         clientName: highlights.clientName || null,
         budget: typeof highlights.budget === 'number' ? highlights.budget : null,
         deadline: highlights.deadline || null,
+        eventDate: highlights.eventDate || null,
         physicalParameters: highlights.physicalParameters || null
       };
 
