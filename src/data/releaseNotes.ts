@@ -8,6 +8,17 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     date: '2026-02-19',
+    version: 'v0.8.8',
+    title: 'Simplified asset tags for consistent AI attribution',
+    bulletPoints: [
+      'Reduced predefined asset tags from 50 to 15 distinct categories for clearer LLM tagging.',
+      'Tags are now more distinct with minimal overlap: Audio, Video & Display, Photography, Graphics & Signage, Lighting, Staging, Catering, Staffing, Logistics, Branding & Marketing, Floral & Decor, Furniture, Technology, Medical, Scenic & Props.',
+      'AI prompt updated to encourage 2–3 tags per asset when appropriate for better categorization.',
+      'Supplier relevance matching updated for the new tags; legacy tags continue to map correctly for existing assets.'
+    ]
+  },
+  {
+    date: '2026-02-19',
     version: 'v0.8.7',
     title: 'Event date extraction and project modal polish',
     bulletPoints: [

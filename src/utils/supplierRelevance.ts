@@ -11,104 +11,77 @@
 import type { Supplier } from '@/lib/supabase';
 
 /**
- * Maps granular asset tags to broad supplier service categories
- * 
- * Many-to-many relationship: one asset tag can map to multiple categories
- * Empty arrays indicate tags that don't directly map to supplier categories
- * (e.g., staffing tags that don't have corresponding supplier categories)
- * 
- * Supplier Categories Available:
- * 'Printing', 'Graphics', 'Banners', 'Staging', 'Audio', 'Lighting',
- * 'Catering', 'Food', 'Beverages', 'Design', 'Branding', 'Marketing',
- * 'Transport', 'Logistics', 'Delivery', 'Photography', 'Video', 'Security',
- * 'Staffing', 'Hospitality', 'Technical Services', 'Medical', 'Floral', 'Furniture', 'IT Services'
+ * Maps asset tags (15 predefined) to broad supplier service categories
+ * Must stay in sync with src/utils/assetTags.ts PREDEFINED_ASSET_TAGS
+ *
+ * Supplier Categories: 'Printing', 'Graphics', 'Banners', 'Staging', 'Audio', 'Lighting',
+ * 'Catering', 'Food', 'Beverages', 'Design', 'Branding', 'Marketing', 'Transport',
+ * 'Logistics', 'Delivery', 'Photography', 'Video', 'Security', 'Staffing', 'Hospitality',
+ * 'Technical Services', 'Medical', 'Floral', 'Furniture', 'IT Services'
  */
 export const ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP: Record<string, string[]> = {
-  // AUDIO & SOUND (7 tags)
-  'Audio Equipment': ['Audio'],
-  'Microphones': ['Audio'],
-  'Sound Reinforcement': ['Audio'],
-  'Audio Recording': ['Audio'],
-  'Wireless Systems': ['Audio'],
-  'Audio Visual': ['Audio', 'Video'], // Multi-category: both audio and video
-  'Backstage Audio': ['Audio'],
-
-  // VISUAL & DISPLAYS (8 tags)
-  'LED Screens': ['Graphics', 'Video'], // Multi-category: graphics and video
-  'Projection': ['Graphics', 'Video'], // Multi-category: graphics and video
-  'Video Production': ['Video'],
+  'Audio': ['Audio'],
+  'Video & Display': ['Graphics', 'Video'],
   'Photography': ['Photography'],
-  'Graphics & Banners': ['Graphics', 'Banners'], // Multi-category: graphics and banners
-  'Signage': ['Graphics', 'Banners'], // Multi-category: graphics and banners
-  'Digital Displays': ['Graphics', 'Video'], // Multi-category: graphics and video
-  'Exhibition Displays': ['Graphics', 'Banners'], // Multi-category: graphics and banners
-
-  // LIGHTING (6 tags)
-  'Stage Lighting': ['Lighting'],
-  'Atmospheric Lighting': ['Lighting'],
-  'LED Lighting': ['Lighting'],
-  'Special Effects': ['Lighting'],
-  'Power & Distribution': ['Lighting'],
-  'Lighting Design': ['Lighting', 'Design'], // Multi-category: lighting and design
-
-  // STAGING & STRUCTURES (5 tags)
-  'Stages': ['Staging'],
-  'Rigging': ['Staging'],
-  'Scenic Elements': ['Staging', 'Design'], // Multi-category: staging and design
-  'Platforms & Risers': ['Staging'],
-  'Tents & Structures': ['Staging'],
-
-  // CATERING & FOOD SERVICE (4 tags)
-  'Catering': ['Catering', 'Food'], // Multi-category: catering and food
-  'Beverages': ['Beverages'],
-  'Tableware': ['Food', 'Catering'], // Multi-category: food and catering
-  'Food Stations': ['Food', 'Catering'], // Multi-category: food and catering
-
-  // STAFFING & SERVICES (5 tags)
-  'Event Staff': ['Staffing'],
-  'Security': ['Security'],
-  'Hospitality': ['Hospitality'],
-  'Technical Staff': ['Technical Services'],
-  'Medical Services': ['Medical'],
-
-  // LOGISTICS & OPERATIONS (5 tags)
-  'Transportation': ['Transport', 'Logistics'], // Multi-category: transport and logistics
-  'Loading & Setup': ['Logistics', 'Delivery'], // Multi-category: logistics and delivery
-  'Storage': ['Logistics'],
-  'Permits & Licenses': [], // Intentionally unmapped - legal/administrative, not a supplier service
-  'Waste Management': ['Logistics'],
-
-  // BRANDING & MARKETING (4 tags)
-  'Branding': ['Branding', 'Design'], // Multi-category: branding and design
-  'Print Materials': ['Printing', 'Graphics'], // Multi-category: printing and graphics
-  'Promotional Items': ['Marketing', 'Branding'], // Multi-category: marketing and branding
-  'Social Media': ['Marketing'],
-
-  // DECOR & FLORAL (4 tags)
-  'Floral': ['Floral'],
-  'Decor': ['Design'],
+  'Graphics & Signage': ['Printing', 'Graphics', 'Banners'],
+  'Lighting': ['Lighting'],
+  'Staging': ['Staging'],
+  'Catering': ['Catering', 'Food', 'Beverages'],
+  'Staffing': ['Staffing', 'Security', 'Hospitality', 'Technical Services'],
+  'Logistics': ['Transport', 'Logistics', 'Delivery'],
+  'Branding & Marketing': ['Design', 'Branding', 'Marketing', 'Printing'],
+  'Floral & Decor': ['Floral', 'Design'],
   'Furniture': ['Furniture'],
-  'Linens & Draping': ['Design'],
+  'Technology': ['IT Services', 'Design', 'Marketing'],
+  'Medical': ['Medical'],
+  'Scenic & Props': ['Staging', 'Design']
+};
 
-  // DIGITAL & TECHNOLOGY (2 tags)
-  'Digital Assets': ['Design', 'Marketing'], // Multi-category: design and marketing
-  'Technology Infrastructure': ['IT Services']
+/**
+ * Legacy tag mappings for backward compatibility with existing assets
+ * Old 50-tag taxonomy → supplier categories (same logic as consolidated tags)
+ */
+const LEGACY_TAG_TO_SUPPLIER_CATEGORY_MAP: Record<string, string[]> = {
+  'Audio Equipment': ['Audio'], 'Microphones': ['Audio'], 'Sound Reinforcement': ['Audio'],
+  'Audio Recording': ['Audio'], 'Wireless Systems': ['Audio'], 'Audio Visual': ['Audio', 'Video'],
+  'Backstage Audio': ['Audio'],
+  'LED Screens': ['Graphics', 'Video'], 'Projection': ['Graphics', 'Video'],
+  'Video Production': ['Video'], 'Photography': ['Photography'],
+  'Graphics & Banners': ['Graphics', 'Banners'], 'Signage': ['Graphics', 'Banners'],
+  'Digital Displays': ['Graphics', 'Video'], 'Exhibition Displays': ['Graphics', 'Banners'],
+  'Stage Lighting': ['Lighting'], 'Atmospheric Lighting': ['Lighting'], 'LED Lighting': ['Lighting'],
+  'Special Effects': ['Lighting'], 'Power & Distribution': ['Lighting'], 'Lighting Design': ['Lighting', 'Design'],
+  'Stages': ['Staging'], 'Rigging': ['Staging'], 'Scenic Elements': ['Staging', 'Design'],
+  'Platforms & Risers': ['Staging'], 'Tents & Structures': ['Staging'],
+  'Catering': ['Catering', 'Food'], 'Beverages': ['Beverages'], 'Tableware': ['Food', 'Catering'],
+  'Food Stations': ['Food', 'Catering'],
+  'Event Staff': ['Staffing'], 'Security': ['Security'], 'Hospitality': ['Hospitality'],
+  'Technical Staff': ['Technical Services'], 'Medical Services': ['Medical'],
+  'Transportation': ['Transport', 'Logistics'], 'Loading & Setup': ['Logistics', 'Delivery'],
+  'Storage': ['Logistics'], 'Waste Management': ['Logistics'],
+  'Branding': ['Branding', 'Design'], 'Print Materials': ['Printing', 'Graphics'],
+  'Promotional Items': ['Marketing', 'Branding'], 'Social Media': ['Marketing'],
+  'Floral': ['Floral'], 'Decor': ['Design'], 'Furniture': ['Furniture'], 'Linens & Draping': ['Design'],
+  'Digital Assets': ['Design', 'Marketing'], 'Technology Infrastructure': ['IT Services']
+  // Permits & Licenses: intentionally omitted (legal/administrative)
 };
 
 /**
  * Maps asset tags to relevant supplier categories
- * 
+ * Checks both current and legacy tag maps for backward compatibility
+ *
  * @param assetTags - Array of asset tag names
  * @returns Set of supplier categories that match the asset tags
  */
 export const mapAssetTagsToSupplierCategories = (assetTags: string[]): Set<string> => {
   const relevantCategories = new Set<string>();
-  
+
   assetTags.forEach(tag => {
-    const categories = ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP[tag] || [];
+    const categories =
+      ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP[tag] ?? LEGACY_TAG_TO_SUPPLIER_CATEGORY_MAP[tag] ?? [];
     categories.forEach(category => relevantCategories.add(category));
   });
-  
+
   return relevantCategories;
 };
 

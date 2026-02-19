@@ -658,33 +658,16 @@ class AIAllocationService {
 
 
   /**
-   * Get the comprehensive list of available asset tags for event production
+   * Get the list of available asset tags for event production
+   * Must stay in sync with src/utils/assetTags.ts PREDEFINED_ASSET_TAGS
+   * 15 distinct tags for consistent LLM attribution
    */
   getAvailableAssetTags() {
     return [
-      // AUDIO & SOUND
-      'Audio Equipment', 'Microphones', 'Sound Reinforcement', 'Audio Recording', 
-      'Wireless Systems', 'Audio Visual', 'Backstage Audio',
-      // VISUAL & DISPLAYS
-      'LED Screens', 'Projection', 'Video Production', 'Photography', 
-      'Graphics & Banners', 'Signage', 'Digital Displays', 'Exhibition Displays',
-      // LIGHTING
-      'Stage Lighting', 'Atmospheric Lighting', 'LED Lighting', 'Special Effects',
-      'Power & Distribution', 'Lighting Design',
-      // STAGING & STRUCTURES
-      'Stages', 'Rigging', 'Scenic Elements', 'Platforms & Risers', 'Tents & Structures',
-      // CATERING & FOOD SERVICE
-      'Catering', 'Beverages', 'Tableware', 'Food Stations',
-      // STAFFING & SERVICES
-      'Event Staff', 'Security', 'Hospitality', 'Technical Staff', 'Medical Services',
-      // LOGISTICS & OPERATIONS
-      'Transportation', 'Loading & Setup', 'Storage', 'Permits & Licenses', 'Waste Management',
-      // BRANDING & MARKETING
-      'Branding', 'Print Materials', 'Promotional Items', 'Social Media',
-      // DECOR & FLORAL
-      'Floral', 'Decor', 'Furniture', 'Linens & Draping',
-      // DIGITAL & TECHNOLOGY
-      'Digital Assets', 'Technology Infrastructure'
+      'Audio', 'Video & Display', 'Photography', 'Graphics & Signage',
+      'Lighting', 'Staging', 'Catering', 'Staffing', 'Logistics',
+      'Branding & Marketing', 'Floral & Decor', 'Furniture', 'Technology',
+      'Medical', 'Scenic & Props'
     ];
   }
 
@@ -812,19 +795,18 @@ Additional Context:
 
 CRITICAL REQUIREMENT: For each asset you identify, you MUST extract the exact text snippet from the brief that indicates this asset is needed. This will be used to create interactive links in the UI.
 
-AVAILABLE ASSET TAGS:
-You must assign 1-4 relevant tags to each asset from the following comprehensive list. Tags must match EXACTLY (case-sensitive):
-
+AVAILABLE ASSET TAGS (use ONLY these 15 - match EXACTLY, case-sensitive):
 ${tagsList}
 
 TAG SELECTION RULES:
-- Select 1-4 tags per asset that best categorize its purpose and function
+- Assign 2-3 tags per asset when appropriate - most assets fit multiple categories
 - Tags must match EXACTLY the names listed above (case-sensitive)
-- Consider the primary domain (Audio, Visual, Lighting, Staging, Catering, etc.)
-- Choose tags that help with organization, filtering, and categorization
-- Example: For "Main Stage Audio System" use tags: ["Audio Equipment", "Sound Reinforcement"]
-- Example: For "LED Video Wall" use tags: ["LED Screens", "Video Production"]
-- Example: For "Catering Service" use tags: ["Catering", "Event Staff"]
+- Each tag is distinct; choose the most relevant categories for the asset
+- Example: "Main Stage Audio System" → ["Audio", "Staging"]
+- Example: "LED Video Wall" → ["Video & Display", "Staging"]
+- Example: "Buffet Catering with Bar" → ["Catering", "Staffing"]
+- Example: "Event Photographer" → ["Photography", "Staffing"]
+- Example: "Printed Banners and Signage" → ["Graphics & Signage", "Branding & Marketing"]
 
 DEDUPLICATION LOGIC:
 - If multiple items serve the same functional purpose in the same zone, they should be grouped ONLY if:
@@ -972,7 +954,7 @@ IMPORTANT GUIDELINES:
 - Be specific about quantities, dimensions, and technical requirements
 - Consider the event type and scale when identifying assets
 - Include both explicitly mentioned and industry-standard requirements
-- MANDATORY: Every asset MUST have at least 1 tag, and up to 4 tags maximum
+- MANDATORY: Every asset MUST have at least 1 tag; PREFER 2-3 tags when the asset fits multiple categories
 - Tag names must match EXACTLY from the available tags list (case-sensitive, no typos)
 
 FOCUS ON IDENTIFYING:
