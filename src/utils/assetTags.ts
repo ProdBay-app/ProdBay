@@ -11,83 +11,23 @@ export interface AssetTag {
 }
 
 // Predefined asset tags - 15 distinct categories to improve LLM consistency
-// Each tag is clearly differentiated with minimal overlap
+// Sorted alphabetically by name for UI display
 export const PREDEFINED_ASSET_TAGS: AssetTag[] = [
-  {
-    name: 'Audio',
-    color: '#8B5CF6',
-    description: 'Speakers, microphones, sound systems, wireless, recording'
-  },
-  {
-    name: 'Video & Display',
-    color: '#3B82F6',
-    description: 'LED screens, projection, video production, digital displays'
-  },
-  {
-    name: 'Photography',
-    color: '#10B981',
-    description: 'Event photography, photo booths, cameras'
-  },
-  {
-    name: 'Graphics & Signage',
-    color: '#059669',
-    description: 'Banners, signage, wayfinding, exhibition displays, print materials'
-  },
-  {
-    name: 'Lighting',
-    color: '#F59E0B',
-    description: 'Stage lighting, atmospheric, LED, special effects, power'
-  },
-  {
-    name: 'Staging',
-    color: '#84CC16',
-    description: 'Stages, rigging, platforms, risers, tents, structures'
-  },
-  {
-    name: 'Catering',
-    color: '#EF4444',
-    description: 'Food service, beverages, tableware, bar service'
-  },
-  {
-    name: 'Staffing',
-    color: '#F97316',
-    description: 'Event staff, security, hospitality, technical crew'
-  },
-  {
-    name: 'Logistics',
-    color: '#0891B2',
-    description: 'Transport, loading, storage, delivery, waste management'
-  },
-  {
-    name: 'Branding & Marketing',
-    color: '#EC4899',
-    description: 'Print, promotional items, social media, brand identity'
-  },
-  {
-    name: 'Floral & Decor',
-    color: '#F472B6',
-    description: 'Floral arrangements, decorations, linens, draping'
-  },
-  {
-    name: 'Furniture',
-    color: '#8B5A2B',
-    description: 'Rental furniture, tables, chairs, lounge seating'
-  },
-  {
-    name: 'Technology',
-    color: '#60A5FA',
-    description: 'WiFi, digital assets, registration systems, IT support'
-  },
-  {
-    name: 'Medical',
-    color: '#DC2626',
-    description: 'First aid, medical personnel'
-  },
-  {
-    name: 'Scenic & Props',
-    color: '#16A34A',
-    description: 'Set construction, backdrops, scenic elements, props'
-  }
+  { name: 'Audio', color: '#8B5CF6', description: 'Speakers, microphones, sound systems, wireless, recording' },
+  { name: 'Branding & Marketing', color: '#EC4899', description: 'Print, promotional items, social media, brand identity' },
+  { name: 'Catering', color: '#EF4444', description: 'Food service, beverages, tableware, bar service' },
+  { name: 'Floral & Decor', color: '#F472B6', description: 'Floral arrangements, decorations, linens, draping' },
+  { name: 'Furniture', color: '#8B5A2B', description: 'Rental furniture, tables, chairs, lounge seating' },
+  { name: 'Graphics & Signage', color: '#059669', description: 'Banners, signage, wayfinding, exhibition displays, print materials' },
+  { name: 'Lighting', color: '#F59E0B', description: 'Stage lighting, atmospheric, LED, special effects, power' },
+  { name: 'Logistics', color: '#0891B2', description: 'Transport, loading, storage, delivery, waste management' },
+  { name: 'Medical', color: '#DC2626', description: 'First aid, medical personnel' },
+  { name: 'Photography', color: '#10B981', description: 'Event photography, photo booths, cameras' },
+  { name: 'Scenic & Props', color: '#16A34A', description: 'Set construction, backdrops, scenic elements, props' },
+  { name: 'Staffing', color: '#F97316', description: 'Event staff, security, hospitality, technical crew' },
+  { name: 'Staging', color: '#84CC16', description: 'Stages, rigging, platforms, risers, tents, structures' },
+  { name: 'Technology', color: '#60A5FA', description: 'WiFi, digital assets, registration systems, IT support' },
+  { name: 'Video & Display', color: '#3B82F6', description: 'LED screens, projection, video production, digital displays' }
 ];
 
 // Get tag by name
