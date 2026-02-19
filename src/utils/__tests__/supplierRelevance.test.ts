@@ -13,62 +13,54 @@ import type { Supplier } from '@/lib/supabase';
 
 describe('supplierRelevance', () => {
   describe('ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP', () => {
-    it('should map audio tags to Audio category', () => {
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Audio Equipment']).toEqual(['Audio']);
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Microphones']).toEqual(['Audio']);
+    it('should map Audio tag to Audio category', () => {
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Audio']).toEqual(['Audio']);
     });
 
     it('should map multi-category tags correctly', () => {
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Audio Visual']).toEqual(['Audio', 'Video']);
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['LED Screens']).toEqual(['Graphics', 'Video']);
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Graphics & Banners']).toEqual(['Graphics', 'Banners']);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Video & Display']).toEqual(['Graphics', 'Video']);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Graphics & Signage']).toEqual(['Printing', 'Graphics', 'Banners']);
     });
 
-    it('should map newly added categories correctly', () => {
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Event Staff']).toEqual(['Staffing']);
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Floral']).toEqual(['Floral']);
+    it('should map staff and service tags correctly', () => {
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Staffing']).toEqual(['Staffing', 'Security', 'Hospitality', 'Technical Services']);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Floral & Decor']).toEqual(['Floral', 'Design']);
       expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Furniture']).toEqual(['Furniture']);
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Hospitality']).toEqual(['Hospitality']);
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Technical Staff']).toEqual(['Technical Services']);
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Medical Services']).toEqual(['Medical']);
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Technology Infrastructure']).toEqual(['IT Services']);
-    });
-
-    it('should keep Permits & Licenses unmapped (intentional)', () => {
-      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Permits & Licenses']).toEqual([]);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Medical']).toEqual(['Medical']);
+      expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Technology']).toEqual(['IT Services', 'Design', 'Marketing']);
     });
   });
 
   describe('mapAssetTagsToSupplierCategories', () => {
     it('should map single tag to categories', () => {
-      const categories = mapAssetTagsToSupplierCategories(['Audio Equipment']);
+      const categories = mapAssetTagsToSupplierCategories(['Audio']);
       expect(Array.from(categories)).toEqual(['Audio']);
     });
 
     it('should map multiple tags and deduplicate categories', () => {
-      const categories = mapAssetTagsToSupplierCategories([
-        'Audio Equipment',
-        'Microphones',
-        'Sound Reinforcement'
-      ]);
-      expect(Array.from(categories)).toEqual(['Audio']);
+      const categories = mapAssetTagsToSupplierCategories(['Audio', 'Lighting', 'Staging']);
+      const categoryArray = Array.from(categories).sort();
+      expect(categoryArray).toEqual(['Audio', 'Lighting', 'Staging']);
     });
 
     it('should handle multi-category tags', () => {
-      const categories = mapAssetTagsToSupplierCategories(['LED Screens', 'Video Production']);
+      const categories = mapAssetTagsToSupplierCategories(['Video & Display', 'Graphics & Signage']);
       const categoryArray = Array.from(categories).sort();
-      expect(categoryArray).toEqual(['Graphics', 'Video']);
+      expect(categoryArray).toEqual(['Banners', 'Graphics', 'Printing', 'Video']);
     });
 
-    it('should map newly added categories', () => {
-      const categories = mapAssetTagsToSupplierCategories(['Event Staff', 'Floral', 'Furniture']);
+    it('should map Staffing, Floral, Furniture', () => {
+      const categories = mapAssetTagsToSupplierCategories(['Staffing', 'Floral & Decor', 'Furniture']);
       const categoryArray = Array.from(categories).sort();
-      expect(categoryArray).toEqual(['Floral', 'Furniture', 'Staffing']);
+      expect(categoryArray).toContain('Staffing');
+      expect(categoryArray).toContain('Floral');
+      expect(categoryArray).toContain('Furniture');
     });
 
-    it('should return empty set for intentionally unmapped tags', () => {
-      const categories = mapAssetTagsToSupplierCategories(['Permits & Licenses']);
-      expect(categories.size).toBe(0);
+    it('should support legacy tags for backward compatibility', () => {
+      const categories = mapAssetTagsToSupplierCategories(['Audio Equipment', 'Event Staff']);
+      const categoryArray = Array.from(categories).sort();
+      expect(categoryArray).toEqual(['Audio', 'Staffing']);
     });
 
     it('should handle empty array', () => {
@@ -135,9 +127,9 @@ describe('supplierRelevance', () => {
         createSupplier('Supplier B', ['Audio', 'Video']), // Score: 2
         createSupplier('Supplier C', ['Audio']), // Score: 1
       ];
-      
-      const sorted = sortSuppliersByRelevance(suppliers, ['Audio Equipment', 'Video Production']);
-      
+
+      const sorted = sortSuppliersByRelevance(suppliers, ['Audio', 'Video & Display']);
+
       expect(sorted[0].supplier_name).toBe('Supplier B'); // Score: 2
       expect(sorted[1].supplier_name).toBe('Supplier C'); // Score: 1
       expect(sorted[2].supplier_name).toBe('Supplier A'); // Score: 0
@@ -149,26 +141,24 @@ describe('supplierRelevance', () => {
         createSupplier('Alpha Audio', ['Audio']), // Score: 1
         createSupplier('Beta Audio', ['Audio']), // Score: 1
       ];
-      
-      const sorted = sortSuppliersByRelevance(suppliers, ['Audio Equipment']);
-      
+
+      const sorted = sortSuppliersByRelevance(suppliers, ['Audio']);
+
       expect(sorted[0].supplier_name).toBe('Alpha Audio');
       expect(sorted[1].supplier_name).toBe('Beta Audio');
       expect(sorted[2].supplier_name).toBe('Zebra Audio');
     });
 
     it('should handle multi-category asset tags correctly', () => {
-      // Asset with tags that map to multiple categories
       const suppliers = [
-        createSupplier('Graphics Only', ['Graphics']), // Score: 1 (matches Graphics from LED Screens)
-        createSupplier('Video Only', ['Video']), // Score: 1 (matches Video from LED Screens)
-        createSupplier('Both Categories', ['Graphics', 'Video']), // Score: 2 (matches both)
+        createSupplier('Graphics Only', ['Graphics']),
+        createSupplier('Video Only', ['Video']),
+        createSupplier('Both Categories', ['Graphics', 'Video']),
       ];
-      
-      const sorted = sortSuppliersByRelevance(suppliers, ['LED Screens']);
-      
+
+      const sorted = sortSuppliersByRelevance(suppliers, ['Video & Display']);
+
       expect(sorted[0].supplier_name).toBe('Both Categories'); // Score: 2
-      // Graphics Only and Video Only both have score 1, so alphabetical
       expect(sorted[1].supplier_name).toBe('Graphics Only');
       expect(sorted[2].supplier_name).toBe('Video Only');
     });
@@ -192,10 +182,9 @@ describe('supplierRelevance', () => {
         createSupplier('Zebra Supplier', ['Audio']),
         createSupplier('Alpha Supplier', ['Video']),
       ];
-      
-      const sorted = sortSuppliersByRelevance(suppliers, ['Event Staff', 'Floral']);
-      
-      // Should be alphabetical since no categories match
+
+      const sorted = sortSuppliersByRelevance(suppliers, ['Unknown Tag']);
+
       expect(sorted[0].supplier_name).toBe('Alpha Supplier');
       expect(sorted[1].supplier_name).toBe('Zebra Supplier');
     });
@@ -205,11 +194,10 @@ describe('supplierRelevance', () => {
         createSupplier('Supplier A', ['Printing']),
         createSupplier('Supplier B', ['Audio']),
       ];
-      
+
       const originalOrder = suppliers.map(s => s.supplier_name);
-      sortSuppliersByRelevance(suppliers, ['Audio Equipment']);
-      
-      // Original array should be unchanged
+      sortSuppliersByRelevance(suppliers, ['Audio']);
+
       expect(suppliers.map(s => s.supplier_name)).toEqual(originalOrder);
     });
   });
@@ -229,34 +217,34 @@ describe('supplierRelevance', () => {
       expect(matching).toEqual(['Furniture']);
     });
 
-    it('should return matching categories for Floral tag', () => {
+    it('should return matching categories for Floral & Decor tag', () => {
       const supplier = createSupplier(['Floral', 'Design']);
-      const matching = getMatchingCategories(supplier, ['Floral']);
-      expect(matching).toEqual(['Floral']);
+      const matching = getMatchingCategories(supplier, ['Floral & Decor']);
+      expect(matching).toEqual(['Floral', 'Design']);
     });
 
-    it('should return matching categories for Event Staff tag', () => {
+    it('should return matching categories for Staffing tag', () => {
       const supplier = createSupplier(['Staffing', 'Security']);
-      const matching = getMatchingCategories(supplier, ['Event Staff']);
-      expect(matching).toEqual(['Staffing']);
+      const matching = getMatchingCategories(supplier, ['Staffing']);
+      expect(matching).toEqual(['Staffing', 'Security']);
     });
 
-    it('should return matching categories for multiple new tags', () => {
+    it('should return matching categories for multiple tags', () => {
       const supplier = createSupplier(['Floral', 'Furniture', 'Staffing', 'IT Services']);
-      const matching = getMatchingCategories(supplier, ['Floral', 'Furniture', 'Event Staff', 'Technology Infrastructure']);
+      const matching = getMatchingCategories(supplier, ['Floral & Decor', 'Furniture', 'Staffing', 'Technology']);
       const categoryArray = matching.sort();
       expect(categoryArray).toEqual(['Floral', 'Furniture', 'IT Services', 'Staffing']);
     });
 
     it('should return empty array for non-matching categories', () => {
       const supplier = createSupplier(['Audio', 'Video']);
-      const matching = getMatchingCategories(supplier, ['Furniture', 'Floral']);
+      const matching = getMatchingCategories(supplier, ['Furniture', 'Floral & Decor']);
       expect(matching).toEqual([]);
     });
 
-    it('should return empty array for intentionally unmapped tags', () => {
+    it('should return empty array for unknown tags', () => {
       const supplier = createSupplier(['Logistics', 'Transport']);
-      const matching = getMatchingCategories(supplier, ['Permits & Licenses']);
+      const matching = getMatchingCategories(supplier, ['Unknown Tag']);
       expect(matching).toEqual([]);
     });
   });
