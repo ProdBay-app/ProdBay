@@ -1,7 +1,9 @@
-import React from 'react';
-import { Edit, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { Edit, Trash2, Tag, X } from 'lucide-react';
 import type { Asset } from '@/lib/supabase';
-import { getTagColor } from '@/utils/assetTags';
+import type { InlineEditFields } from './AssetList';
+import { getTagColor, PREDEFINED_ASSET_TAGS, filterTags } from '@/utils/assetTags';
 
 interface AssetTableProps {
   assets: Asset[];
@@ -10,6 +12,10 @@ interface AssetTableProps {
   onView?: (asset: Asset) => void;
   hoveredAssetId?: string | null;
   onAssetHover?: (assetId: string | null) => void;
+  /** Inline edit mode: when true, row click does not open detail modal and Edit icon is hidden */
+  isEditMode?: boolean;
+  edits?: Record<string, InlineEditFields>;
+  onEditChange?: (assetId: string, updates: Partial<InlineEditFields>) => void;
 }
 
 /**
@@ -32,8 +38,59 @@ const AssetTable: React.FC<AssetTableProps> = ({
   onDelete,
   onView,
   hoveredAssetId,
-  onAssetHover
+  onAssetHover,
+  isEditMode = false,
+  edits = {},
+  onEditChange
 }) => {
+  const [openTagSelectorForAssetId, setOpenTagSelectorForAssetId] = useState<string | null>(null);
+  const [tagSearchTerm, setTagSearchTerm] = useState('');
+  const [tagDropdownPosition, setTagDropdownPosition] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
+  const tagSelectorTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const tagDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Reset search when opening/closing tag selector
+  useEffect(() => {
+    if (!openTagSelectorForAssetId) {
+      setTagSearchTerm('');
+      setTagDropdownPosition(null);
+    }
+  }, [openTagSelectorForAssetId]);
+
+  // Position dropdown from trigger ref (useLayoutEffect so it runs before paint)
+  useLayoutEffect(() => {
+    if (!openTagSelectorForAssetId) return;
+    const el = tagSelectorTriggerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setTagDropdownPosition({
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: Math.max(rect.width, 280)
+    });
+  }, [openTagSelectorForAssetId]);
+
+  // Click outside to close tag dropdown
+  useEffect(() => {
+    if (!openTagSelectorForAssetId) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        tagSelectorTriggerRef.current?.contains(target) ||
+        tagDropdownRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setOpenTagSelectorForAssetId(null);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openTagSelectorForAssetId]);
+
   // Format last updated date
   const formatLastUpdated = (dateString: string | null | undefined): string => {
     if (!dateString) return 'Never';
@@ -124,9 +181,9 @@ const AssetTable: React.FC<AssetTableProps> = ({
     );
   };
 
-  // Handle row click (open detail view)
+  // Handle row click (open detail view) - disabled when isEditMode to allow cell focus
   const handleRowClick = (asset: Asset) => {
-    if (onView) {
+    if (!isEditMode && onView) {
       onView(asset);
     }
   };
@@ -184,9 +241,9 @@ const AssetTable: React.FC<AssetTableProps> = ({
               <tr
                 key={asset.id}
                 className={`
-                  h-[72px] bg-white/5 border-b border-white/10 
+                  ${isEditMode ? 'min-h-[72px]' : 'h-[72px]'} bg-white/5 border-b border-white/10 
                   hover:bg-white/10 hover:border-purple-400/30 
-                  transition-all duration-200 cursor-pointer
+                  transition-all duration-200 ${isEditMode ? '' : 'cursor-pointer'}
                   ${isHighlighted ? 'ring-2 ring-purple-400/50 bg-white/15' : ''}
                 `}
                 onClick={() => handleRowClick(asset)}
@@ -194,37 +251,203 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 onMouseLeave={() => onAssetHover && onAssetHover(null)}
               >
                 {/* Name */}
-                <td className={`px-4 py-3 text-gray-200 whitespace-nowrap ${isHighlighted ? 'bg-white/15' : 'bg-white/5'}`}>
-                  <span className="font-medium capitalize block max-w-[250px] overflow-hidden text-ellipsis">
-                    {asset.asset_name}
-                  </span>
+                <td className={`px-4 py-3 text-gray-200 ${!isEditMode ? 'whitespace-nowrap' : ''} ${isHighlighted ? 'bg-white/15' : 'bg-white/5'}`}>
+                  {isEditMode && onEditChange ? (
+                    <input
+                      type="text"
+                      value={edits[asset.id]?.asset_name ?? asset.asset_name ?? ''}
+                      onChange={(e) => onEditChange(asset.id, { asset_name: e.target.value })}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full min-w-[120px] max-w-[250px] px-2 py-1.5 text-sm bg-black/20 border border-white/20 text-white rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Asset name"
+                    />
+                  ) : (
+                    <span className="font-medium capitalize block max-w-[250px] overflow-hidden text-ellipsis">
+                      {asset.asset_name}
+                    </span>
+                  )}
                 </td>
 
                 {/* Quantity */}
-                <td className="px-4 py-3 text-gray-200 whitespace-nowrap">
-                  {asset.quantity !== null && asset.quantity !== undefined ? (
-                    <span className="text-sm">{asset.quantity}</span>
+                <td className={`px-4 py-3 text-gray-200 ${!isEditMode ? 'whitespace-nowrap' : ''}`}>
+                  {isEditMode && onEditChange ? (
+                    <input
+                      type="number"
+                      value={
+                        edits[asset.id] && 'quantity' in edits[asset.id]
+                          ? (edits[asset.id].quantity ?? '')
+                          : (asset.quantity ?? '')
+                      }
+                      onChange={(e) => {
+                        const v = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+                        onEditChange(asset.id, { quantity: Number.isNaN(v) ? undefined : v });
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-20 px-2 py-1.5 text-sm bg-black/20 border border-white/20 text-white rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      placeholder="—"
+                      min={0}
+                    />
                   ) : (
-                    <span className="text-gray-400 text-sm">—</span>
+                    asset.quantity !== null && asset.quantity !== undefined ? (
+                      <span className="text-sm">{asset.quantity}</span>
+                    ) : (
+                      <span className="text-gray-400 text-sm">—</span>
+                    )
                   )}
                 </td>
 
                 {/* Tags */}
-                <td className="px-4 py-3 whitespace-nowrap">
-                  {formatTags(asset.tags)}
+                <td className={`px-4 py-3 ${isEditMode ? 'align-top overflow-visible' : 'whitespace-nowrap'}`}>
+                  {isEditMode && onEditChange ? (
+                    <div
+                      className="min-w-[140px] max-w-[200px]"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {(() => {
+                        const currentTags = edits[asset.id]?.tags ?? asset.tags ?? [];
+                        const filteredTagsList = filterTags(tagSearchTerm);
+                        const isOpen = openTagSelectorForAssetId === asset.id;
+                        const position = isOpen ? tagDropdownPosition : null;
+
+                        return (
+                          <>
+                            {currentTags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-1.5">
+                                {currentTags.map((tagName) => (
+                                  <span
+                                    key={tagName}
+                                    className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                                    style={{ backgroundColor: getTagColor(tagName) }}
+                                  >
+                                    {tagName}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const next = currentTags.filter((t) => t !== tagName);
+                                        onEditChange(asset.id, { tags: next });
+                                      }}
+                                      className="ml-0.5 hover:bg-white/20 rounded-full p-0.5"
+                                      aria-label={`Remove ${tagName}`}
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <button
+                              ref={isOpen ? tagSelectorTriggerRef : undefined}
+                              type="button"
+                              onClick={() =>
+                                setOpenTagSelectorForAssetId((prev) =>
+                                  prev === asset.id ? null : asset.id
+                                )
+                              }
+                              className="flex items-center gap-1.5 px-2 py-1.5 text-sm bg-white/10 border border-white/20 text-gray-200 rounded hover:bg-white/20 transition-colors w-full text-left"
+                            >
+                              <Tag className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                              <span>
+                                {currentTags.length > 0
+                                  ? `${currentTags.length} tag(s)`
+                                  : 'Select tags...'}
+                              </span>
+                            </button>
+                            {isOpen &&
+                              position &&
+                              createPortal(
+                                <div
+                                  ref={tagDropdownRef}
+                                  className="fixed z-[9999] bg-gray-900 border border-white/20 rounded-lg shadow-xl max-h-60 overflow-hidden min-w-[280px]"
+                                  style={{
+                                    top: position.top,
+                                    left: position.left,
+                                    width: position.width
+                                  }}
+                                >
+                                  <div className="p-2 border-b border-white/20">
+                                    <input
+                                      type="text"
+                                      placeholder="Search tags..."
+                                      value={tagSearchTerm}
+                                      onChange={(e) => setTagSearchTerm(e.target.value)}
+                                      className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div className="max-h-48 overflow-y-auto">
+                                    {filteredTagsList.length === 0 ? (
+                                      <div className="p-3 text-sm text-gray-300 text-center">
+                                        No tags found
+                                      </div>
+                                    ) : (
+                                      filteredTagsList.map((tag) => (
+                                        <button
+                                          key={tag.name}
+                                          type="button"
+                                          onClick={() => {
+                                            const next = currentTags.includes(tag.name)
+                                              ? currentTags.filter((t) => t !== tag.name)
+                                              : [...currentTags, tag.name];
+                                            onEditChange(asset.id, { tags: next });
+                                          }}
+                                          className={`w-full px-3 py-2 text-left text-sm hover:bg-white/10 flex items-center gap-2 ${
+                                            currentTags.includes(tag.name)
+                                              ? 'bg-purple-500/20'
+                                              : ''
+                                          }`}
+                                        >
+                                          <div
+                                            className="w-3 h-3 rounded-full flex-shrink-0"
+                                            style={{ backgroundColor: tag.color }}
+                                          />
+                                          <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-white truncate">
+                                              {tag.name}
+                                            </div>
+                                            <div className="text-xs text-gray-300 truncate">
+                                              {tag.description}
+                                            </div>
+                                          </div>
+                                          {currentTags.includes(tag.name) && (
+                                            <span className="text-purple-300 flex-shrink-0">✓</span>
+                                          )}
+                                        </button>
+                                      ))
+                                    )}
+                                  </div>
+                                </div>,
+                                document.body
+                              )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    formatTags(asset.tags)
+                  )}
                 </td>
 
                 {/* Specifications */}
-                <td className="px-4 py-3 text-gray-200 max-w-[220px]">
-                  {asset.specifications ? (
-                    <span
-                      className="block text-sm truncate"
-                      title={asset.specifications}
-                    >
-                      {asset.specifications}
-                    </span>
+                <td className={`px-4 py-3 text-gray-200 max-w-[220px] ${isEditMode ? 'align-top' : ''}`}>
+                  {isEditMode && onEditChange ? (
+                    <textarea
+                      value={edits[asset.id]?.specifications ?? asset.specifications ?? ''}
+                      onChange={(e) => onEditChange(asset.id, { specifications: e.target.value })}
+                      onClick={(e) => e.stopPropagation()}
+                      rows={3}
+                      className="w-full min-h-[4rem] max-h-[8rem] overflow-y-auto resize-y px-2 py-1.5 text-sm bg-black/20 border border-white/20 text-white rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Specifications"
+                    />
                   ) : (
-                    <span className="text-gray-400 text-sm">—</span>
+                    asset.specifications ? (
+                      <span
+                        className="block text-sm truncate"
+                        title={asset.specifications}
+                      >
+                        {asset.specifications}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-sm">—</span>
+                    )
                   )}
                 </td>
 
@@ -241,14 +464,16 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 {/* Actions */}
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    {/* Edit Button */}
-                    <button
-                      onClick={() => onEdit(asset)}
-                      className="p-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 rounded backdrop-blur-sm transition-colors"
-                      aria-label="Edit asset"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
+                    {/* Edit Button - hidden in edit mode */}
+                    {!isEditMode && (
+                      <button
+                        onClick={() => onEdit(asset)}
+                        className="p-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 rounded backdrop-blur-sm transition-colors"
+                        aria-label="Edit asset"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    )}
                     
                     {/* Delete Button */}
                     <button

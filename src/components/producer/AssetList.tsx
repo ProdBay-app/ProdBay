@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Package, Search, ArrowUpDown, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Package, Search, ArrowUpDown, X, Pencil, Save, RotateCcw, Loader2 } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import AssetTable from './AssetTable';
@@ -9,6 +9,14 @@ import ConfirmationModal from '@/components/shared/ConfirmationModal';
 import { getTagColor } from '@/utils/assetTags';
 import { toTitleCase } from '@/utils/textFormatters';
 import type { Asset } from '@/lib/supabase';
+
+/** Editable fields for inline table editing */
+export type InlineEditFields = {
+  asset_name?: string;
+  quantity?: number;
+  tags?: string[];
+  specifications?: string;
+};
 
 interface AssetListProps {
   assets: Asset[];
@@ -53,6 +61,101 @@ const AssetList: React.FC<AssetListProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [viewingAsset, setViewingAsset] = useState<Asset | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  // Inline edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [edits, setEdits] = useState<Record<string, InlineEditFields>>({});
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [isSavingInlineEdits, setIsSavingInlineEdits] = useState(false);
+
+  const hasEdits = Object.keys(edits).length > 0;
+
+  // Handle edit mode toggle - prompt to discard if unsaved changes
+  const handleEditModeToggle = useCallback(() => {
+    if (isEditMode && hasEdits) {
+      setShowDiscardConfirm(true);
+    } else {
+      setIsEditMode((prev) => !prev);
+      if (!isEditMode) setEdits({});
+    }
+  }, [isEditMode, hasEdits]);
+
+  // Confirm discard and exit edit mode
+  const handleConfirmDiscard = useCallback(() => {
+    setEdits({});
+    setIsEditMode(false);
+    setShowDiscardConfirm(false);
+  }, []);
+
+  // Discard edits (stay in edit mode)
+  const handleDiscardEdits = useCallback(() => {
+    setEdits({});
+  }, []);
+
+  // Save All - persist inline edits via ProducerService.updateAsset
+  const handleSaveAll = useCallback(async () => {
+    const entries = Object.entries(edits);
+    if (entries.length === 0) return;
+
+    setIsSavingInlineEdits(true);
+    try {
+      const promises = entries.map(([assetId, updates]) => {
+        const asset = assets.find((a) => a.id === assetId);
+        if (!asset) {
+          return Promise.reject(new Error('Asset not found'));
+        }
+        const formData = {
+          asset_name: toTitleCase(updates.asset_name ?? asset.asset_name ?? ''),
+          specifications: updates.specifications ?? asset.specifications ?? '',
+          timeline: asset.timeline ?? '',
+          status: asset.status,
+          assigned_supplier_id: asset.assigned_supplier_id,
+          quantity: updates.quantity ?? asset.quantity,
+          tags: updates.tags ?? asset.tags ?? []
+        };
+        return ProducerService.updateAsset(assetId, formData);
+      });
+
+      const results = await Promise.allSettled(promises);
+      const fulfilledIndices = results
+        .map((r, i) => (r.status === 'fulfilled' ? i : -1))
+        .filter((i) => i >= 0);
+      const rejectedCount = results.filter((r) => r.status === 'rejected').length;
+
+      if (rejectedCount === 0) {
+        setEdits({});
+        setIsEditMode(false);
+        fulfilledIndices.forEach((i) => {
+          const r = results[i];
+          if (r.status === 'fulfilled') onAssetUpdate?.(r.value);
+        });
+        showSuccess(
+          `Updated ${fulfilledIndices.length} asset${fulfilledIndices.length === 1 ? '' : 's'} successfully`
+        );
+      } else {
+        const successfulIds = new Set(fulfilledIndices.map((i) => entries[i][0]));
+        setEdits((prev) => {
+          const next = { ...prev };
+          successfulIds.forEach((id) => delete next[id]);
+          return next;
+        });
+        showError(
+          `${rejectedCount} of ${entries.length} update${entries.length === 1 ? '' : 's'} failed. Successful changes were saved; failed assets remain in edit mode.`
+        );
+      }
+    } finally {
+      setIsSavingInlineEdits(false);
+    }
+  }, [edits, assets, onAssetUpdate, showSuccess, showError]);
+
+  // Update a single asset's edits
+  const handleEditChange = useCallback((assetId: string, updates: Partial<InlineEditFields>) => {
+    setEdits((prev) => {
+      const current = prev[assetId] || {};
+      const next = { ...current, ...updates };
+      return { ...prev, [assetId]: next };
+    });
+  }, []);
 
   // Search, filter, and sort state
   const [searchTerm, setSearchTerm] = useState('');
@@ -462,15 +565,66 @@ const AssetList: React.FC<AssetListProps> = ({
           </button>
         </div>
       ) : (
-        // Asset Table View
-        <AssetTable
-          assets={filteredAndSortedAssets}
-          onEdit={handleOpenEditModal}
-          onDelete={handleOpenDeleteModal}
-          onView={handleViewAsset}
-          hoveredAssetId={hoveredAssetId}
-          onAssetHover={onAssetHover}
-        />
+        // Asset Table View with Inline Edit Toolbar
+        <>
+          {/* Inline Edit Toolbar */}
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <button
+              type="button"
+              onClick={handleEditModeToggle}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isEditMode
+                  ? 'bg-purple-600 text-white hover:bg-purple-500'
+                  : 'bg-white/10 border border-white/20 text-gray-200 hover:bg-white/20'
+              }`}
+            >
+              <Pencil className="w-4 h-4" />
+              {isEditMode ? 'Exit Edit Mode' : 'Edit Mode'}
+            </button>
+            {isEditMode && hasEdits && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDiscardEdits}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white/10 border border-white/20 text-gray-200 hover:bg-white/20 transition-colors"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Discard
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAll}
+                  disabled={isSavingInlineEdits}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-teal-600 text-white hover:bg-teal-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isSavingInlineEdits ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Save All
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <AssetTable
+            assets={filteredAndSortedAssets}
+            onEdit={handleOpenEditModal}
+            onDelete={handleOpenDeleteModal}
+            onView={handleViewAsset}
+            hoveredAssetId={hoveredAssetId}
+            onAssetHover={onAssetHover}
+            isEditMode={isEditMode}
+            edits={edits}
+            onEditChange={handleEditChange}
+          />
+        </>
       )}
 
       {/* Edit Asset Modal */}
@@ -484,6 +638,18 @@ const AssetList: React.FC<AssetListProps> = ({
           setEditingAsset(null);
         }}
         onSubmit={handleUpdateAsset}
+      />
+
+      {/* Discard changes confirmation (when exiting edit mode with unsaved edits) */}
+      <ConfirmationModal
+        isOpen={showDiscardConfirm}
+        title="Discard changes?"
+        message="You have unsaved changes. Are you sure you want to exit edit mode and discard them?"
+        confirmText="Discard"
+        cancelText="Keep Editing"
+        onConfirm={handleConfirmDiscard}
+        onCancel={() => setShowDiscardConfirm(false)}
+        variant="danger"
       />
 
       {/* Delete Confirmation Modal */}
