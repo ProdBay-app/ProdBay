@@ -167,7 +167,12 @@ router.post('/ai-create-assets', async (req, res) => {
       try {
         const quantity = parseQuantity(assetData.quantity);
         const specifications = buildSpecifications(assetData);
-        const supplierContext = assetData.supplier_context ?? null;
+        const supplierContext = (assetData.supplier_context != null && String(assetData.supplier_context).trim() !== '')
+          ? String(assetData.supplier_context).trim()
+          : null;
+        if (!supplierContext && process.env.NODE_ENV === 'development') {
+          console.warn(`[ai-create-assets] supplier_context empty for asset "${assetData.asset_name}"`);
+        }
 
         const { data: asset, error } = await supabase
           .from('assets')

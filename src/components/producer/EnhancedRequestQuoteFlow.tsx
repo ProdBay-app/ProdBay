@@ -272,13 +272,17 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
     
     const subject = `Quote Request: ${assetName}`;
 
+    const supplierContextLine = (asset?.supplier_context && asset.supplier_context.trim() !== '')
+      ? `\nSupplier & Logistics Context: ${asset.supplier_context}\n`
+      : '';
+
     const body = `Dear ${contactName},
 
 We would like to request a quote for the following asset:
 
 Asset: ${assetName}
 Specifications: ${asset?.specifications || 'See project brief for details'}
-${asset?.timeline ? `Timeline: ${new Date(asset.timeline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : ''}
+${supplierContextLine}${asset?.timeline ? `Timeline: ${new Date(asset.timeline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : ''}
 
 Please provide your quote by visiting the link below. You will receive a unique link via email once this request is sent.
 

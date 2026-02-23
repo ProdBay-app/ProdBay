@@ -82,6 +82,14 @@ class AIAllocationService {
       // Map new AI schema (technical_specifications, category_tag, supplier_context) to internal schema
       if (parsed.assets && Array.isArray(parsed.assets)) {
         parsed.assets = parsed.assets.map((a) => this.mapAssetToInternalSchema(a));
+        // Debug: log supplier_context presence (first 3 assets) to diagnose NULL in DB
+        const sample = parsed.assets.slice(0, 3);
+        sample.forEach((a, i) => {
+          const hasCtx = a.supplier_context != null && String(a.supplier_context).trim() !== '';
+          if (!hasCtx) {
+            console.warn(`[AI Asset ${i}] supplier_context missing or empty for "${a.asset_name}"`);
+          }
+        });
       }
       return parsed;
     } catch (error) {
@@ -839,7 +847,7 @@ Quantity Rules:
 
 Technical Specifications: Include relevant procurement details such as dimensions, materials, resolution, structural requirements, duration, power requirements, finish quality, load bearing, weather resistance, compliance standards, usage rights, etc.
 
-Supplier Context: Include operational and vendor-relevant context such as indoor/outdoor use, installation and removal requirements, required delivery date, operating hours, transport needs, operator requirements, revision requirements, integration with other assets, safety or compliance requirements.
+Supplier Context (MANDATORY - NEVER OMIT): Every asset MUST have a non-empty supplier_context. Include operational and vendor-relevant context such as: indoor/outdoor use, installation and removal requirements, required delivery date, operating hours, transport needs, operator requirements, revision requirements, integration with other assets, safety or compliance requirements. If uncertain, write "Indoor/outdoor TBC. Delivery and installation to be confirmed." Do not leave supplier_context empty or null.
 
 Respond with ONLY a JSON object in this exact format (no markdown, no code blocks):
 {

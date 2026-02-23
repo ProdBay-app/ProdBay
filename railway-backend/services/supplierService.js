@@ -235,13 +235,17 @@ class SupplierService {
     const fromName = from?.name || '[Your Name]';
     const fromEmail = from?.email || '[Your Email]';
     
+    const supplierContextBlock = (asset.supplier_context && asset.supplier_context.trim() !== '')
+      ? `\nSupplier & Logistics Context: ${asset.supplier_context}\n`
+      : '';
+
     return `Dear ${contactName},
 
 We would like to request a quote for the following asset:
 
 Asset: ${asset.asset_name}
 Specifications: ${asset.specifications || 'See project brief for details'}
-Timeline: ${asset.timeline || 'To be discussed'}
+${supplierContextBlock}Timeline: ${asset.timeline || 'To be discussed'}
 
 Please provide your quote by visiting the link below and submitting your proposal.
 
