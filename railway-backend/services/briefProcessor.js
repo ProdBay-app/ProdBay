@@ -139,6 +139,12 @@ class BriefProcessor {
           // Create assets with AI-generated specifications
           createdAssets = [];
           for (const aiAsset of aiResult.assets) {
+            const quantity = (aiAsset.quantity != null && Number.isInteger(Number(aiAsset.quantity)) && Number(aiAsset.quantity) >= 0)
+              ? Number(aiAsset.quantity)
+              : 1;
+            const supplierContext = (aiAsset.supplier_context != null && String(aiAsset.supplier_context).trim() !== '')
+              ? String(aiAsset.supplier_context).trim()
+              : null;
             const { data: asset, error } = await supabase
               .from('assets')
               .insert({
@@ -147,6 +153,8 @@ class BriefProcessor {
                 specifications: aiAsset.specifications,
                 source_text: aiAsset.source_text || null,
                 tags: aiAsset.tags || [],
+                quantity,
+                supplier_context: supplierContext,
                 status: 'Pending'
               })
               .select()
