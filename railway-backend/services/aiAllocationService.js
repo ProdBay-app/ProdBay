@@ -696,16 +696,10 @@ class AIAllocationService {
 
   /**
    * Get the list of available asset tags for event production
-   * Must stay in sync with src/utils/assetTags.ts PREDEFINED_ASSET_TAGS
-   * 15 distinct tags for consistent LLM attribution
+   * Single source of truth: config/assetTagNames.json (shared with frontend)
    */
   getAvailableAssetTags() {
-    return [
-      'Audio', 'Video & Display', 'Photography', 'Graphics & Signage',
-      'Lighting', 'Staging', 'Catering', 'Staffing', 'Logistics',
-      'Branding & Marketing', 'Floral & Decor', 'Furniture', 'Technology',
-      'Medical', 'Scenic & Props'
-    ];
+    return require('../../config/assetTagNames.json');
   }
 
   /**

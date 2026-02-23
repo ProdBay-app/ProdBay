@@ -7,12 +7,19 @@ import {
   mapAssetTagsToSupplierCategories,
   calculateSupplierRelevanceScore,
   sortSuppliersByRelevance,
-  getMatchingCategories
+  getMatchingCategories,
+  validateAssetTagMapKeys
 } from '../supplierRelevance';
 import type { Supplier } from '@/lib/supabase';
 
 describe('supplierRelevance', () => {
   describe('ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP', () => {
+    it('should have mapping for every tag in config (validateAssetTagMapKeys)', () => {
+      const { valid, missing } = validateAssetTagMapKeys();
+      expect(valid).toBe(true);
+      expect(missing).toEqual([]);
+    });
+
     it('should map Audio tag to Audio category', () => {
       expect(ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP['Audio']).toEqual(['Audio']);
     });
