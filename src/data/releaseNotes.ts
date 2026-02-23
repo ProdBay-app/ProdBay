@@ -17,6 +17,9 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       "New 'Supplier Context' field provides vendor-ready instructions: indoor/outdoor use, installation requirements, operator needs, transport.",
       'Smart handling of TBC and Estimated quantities—stored in specifications when exact count is uncertain.',
       "Procurement Insights section in AI preview and 'Supplier & Logistics Context' in asset details surface these insights before creation."
+    ]
+  },
+  {
     date: '2026-02-24',
     version: 'v0.9.0',
     title: 'Global inline table editing for assets',
