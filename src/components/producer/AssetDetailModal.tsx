@@ -61,7 +61,8 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
     asset_name: asset?.asset_name || '',
     specifications: asset?.specifications || '',
     quantity: asset?.quantity,
-    tags: asset?.tags || []
+    tags: asset?.tags || [],
+    supplier_context: asset?.supplier_context ?? ''
   });
 
   // Sync editingData when asset ID changes (switching to a different asset)
@@ -89,7 +90,8 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
               status: previousAsset.status,
               assigned_supplier_id: previousAsset.assigned_supplier_id,
               quantity: previousData.quantity,
-              tags: previousData.tags
+              tags: previousData.tags,
+              supplier_context: previousData.supplier_context || null
             });
             // Notify parent of the update
             onAssetUpdate(updatedAsset);
@@ -108,7 +110,8 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
         asset_name: asset.asset_name || '',
         specifications: asset.specifications || '',
         quantity: asset.quantity,
-        tags: asset.tags || []
+        tags: asset.tags || [],
+        supplier_context: asset.supplier_context ?? ''
       });
       setSaveStatus('idle');
       isInitialMount.current = true;
@@ -146,7 +149,8 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
         status: currentAsset.status,
         assigned_supplier_id: currentAsset.assigned_supplier_id,
         quantity: editingData.quantity,
-        tags: editingData.tags
+        tags: editingData.tags,
+        supplier_context: editingData.supplier_context?.trim() || null
       });
 
       onAssetUpdate(updatedAsset);
@@ -460,21 +464,26 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                   </div>
                 </div>
 
-                {/* Supplier & Logistics Context - Production Note (read-only, from AI analysis) */}
-                {asset.supplier_context != null && asset.supplier_context.trim() !== '' && (
-                  <div className="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
-                    <div className="flex items-start gap-2">
-                      <Truck className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <label className="block text-sm font-semibold text-amber-200 mb-1.5">
-                          Supplier & Logistics Context
-                        </label>
-                        <p className="text-sm text-gray-200 leading-relaxed">{asset.supplier_context}</p>
-                        <span className="inline-block mt-2 text-xs text-amber-300/80 italic">Production note from AI analysis</span>
-                      </div>
+                {/* Supplier & Logistics Context - Editable, included in quote requests to suppliers */}
+                <div className="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <Truck className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <label className="block text-sm font-semibold text-amber-200 mb-1.5">
+                        Supplier & Logistics Context
+                      </label>
+                      <textarea
+                        value={editingData.supplier_context}
+                        onChange={(e) => handleFieldChange('supplier_context', e.target.value)}
+                        onBlur={handleBlur}
+                        rows={3}
+                        className="w-full px-3 py-2 bg-black/20 border border-white/20 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all resize-y"
+                        placeholder="Indoor/outdoor use, installation requirements, delivery dates, operator needs, transport, etc. This is included in quote requests to suppliers."
+                      />
+                      <span className="inline-block mt-2 text-xs text-amber-300/80 italic">Included in quote request emails to suppliers</span>
                     </div>
                   </div>
-                )}
+                </div>
 
                 {/* Tags Section */}
                 <div className="mt-4 bg-black/10 border border-white/10 rounded-lg p-4">

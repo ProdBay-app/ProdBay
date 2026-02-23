@@ -13,6 +13,9 @@ RUN npm ci --omit=dev
 # Copy application code from railway-backend directory
 COPY railway-backend/ .
 
+# Copy shared config (assetTagNames.json) - backend requires ../../config from /app/services/
+COPY config/ /config/
+
 # Expose port
 EXPOSE 3000
 
