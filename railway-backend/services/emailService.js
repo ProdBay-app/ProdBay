@@ -248,23 +248,25 @@ class EmailService {
       }
 
       // Build HTML body
-      // Convert plain text message to HTML, preserving line breaks
+      // Convert plain text message to HTML, preserving line breaks.
+      // IMPORTANT: Escape each line before joining with <br> so that <br> tags
+      // render as HTML, not as literal &lt;br&gt; text.
       let htmlBodyContent = '';
       if (message) {
-        // Convert plain text to HTML paragraphs
         const paragraphs = message.split('\n\n').filter(p => p.trim());
         htmlBodyContent = paragraphs.map(para => {
-          // Replace single newlines with <br> within paragraphs
-          const formatted = para.split('\n').map(line => line.trim()).filter(line => line).join('<br>');
-          return `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">${escapeHtml(formatted)}</p>`;
+          const lines = para.split('\n').map(line => line.trim()).filter(Boolean);
+          const safeContent = lines.map(line => escapeHtml(line)).join('<br>');
+          return `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">${safeContent}</p>`;
         }).join('');
-        
-        // Ensure quote link is clickable if present
-        if (quoteLink && htmlBodyContent.includes(quoteLink)) {
-          htmlBodyContent = htmlBodyContent.replace(
-            new RegExp(escapeHtml(quoteLink), 'g'),
-            `<a href="${quoteLink}" style="color: #7c3aed; text-decoration: underline;">${quoteLink}</a>`
-          );
+
+        // Make quote link clickable if present. Use escaped URL for search (to match
+        // rendered content) and escape regex special chars to avoid RegExp errors.
+        if (quoteLink && typeof quoteLink === 'string' && quoteLink.trim()) {
+          const escapedLink = escapeHtml(quoteLink);
+          const regexSafe = escapedLink.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const linkHtml = `<a href="${escapeHtml(quoteLink)}" style="color: #7c3aed; text-decoration: underline;">${escapedLink}</a>`;
+          htmlBodyContent = htmlBodyContent.replace(new RegExp(regexSafe, 'g'), linkHtml);
         }
       } else {
         // Fallback HTML

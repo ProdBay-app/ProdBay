@@ -9,6 +9,17 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   {
     date: '2026-02-23',
     version: 'v0.9.0',
+    title: 'Professional Email Overhaul (Part 1)',
+    bulletPoints: [
+      'New branded global email template with ProdBay header and consistent typography (Inter/system-serif).',
+      'Fixed quote request email formatting: line breaks and links now display correctly instead of raw HTML tags.',
+      'Prominent "Submit Quote" button as the primary visual anchor for supplier action.',
+      'Reusable BaseEmailLayout infrastructure for future email types.'
+    ]
+  },
+  {
+    date: '2026-02-23',
+    version: 'v0.9.0',
     title: 'Intelligence Upgrade: Senior Production Controller',
     bulletPoints: [
       'AI Asset Analysis engine refactored to act as a Senior Production Controller with event procurement expertise.',

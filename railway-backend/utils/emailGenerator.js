@@ -1,86 +1,54 @@
 /**
  * Email Generator Utility
  * Generates branded HTML email templates with dark header and light content
- * 
+ *
  * Design: Light Mode with Dark Header (Option A)
  * - Better email client compatibility (especially Outlook)
  * - High readability
  * - Brand consistency via dark header
+ * - Professional typography: Inter, system-ui, sans-serif
  */
+
+const FONT_STACK = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+const BRAND_PURPLE = '#7c3aed';
+const HEADER_BG = '#0A0A0A';
 
 /**
- * Generate HTML email template
- * @param {Object} options - Email template options
- * @param {string} options.title - Email title/heading
- * @param {string|Array} options.body - Email body content (plain text, HTML string, or array of key-value pairs)
- * @param {string} [options.ctaLink] - Call-to-action button link (optional)
- * @param {string} [options.ctaText] - Call-to-action button text (optional)
- * @param {string} [options.footerText] - Custom footer text (optional, defaults to "ProdBay - Production Management Platform")
+ * Base Email Layout
+ * Reusable HTML wrapper for all ProdBay emails. Accepts pre-rendered content
+ * and optional CTA. Uses text-based header with purple accent when no logo URL is configured.
+ *
+ * @param {Object} options - Layout options
+ * @param {string} options.title - Email heading (displayed in card)
+ * @param {string} options.content - Pre-rendered HTML body content
+ * @param {Object} [options.cta] - Call-to-action { link, text } or null
+ * @param {string} [options.footerText] - Footer text (default: "ProdBay - Production Management Platform")
+ * @param {string} [options.logoUrl] - Optional hosted logo image URL (falls back to text header if absent)
  * @returns {string} Complete HTML email string
  */
-function generateEmailHtml({ title, body, ctaLink, ctaText, footerText }) {
-  // Validate required parameters
-  if (!title) {
-    throw new Error('Title is required for email template');
-  }
-  if (!body) {
-    throw new Error('Body is required for email template');
-  }
+function BaseEmailLayout({ title, content, cta = null, footerText, logoUrl }) {
+  const finalFooterText = footerText || 'ProdBay - Production Management Platform';
 
-  // Process body content
-  let bodyHtml = '';
-  
-  if (typeof body === 'string') {
-    // Plain text or HTML string - convert newlines to <br> if plain text
-    if (body.includes('<') && body.includes('>')) {
-      // Assume HTML if contains HTML tags
-      bodyHtml = body;
-    } else {
-      // Plain text - preserve line breaks
-      bodyHtml = body.split('\n').map(line => {
-        const trimmed = line.trim();
-        if (trimmed === '') return '<br>';
-        return `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">${escapeHtml(trimmed)}</p>`;
-      }).join('');
-    }
-  } else if (Array.isArray(body)) {
-    // Array of key-value pairs
-    bodyHtml = body.map(item => {
-      const label = escapeHtml(item.label || '');
-      const value = escapeHtml(item.value || '');
-      return `
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
-          <tr>
-            <td style="padding: 0;">
-              <p style="margin: 0 0 4px 0; color: #666666; font-size: 14px; font-weight: 600;">${label}</p>
-              <p style="margin: 0; color: #1a1a1a; font-size: 16px; line-height: 1.6;">${value}</p>
-            </td>
-          </tr>
-        </table>
-      `;
-    }).join('');
-  }
+  // Header: logo image if URL provided, otherwise text-based brand header
+  const headerHtml = logoUrl
+    ? `<img src="${escapeHtml(logoUrl)}" alt="ProdBay" width="140" height="40" style="display: block; max-width: 140px; height: auto;" />`
+    : `<span style="color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.02em;">ProdBay</span>`;
 
-  // Generate CTA button HTML if provided
-  let ctaHtml = '';
-  if (ctaLink && ctaText) {
-    ctaHtml = `
+  // CTA: flexible button with link and text
+  const ctaHtml = cta && cta.link && cta.text
+    ? `
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 30px 0;">
         <tr>
           <td align="center" style="padding: 0;">
-            <a href="${escapeHtml(ctaLink)}" style="display: inline-block; padding: 16px 32px; background-color: #7c3aed; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-              ${escapeHtml(ctaText)}
+            <a href="${escapeHtml(cta.link)}" style="display: inline-block; padding: 16px 32px; background-color: ${BRAND_PURPLE}; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; font-family: ${FONT_STACK};">
+              ${escapeHtml(cta.text)}
             </a>
           </td>
         </tr>
       </table>
-    `;
-  }
+    `
+    : '';
 
-  // Default footer text
-  const finalFooterText = footerText || 'ProdBay - Production Management Platform';
-
-  // Generate complete HTML email
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,7 +70,7 @@ function generateEmailHtml({ title, body, ctaLink, ctaText, footerText }) {
     }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: ${FONT_STACK};">
   <!-- Outer wrapper table -->
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5f5f5" style="padding: 20px 0;">
     <tr>
@@ -110,44 +78,42 @@ function generateEmailHtml({ title, body, ctaLink, ctaText, footerText }) {
         <!-- Header -->
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%;">
           <tr>
-            <td bgcolor="#0A0A0A" style="padding: 30px; text-align: center;" class="header-padding">
-              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                ProdBay
-              </h1>
+            <td bgcolor="${HEADER_BG}" style="padding: 30px; text-align: center;" class="header-padding">
+              ${headerHtml}
             </td>
           </tr>
           <tr>
-            <td bgcolor="#7c3aed" style="height: 4px; padding: 0; line-height: 4px; font-size: 4px;">
+            <td bgcolor="${BRAND_PURPLE}" style="height: 4px; padding: 0; line-height: 4px; font-size: 4px;">
               &nbsp;
             </td>
           </tr>
         </table>
-        
+
         <!-- Card Container -->
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="max-width: 600px; width: 100%; border: 1px solid #e5e5e5; border-radius: 8px; margin-top: 0;">
           <tr>
             <td style="padding: 40px;" class="card">
               <!-- Title -->
-              <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 24px; font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.3;">
+              <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 24px; font-weight: bold; font-family: ${FONT_STACK}; line-height: 1.3;">
                 ${escapeHtml(title)}
               </h2>
-              
+
               <!-- Body Content -->
-              <div style="color: #333333; font-size: 16px; line-height: 1.6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                ${bodyHtml}
+              <div style="color: #333333; font-size: 16px; line-height: 1.6; font-family: ${FONT_STACK};">
+                ${content}
               </div>
-              
+
               <!-- CTA Button -->
               ${ctaHtml}
             </td>
           </tr>
         </table>
-        
+
         <!-- Footer -->
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; margin-top: 0;">
           <tr>
-            <td bgcolor="#0A0A0A" style="padding: 30px; text-align: center;" class="footer-padding">
-              <p style="margin: 0; color: #999999; font-size: 12px; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+            <td bgcolor="${HEADER_BG}" style="padding: 30px; text-align: center;" class="footer-padding">
+              <p style="margin: 0; color: #999999; font-size: 12px; line-height: 1.5; font-family: ${FONT_STACK};">
                 ${escapeHtml(finalFooterText)}
               </p>
             </td>
@@ -161,6 +127,66 @@ function generateEmailHtml({ title, body, ctaLink, ctaText, footerText }) {
 }
 
 /**
+ * Generate HTML email template
+ * High-level API that processes body content and delegates to BaseEmailLayout.
+ *
+ * @param {Object} options - Email template options
+ * @param {string} options.title - Email title/heading
+ * @param {string|Array} options.body - Email body content (plain text, HTML string, or array of key-value pairs)
+ * @param {string} [options.ctaLink] - Call-to-action button link (optional)
+ * @param {string} [options.ctaText] - Call-to-action button text (optional)
+ * @param {string} [options.footerText] - Custom footer text (optional)
+ * @returns {string} Complete HTML email string
+ */
+function generateEmailHtml({ title, body, ctaLink, ctaText, footerText }) {
+  if (!title) {
+    throw new Error('Title is required for email template');
+  }
+  if (!body) {
+    throw new Error('Body is required for email template');
+  }
+
+  // Process body content into HTML
+  let bodyHtml = '';
+
+  if (typeof body === 'string') {
+    if (body.includes('<') && body.includes('>')) {
+      bodyHtml = body;
+    } else {
+      bodyHtml = body.split('\n').map(line => {
+        const trimmed = line.trim();
+        if (trimmed === '') return '<br>';
+        return `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">${escapeHtml(trimmed)}</p>`;
+      }).join('');
+    }
+  } else if (Array.isArray(body)) {
+    bodyHtml = body.map(item => {
+      const label = escapeHtml(item.label || '');
+      const value = escapeHtml(item.value || '');
+      return `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+          <tr>
+            <td style="padding: 0;">
+              <p style="margin: 0 0 4px 0; color: #666666; font-size: 14px; font-weight: 600;">${label}</p>
+              <p style="margin: 0; color: #1a1a1a; font-size: 16px; line-height: 1.6;">${value}</p>
+            </td>
+          </tr>
+        </table>
+      `;
+    }).join('');
+  }
+
+  const cta = (ctaLink && ctaText) ? { link: ctaLink, text: ctaText } : null;
+
+  return BaseEmailLayout({
+    title,
+    content: bodyHtml,
+    cta,
+    footerText
+  });
+}
+
+/**
  * Escape HTML special characters to prevent XSS
  * @param {string} text - Text to escape
  * @returns {string} Escaped text
@@ -169,7 +195,7 @@ function escapeHtml(text) {
   if (typeof text !== 'string') {
     return String(text);
   }
-  
+
   const map = {
     '&': '&amp;',
     '<': '&lt;',
@@ -177,11 +203,12 @@ function escapeHtml(text) {
     '"': '&quot;',
     "'": '&#039;'
   };
-  
+
   return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 module.exports = {
-  generateEmailHtml
+  generateEmailHtml,
+  BaseEmailLayout,
+  escapeHtml
 };
-
