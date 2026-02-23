@@ -47,6 +47,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       'Universal branding applied to acceptance notifications and message alerts.',
       'Quote Accepted and "New Message" (producer → supplier) emails now carry the producer\'s signature and branding.',
       'Clean fallback logic: incomplete profiles (name-only, no company/phone) render without empty lines or weird punctuation.',
+      "Implemented 'Airbnb-style' From headers for enhanced brand recognition.",
       'Email & Branding Overhaul: 100% complete.'
     ]
   },

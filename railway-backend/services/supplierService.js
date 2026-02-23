@@ -601,9 +601,12 @@ ${signatureLines}`;
       const bccEmails = customizedEmail?.bccEmails || null;
 
       // Send email via Resend with Reply-To pattern
+      // Pass signature for Airbnb-style From header: "ProdBay via [Company]"
+      const signature = { name: from.name, company: from.company, email: from.email };
       const emailResult = await emailService.sendQuoteRequest({
         to: supplierEmail,
         replyTo: from.email, // User's email for Reply-To header
+        signature,
         assetName: asset.asset_name,
         message: message,
         quoteLink: quoteLink,

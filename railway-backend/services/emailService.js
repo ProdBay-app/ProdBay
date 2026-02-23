@@ -36,6 +36,34 @@ class EmailService {
   }
 
   /**
+   * Extract the verified system email address from this.fromEmail.
+   * Handles both "Display Name <email@domain.com>" and bare "email@domain.com" formats.
+   * @returns {string} The email address for use in From header angle brackets
+   */
+  getVerifiedSystemEmail() {
+    const match = this.fromEmail.match(/<([^>]+)>/);
+    return match ? match[1].trim() : this.fromEmail.trim();
+  }
+
+  /**
+   * Build "Airbnb-style" From header: "ProdBay via [Company/Name] <verified-email>".
+   * Sanitizes display strings to prevent header injection (newlines, angle brackets).
+   *
+   * @param {Object} [signature] - { name, company, email }
+   * @returns {string} Formatted From string for Resend API
+   */
+  getFormattedFromAddress(signature) {
+    const verifiedEmail = this.getVerifiedSystemEmail();
+    const sanitize = (s) => (typeof s === 'string' ? s.replace(/[\r\n<>]/g, ' ').trim() : '') || '';
+
+    const company = sanitize(signature?.company);
+    const name = sanitize(signature?.name);
+    const display = company || name || 'Producer';
+
+    return `ProdBay via ${display} <${verifiedEmail}>`;
+  }
+
+  /**
    * Delay helper used by throttling and retry logic
    * @param {number} ms - Milliseconds to wait
    * @returns {Promise<void>}
@@ -203,9 +231,10 @@ class EmailService {
    * @param {Array} [params.attachmentUrls] - Optional array of {url, filename} from Storage (preferred)
    * @param {string} [params.cc] - Optional comma-separated CC email addresses
    * @param {string} [params.bcc] - Optional comma-separated BCC email addresses
+   * @param {Object} [params.signature] - Producer signature { name, company, email } for Airbnb-style From header
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null, attachments = null, attachmentUrls = null, cc = null, bcc = null }) {
+  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null, attachments = null, attachmentUrls = null, cc = null, bcc = null, signature = null }) {
     try {
       // Log entry point and parameters
       console.log('[EmailService] Attempting to send quote request email');
@@ -355,9 +384,11 @@ class EmailService {
       }
 
       // Send email via Resend
+      // From: Airbnb-style "ProdBay via [Company]" when producer signature available
+      const fromHeader = signature ? this.getFormattedFromAddress(signature) : this.fromEmail;
       console.log('[EmailService] Calling Resend API...');
       const emailPayload = {
-        from: this.fromEmail,
+        from: fromHeader,
         to: [to],
         reply_to: [replyTo],
         subject: emailSubject,
@@ -625,10 +656,13 @@ class EmailService {
       });
 
       // Send email via Resend
+      // From: Airbnb-style "ProdBay via [Company]" when producer is sender (signature present);
+      // otherwise standard ProdBay header (supplier sender)
+      const fromHeader = signature ? this.getFormattedFromAddress(signature) : this.fromEmail;
       console.log('[EmailService] Calling Resend API...');
       const { data } = await this.enqueueSend(async () => {
         const { data: sendData, error: sendError } = await this.resend.emails.send({
-          from: this.fromEmail,
+          from: fromHeader,
           to: [to],
           reply_to: [replyTo],
           subject: emailSubject,
@@ -725,14 +759,22 @@ class EmailService {
         footerText: 'ProdBay - Production Management Platform'
       });
 
+      // From: Airbnb-style "ProdBay via [Company]" when producer signature available
+      const fromHeader = signature ? this.getFormattedFromAddress(signature) : this.fromEmail;
+      const replyToEmail = signature?.email || null;
+
       const { data } = await this.enqueueSend(async () => {
-        const { data: sendData, error: sendError } = await this.resend.emails.send({
-          from: this.fromEmail,
+        const payload = {
+          from: fromHeader,
           to: [toEmail],
           subject: emailSubject,
           text: plainBody,
           html: htmlBody
-        });
+        };
+        if (replyToEmail) {
+          payload.reply_to = [replyToEmail];
+        }
+        const { data: sendData, error: sendError } = await this.resend.emails.send(payload);
 
         if (sendError) {
           throw this.createSendError(sendError, 'send quote accepted email');
