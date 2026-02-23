@@ -488,9 +488,10 @@ class EmailService {
       }
 
       if (documentUrl) {
-        bodyData.push({ 
-          label: 'Quote Document', 
-          value: `<a href="${documentUrl}" style="color: #7c3aed; text-decoration: underline;">View Document</a>` 
+        const safeUrl = escapeHtml(documentUrl);
+        bodyData.push({
+          label: 'Quote Document',
+          valueHtml: `<a href="${safeUrl}" style="color: #7c3aed; text-decoration: underline;">View Document</a>`
         });
       }
 
@@ -597,13 +598,16 @@ class EmailService {
       emailBody += `View the full conversation and reply here:\n${portalLink}\n\n`;
       emailBody += `Best regards,\nProdBay Team`;
 
-      // Build HTML body
-      let htmlBodyContent = `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">You have received a new message from <strong>${senderName}</strong> regarding <strong>"${quoteName}"</strong>.</p>`;
-      
+      // Build HTML body - escape all user-supplied content to prevent XSS
+      const safeSenderName = escapeHtml(senderName);
+      const safeQuoteName = escapeHtml(quoteName);
+      let htmlBodyContent = `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">You have received a new message from <strong>${safeSenderName}</strong> regarding <strong>"${safeQuoteName}"</strong>.</p>`;
+
       if (messagePreview) {
         const previewText = messagePreview.length >= 100 ? messagePreview.substring(0, 100) + '...' : messagePreview;
+        const safePreview = escapeHtml(previewText);
         htmlBodyContent += `<div style="background-color: #f5f5f5; border-left: 3px solid #7c3aed; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">`;
-        htmlBodyContent += `<p style="margin: 0; color: #666666; font-size: 14px; font-style: italic; line-height: 1.6;">"${previewText}"</p>`;
+        htmlBodyContent += `<p style="margin: 0; color: #666666; font-size: 14px; font-style: italic; line-height: 1.6;">"${safePreview}"</p>`;
         htmlBodyContent += `</div>`;
       }
 
@@ -671,9 +675,10 @@ class EmailService {
    * @param {string} supplierName - Supplier name/contact name
    * @param {string|null} projectName - Optional project name (not used in content)
    * @param {string} quoteTitle - Quote/asset title
+   * @param {string} [portalLink] - Optional portal link for "View in Portal" CTA
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendQuoteAcceptedEmail(toEmail, supplierName, projectName, quoteTitle) {
+  async sendQuoteAcceptedEmail(toEmail, supplierName, projectName, quoteTitle, portalLink = null) {
     try {
       if (!toEmail || !supplierName || !quoteTitle) {
         throw new Error('Missing required parameters: toEmail, supplierName, and quoteTitle are required');
@@ -696,6 +701,7 @@ class EmailService {
         `The producer will be in touch shortly.\n\n` +
         `Best regards,\nProdBay Team`;
 
+      // Paragraph styles: 16px, 1.6 line-height per BaseEmailLayout standard
       const htmlBodyContent =
         `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
         `Good news, <strong>${safeSupplierName}</strong>!</p>` +
@@ -707,8 +713,8 @@ class EmailService {
       const htmlBody = generateEmailHtml({
         title: 'Quote Accepted',
         body: htmlBodyContent,
-        ctaLink: null,
-        ctaText: null,
+        ctaLink: portalLink || null,
+        ctaText: portalLink ? 'View in Portal' : null,
         footerText: 'ProdBay - Production Management Platform'
       });
 

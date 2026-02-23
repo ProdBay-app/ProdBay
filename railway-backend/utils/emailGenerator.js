@@ -162,7 +162,10 @@ function generateEmailHtml({ title, body, ctaLink, ctaText, footerText }) {
   } else if (Array.isArray(body)) {
     bodyHtml = body.map(item => {
       const label = escapeHtml(item.label || '');
-      const value = escapeHtml(item.value || '');
+      // Use valueHtml for trusted HTML (e.g. links); otherwise escape value for safety
+      const value = item.valueHtml !== undefined
+        ? item.valueHtml
+        : escapeHtml(item.value || '');
       return `
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
           <tr>

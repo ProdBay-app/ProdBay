@@ -47,7 +47,7 @@ class QuoteService {
         throw new Error('Invalid quote ID format. Quote IDs must be valid UUIDs.');
       }
 
-      // Fetch the quote with asset_id and supplier_id
+      // Fetch the quote with asset_id, supplier_id, and access_token (for portal link)
       const { data: quote, error: quoteError } = await supabase
         .from('quotes')
         .select(`
@@ -56,6 +56,7 @@ class QuoteService {
           supplier_id,
           status,
           cost,
+          access_token,
           supplier:suppliers(
             supplier_name,
             contact_email,
@@ -179,12 +180,18 @@ class QuoteService {
       const projectName = quote.asset?.project?.project_name || null;
 
       if (supplierEmail) {
+        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+        const portalLink = quote.access_token
+          ? `${frontendUrl}/portal/quote/${quote.access_token}`
+          : null;
+
         console.log(`[QuoteService] Sending acceptance email for quote ${quoteId} to ${supplierEmail}`);
         const emailResult = await emailService.sendQuoteAcceptedEmail(
           supplierEmail,
           supplierName,
           projectName,
-          quoteTitle
+          quoteTitle,
+          portalLink
         );
 
         if (!emailResult.success) {

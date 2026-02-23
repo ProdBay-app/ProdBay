@@ -20,6 +20,17 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   {
     date: '2026-02-23',
     version: 'v0.9.0',
+    title: 'Professional Email Overhaul (Part 2)',
+    bulletPoints: [
+      'System-wide email content standardization: Quote Received, New Message, and Quote Accepted notifications.',
+      'Quote Received: Document links now render as clickable links (valueHtml support in email generator).',
+      'New Message: All user-supplied content (sender name, quote name, message preview) escaped to prevent XSS.',
+      'Quote Accepted: "View in Portal" CTA button when portal link is available; consistent 16px/1.6 typography.'
+    ]
+  },
+  {
+    date: '2026-02-23',
+    version: 'v0.9.0',
     title: 'Intelligence Upgrade: Senior Production Controller',
     bulletPoints: [
       'AI Asset Analysis engine refactored to act as a Senior Production Controller with event procurement expertise.',
