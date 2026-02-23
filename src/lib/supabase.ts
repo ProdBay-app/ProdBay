@@ -105,8 +105,6 @@ export interface Asset {
   created_at: string;
   updated_at: string;
   assigned_supplier?: Supplier;
-  quote_count?: number; // Total count of quote requests sent (all statuses)
-  received_quote_count?: number; // Count of quotes received (Submitted, Accepted, or Rejected status)
 }
 
 export interface ContactPerson {

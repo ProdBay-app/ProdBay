@@ -7,6 +7,28 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    date: '2026-02-24',
+    version: 'v0.9.0',
+    title: 'Global inline table editing for assets',
+    bulletPoints: [
+      'Added Edit Mode toggle to the asset table for rapid updates without opening modals.',
+      'Inline editing for Name, Quantity, Tags, and Specifications directly in the table view.',
+      'Tags use the same predefined list and multi-select dropdown as the asset forms.',
+      'Save All persists changes; partial failures keep failed assets editable and show clear feedback.',
+      'Discard clears unsaved edits; confirmation required when exiting edit mode with unsaved changes.'
+    ]
+  },
+  {
+    date: '2026-02-23',
+    version: 'v0.8.9',
+    title: 'Asset table updates: specifications column and streamlined columns',
+    bulletPoints: [
+      'Removed deprecated # Quote Requests and # Quotes Received columns from the asset table list view.',
+      'Added Specifications column between Tags and Supplier Status so asset specs are visible at a glance.',
+      'Long specifications are truncated with ellipsis; hover to see the full text in a tooltip.'
+    ]
+  },
+  {
     date: '2026-02-19',
     version: 'v0.8.8',
     title: 'Simplified asset tags for consistent AI attribution',
