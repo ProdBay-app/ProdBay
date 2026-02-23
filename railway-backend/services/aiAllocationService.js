@@ -13,8 +13,28 @@ class AIAllocationService {
   }
 
   /**
+   * Map AI response asset (new schema) to internal schema for downstream consumers.
+   * New schema: technical_specifications, supplier_context, category_tag
+   * Internal schema: specifications, tags (array), supplier_context, quantity
+   */
+  mapAssetToInternalSchema(asset) {
+    const specifications = asset.technical_specifications ?? asset.specifications ?? '';
+    const categoryTag = asset.category_tag;
+    const tags = Array.isArray(asset.tags) ? asset.tags : (categoryTag ? [categoryTag] : []);
+    return {
+      asset_name: asset.asset_name,
+      specifications,
+      source_text: asset.source_text ?? '',
+      tags,
+      quantity: asset.quantity,
+      supplier_context: asset.supplier_context ?? null
+    };
+  }
+
+  /**
    * Clean and parse JSON response from OpenAI
    * Handles markdown code blocks and other formatting issues
+   * Maps new AI schema (technical_specifications, category_tag) to internal schema
    */
   parseAIResponse(content) {
     // Declare cleanedContent outside try block to avoid ReferenceError in catch
@@ -58,7 +78,12 @@ class AIAllocationService {
         console.log(`[Repair] Merged asset objects detected and repaired automatically (${this._lastSavedCount} assets saved)`);
       }
       
-      return JSON.parse(cleanedContent);
+      const parsed = JSON.parse(cleanedContent);
+      // Map new AI schema (technical_specifications, category_tag, supplier_context) to internal schema
+      if (parsed.assets && Array.isArray(parsed.assets)) {
+        parsed.assets = parsed.assets.map((a) => this.mapAssetToInternalSchema(a));
+      }
+      return parsed;
     } catch (error) {
       // Enhanced error logging with repair attempt information
       const repairInfo = this._lastRepairAttempted ? ' [REPAIR ATTEMPTED]' : '';
@@ -432,6 +457,24 @@ class AIAllocationService {
       const specs = match.match(/"specifications":\s*"([^"]*)"/g);
       return specs ? specs[specs.length - 1] : match;
     });
+
+    // Remove duplicate technical_specifications (new schema)
+    cleaned = cleaned.replace(/"technical_specifications":\s*"[^"]*",\s*"technical_specifications":\s*"[^"]*"/g, (match) => {
+      const specs = match.match(/"technical_specifications":\s*"([^"]*)"/g);
+      return specs ? specs[specs.length - 1] : match;
+    });
+
+    // Remove duplicate supplier_context
+    cleaned = cleaned.replace(/"supplier_context":\s*"[^"]*",\s*"supplier_context":\s*"[^"]*"/g, (match) => {
+      const ctx = match.match(/"supplier_context":\s*"([^"]*)"/g);
+      return ctx ? ctx[ctx.length - 1] : match;
+    });
+
+    // Remove duplicate quantity (number or string)
+    cleaned = cleaned.replace(/"quantity":\s*(?:\d+|"[^"]*"),\s*"quantity":\s*(?:\d+|"[^"]*")/g, (match) => {
+      const qty = match.match(/"quantity":\s*(\d+|"[^"]*")/g);
+      return qty ? qty[qty.length - 1] : match;
+    });
     
     // Remove duplicate source_text
     cleaned = cleaned.replace(/"source_text":\s*"[^"]*",\s*"source_text":\s*"[^"]*"/g, (match) => {
@@ -450,12 +493,14 @@ class AIAllocationService {
 
   /**
    * Extract assets from malformed JSON using multiple strategies
+   * Supports both legacy (specifications, tags) and new (technical_specifications, category_tag, supplier_context) schemas
    */
   extractAssetsFromMalformedJson(rawContent) {
     const assets = [];
     
     try {
       // Strategy 1: Try to find complete asset objects using regex
+      // Pattern matches objects with asset_name and either specifications or technical_specifications
       const assetPattern = /{\s*"asset_name":\s*"[^"]*"[^}]*}/g;
       const assetMatches = rawContent.match(assetPattern);
       
@@ -466,14 +511,10 @@ class AIAllocationService {
             const cleanedAsset = this.cleanJsonResponse(assetMatch);
             const asset = JSON.parse(cleanedAsset);
             
-            // Validate that it has required fields
-            if (asset.asset_name && asset.specifications) {
-              assets.push({
-                asset_name: asset.asset_name,
-                specifications: asset.specifications,
-                source_text: asset.source_text || '',
-                tags: asset.tags || []
-              });
+            // Validate: asset_name and either specifications or technical_specifications
+            const hasSpecs = asset.specifications || asset.technical_specifications;
+            if (asset.asset_name && hasSpecs) {
+              assets.push(this.mapAssetToInternalSchema(asset));
             }
           } catch (parseError) {
             // Skip malformed individual assets
@@ -494,13 +535,9 @@ class AIAllocationService {
               const cleanedAsset = this.cleanJsonResponse(assetObj.trim());
               const asset = JSON.parse(cleanedAsset);
               
-              if (asset.asset_name && asset.specifications) {
-                assets.push({
-                  asset_name: asset.asset_name,
-                  specifications: asset.specifications,
-                  source_text: asset.source_text || '',
-                  tags: asset.tags || []
-                });
+              const hasSpecs = asset.specifications || asset.technical_specifications;
+              if (asset.asset_name && hasSpecs) {
+                assets.push(this.mapAssetToInternalSchema(asset));
               }
             } catch (parseError) {
               continue;
@@ -534,7 +571,7 @@ class AIAllocationService {
         messages: [
           {
             role: "system",
-            content: "You are an expert event production manager. Analyze project briefs to identify all required assets, listing each with detailed specifications. Respond with JSON only—do not use markdown, code blocks, or add explanations outside the JSON. STRICT JSON RULES: 1) Escape all string values: use \\ for backslashes, \" for quotes, \n for newlines. 2) Write all symbols in plain text (e.g., '360 degrees', not LaTeX). 3) Validate arrays/objects: all brackets/braces must close, no trailing commas. 4) No duplicate properties in any object. 5) Escape special characters according to JSON rules. 6) Each asset object must be separate within the assets array—never merge multiple assets. ASSET GUIDELINES: An asset is a physical item, piece of equipment, service, or crew role essential for production. Assets must be functionally distinct and independently procurable. When multiple items are listed together, split into separate assets unless: (a) they are a single pre-assembled kit/set, (b) they are functionally inseparable, or (c) described as a single unit. CREW/TALENT: Specify each individual crew/talent role as its own asset. Never use a generic 'Crew' asset—each distinct role (e.g., 'Event Manager', 'Brand Ambassador', 'DJ') is a separate asset due to their unique requirements."
+            content: "You are a Senior Production Controller with extensive experience in event production, brand activations, and procurement planning. Your responsibility is to translate creative production briefs into complete, procurement-ready asset lists suitable for vendor quoting, budgeting, and logistics planning. Respond with JSON only—do not use markdown, code blocks, or add explanations outside the JSON. STRICT JSON RULES: 1) Escape all string values: use \\ for backslashes, \" for quotes, \n for newlines. 2) Write all symbols in plain text (e.g., '360 degrees', not LaTeX). 3) Validate arrays/objects: all brackets/braces must close, no trailing commas. 4) No duplicate properties in any object. 5) Escape special characters according to JSON rules. 6) Each asset object must be separate within the assets array—never merge multiple assets. ASSET GUIDELINES: An asset is a physical item, piece of equipment, service, or crew role essential for production. Assets must be functionally distinct and independently procurable. When multiple items are listed together, split into separate assets unless: (a) they are a single pre-assembled kit/set, (b) they are functionally inseparable, or (c) described as a single unit. CREW/TALENT: Specify each individual crew/talent role as its own asset. Never use a generic 'Crew' asset—each distinct role (e.g., 'Event Manager', 'Brand Ambassador', 'DJ') is a separate asset due to their unique requirements."
           },
           {
             role: "user",
@@ -745,7 +782,8 @@ class AIAllocationService {
   }
 
   /**
-   * Build prompt for asset analysis with industry-specific categories and examples
+   * Build prompt for asset analysis using Senior Production Controller logic
+   * Extracts explicit, implied, and lifecycle assets for procurement-ready BOMs
    */
   buildAssetAnalysisPrompt(briefDescription, projectContext) {
     // Sanitize the brief description before including in prompt
@@ -754,37 +792,37 @@ class AIAllocationService {
     const availableTags = this.getAvailableAssetTags();
     const tagsList = availableTags.map((tag, index) => `${index + 1}. ${tag}`).join('\n');
     return `
-You are a senior event production manager with 15+ years of experience specializing in:
+Role
+Act as a Senior Production Controller with extensive experience in event production, brand activations, and procurement planning. Your responsibility is to translate creative production briefs into complete, procurement-ready asset lists suitable for vendor quoting, budgeting, and logistics planning.
 
-CORPORATE EVENTS & CONFERENCES:
-- Main stage setups (40x20 stages, LED walls, professional AV systems, wireless microphones)
-- Breakout rooms (projection systems, screens, audio for 20-100 people, flip charts)
-- Registration areas (check-in stations, badge printing, directional signage, welcome desks)
-- Networking spaces (cocktail tables, bar setups, ambient lighting, background music)
-- Presentation equipment (laptops, clickers, laser pointers, confidence monitors)
+Objective
+Deconstruct the provided production brief into a comprehensive, structured asset list. Your output must identify and document every asset required to execute the activation successfully. This includes:
+• Explicitly mentioned assets
+• Implicit or operationally required assets
+• Supporting infrastructure
+• Technical, staffing, and logistical components
+• Installation, operational, and breakdown requirements
+You must think like a production controller responsible for ensuring nothing is missed during procurement.
 
-TRADE SHOWS & EXHIBITIONS:
-- Booth construction (modular displays, custom builds, lighting packages, carpeting)
-- Graphics & signage (banners, backdrops, floor graphics, wayfinding, hanging signs)
-- Technology integration (touchscreens, interactive displays, charging stations, WiFi)
-- Demo stations (product displays, sample stations, interactive kiosks)
-- Lead capture systems (badge scanners, lead retrieval, data collection)
+Asset Identification Rules
+You must extract and include:
 
-SOCIAL EVENTS & WEDDINGS:
-- Ceremony setups (altars, arches, seating arrangements, aisle runners, floral arrangements)
-- Reception spaces (dance floors, DJ booths, photo booths, lighting effects)
-- Catering infrastructure (buffet stations, bar setups, table settings, linens)
-- Entertainment areas (stages, sound systems, lighting, special effects)
-- Guest services (coat check, gift tables, guest books, transportation)
+Explicit Assets: Directly mentioned items in the brief.
 
-VENUE-SPECIFIC CONSIDERATIONS:
-- Convention centers: Rigging points, power distribution, loading docks, union requirements
-- Hotels: Ballroom setups, breakout rooms, guest services, catering restrictions
-- Outdoor venues: Weather protection, power generation, site preparation, permits
-- Museums/Galleries: Art protection, climate control, security requirements
-- Stadiums/Arenas: Large-scale AV, crowd management, security, parking
+Implied Assets: Assets not explicitly stated but required for execution. Examples:
+• If a photoshoot is mentioned → include studio hire, lighting equipment, camera gear, crew, catering, usage licensing
+• If an LED screen is mentioned → include rigging, power distribution, media server, operator, transport, installation
+• If a branded structure is mentioned → include fabrication, structural support, finishes, transport, installation, engineering approval if relevant
+• If talent or staff are mentioned → include uniforms, accreditation, catering, staffing hours
+• If an activation runs for multiple days → include storage, security, cleaning, maintenance
 
-Analyze this project brief and identify ALL required assets with detailed specifications.
+Lifecycle Assets: Include assets required across all phases:
+• Pre-production
+• Fabrication
+• Transport and logistics
+• Installation
+• Live operation
+• Derig and removal
 
 Project Brief: "${sanitizedBrief}"
 
@@ -793,42 +831,36 @@ Additional Context:
 - Timeline: ${projectContext.timeline_deadline || 'Not specified'}
 - Venue: ${projectContext.physical_parameters || 'Not specified'}
 
-CRITICAL REQUIREMENT: For each asset you identify, you MUST extract the exact text snippet from the brief that indicates this asset is needed. This will be used to create interactive links in the UI.
+CRITICAL REQUIREMENT: For each asset you identify, you MUST extract the exact text snippet from the brief that indicates this asset is needed (source_text). This will be used to create interactive links in the UI.
 
-AVAILABLE ASSET TAGS (use ONLY these 15 - match EXACTLY, case-sensitive):
+AVAILABLE ASSET TAGS (use ONLY these 15 for category_tag - match EXACTLY, case-sensitive):
 ${tagsList}
 
-TAG SELECTION RULES:
-- Assign 2-3 tags per asset when appropriate - most assets fit multiple categories
-- Tags must match EXACTLY the names listed above (case-sensitive)
-- Each tag is distinct; choose the most relevant categories for the asset
-- Example: "Main Stage Audio System" → ["Audio", "Staging"]
-- Example: "LED Video Wall" → ["Video & Display", "Staging"]
-- Example: "Buffet Catering with Bar" → ["Catering", "Staffing"]
-- Example: "Event Photographer" → ["Photography", "Staffing"]
-- Example: "Printed Banners and Signage" → ["Graphics & Signage", "Branding & Marketing"]
+TAG SELECTION: Assign the most appropriate single category_tag from the list above. Do not invent new categories.
 
-DEDUPLICATION LOGIC:
-- If multiple items serve the same functional purpose in the same zone, they should be grouped ONLY if:
-  a) They are explicitly described as a set/package (e.g., 'DJ booth package', 'furniture set')
-  b) They are functionally inseparable (e.g., 'LED wall with built-in mounting hardware', 'stage with integrated lighting')
-- Otherwise, create separate assets for each distinct item
-- Use consistent asset names across all briefs for the same item type
-- Example: 'Industrial workbenches' and 'Industrial stools' are separate assets even if used in the same zone
-- Example: 'DJ booth package' (if explicitly called a package) remains one asset
+Quantity Rules:
+- Use exact number if stated in the brief
+- If unknown, use one of: "TBC" (when quantity must be confirmed by client or creative team) or "Estimate" (when logical estimation is possible based on context)
+- For numeric quantities, use a number (e.g., 6 for "6 Ambassadors")
+
+Technical Specifications: Include relevant procurement details such as dimensions, materials, resolution, structural requirements, duration, power requirements, finish quality, load bearing, weather resistance, compliance standards, usage rights, etc.
+
+Supplier Context: Include operational and vendor-relevant context such as indoor/outdoor use, installation and removal requirements, required delivery date, operating hours, transport needs, operator requirements, revision requirements, integration with other assets, safety or compliance requirements.
 
 Respond with ONLY a JSON object in this exact format (no markdown, no code blocks):
 {
   "assets": [
     {
-      "asset_name": "Specific Asset Name",
-      "specifications": "Detailed technical requirements including quantities, dimensions, power needs, setup requirements",
-      "source_text": "The exact sentence or phrase from the brief that mentions this asset requirement",
-      "tags": ["TagName1", "TagName2"]
+      "asset_name": "string",
+      "quantity": "number or string (TBC/Estimate)",
+      "technical_specifications": "string",
+      "supplier_context": "string",
+      "category_tag": "string",
+      "source_text": "string"
     }
   ],
-  "reasoning": "Explanation of why these assets were identified based on event type, scale, and venue requirements",
-  "confidence": 0.85
+  "reasoning": "string",
+  "confidence": "number"
 }
 
 CRITICAL ATOMICITY REQUIREMENTS:
@@ -856,7 +888,7 @@ CRITICAL ATOMICITY REQUIREMENTS:
    - Each asset MUST be its own closed JSON object within the array
    - Every asset object MUST end with a closing brace } before the next asset begins
    - NEVER list two or more "asset_name" fields within a single object
-   - Each object must be completely self-contained with all its properties (asset_name, specifications, source_text, tags) before closing with }
+   - Each object must be completely self-contained with all its properties (asset_name, quantity, technical_specifications, supplier_context, category_tag, source_text) before closing with }
    - After closing each object with }, add a comma if more assets follow in the array
 
 4. CONSISTENCY REQUIREMENTS:
@@ -868,103 +900,82 @@ COMMON MISTAKES TO AVOID:
 ❌ INCORRECT - Merged objects (DO NOT DO THIS):
    {
      "asset_name": "Blueprint photo booth",
-     "specifications": "...",
+     "quantity": 1,
+     "technical_specifications": "...",
+     "supplier_context": "...",
+     "category_tag": "Photography",
      "source_text": "...",
-     "tags": ["Photography"],
      "asset_name": "Industrial workbenches",  // WRONG - second asset_name in same object
-     "specifications": "...",
-     "tags": ["Furniture"]
+     "quantity": 1,
+     "technical_specifications": "...",
+     "supplier_context": "...",
+     "category_tag": "Furniture"
    }
 
 ❌ INCORRECT - Grouped items that should be split (DO NOT DO THIS):
    {
      "asset_name": "Industrial workbenches, stools, and racks",  // WRONG - should be 3 separate assets
-     "specifications": "...",
-     "tags": ["Furniture"]
+     "quantity": 1,
+     "technical_specifications": "...",
+     "supplier_context": "...",
+     "category_tag": "Furniture"
    }
 
 ❌ INCORRECT - Generic crew grouping (DO NOT DO THIS):
    {
      "asset_name": "Event Staff",  // WRONG - should split into individual roles
-     "specifications": "Event Manager, Ambassadors, Workshop Leaders",
-     "tags": ["Event Staff"]
+     "quantity": 1,
+     "technical_specifications": "Event Manager, Ambassadors, Workshop Leaders",
+     "supplier_context": "...",
+     "category_tag": "Staffing"
    }
 
 ✅ CORRECT - Separate objects (DO THIS):
    {
      "asset_name": "Blueprint Photo Booth",
-     "specifications": "...",
-     "source_text": "...",
-     "tags": ["Photography"]
+     "quantity": 1,
+     "technical_specifications": "Custom booth with backdrop, lighting, instant print",
+     "supplier_context": "Indoor use, delivery required on site, operator included",
+     "category_tag": "Photography",
+     "source_text": "Blueprint photo booth for guest engagement"
    },
    {
      "asset_name": "Industrial Workbenches",
-     "specifications": "...",
-     "source_text": "...",
-     "tags": ["Furniture"]
-   },
-   {
-     "asset_name": "Stools",
-     "specifications": "...",
-     "source_text": "...",
-     "tags": ["Furniture"]
-   },
-   {
-     "asset_name": "Storage Racks",
-     "specifications": "...",
-     "source_text": "...",
-     "tags": ["Furniture"]
-   }
-
-✅ CORRECT - Separate crew roles (DO THIS):
-   {
-     "asset_name": "Event Manager",
-     "specifications": "...",
-     "tags": ["Event Staff"]
+     "quantity": 4,
+     "technical_specifications": "Heavy-duty workbenches, 6ft length, steel frame",
+     "supplier_context": "Indoor use, transport and installation required",
+     "category_tag": "Furniture",
+     "source_text": "Industrial workbenches and stools"
    },
    {
      "asset_name": "Brand Ambassadors",
-     "specifications": "Quantity: 6",
-     "tags": ["Event Staff"]
-   },
-   {
-     "asset_name": "Workshop Leaders",
-     "specifications": "Quantity: 4",
-     "tags": ["Event Staff"]
+     "quantity": 6,
+     "technical_specifications": "Event staff, uniformed, trained on brand messaging",
+     "supplier_context": "Full day coverage, catering required, accreditation needed",
+     "category_tag": "Staffing",
+     "source_text": "6 brand ambassadors"
    }
 
-REFERENCE EXAMPLE (For Calibration Only):
-The following is an EXAMPLE of proper asset granularity for a specific project. This demonstrates the logic of splitting grouped items, but different projects will have different asset lists. Apply the SAME LOGIC (not the same assets) to any brief:
+COMPLETENESS REQUIREMENT:
+Before finishing, internally validate that you have included assets across these operational layers (if implied by the brief):
+• Fabrication and build
+• Branding and graphics
+• AV and technical
+• Lighting
+• Power and electrical
+• Structures and scenic
+• Furniture
+• Staffing and crew
+• Logistics and transport
+• Installation and derig
+• Venue infrastructure
+• Safety and compliance
+• Storage and security
+• Talent support
+• Content capture and media production
 
-Example Project Assets (26 distinct entities):
-- Infrastructure/Large Scale: Entrance Tunnel, DJ Stage Shipping Container, Mesh Signage Walls, Movement Lab, Power Solution
-- Branding/Signage: Adidas Logo Light Box, Floor Decals, Printed Fabric Banners
-- Interactive/Digital: Digital Sketch Wall, AI Art Generator, Photographer & Videographer
-- Furniture/Decor: Sneaker Customization Stations, Industrial Workbenches, Industrial Stools, Industrial Racks, Merch Display Stands, Cafe Lounge Couches and WiFi
-- Staff/Crew: Event Manager, Production Crew, Brand Ambassadors, Workshop Leaders, DJs
-- Merch/Inventory: Adidas Patches and Pins, Blueprint Notebooks, Branded T-Shirts, Discount Codes
-
-Note: This example shows that 'workbenches, stools, and racks' should be 3 separate assets, and crew roles should be split individually. Different projects will have different master lists - apply the same logical splitting principles to extract independently procurable items.
-
-IMPORTANT GUIDELINES:
-- The source_text field should contain the precise text from the brief (verbatim) that led you to identify this asset
-- Extract complete sentences or meaningful phrases, not single words
-- If an asset is implied by multiple brief sections, choose the most specific/relevant excerpt
-- The source_text will be highlighted in the UI when users interact with the asset
-- Be specific about quantities, dimensions, and technical requirements
-- Consider the event type and scale when identifying assets
-- Include both explicitly mentioned and industry-standard requirements
-- MANDATORY: Every asset MUST have at least 1 tag; PREFER 2-3 tags when the asset fits multiple categories
-- Tag names must match EXACTLY from the available tags list (case-sensitive, no typos)
-
-FOCUS ON IDENTIFYING:
-- Production equipment (audio, lighting, staging, AV systems)
-- Marketing materials (printing, graphics, banners, signage, displays)
-- Services (catering, transport, security, cleaning, staffing)
-- Design and creative assets (decorations, floral, photography, videography)
-- Logistics and support services (registration, networking, seating, power)
-- Venue-specific requirements (rigging, power distribution, access, permits)
-- Entertainment and special effects (music, lighting effects, interactive elements)
+QUALITY STANDARD:
+The final output must be procurement ready, specific enough to request vendor quotes, contain no vague asset names, avoid creative descriptions without operational clarity, and reflect real-world production workflows.
 
 Be specific and practical in your asset identification, considering the event type, scale, and venue requirements.
 `;

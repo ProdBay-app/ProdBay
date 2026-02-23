@@ -144,17 +144,41 @@ router.post('/ai-create-assets', async (req, res) => {
 
     const createdAssets = [];
 
+    // Parse quantity safely: DB column is INTEGER; "TBC"/"Estimate" stored in specs, quantity set to null
+    const parseQuantity = (val) => {
+      if (val === undefined || val === null) return 1; // Legacy: no quantity = default 1
+      const num = Number(val);
+      if (Number.isInteger(num) && num >= 0) return num;
+      if (val === 'TBC' || val === 'Estimate') return null; // Non-numeric: store in specs, DB gets null
+      return 1;
+    };
+
+    const buildSpecifications = (assetData) => {
+      let specs = assetData.specifications || `AI-generated requirements for ${assetData.asset_name}`;
+      const qty = assetData.quantity;
+      if (qty === 'TBC' || qty === 'Estimate') {
+        specs = `Quantity: ${qty}. ${specs}`;
+      }
+      return specs;
+    };
+
     // Create each asset
     for (const assetData of assets) {
       try {
+        const quantity = parseQuantity(assetData.quantity);
+        const specifications = buildSpecifications(assetData);
+        const supplierContext = assetData.supplier_context ?? null;
+
         const { data: asset, error } = await supabase
           .from('assets')
           .insert({
             project_id: projectId,
             asset_name: assetData.asset_name,
-            specifications: assetData.specifications || `AI-generated requirements for ${assetData.asset_name}`,
+            specifications,
             source_text: assetData.source_text || null,
             tags: assetData.tags || [],
+            quantity: quantity, // number, or null for TBC/Estimate (DB INTEGER allows NULL)
+            supplier_context: supplierContext,
             status: 'Pending'
           })
           .select()

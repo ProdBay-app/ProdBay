@@ -102,6 +102,8 @@ export interface Asset {
   source_text?: string;
   quantity?: number;
   tags?: string[];
+  /** Operational/vendor context: indoor-outdoor, installation, delivery, operator needs */
+  supplier_context?: string | null;
   created_at: string;
   updated_at: string;
   assigned_supplier?: Supplier;

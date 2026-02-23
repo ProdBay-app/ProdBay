@@ -1,7 +1,14 @@
 import React from 'react';
-import { Brain, Sparkles } from 'lucide-react';
+import { Brain, Sparkles, Truck } from 'lucide-react';
 import type { AIAssetSuggestion } from '@/services/aiAllocationService';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
+
+/** Format quantity for display: number, "TBC", or "Estimate" */
+function formatQuantity(qty: string | number | undefined): string {
+  if (qty === undefined || qty === null) return '1';
+  if (typeof qty === 'number') return String(qty);
+  return qty;
+}
 
 interface AIAllocationModalProps {
   isOpen: boolean;
@@ -105,8 +112,22 @@ const AIAllocationModal: React.FC<AIAllocationModalProps> = ({
                     <div key={index} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-gray-900">{asset.asset_name}</h5>
+                        <span className="text-sm font-medium text-gray-500 px-2 py-0.5 bg-gray-100 rounded">
+                          Qty: {formatQuantity(asset.quantity)}
+                        </span>
                       </div>
-                      <p className="text-sm text-gray-600">{asset.specifications}</p>
+                      <p className="text-sm text-gray-600 mb-3">{asset.specifications}</p>
+                      {(asset.supplier_context != null && asset.supplier_context.trim() !== '') && (
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <div className="flex items-start gap-2">
+                            <Truck className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">Procurement Insights</span>
+                              <p className="text-sm text-gray-600 mt-1">{asset.supplier_context}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

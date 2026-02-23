@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { X, FileText, Clock, Package, Hash, Tag, Check, Loader2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, FileText, Clock, Package, Hash, Tag, Check, Loader2, Plus, ChevronDown, ChevronUp, Truck } from 'lucide-react';
 import { ProducerService } from '@/services/producerService';
 import { useNotification } from '@/hooks/useNotification';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
@@ -459,6 +459,22 @@ const AssetDetailModal: React.FC<AssetDetailModalProps> = ({ isOpen, asset, onCl
                     />
                   </div>
                 </div>
+
+                {/* Supplier & Logistics Context - Production Note (read-only, from AI analysis) */}
+                {asset.supplier_context != null && asset.supplier_context.trim() !== '' && (
+                  <div className="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                    <div className="flex items-start gap-2">
+                      <Truck className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <label className="block text-sm font-semibold text-amber-200 mb-1.5">
+                          Supplier & Logistics Context
+                        </label>
+                        <p className="text-sm text-gray-200 leading-relaxed">{asset.supplier_context}</p>
+                        <span className="inline-block mt-2 text-xs text-amber-300/80 italic">Production note from AI analysis</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Tags Section */}
                 <div className="mt-4 bg-black/10 border border-white/10 rounded-lg p-4">
