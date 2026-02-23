@@ -19,7 +19,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   },
   {
     date: '2026-02-23',
-    version: 'v0.9.0',
+    version: 'v0.9.1',
     title: 'Professional Email Overhaul (Part 2)',
     bulletPoints: [
       'System-wide email content standardization: Quote Received, New Message, and Quote Accepted notifications.',
@@ -30,7 +30,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   },
   {
     date: '2026-02-24',
-    version: 'v0.9.0',
+    version: 'v0.9.2',
     title: 'Customizable Business Branding',
     bulletPoints: [
       'Quote request emails now carry your professional identity: name, company, email, and phone from your profile.',
@@ -41,7 +41,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   },
   {
     date: '2026-02-24',
-    version: 'v0.9.0',
+    version: 'v0.9.3',
     title: 'Email & Branding Overhaul (Complete)',
     bulletPoints: [
       'Universal branding applied to acceptance notifications and message alerts.',
@@ -53,7 +53,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   },
   {
     date: '2026-02-23',
-    version: 'v0.9.0',
+    version: 'v0.9.4',
     title: 'Intelligence Upgrade: Senior Production Controller',
     bulletPoints: [
       'AI Asset Analysis engine refactored to act as a Senior Production Controller with event procurement expertise.',
@@ -66,7 +66,15 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   },
   {
     date: '2026-02-24',
-    version: 'v0.9.0',
+    version: 'v0.9.5',
+    title: 'Dashboard UI Simplification',
+    bulletPoints: [
+      'Removed status and sort filters from the All Projects view for a streamlined project management experience.'
+    ]
+  },
+  {
+    date: '2026-02-24',
+    version: 'v0.9.6',
     title: 'Global inline table editing for assets',
     bulletPoints: [
       'Added Edit Mode toggle to the asset table for rapid updates without opening modals.',
