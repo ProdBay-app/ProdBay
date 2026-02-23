@@ -230,91 +230,12 @@ export class ProducerService {
   // ===== ASSET OPERATIONS =====
 
   /**
-   * Load assets for a specific project with assigned suppliers and quote counts
-   * Calculates both total quote count and received quote count (Submitted, Accepted, Rejected)
+   * Load assets for a specific project with assigned suppliers
    */
   static async loadProjectAssets(projectId: string): Promise<Asset[]> {
     const supabase = await getSupabase();
-    
-    // First, try to fetch assets with quotes including status
-    // Note: PostgREST relationship name verification - if this fails, we'll fall back to separate query
-    let data: any[] | null = null;
-    let error: any = null;
-    
-    try {
-      const result = await supabase
-        .from('assets')
-        .select(`
-          *,
-          assigned_supplier:suppliers(*),
-          quotes(status)
-        `)
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: true });
-      
-      data = result.data;
-      error = result.error;
-      
-      // If the relationship name is wrong, PostgREST will return an error
-      // Check for common error patterns indicating relationship name issues
-      if (error && (
-        error.message?.includes('relation') || 
-        error.message?.includes('column') ||
-        error.code === 'PGRST116' // PostgREST error for unknown relation
-      )) {
-        console.warn('[ProducerService] Quote status aggregation failed, falling back to separate query:', error.message);
-        // Fall back to separate query approach
-        return await this.loadProjectAssetsWithSeparateQuoteCount(projectId);
-      }
-      
-      if (error) throw error;
-      
-      // Transform data to calculate both quote counts
-      // Received statuses: 'Submitted', 'Accepted', 'Rejected'
-      const RECEIVED_STATUSES = ['Submitted', 'Accepted', 'Rejected'];
-      
-      return (data || []).map((item: any) => {
-        let quoteCount = 0;
-        let receivedQuoteCount = 0;
-        
-        // Handle different response formats
-        if (Array.isArray(item.quotes)) {
-          quoteCount = item.quotes.length;
-          // Count quotes with received statuses
-          receivedQuoteCount = item.quotes.filter((q: any) => 
-            q.status && RECEIVED_STATUSES.includes(q.status)
-          ).length;
-        } else if (item.quotes && typeof item.quotes === 'object') {
-          // If quotes is an object (unexpected format), try to handle it
-          console.warn('[ProducerService] Unexpected quotes format:', typeof item.quotes);
-        }
-        
-        // Remove nested quotes array and add counts
-        const { quotes, ...assetData } = item;
-        return {
-          ...assetData,
-          quote_count: quoteCount,
-          received_quote_count: receivedQuoteCount
-        };
-      }) as unknown as Asset[];
-      
-    } catch (err) {
-      // If aggregation fails for any reason, fall back to separate query
-      console.warn('[ProducerService] Error in quote status aggregation, falling back:', err);
-      return await this.loadProjectAssetsWithSeparateQuoteCount(projectId);
-    }
-  }
 
-  /**
-   * Fallback method: Load assets and fetch quote counts separately
-   * Used when quote status aggregation via relationship fails
-   * Calculates both total quote count and received quote count
-   */
-  private static async loadProjectAssetsWithSeparateQuoteCount(projectId: string): Promise<Asset[]> {
-    const supabase = await getSupabase();
-    
-    // Fetch assets
-    const { data: assets, error: assetsError } = await supabase
+    const { data, error } = await supabase
       .from('assets')
       .select(`
         *,
@@ -323,49 +244,8 @@ export class ProducerService {
       .eq('project_id', projectId)
       .order('created_at', { ascending: true });
 
-    if (assetsError) throw assetsError;
-    if (!assets || assets.length === 0) return [];
-
-    // Fetch all quotes for these assets with status in a single query
-    const assetIds = assets.map((a: any) => a.id);
-    const { data: quotes, error: quotesError } = await supabase
-      .from('quotes')
-      .select('asset_id, status')
-      .in('asset_id', assetIds);
-
-    if (quotesError) {
-      console.error('[ProducerService] Error fetching quote counts:', quotesError);
-      // Continue without quote counts rather than failing completely
-    }
-
-    // Count quotes per asset (total and received)
-    // Received statuses: 'Submitted', 'Accepted', 'Rejected'
-    const RECEIVED_STATUSES = ['Submitted', 'Accepted', 'Rejected'];
-    const quoteCounts = new Map<string, number>();
-    const receivedQuoteCounts = new Map<string, number>();
-    
-    if (quotes) {
-      quotes.forEach((quote: any) => {
-        const assetId = quote.asset_id;
-        
-        // Increment total count
-        const totalCount = quoteCounts.get(assetId) || 0;
-        quoteCounts.set(assetId, totalCount + 1);
-        
-        // Increment received count if status is received
-        if (quote.status && RECEIVED_STATUSES.includes(quote.status)) {
-          const receivedCount = receivedQuoteCounts.get(assetId) || 0;
-          receivedQuoteCounts.set(assetId, receivedCount + 1);
-        }
-      });
-    }
-
-    // Merge quote counts into assets
-    return (assets || []).map((asset: any) => ({
-      ...asset,
-      quote_count: quoteCounts.get(asset.id) || 0,
-      received_quote_count: receivedQuoteCounts.get(asset.id) || 0
-    })) as unknown as Asset[];
+    if (error) throw error;
+    return (data || []) as unknown as Asset[];
   }
 
   /**

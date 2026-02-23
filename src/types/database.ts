@@ -38,8 +38,6 @@ export interface Asset {
   tags: string[];
   created_at: string;
   updated_at: string;
-  quote_count?: number; // Total count of quote requests sent (all statuses)
-  received_quote_count?: number; // Count of quotes received (Submitted, Accepted, or Rejected status)
 }
 
 export interface Supplier {
