@@ -78,15 +78,15 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
   const [currentSupplierIndex, setCurrentSupplierIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // User signature (could be fetched from user profile in production)
-  const [signature] = useState({
+  // User signature - populated from producer profile (Settings) and auth
+  const [signature, setSignature] = useState({
     name: 'Production Manager',
-    company: 'Your Company Name',
-    email: 'manager@yourcompany.com',
-    phone: '+1 (555) 123-4567'
+    company: '',
+    email: '',
+    phone: ''
   });
 
-  // Fetch suppliers when modal opens
+  // Fetch suppliers and producer profile when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchSuppliers();
@@ -96,6 +96,32 @@ const EnhancedRequestQuoteFlow: React.FC<RequestQuoteFlowProps> = ({
       setCurrentSupplierIndex(0);
       setSearchTerm('');
       setSelectedCategories([]);
+
+      const loadProducerSignature = async () => {
+        const supabase = await getSupabase();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id) return;
+
+        const { data: producer } = await supabase
+          .from('producers')
+          .select('full_name, email, company_name, phone_number')
+          .eq('id', user.id)
+          .single();
+
+        const metadata = user.user_metadata ?? {};
+        const firstName = typeof metadata.first_name === 'string' ? metadata.first_name : '';
+        const lastName = typeof metadata.last_name === 'string' ? metadata.last_name : '';
+        const fullName = [firstName, lastName].filter(Boolean).join(' ') || producer?.full_name || user.email?.split('@')[0] || 'Producer';
+
+        setSignature({
+          name: fullName,
+          company: producer?.company_name ?? '',
+          email: producer?.email ?? user.email ?? '',
+          phone: producer?.phone_number ?? ''
+        });
+      };
+
+      loadProducerSignature();
     }
   }, [isOpen]);
 
@@ -284,16 +310,14 @@ Asset: ${assetName}
 Specifications: ${asset?.specifications || 'See project brief for details'}
 ${supplierContextLine}${asset?.timeline ? `Timeline: ${new Date(asset.timeline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : ''}
 
-Please provide your quote by visiting the link below. You will receive a unique link via email once this request is sent.
+Please provide your quote by visiting the link below.
 
 We appreciate your time and look forward to working with you.
 
 Best regards,
 
 ${signature.name}
-${signature.company}
-${signature.email}
-${signature.phone}`;
+${[signature.company, signature.email, signature.phone].filter(Boolean).join('\n')}`;
 
     return {
       supplierId: supplier.id,

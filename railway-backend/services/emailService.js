@@ -36,6 +36,34 @@ class EmailService {
   }
 
   /**
+   * Extract the verified system email address from this.fromEmail.
+   * Handles both "Display Name <email@domain.com>" and bare "email@domain.com" formats.
+   * @returns {string} The email address for use in From header angle brackets
+   */
+  getVerifiedSystemEmail() {
+    const match = this.fromEmail.match(/<([^>]+)>/);
+    return match ? match[1].trim() : this.fromEmail.trim();
+  }
+
+  /**
+   * Build "Airbnb-style" From header: "ProdBay via [Company/Name] <verified-email>".
+   * Sanitizes display strings to prevent header injection (newlines, angle brackets).
+   *
+   * @param {Object} [signature] - { name, company, email }
+   * @returns {string} Formatted From string for Resend API
+   */
+  getFormattedFromAddress(signature) {
+    const verifiedEmail = this.getVerifiedSystemEmail();
+    const sanitize = (s) => (typeof s === 'string' ? s.replace(/[\r\n<>]/g, ' ').trim() : '') || '';
+
+    const company = sanitize(signature?.company);
+    const name = sanitize(signature?.name);
+    const display = company || name || 'Producer';
+
+    return `ProdBay via ${display} <${verifiedEmail}>`;
+  }
+
+  /**
    * Delay helper used by throttling and retry logic
    * @param {number} ms - Milliseconds to wait
    * @returns {Promise<void>}
@@ -203,9 +231,10 @@ class EmailService {
    * @param {Array} [params.attachmentUrls] - Optional array of {url, filename} from Storage (preferred)
    * @param {string} [params.cc] - Optional comma-separated CC email addresses
    * @param {string} [params.bcc] - Optional comma-separated BCC email addresses
+   * @param {Object} [params.signature] - Producer signature { name, company, email } for Airbnb-style From header
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null, attachments = null, attachmentUrls = null, cc = null, bcc = null }) {
+  async sendQuoteRequest({ to, replyTo, assetName, message, quoteLink, subject = null, attachments = null, attachmentUrls = null, cc = null, bcc = null, signature = null }) {
     try {
       // Log entry point and parameters
       console.log('[EmailService] Attempting to send quote request email');
@@ -248,23 +277,25 @@ class EmailService {
       }
 
       // Build HTML body
-      // Convert plain text message to HTML, preserving line breaks
+      // Convert plain text message to HTML, preserving line breaks.
+      // IMPORTANT: Escape each line before joining with <br> so that <br> tags
+      // render as HTML, not as literal &lt;br&gt; text.
       let htmlBodyContent = '';
       if (message) {
-        // Convert plain text to HTML paragraphs
         const paragraphs = message.split('\n\n').filter(p => p.trim());
         htmlBodyContent = paragraphs.map(para => {
-          // Replace single newlines with <br> within paragraphs
-          const formatted = para.split('\n').map(line => line.trim()).filter(line => line).join('<br>');
-          return `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">${escapeHtml(formatted)}</p>`;
+          const lines = para.split('\n').map(line => line.trim()).filter(Boolean);
+          const safeContent = lines.map(line => escapeHtml(line)).join('<br>');
+          return `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">${safeContent}</p>`;
         }).join('');
-        
-        // Ensure quote link is clickable if present
-        if (quoteLink && htmlBodyContent.includes(quoteLink)) {
-          htmlBodyContent = htmlBodyContent.replace(
-            new RegExp(escapeHtml(quoteLink), 'g'),
-            `<a href="${quoteLink}" style="color: #7c3aed; text-decoration: underline;">${quoteLink}</a>`
-          );
+
+        // Make quote link clickable if present. Use escaped URL for search (to match
+        // rendered content) and escape regex special chars to avoid RegExp errors.
+        if (quoteLink && typeof quoteLink === 'string' && quoteLink.trim()) {
+          const escapedLink = escapeHtml(quoteLink);
+          const regexSafe = escapedLink.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const linkHtml = `<a href="${escapeHtml(quoteLink)}" style="color: #7c3aed; text-decoration: underline;">${escapedLink}</a>`;
+          htmlBodyContent = htmlBodyContent.replace(new RegExp(regexSafe, 'g'), linkHtml);
         }
       } else {
         // Fallback HTML
@@ -353,9 +384,11 @@ class EmailService {
       }
 
       // Send email via Resend
+      // From: Airbnb-style "ProdBay via [Company]" when producer signature available
+      const fromHeader = signature ? this.getFormattedFromAddress(signature) : this.fromEmail;
       console.log('[EmailService] Calling Resend API...');
       const emailPayload = {
-        from: this.fromEmail,
+        from: fromHeader,
         to: [to],
         reply_to: [replyTo],
         subject: emailSubject,
@@ -486,9 +519,10 @@ class EmailService {
       }
 
       if (documentUrl) {
-        bodyData.push({ 
-          label: 'Quote Document', 
-          value: `<a href="${documentUrl}" style="color: #7c3aed; text-decoration: underline;">View Document</a>` 
+        const safeUrl = escapeHtml(documentUrl);
+        bodyData.push({
+          label: 'Quote Document',
+          valueHtml: `<a href="${safeUrl}" style="color: #7c3aed; text-decoration: underline;">View Document</a>`
         });
       }
 
@@ -556,9 +590,10 @@ class EmailService {
    * @param {string} params.quoteName - Asset/quote name for context
    * @param {string} params.portalLink - Link to portal (for supplier) or dashboard (for producer)
    * @param {string} [params.messagePreview] - First 100 chars of message (optional)
+   * @param {Object} [params.signature] - Producer signature { name, company, email, phone } when sender is producer
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendNewMessageNotification({ to, replyTo, senderName, quoteName, portalLink, messagePreview = null }) {
+  async sendNewMessageNotification({ to, replyTo, senderName, quoteName, portalLink, messagePreview = null, signature = null }) {
     try {
       // Log entry point and parameters
       console.log('[EmailService] Attempting to send new message notification');
@@ -593,17 +628,23 @@ class EmailService {
       }
       
       emailBody += `View the full conversation and reply here:\n${portalLink}\n\n`;
-      emailBody += `Best regards,\nProdBay Team`;
+      const sig = formatSignature(signature);
+      emailBody += `Best regards,\n${sig.plain}`;
 
-      // Build HTML body
-      let htmlBodyContent = `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">You have received a new message from <strong>${senderName}</strong> regarding <strong>"${quoteName}"</strong>.</p>`;
-      
+      // Build HTML body - escape all user-supplied content to prevent XSS
+      const safeSenderName = escapeHtml(senderName);
+      const safeQuoteName = escapeHtml(quoteName);
+      let htmlBodyContent = `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">You have received a new message from <strong>${safeSenderName}</strong> regarding <strong>"${safeQuoteName}"</strong>.</p>`;
+
       if (messagePreview) {
         const previewText = messagePreview.length >= 100 ? messagePreview.substring(0, 100) + '...' : messagePreview;
+        const safePreview = escapeHtml(previewText);
         htmlBodyContent += `<div style="background-color: #f5f5f5; border-left: 3px solid #7c3aed; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">`;
-        htmlBodyContent += `<p style="margin: 0; color: #666666; font-size: 14px; font-style: italic; line-height: 1.6;">"${previewText}"</p>`;
+        htmlBodyContent += `<p style="margin: 0; color: #666666; font-size: 14px; font-style: italic; line-height: 1.6;">"${safePreview}"</p>`;
         htmlBodyContent += `</div>`;
       }
+
+      htmlBodyContent += `<p style="margin: 16px 0 0 0; color: #333333; font-size: 16px; line-height: 1.6;">Best regards,<br>${sig.html}</p>`;
 
       // Generate HTML email
       const htmlBody = generateEmailHtml({
@@ -615,10 +656,13 @@ class EmailService {
       });
 
       // Send email via Resend
+      // From: Airbnb-style "ProdBay via [Company]" when producer is sender (signature present);
+      // otherwise standard ProdBay header (supplier sender)
+      const fromHeader = signature ? this.getFormattedFromAddress(signature) : this.fromEmail;
       console.log('[EmailService] Calling Resend API...');
       const { data } = await this.enqueueSend(async () => {
         const { data: sendData, error: sendError } = await this.resend.emails.send({
-          from: this.fromEmail,
+          from: fromHeader,
           to: [to],
           reply_to: [replyTo],
           subject: emailSubject,
@@ -669,9 +713,11 @@ class EmailService {
    * @param {string} supplierName - Supplier name/contact name
    * @param {string|null} projectName - Optional project name (not used in content)
    * @param {string} quoteTitle - Quote/asset title
+   * @param {string} [portalLink] - Optional portal link for "View in Portal" CTA
+   * @param {Object} [signature] - Producer signature { name, company, email, phone } for branded footer
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendQuoteAcceptedEmail(toEmail, supplierName, projectName, quoteTitle) {
+  async sendQuoteAcceptedEmail(toEmail, supplierName, projectName, quoteTitle, portalLink = null, signature = null) {
     try {
       if (!toEmail || !supplierName || !quoteTitle) {
         throw new Error('Missing required parameters: toEmail, supplierName, and quoteTitle are required');
@@ -686,38 +732,49 @@ class EmailService {
 
       const safeSupplierName = escapeHtml(supplierName);
       const safeQuoteTitle = escapeHtml(quoteTitle);
+      const sig = formatSignature(signature);
       // Intentionally omitting projectName from subject/body per privacy requirement.
       const emailSubject = 'Your Quote was Accepted';
       const plainBody =
         `Good news, ${safeSupplierName}!\n\n` +
         `Your quote "${safeQuoteTitle}" has been accepted.\n` +
         `The producer will be in touch shortly.\n\n` +
-        `Best regards,\nProdBay Team`;
+        `Best regards,\n${sig.plain}`;
 
+      // Paragraph styles: 16px, 1.6 line-height per BaseEmailLayout standard
       const htmlBodyContent =
         `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
         `Good news, <strong>${safeSupplierName}</strong>!</p>` +
         `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
         `Your quote "<strong>${safeQuoteTitle}</strong>" has been accepted.</p>` +
-        `<p style="margin: 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
-        `The producer will be in touch shortly.</p>`;
+        `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
+        `The producer will be in touch shortly.</p>` +
+        `<p style="margin: 16px 0 0 0; color: #333333; font-size: 16px; line-height: 1.6;">Best regards,<br>${sig.html}</p>`;
 
       const htmlBody = generateEmailHtml({
         title: 'Quote Accepted',
         body: htmlBodyContent,
-        ctaLink: null,
-        ctaText: null,
+        ctaLink: portalLink || null,
+        ctaText: portalLink ? 'View in Portal' : null,
         footerText: 'ProdBay - Production Management Platform'
       });
 
+      // From: Airbnb-style "ProdBay via [Company]" when producer signature available
+      const fromHeader = signature ? this.getFormattedFromAddress(signature) : this.fromEmail;
+      const replyToEmail = signature?.email || null;
+
       const { data } = await this.enqueueSend(async () => {
-        const { data: sendData, error: sendError } = await this.resend.emails.send({
-          from: this.fromEmail,
+        const payload = {
+          from: fromHeader,
           to: [toEmail],
           subject: emailSubject,
           text: plainBody,
           html: htmlBody
-        });
+        };
+        if (replyToEmail) {
+          payload.reply_to = [replyToEmail];
+        }
+        const { data: sendData, error: sendError } = await this.resend.emails.send(payload);
 
         if (sendError) {
           throw this.createSendError(sendError, 'send quote accepted email');
@@ -742,6 +799,25 @@ class EmailService {
       };
     }
   }
+}
+
+/**
+ * Format producer signature for email body. Filters empty values to avoid "Best regards, ," artifacts.
+ * @param {Object} [signature] - { name, company, email, phone }
+ * @returns {{ plain: string, html: string }} Plain text and HTML signature blocks
+ */
+function formatSignature(signature) {
+  if (!signature || typeof signature !== 'object') {
+    return { plain: 'ProdBay Team', html: 'ProdBay - Production Management Platform' };
+  }
+  const parts = [signature.name, signature.company, signature.email, signature.phone].filter(Boolean);
+  if (parts.length === 0) {
+    return { plain: 'ProdBay Team', html: 'ProdBay - Production Management Platform' };
+  }
+  return {
+    plain: parts.join('\n'),
+    html: parts.map(p => escapeHtml(p)).join('<br>')
+  };
 }
 
 /**

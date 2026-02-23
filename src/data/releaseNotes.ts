@@ -7,8 +7,28 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    date: '2026-02-24',
+    version: 'v0.9.6',
+    title: 'Global inline table editing for assets',
+    bulletPoints: [
+      'Added Edit Mode toggle to the asset table for rapid updates without opening modals.',
+      'Inline editing for Name, Quantity, Tags, and Specifications directly in the table view.',
+      'Tags use the same predefined list and multi-select dropdown as the asset forms.',
+      'Save All persists changes; partial failures keep failed assets editable and show clear feedback.',
+      'Discard clears unsaved edits; confirmation required when exiting edit mode with unsaved changes.'
+    ]
+  },
+  {
+    date: '2026-02-24',
+    version: 'v0.9.5',
+    title: 'Dashboard UI Simplification',
+    bulletPoints: [
+      'Removed status and sort filters from the All Projects view for a streamlined project management experience.'
+    ]
+  },
+  {
     date: '2026-02-23',
-    version: 'v0.9.0',
+    version: 'v0.9.4',
     title: 'Intelligence Upgrade: Senior Production Controller',
     bulletPoints: [
       'AI Asset Analysis engine refactored to act as a Senior Production Controller with event procurement expertise.',
@@ -21,14 +41,47 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   },
   {
     date: '2026-02-24',
-    version: 'v0.9.0',
-    title: 'Global inline table editing for assets',
+    version: 'v0.9.3',
+    title: 'Email & Branding Overhaul (Complete)',
     bulletPoints: [
-      'Added Edit Mode toggle to the asset table for rapid updates without opening modals.',
-      'Inline editing for Name, Quantity, Tags, and Specifications directly in the table view.',
-      'Tags use the same predefined list and multi-select dropdown as the asset forms.',
-      'Save All persists changes; partial failures keep failed assets editable and show clear feedback.',
-      'Discard clears unsaved edits; confirmation required when exiting edit mode with unsaved changes.'
+      'Universal branding applied to acceptance notifications and message alerts.',
+      'Quote Accepted and "New Message" (producer → supplier) emails now carry the producer\'s signature and branding.',
+      'Clean fallback logic: incomplete profiles (name-only, no company/phone) render without empty lines or weird punctuation.',
+      "Implemented 'Airbnb-style' From headers for enhanced brand recognition.",
+      'Email & Branding Overhaul: 100% complete.'
+    ]
+  },
+  {
+    date: '2026-02-24',
+    version: 'v0.9.2',
+    title: 'Customizable Business Branding',
+    bulletPoints: [
+      'Quote request emails now carry your professional identity: name, company, email, and phone from your profile.',
+      'New Company Name and Business Phone Number fields in Settings → Profile; values sync to producers table and user metadata.',
+      'Backend fetches producer profile when building default quote request emails, replacing generic "[Your Name]" fallbacks.',
+      'Removed redundant "You will receive a unique link via email" sentence from quote request body.'
+    ]
+  },
+  {
+    date: '2026-02-23',
+    version: 'v0.9.1',
+    title: 'Professional Email Overhaul (Part 2)',
+    bulletPoints: [
+      'System-wide email content standardization: Quote Received, New Message, and Quote Accepted notifications.',
+      'Quote Received: Document links now render as clickable links (valueHtml support in email generator).',
+      'New Message: All user-supplied content (sender name, quote name, message preview) escaped to prevent XSS.',
+      'Quote Accepted: "View in Portal" CTA button when portal link is available; consistent 16px/1.6 typography.'
+    ]
+  },
+  {
+    date: '2026-02-23',
+    version: 'v0.9.0',
+    title: 'Professional Email Overhaul (Part 1)',
+    bulletPoints: [
+      'New branded global email template with ProdBay header and consistent typography (Inter/system-serif).',
+      'Fixed quote request email formatting: line breaks and links now display correctly instead of raw HTML tags.',
+      'Prominent "Submit Quote" button as the primary visual anchor for supplier action.',
+      'Reusable BaseEmailLayout infrastructure for future email types.'
     ]
   },
   {

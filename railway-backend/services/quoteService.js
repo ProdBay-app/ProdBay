@@ -47,7 +47,7 @@ class QuoteService {
         throw new Error('Invalid quote ID format. Quote IDs must be valid UUIDs.');
       }
 
-      // Fetch the quote with asset_id and supplier_id
+      // Fetch the quote with asset_id, supplier_id, access_token, and project.producer_id (for producer branding)
       const { data: quote, error: quoteError } = await supabase
         .from('quotes')
         .select(`
@@ -56,6 +56,7 @@ class QuoteService {
           supplier_id,
           status,
           cost,
+          access_token,
           supplier:suppliers(
             supplier_name,
             contact_email,
@@ -66,7 +67,8 @@ class QuoteService {
             asset_name,
             project:projects(
               id,
-              project_name
+              project_name,
+              producer_id
             )
           )
         `)
@@ -179,12 +181,39 @@ class QuoteService {
       const projectName = quote.asset?.project?.project_name || null;
 
       if (supplierEmail) {
+        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+        const portalLink = quote.access_token
+          ? `${frontendUrl}/portal/quote/${quote.access_token}`
+          : null;
+
+        // Fetch producer profile for branded signature
+        let signature = null;
+        const project = Array.isArray(quote.asset?.project) ? quote.asset?.project?.[0] : quote.asset?.project;
+        const producerId = project?.producer_id;
+        if (producerId) {
+          const { data: producer } = await supabase
+            .from('producers')
+            .select('full_name, email, company_name, phone_number')
+            .eq('id', producerId)
+            .single();
+          if (producer) {
+            signature = {
+              name: producer.full_name || producer.email?.split('@')[0] || 'Producer',
+              company: producer.company_name || '',
+              email: producer.email || '',
+              phone: producer.phone_number || ''
+            };
+          }
+        }
+
         console.log(`[QuoteService] Sending acceptance email for quote ${quoteId} to ${supplierEmail}`);
         const emailResult = await emailService.sendQuoteAcceptedEmail(
           supplierEmail,
           supplierName,
           projectName,
-          quoteTitle
+          quoteTitle,
+          portalLink,
+          signature
         );
 
         if (!emailResult.success) {

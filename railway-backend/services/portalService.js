@@ -433,12 +433,31 @@ class PortalService {
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
       const portalLink = `${frontendUrl}/portal/quote/${quote.access_token}`;
 
-      // Send email notification to supplier
+      // Send email notification to supplier (producer → supplier: use producer branding)
       if (supplierEmail) {
         try {
-          // Get producer email from user or use default
           const producerEmail = user.email || process.env.PRODUCER_EMAIL || 'noreply@prodbay.com';
           const producerName = user.user_metadata?.name || user.email || 'Producer';
+
+          // Fetch producer profile for branded signature (sender is producer)
+          let signature = null;
+          const project = Array.isArray(asset?.project) ? asset?.project?.[0] : asset?.project;
+          const producerId = project?.producer_id;
+          if (producerId) {
+            const { data: producer } = await supabase
+              .from('producers')
+              .select('full_name, email, company_name, phone_number')
+              .eq('id', producerId)
+              .single();
+            if (producer) {
+              signature = {
+                name: producer.full_name || producer.email?.split('@')[0] || 'Producer',
+                company: producer.company_name || '',
+                email: producer.email || '',
+                phone: producer.phone_number || ''
+              };
+            }
+          }
 
           await emailService.sendNewMessageNotification({
             to: supplierEmail,
@@ -446,7 +465,8 @@ class PortalService {
             senderName: producerName,
             quoteName: asset?.asset_name || 'Quote',
             portalLink: portalLink,
-            messagePreview: trimmedContent.substring(0, 100)
+            messagePreview: trimmedContent.substring(0, 100),
+            signature
           });
         } catch (emailError) {
           console.error('Failed to send email notification:', emailError);
