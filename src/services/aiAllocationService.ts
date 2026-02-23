@@ -9,6 +9,13 @@ export interface AIAssetSuggestion {
   asset_name: string;
   specifications: string;
   source_text?: string;
+  /** Technical specs from AI (backend maps to specifications before returning) */
+  technical_specifications?: string;
+  /** Operational/vendor context: indoor-outdoor, installation, delivery, operator needs */
+  supplier_context?: string | null;
+  /** Numeric or "TBC"/"Estimate" when quantity is uncertain */
+  quantity?: string | number;
+  tags?: string[];
 }
 
 

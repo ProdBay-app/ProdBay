@@ -7,6 +7,19 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    date: '2026-02-23',
+    version: 'v0.9.0',
+    title: 'Intelligence Upgrade: Senior Production Controller',
+    bulletPoints: [
+      'AI Asset Analysis engine refactored to act as a Senior Production Controller with event procurement expertise.',
+      'Identifies implied infrastructure and operational requirements (e.g., rigging, power, crew when LED screens or branded structures are mentioned).',
+      'Tracks asset lifecycle from fabrication through transport, installation, live operation, and derig.',
+      "New 'Supplier Context' field provides vendor-ready instructions: indoor/outdoor use, installation requirements, operator needs, transport.",
+      'Smart handling of TBC and Estimated quantities—stored in specifications when exact count is uncertain.',
+      "Procurement Insights section in AI preview and 'Supplier & Logistics Context' in asset details surface these insights before creation."
+    ]
+  },
+  {
     date: '2026-02-24',
     version: 'v0.9.0',
     title: 'Global inline table editing for assets',

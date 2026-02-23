@@ -21,6 +21,7 @@ export interface AssetFormData {
   assigned_supplier_id?: string;
   quantity?: number;
   tags?: string[];
+  supplier_context?: string | null;
 }
 
 export interface ProducerSettings {
@@ -384,7 +385,8 @@ export class ProducerService {
         status: assetData.status,
         assigned_supplier_id: assetData.assigned_supplier_id || null,
         quantity: assetData.quantity || null,
-        tags: assetData.tags || []
+        tags: assetData.tags || [],
+        supplier_context: assetData.supplier_context ?? null
       })
       .eq('id', assetId)
       .select()

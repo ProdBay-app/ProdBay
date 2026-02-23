@@ -10,6 +10,7 @@ import {
   Briefcase,
   MapPin,
   Paperclip,
+  Truck,
   X
 } from 'lucide-react';
 import { PortalService, type PortalSession, type Message, type Quote } from '@/services/portalService';
@@ -453,6 +454,17 @@ const QuotePortal: React.FC = () => {
               <p className="text-sm text-gray-400 italic">No specifications provided</p>
             )}
           </div>
+
+          {/* Supplier & Logistics Context */}
+          {asset.supplier_context != null && asset.supplier_context.trim() !== '' && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Truck className="h-5 w-5 text-amber-400" />
+                <h2 className="text-lg font-semibold text-amber-200">Supplier & Logistics Context</h2>
+              </div>
+              <p className="text-sm text-gray-200 leading-relaxed">{asset.supplier_context}</p>
+            </div>
+          )}
 
           {/* Timeline */}
           {asset.timeline && (

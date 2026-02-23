@@ -6,13 +6,17 @@
  * 
  * This enables relevance-based sorting in the RFQ workflow, where suppliers
  * with matching service categories appear first in the selection list.
+ * 
+ * Asset tag names: single source of truth in config/assetTagNames.json
+ * Map keys below must match tag names from that config.
  */
 
 import type { Supplier } from '@/lib/supabase';
+import { ASSET_TAG_NAMES } from './assetTags';
 
 /**
- * Maps asset tags (15 predefined) to broad supplier service categories
- * Must stay in sync with src/utils/assetTags.ts PREDEFINED_ASSET_TAGS
+ * Maps asset tags (from config/assetTagNames.json) to broad supplier service categories
+ * Keys must match tag names in config. When adding a new tag to config, add its mapping here.
  *
  * Supplier Categories: 'Printing', 'Graphics', 'Banners', 'Staging', 'Audio', 'Lighting',
  * 'Catering', 'Food', 'Beverages', 'Design', 'Branding', 'Marketing', 'Transport',
@@ -35,6 +39,15 @@ export const ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP: Record<string, string[]> = {
   'Technology': ['IT Services', 'Design', 'Marketing'],
   'Medical': ['Medical'],
   'Scenic & Props': ['Staging', 'Design']
+};
+
+/**
+ * Validates that ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP has an entry for every tag in config.
+ * Call in tests or dev to catch drift when adding new tags to config.
+ */
+export const validateAssetTagMapKeys = (): { valid: boolean; missing: string[] } => {
+  const missing = ASSET_TAG_NAMES.filter(name => !(name in ASSET_TAG_TO_SUPPLIER_CATEGORY_MAP));
+  return { valid: missing.length === 0, missing };
 };
 
 /**

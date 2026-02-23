@@ -81,13 +81,17 @@ const QuoteRequestPreviewModal: React.FC<QuoteRequestPreviewModalProps> = ({
         const contactEmail = getSupplierPrimaryEmail(supplier) || '';
         
         const subject = `Quote Request: ${asset.asset_name}`;
+        const supplierContextLine = (asset.supplier_context && asset.supplier_context.trim() !== '')
+          ? `\nSupplier & Logistics Context: ${asset.supplier_context}\n`
+          : '';
+
         const body = `Dear ${contactName},
 
 We would like to request a quote for the following asset:
 
 Asset: ${asset.asset_name}
 Specifications: ${asset.specifications || 'See project brief for details'}
-Timeline: ${asset.timeline || 'To be discussed'}
+${supplierContextLine}Timeline: ${asset.timeline || 'To be discussed'}
 
 Please provide your quote by visiting the link below and submitting your proposal.
 

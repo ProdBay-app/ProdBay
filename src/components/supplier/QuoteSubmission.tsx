@@ -251,7 +251,12 @@ const QuoteSubmission: React.FC = () => {
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-2">{asset.asset_name}</h3>
                 <p className="text-gray-700 mb-4">{asset.specifications}</p>
-                
+                {asset.supplier_context && asset.supplier_context.trim() !== '' && (
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <h4 className="font-medium text-amber-900 mb-1">Supplier & Logistics Context</h4>
+                    <p className="text-gray-700 text-sm">{asset.supplier_context}</p>
+                  </div>
+                )}
                 {asset.project?.brief_description && (
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Project Brief Context:</h4>
