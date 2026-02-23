@@ -16,7 +16,7 @@ interface AssetTableProps {
  * AssetTable - Data-dense table view for displaying assets
  * 
  * Features:
- * - 8 columns: Name, Quantity, Tags, Supplier Status, # Quote Requests, # Quotes Received, Last Updated, Actions
+ * - 7 columns: Name, Quantity, Tags, Specifications, Supplier Status, Last Updated, Actions
  * - Glassmorphism styling matching app aesthetic
  * - Responsive design with horizontal scroll on mobile
  * - Bi-directional hover linking with project brief
@@ -162,13 +162,10 @@ const AssetTable: React.FC<AssetTableProps> = ({
               Tags
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-white">
+              Specifications
+            </th>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Supplier Status
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
-              # Quote Requests
-            </th>
-            <th className="px-4 py-3 text-left text-sm font-semibold text-white">
-              # Quotes Received
             </th>
             <th className="px-4 py-3 text-left text-sm font-semibold text-white">
               Last Updated
@@ -217,19 +214,23 @@ const AssetTable: React.FC<AssetTableProps> = ({
                   {formatTags(asset.tags)}
                 </td>
 
+                {/* Specifications */}
+                <td className="px-4 py-3 text-gray-200 max-w-[220px]">
+                  {asset.specifications ? (
+                    <span
+                      className="block text-sm truncate"
+                      title={asset.specifications}
+                    >
+                      {asset.specifications}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 text-sm">—</span>
+                  )}
+                </td>
+
                 {/* Supplier Status */}
                 <td className="px-4 py-3 whitespace-nowrap">
                   {getStatusBadge(asset.status)}
-                </td>
-
-                {/* # Quote Requests */}
-                <td className="px-4 py-3 text-gray-200 whitespace-nowrap">
-                  <span className="text-sm">{asset.quote_count ?? 0}</span>
-                </td>
-
-                {/* # Quotes Received */}
-                <td className="px-4 py-3 text-gray-200 whitespace-nowrap">
-                  <span className="text-sm">{asset.received_quote_count ?? 0}</span>
                 </td>
 
                 {/* Last Updated */}

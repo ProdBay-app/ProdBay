@@ -7,6 +7,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    date: '2026-02-23',
+    version: 'v0.8.9',
+    title: 'Asset table updates: specifications column and streamlined columns',
+    bulletPoints: [
+      'Removed deprecated # Quote Requests and # Quotes Received columns from the asset table list view.',
+      'Added Specifications column between Tags and Supplier Status so asset specs are visible at a glance.',
+      'Long specifications are truncated with ellipsis; hover to see the full text in a tooltip.'
+    ]
+  },
+  {
     date: '2026-02-19',
     version: 'v0.8.8',
     title: 'Simplified asset tags for consistent AI attribution',
