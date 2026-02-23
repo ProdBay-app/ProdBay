@@ -559,9 +559,10 @@ class EmailService {
    * @param {string} params.quoteName - Asset/quote name for context
    * @param {string} params.portalLink - Link to portal (for supplier) or dashboard (for producer)
    * @param {string} [params.messagePreview] - First 100 chars of message (optional)
+   * @param {Object} [params.signature] - Producer signature { name, company, email, phone } when sender is producer
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendNewMessageNotification({ to, replyTo, senderName, quoteName, portalLink, messagePreview = null }) {
+  async sendNewMessageNotification({ to, replyTo, senderName, quoteName, portalLink, messagePreview = null, signature = null }) {
     try {
       // Log entry point and parameters
       console.log('[EmailService] Attempting to send new message notification');
@@ -596,7 +597,8 @@ class EmailService {
       }
       
       emailBody += `View the full conversation and reply here:\n${portalLink}\n\n`;
-      emailBody += `Best regards,\nProdBay Team`;
+      const sig = formatSignature(signature);
+      emailBody += `Best regards,\n${sig.plain}`;
 
       // Build HTML body - escape all user-supplied content to prevent XSS
       const safeSenderName = escapeHtml(senderName);
@@ -610,6 +612,8 @@ class EmailService {
         htmlBodyContent += `<p style="margin: 0; color: #666666; font-size: 14px; font-style: italic; line-height: 1.6;">"${safePreview}"</p>`;
         htmlBodyContent += `</div>`;
       }
+
+      htmlBodyContent += `<p style="margin: 16px 0 0 0; color: #333333; font-size: 16px; line-height: 1.6;">Best regards,<br>${sig.html}</p>`;
 
       // Generate HTML email
       const htmlBody = generateEmailHtml({
@@ -676,9 +680,10 @@ class EmailService {
    * @param {string|null} projectName - Optional project name (not used in content)
    * @param {string} quoteTitle - Quote/asset title
    * @param {string} [portalLink] - Optional portal link for "View in Portal" CTA
+   * @param {Object} [signature] - Producer signature { name, company, email, phone } for branded footer
    * @returns {Promise<Object>} Result with success status and messageId or error
    */
-  async sendQuoteAcceptedEmail(toEmail, supplierName, projectName, quoteTitle, portalLink = null) {
+  async sendQuoteAcceptedEmail(toEmail, supplierName, projectName, quoteTitle, portalLink = null, signature = null) {
     try {
       if (!toEmail || !supplierName || !quoteTitle) {
         throw new Error('Missing required parameters: toEmail, supplierName, and quoteTitle are required');
@@ -693,13 +698,14 @@ class EmailService {
 
       const safeSupplierName = escapeHtml(supplierName);
       const safeQuoteTitle = escapeHtml(quoteTitle);
+      const sig = formatSignature(signature);
       // Intentionally omitting projectName from subject/body per privacy requirement.
       const emailSubject = 'Your Quote was Accepted';
       const plainBody =
         `Good news, ${safeSupplierName}!\n\n` +
         `Your quote "${safeQuoteTitle}" has been accepted.\n` +
         `The producer will be in touch shortly.\n\n` +
-        `Best regards,\nProdBay Team`;
+        `Best regards,\n${sig.plain}`;
 
       // Paragraph styles: 16px, 1.6 line-height per BaseEmailLayout standard
       const htmlBodyContent =
@@ -707,8 +713,9 @@ class EmailService {
         `Good news, <strong>${safeSupplierName}</strong>!</p>` +
         `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
         `Your quote "<strong>${safeQuoteTitle}</strong>" has been accepted.</p>` +
-        `<p style="margin: 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
-        `The producer will be in touch shortly.</p>`;
+        `<p style="margin: 0 0 12px 0; color: #333333; font-size: 16px; line-height: 1.6;">` +
+        `The producer will be in touch shortly.</p>` +
+        `<p style="margin: 16px 0 0 0; color: #333333; font-size: 16px; line-height: 1.6;">Best regards,<br>${sig.html}</p>`;
 
       const htmlBody = generateEmailHtml({
         title: 'Quote Accepted',
@@ -750,6 +757,25 @@ class EmailService {
       };
     }
   }
+}
+
+/**
+ * Format producer signature for email body. Filters empty values to avoid "Best regards, ," artifacts.
+ * @param {Object} [signature] - { name, company, email, phone }
+ * @returns {{ plain: string, html: string }} Plain text and HTML signature blocks
+ */
+function formatSignature(signature) {
+  if (!signature || typeof signature !== 'object') {
+    return { plain: 'ProdBay Team', html: 'ProdBay - Production Management Platform' };
+  }
+  const parts = [signature.name, signature.company, signature.email, signature.phone].filter(Boolean);
+  if (parts.length === 0) {
+    return { plain: 'ProdBay Team', html: 'ProdBay - Production Management Platform' };
+  }
+  return {
+    plain: parts.join('\n'),
+    html: parts.map(p => escapeHtml(p)).join('<br>')
+  };
 }
 
 /**

@@ -40,6 +40,17 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     ]
   },
   {
+    date: '2026-02-24',
+    version: 'v0.9.0',
+    title: 'Email & Branding Overhaul (Complete)',
+    bulletPoints: [
+      'Universal branding applied to acceptance notifications and message alerts.',
+      'Quote Accepted and "New Message" (producer → supplier) emails now carry the producer\'s signature and branding.',
+      'Clean fallback logic: incomplete profiles (name-only, no company/phone) render without empty lines or weird punctuation.',
+      'Email & Branding Overhaul: 100% complete.'
+    ]
+  },
+  {
     date: '2026-02-23',
     version: 'v0.9.0',
     title: 'Intelligence Upgrade: Senior Production Controller',
