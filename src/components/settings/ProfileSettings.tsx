@@ -35,6 +35,8 @@ interface ProfileFormState {
   email: string;
   bio: string;
   avatarId: number;
+  companyName: string;
+  phoneNumber: string;
 }
 
 const ProfileSettings: React.FC = () => {
@@ -54,12 +56,16 @@ const ProfileSettings: React.FC = () => {
       typeof metadata.avatar_id === 'number' && metadata.avatar_id >= 0 && metadata.avatar_id <= 9
         ? metadata.avatar_id
         : 0;
+    const companyName = typeof metadata.company_name === 'string' ? metadata.company_name : '';
+    const phoneNumber = typeof metadata.phone_number === 'string' ? metadata.phone_number : '';
 
     return {
       name: fullName,
       email: user?.email ?? '',
       bio,
       avatarId,
+      companyName,
+      phoneNumber,
     };
   }, [user]);
 
@@ -68,6 +74,29 @@ const ProfileSettings: React.FC = () => {
   useEffect(() => {
     setForm(getInitialState());
   }, [getInitialState]);
+
+  // Pre-populate company/phone from producers table on mount (source of truth for business branding)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadProducer = async () => {
+      const { data } = await supabase
+        .from('producers')
+        .select('company_name, phone_number')
+        .eq('id', user.id)
+        .single();
+
+      if (data) {
+        setForm((prev) => ({
+          ...prev,
+          companyName: data.company_name ?? '',
+          phoneNumber: data.phone_number ?? '',
+        }));
+      }
+    };
+
+    loadProducer();
+  }, [user?.id]);
 
   const handleChange = (field: keyof ProfileFormState, value: string | number) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -116,7 +145,7 @@ const ProfileSettings: React.FC = () => {
       const firstName = parts[0] ?? '';
       const lastName = parts.slice(1).join(' ');
 
-      const { error } = await supabase.auth.updateUser({
+      const { error: authError } = await supabase.auth.updateUser({
         email: form.email.trim(),
         data: {
           ...(user.user_metadata ?? {}),
@@ -124,10 +153,28 @@ const ProfileSettings: React.FC = () => {
           last_name: lastName,
           bio: form.bio.trim(),
           avatar_id: form.avatarId,
+          company_name: form.companyName.trim(),
+          phone_number: form.phoneNumber.trim(),
         },
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      const { error: producerError } = await supabase
+        .from('producers')
+        .upsert(
+          {
+            id: user.id,
+            full_name: form.name.trim(),
+            email: form.email.trim(),
+            company_name: form.companyName.trim() || null,
+            phone_number: form.phoneNumber.trim() || null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        );
+
+      if (producerError) throw producerError;
 
       showSuccess('Settings saved');
     } catch (err) {
@@ -265,6 +312,38 @@ const ProfileSettings: React.FC = () => {
                 {errors.email}
               </p>
             )}
+          </div>
+
+          {/* Company Name */}
+          <div>
+            <label htmlFor="profile-company" className="block text-sm font-medium text-gray-200 mb-2">
+              Company Name <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              id="profile-company"
+              type="text"
+              value={form.companyName}
+              onChange={(e) => handleChange('companyName', e.target.value)}
+              placeholder="Your company or organization"
+              className={`${inputBase} ${errors.companyName ? inputError : inputDefault}`}
+              aria-invalid={!!errors.companyName}
+            />
+          </div>
+
+          {/* Business Phone Number */}
+          <div>
+            <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-200 mb-2">
+              Business Phone Number <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              id="profile-phone"
+              type="tel"
+              value={form.phoneNumber}
+              onChange={(e) => handleChange('phoneNumber', e.target.value)}
+              placeholder="+1 (555) 123-4567"
+              className={`${inputBase} ${errors.phoneNumber ? inputError : inputDefault}`}
+              aria-invalid={!!errors.phoneNumber}
+            />
           </div>
 
           {/* Bio */}

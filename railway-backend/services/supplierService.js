@@ -232,9 +232,12 @@ class SupplierService {
    * @returns {string} Email body
    */
   static generateEmailBody(asset, contactName, from = null) {
-    const fromName = from?.name || '[Your Name]';
-    const fromEmail = from?.email || '[Your Email]';
-    
+    const fromName = from?.name || 'Producer';
+    const fromEmail = from?.email || '';
+    const fromCompany = from?.company || '';
+    const fromPhone = from?.phone || '';
+    const signatureLines = [fromCompany, fromEmail, fromPhone].filter(Boolean).join('\n') || fromName;
+
     const supplierContextBlock = (asset.supplier_context && asset.supplier_context.trim() !== '')
       ? `\nSupplier & Logistics Context: ${asset.supplier_context}\n`
       : '';
@@ -253,7 +256,7 @@ Thank you for your time and we look forward to working with you.
 
 Best regards,
 ${fromName}
-${fromEmail}`;
+${signatureLines}`;
   }
 
   /**
@@ -284,10 +287,13 @@ ${fromEmail}`;
         }
       }
 
-      // Fetch asset details
+      // Fetch asset details with project for producer lookup (fallback when from is missing)
       const { data: asset, error: assetError } = await supabase
         .from('assets')
-        .select('*')
+        .select(`
+          *,
+          project:projects(id, producer_id)
+        `)
         .eq('id', assetId)
         .single();
 
@@ -308,6 +314,28 @@ ${fromEmail}`;
       if (!suppliers || suppliers.length !== supplierIds.length) {
         throw new Error('One or more suppliers not found');
       }
+
+      // Enrich from with producer profile when missing or incomplete (company, phone)
+      let enrichedFrom = from ? { ...from, company: from.company ?? '', phone: from.phone ?? '' } : null;
+      const project = Array.isArray(asset.project) ? asset.project?.[0] : asset.project;
+      const producerId = project?.producer_id;
+      if (producerId) {
+        const { data: producer } = await supabase
+          .from('producers')
+          .select('full_name, email, company_name, phone_number')
+          .eq('id', producerId)
+          .single();
+
+        if (producer) {
+          enrichedFrom = {
+            name: enrichedFrom?.name || producer.full_name || producer.email?.split('@')[0] || 'Producer',
+            email: enrichedFrom?.email || producer.email || '',
+            company: enrichedFrom?.company || producer.company_name || '',
+            phone: enrichedFrom?.phone || producer.phone_number || ''
+          };
+        }
+      }
+      if (!enrichedFrom) enrichedFrom = { name: 'Producer', email: '', company: '', phone: '' };
 
       const results = [];
       const errors = [];
@@ -444,7 +472,7 @@ ${fromEmail}`;
                 supplier,
                 asset,
                 quote,
-                from,
+                enrichedFrom,
                 customizedEmail,
                 attachmentUrls.length > 0 ? attachmentUrls : null,
                 failedAttachments.length > 0 ? failedAttachments : null

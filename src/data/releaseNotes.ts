@@ -29,6 +29,17 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     ]
   },
   {
+    date: '2026-02-24',
+    version: 'v0.9.0',
+    title: 'Customizable Business Branding',
+    bulletPoints: [
+      'Quote request emails now carry your professional identity: name, company, email, and phone from your profile.',
+      'New Company Name and Business Phone Number fields in Settings → Profile; values sync to producers table and user metadata.',
+      'Backend fetches producer profile when building default quote request emails, replacing generic "[Your Name]" fallbacks.',
+      'Removed redundant "You will receive a unique link via email" sentence from quote request body.'
+    ]
+  },
+  {
     date: '2026-02-23',
     version: 'v0.9.0',
     title: 'Intelligence Upgrade: Senior Production Controller',
