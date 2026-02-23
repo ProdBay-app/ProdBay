@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Edit, Trash2, Tag, X } from 'lucide-react';
+import { Trash2, Tag, X, ChevronDown } from 'lucide-react';
 import type { Asset } from '@/lib/supabase';
 import type { InlineEditFields } from './AssetList';
 import { getTagColor, PREDEFINED_ASSET_TAGS, filterTags } from '@/utils/assetTags';
 
 interface AssetTableProps {
   assets: Asset[];
-  onEdit: (asset: Asset) => void;
   onDelete: (asset: Asset) => void;
   onView?: (asset: Asset) => void;
   hoveredAssetId?: string | null;
@@ -34,7 +33,6 @@ interface AssetTableProps {
  */
 const AssetTable: React.FC<AssetTableProps> = ({
   assets,
-  onEdit,
   onDelete,
   onView,
   hoveredAssetId,
@@ -253,12 +251,12 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 {/* Name */}
                 <td className={`px-4 py-3 text-gray-200 ${!isEditMode ? 'whitespace-nowrap' : ''} ${isHighlighted ? 'bg-white/15' : 'bg-white/5'}`}>
                   {isEditMode && onEditChange ? (
-                    <input
-                      type="text"
+                    <textarea
                       value={edits[asset.id]?.asset_name ?? asset.asset_name ?? ''}
                       onChange={(e) => onEditChange(asset.id, { asset_name: e.target.value })}
                       onClick={(e) => e.stopPropagation()}
-                      className="w-full min-w-[120px] max-w-[250px] px-2 py-1.5 text-sm bg-black/20 border border-white/20 text-white rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      rows={2}
+                      className="w-full min-w-[120px] max-w-[250px] resize-none px-2 py-1.5 text-sm bg-black/20 border border-white/20 text-white rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="Asset name"
                     />
                   ) : (
@@ -343,14 +341,14 @@ const AssetTable: React.FC<AssetTableProps> = ({
                                   prev === asset.id ? null : asset.id
                                 )
                               }
-                              className="flex items-center gap-1.5 px-2 py-1.5 text-sm bg-white/10 border border-white/20 text-gray-200 rounded hover:bg-white/20 transition-colors w-full text-left"
+                              className="flex items-center justify-between gap-2 w-full text-left px-2 py-1 text-sm border border-white/20 bg-black/20 text-gray-200 rounded-md hover:bg-black/30 transition-colors"
                             >
-                              <Tag className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                              <span>
+                              <span className="truncate">
                                 {currentTags.length > 0
                                   ? `${currentTags.length} tag(s)`
                                   : 'Select tags...'}
                               </span>
+                              <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
                             </button>
                             {isOpen &&
                               position &&
@@ -464,17 +462,6 @@ const AssetTable: React.FC<AssetTableProps> = ({
                 {/* Actions */}
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    {/* Edit Button - hidden in edit mode */}
-                    {!isEditMode && (
-                      <button
-                        onClick={() => onEdit(asset)}
-                        className="p-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 rounded backdrop-blur-sm transition-colors"
-                        aria-label="Edit asset"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                    )}
-                    
                     {/* Delete Button */}
                     <button
                       onClick={() => onDelete(asset)}

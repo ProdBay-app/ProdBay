@@ -615,7 +615,6 @@ const AssetList: React.FC<AssetListProps> = ({
 
           <AssetTable
             assets={filteredAndSortedAssets}
-            onEdit={handleOpenEditModal}
             onDelete={handleOpenDeleteModal}
             onView={handleViewAsset}
             hoveredAssetId={hoveredAssetId}
