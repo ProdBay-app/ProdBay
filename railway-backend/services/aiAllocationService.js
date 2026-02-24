@@ -562,126 +562,75 @@ class AIAllocationService {
   }
 
   /**
-   * Analyze project brief and suggest assets using AI
+   * Analyze project brief and suggest assets using AI (two-phase: extract then enrich)
    * @param {string} briefDescription - The project brief text
    * @param {Object} projectContext - Additional project context (budget, timeline, etc.)
    * @returns {Promise<Object>} AI-generated asset suggestions
    */
   async analyzeBriefForAssets(briefDescription, projectContext = {}) {
     const startTime = Date.now();
-    
+
     try {
-      const prompt = this.buildAssetAnalysisPrompt(briefDescription, projectContext);
-      
-      const response = await this.openai.chat.completions.create({
-        model: "gpt-4.1-nano",
-        temperature: 0,
-        messages: [
-          {
-            role: "system",
-            content: "You are a precise Data Extraction Specialist working in event production. Your SOLE responsibility is to extract explicit physical items, services, and crew roles from a creative brief into a structured JSON list. You are NOT planning the event; you are merely cataloging what is written. Respond with JSON only. STRICT JSON RULES: 1) Escape all string values properly. 2) Write symbols in plain text. 3) Validate arrays/objects perfectly. 4) Each asset must be a distinct object in the 'assets' array. CRITICAL: Never hallucinate sub-components of a system. If the text says 'A + B', split them into two assets. If the text says 'System C', leave it as one asset."          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        max_completion_tokens: 24000, // Increased from 16000 to handle very large asset lists. gpt-4.1-nano supports up to 400k tokens total, so 24k completion tokens provides headroom for complex briefs with 30+ assets
-        response_format: { type: "json_object" } // Force JSON output for consistency
-      });
-
-      // Validate response structure before accessing content
-      if (!response || !response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
-        throw new Error('Invalid API response structure: missing choices array');
+      // Phase 1: Exhaustive extraction (high recall, minimal output)
+      const phase1Result = await this.extractAssetsPhase1(briefDescription);
+      const extractedAssets = phase1Result.assets;
+      if (!extractedAssets || extractedAssets.length === 0) {
+        throw new Error('Phase 1 returned no assets');
       }
+      console.log(`[Two-Phase] Phase 1 extracted ${extractedAssets.length} assets`);
 
-      if (!response.choices[0] || !response.choices[0].message) {
-        throw new Error('Invalid API response structure: missing message in choices[0]');
-      }
-
-      const content = response.choices[0].message.content;
-      
-      // Log the response structure BEFORE checking content to diagnose issues
-      console.log('Response structure:', {
-        hasResponse: !!response,
-        choicesCount: response.choices?.length || 0,
-        hasMessage: !!response.choices[0]?.message,
-        contentLength: content?.length || 0,
-        contentType: typeof content,
-        finishReason: response.choices[0]?.finish_reason,
-        usage: response.usage || 'not provided',
-        promptTokens: response.usage?.prompt_tokens || 'unknown',
-        completionTokens: response.usage?.completion_tokens || 'unknown',
-        totalTokens: response.usage?.total_tokens || 'unknown',
-        promptLength: typeof prompt !== 'undefined' ? prompt.length : 'unknown'
-      });
-      
-      // Handle null/undefined/empty content explicitly
-      if (content === null || content === undefined) {
-        const finishReason = response.choices[0]?.finish_reason;
-        const promptTokens = response.usage?.prompt_tokens || 'unknown';
-        const maxTokens = 16000;
-        throw new Error(`AI returned null/undefined content. Finish reason: ${finishReason || 'unknown'}. Prompt tokens: ${promptTokens}, Max completion tokens: ${maxTokens}. This may indicate the model hit a limit or encountered an error.`);
-      }
-      
-      // Handle empty string content (often caused by 'length' finish reason with very low token limits)
-      if (content.trim().length === 0) {
-        const finishReason = response.choices[0]?.finish_reason;
-        const promptTokens = response.usage?.prompt_tokens || 'unknown';
-        const completionTokens = response.usage?.completion_tokens || 0;
-        const maxTokens = 24000;
-        if (finishReason === 'length') {
-          throw new Error(`AI response was cut off due to token limit (finish_reason: 'length'). Prompt tokens: ${promptTokens}, Completion tokens: ${completionTokens}, Max completion tokens: ${maxTokens}. The response exceeded the token limit - consider splitting the brief into smaller sections or the asset list may be exceptionally large (30+ assets).`);
+      // Phase 2: Enrich with specs, supplier context, category
+      let phase2Success = false;
+      let enrichedAssets = [];
+      try {
+        const phase2Result = await this.enrichAssetsPhase2(extractedAssets, briefDescription, projectContext);
+        enrichedAssets = phase2Result.enriched_assets;
+        phase2Success = true;
+      } catch (phase2Error) {
+        console.warn('[Two-Phase] Phase 2 failed, retrying once:', phase2Error.message);
+        try {
+          const phase2Result = await this.enrichAssetsPhase2(extractedAssets, briefDescription, projectContext);
+          enrichedAssets = phase2Result.enriched_assets;
+          phase2Success = true;
+        } catch (retryError) {
+          console.warn('[Two-Phase] Phase 2 retry failed, using placeholder specs:', retryError.message);
         }
-        throw new Error(`AI returned empty content. Finish reason: ${finishReason || 'unknown'}. Prompt tokens: ${promptTokens}, Completion tokens: ${completionTokens}. This may indicate the model encountered an error or the response was filtered.`);
       }
-      
-      // Log the raw response for debugging
-      console.log('Raw AI response:', content);
-      // Note: OpenAI SDK handles timeouts and retries automatically
-      // For large payloads (>200k chars), processing may take longer but is within gpt-4.1-nano's 400k token capacity
 
-      const aiResponse = this.parseAIResponse(content);
+      const merged = this.mergeExtractedAndEnriched(extractedAssets, enrichedAssets);
+      const assets = merged.map((a) => this.mapAssetToInternalSchema(a));
       const processingTime = Date.now() - startTime;
 
-      // Capture telemetry data for repair effectiveness tracking
-      const savedCount = this._lastSavedCount || 0;
-      const repairTriggered = this._lastRepairAttempted || false;
-      const totalAssets = aiResponse.assets ? aiResponse.assets.length : 0;
-
-      // Log the AI processing
       await this.logAIProcessing('asset_creation', {
         briefDescription,
         projectContext
-      }, aiResponse, processingTime, true);
+      }, { assets }, processingTime, true);
 
       return {
         success: true,
-        assets: aiResponse.assets,
-        reasoning: aiResponse.reasoning,
-        confidence: aiResponse.confidence,
+        assets,
+        reasoning: 'Two-phase extraction: Phase 1 (exhaustive list) + Phase 2 (enrichment).',
+        confidence: phase2Success ? 0.95 : 0.8,
         processingTime,
         telemetry: {
-          total_assets: totalAssets,
-          saved_assets: savedCount,
-          repair_triggered: repairTriggered
+          total_assets: assets.length,
+          phase1_assets: extractedAssets.length,
+          phase2_success: phase2Success
         }
       };
-
     } catch (error) {
       console.error('AI asset analysis failed:', error);
       const processingTime = Date.now() - startTime;
-      
+
       await this.logAIProcessing('asset_creation', {
         briefDescription,
         projectContext
       }, null, processingTime, false, error.message);
 
-      // Try to extract partial assets from malformed JSON
       let fallbackAssets = [];
       try {
         const rawContent = error.rawContent || '';
         if (rawContent) {
-          // Try multiple strategies to extract assets
           fallbackAssets = this.extractAssetsFromMalformedJson(rawContent);
           if (fallbackAssets.length > 0) {
             console.log(`Extracted ${fallbackAssets.length} partial assets from malformed JSON`);
@@ -707,6 +656,185 @@ class AIAllocationService {
    */
   getAvailableAssetTags() {
     return require('../../config/assetTagNames.json');
+  }
+
+  /**
+   * Parse Phase 1 extraction response (minimal schema: asset_name, quantity, source_text)
+   */
+  parsePhase1Response(content) {
+    if (!content || typeof content !== 'string') {
+      throw new Error('Invalid content: content must be a non-empty string');
+    }
+    let cleaned = content.trim();
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    cleaned = cleaned.trim();
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    }
+    const parsed = JSON.parse(cleaned);
+    if (!parsed.assets || !Array.isArray(parsed.assets)) {
+      throw new Error('Phase 1 response missing assets array');
+    }
+    return { assets: parsed.assets };
+  }
+
+  /**
+   * Build Phase 1 extraction prompt (brief only, minimal output)
+   */
+  buildPhase1ExtractionPrompt(briefDescription) {
+    const sanitizedBrief = this.sanitizeBriefText(briefDescription);
+    return `Extract every asset from this event brief. Return ONLY valid JSON.
+
+RULES:
+- Extract every bullet under ASSETS REQUIRED, STAFF & TALENT, MERCH & GIVEAWAYS, FURNITURE & DÉCOR. Do not miss a single item.
+- SPLIT items joined by "+", "and", or slashes (e.g., "6 Grill Chefs + kitchen assistants" → two items).
+- Do NOT deconstruct single systems (e.g., keep "Projection mapping system" as one item).
+- Do NOT invent support items (no cables, trash bags, lighting control system).
+
+Respond ONLY with: { "assets": [ { "asset_name": "string", "quantity": "string", "source_text": "string" } ] }
+
+Event Brief:
+"${sanitizedBrief}"`;
+  }
+
+  /**
+   * Phase 1: Extract exhaustive list of assets (high recall, minimal output)
+   */
+  async extractAssetsPhase1(briefDescription) {
+    const prompt = this.buildPhase1ExtractionPrompt(briefDescription);
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4.1-nano',
+      temperature: 0,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a meticulous Data Extraction Specialist. Your ONLY job is to read an event brief and extract an exhaustive list of every physical item, piece of equipment, service, or crew role. Respond with JSON only—no markdown, no code blocks.'
+        },
+        { role: 'user', content: prompt }
+      ],
+      max_completion_tokens: 8000,
+      response_format: { type: 'json_object' }
+    });
+    const content = response?.choices?.[0]?.message?.content;
+    if (!content || content.trim().length === 0) {
+      throw new Error('Phase 1 returned empty content');
+    }
+    return this.parsePhase1Response(content);
+  }
+
+  /**
+   * Parse Phase 2 enrichment response (enriched_assets array)
+   */
+  parsePhase2Response(content) {
+    if (!content || typeof content !== 'string') {
+      throw new Error('Invalid content: content must be a non-empty string');
+    }
+    let cleaned = content.trim();
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    cleaned = cleaned.trim();
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    }
+    const parsed = JSON.parse(cleaned);
+    if (!parsed.enriched_assets && !parsed.assets) {
+      throw new Error('Phase 2 response missing enriched_assets or assets array');
+    }
+    const enriched = parsed.enriched_assets || parsed.assets;
+    if (!Array.isArray(enriched)) {
+      throw new Error('Phase 2 enriched_assets is not an array');
+    }
+    return { enriched_assets: enriched };
+  }
+
+  /**
+   * Build Phase 2 enrichment prompt (assets + brief + context)
+   */
+  buildPhase2EnrichmentPrompt(extractedAssets, briefDescription, projectContext) {
+    const sanitizedBrief = this.sanitizeBriefText(briefDescription);
+    const tagsList = this.getAvailableAssetTags().join(', ');
+    const assetsJson = JSON.stringify(extractedAssets, null, 0);
+    return `Enrich each asset below with technical specifications, supplier context, and category tag.
+
+RULES:
+- Return ONE object for EVERY asset in the input array, in the SAME ORDER. Do not add or remove any.
+- Use ONLY these category tags (match exactly): ${tagsList}
+- Provide procurement-ready technical specifications based on the brief.
+- Every asset MUST have non-empty supplier_context (e.g., "Outdoor, delivery by Jan 14").
+
+Respond ONLY with: { "enriched_assets": [ { "asset_name": "string", "category_tag": "string", "technical_specifications": "string", "supplier_context": "string" } ] }
+
+Brief context:
+- Budget: ${projectContext.financial_parameters || 'Not specified'}
+- Timeline: ${projectContext.timeline_deadline || 'Not specified'}
+- Venue: ${projectContext.physical_parameters || 'Not specified'}
+
+Event Brief (excerpt): "${sanitizedBrief.substring(0, 3000)}${sanitizedBrief.length > 3000 ? '...' : ''}"
+
+Input assets to enrich (in order):
+${assetsJson}`;
+  }
+
+  /**
+   * Phase 2: Enrich extracted assets with specs, supplier context, category
+   */
+  async enrichAssetsPhase2(extractedAssets, briefDescription, projectContext) {
+    const prompt = this.buildPhase2EnrichmentPrompt(extractedAssets, briefDescription, projectContext);
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4.1-nano',
+      temperature: 0,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a Senior Production Controller. I will provide an array of event assets and the original brief. Your job is to enrich each asset with Technical Specifications, Supplier Context, and Category Tag. Return one object per input asset, in the same order. Respond with JSON only.'
+        },
+        { role: 'user', content: prompt }
+      ],
+      max_completion_tokens: 24000,
+      response_format: { type: 'json_object' }
+    });
+    const content = response?.choices?.[0]?.message?.content;
+    if (!content || content.trim().length === 0) {
+      throw new Error('Phase 2 returned empty content');
+    }
+    return this.parsePhase2Response(content);
+  }
+
+  /**
+   * Merge Phase 1 (extracted) and Phase 2 (enriched) results by index
+   */
+  mergeExtractedAndEnriched(phase1Assets, phase2Enriched) {
+    const merged = [];
+    if (phase2Enriched.length !== phase1Assets.length) {
+      console.warn(`[Two-Phase] Length mismatch: Phase 1=${phase1Assets.length}, Phase 2=${phase2Enriched.length}. Aligning by index.`);
+    }
+    const defaultTag = this.getAvailableAssetTags()[0] || 'Logistics';
+    for (let i = 0; i < phase1Assets.length; i++) {
+      const p1 = phase1Assets[i];
+      const p2 = phase2Enriched[i] || {};
+      merged.push({
+        asset_name: p1.asset_name,
+        quantity: p1.quantity,
+        source_text: p1.source_text ?? '',
+        technical_specifications: p2.technical_specifications ?? 'See brief for details.',
+        category_tag: p2.category_tag || defaultTag,
+        supplier_context: (p2.supplier_context != null && String(p2.supplier_context).trim() !== '')
+          ? p2.supplier_context
+          : 'Indoor/outdoor TBC. Delivery and installation to be confirmed.'
+      });
+    }
+    return merged;
   }
 
   /**
