@@ -562,7 +562,33 @@ class AIAllocationService {
   }
 
   /**
+   * Run the full two-phase extraction flow (Phase 1 + Phase 2 + merge).
+   * Throws on any failure.
+   */
+  async runTwoPhaseFlow(briefDescription, projectContext) {
+    const phase1Result = await this.extractAssetsPhase1(briefDescription);
+    const extractedAssets = phase1Result.assets;
+    if (!extractedAssets || extractedAssets.length === 0) {
+      throw new Error('Phase 1 returned no assets');
+    }
+    console.log(`[Two-Phase] Phase 1 extracted ${extractedAssets.length} assets`);
+
+    const phase2Result = await this.enrichAssetsPhase2(extractedAssets, briefDescription, projectContext);
+    const enrichedAssets = phase2Result.enriched_assets;
+    if (!enrichedAssets || enrichedAssets.length === 0) {
+      throw new Error('Phase 2 returned no enriched assets');
+    }
+    if (enrichedAssets.length !== extractedAssets.length) {
+      throw new Error(`Phase 2 returned ${enrichedAssets.length} assets but Phase 1 had ${extractedAssets.length}. Counts must match.`);
+    }
+
+    const merged = this.mergeExtractedAndEnriched(extractedAssets, enrichedAssets);
+    return merged.map((a) => this.mapAssetToInternalSchema(a));
+  }
+
+  /**
    * Analyze project brief and suggest assets using AI (two-phase: extract then enrich)
+   * Retries the full flow once on failure. Never uses placeholders.
    * @param {string} briefDescription - The project brief text
    * @param {Object} projectContext - Additional project context (budget, timeline, etc.)
    * @returns {Promise<Object>} AI-generated asset suggestions
@@ -571,36 +597,15 @@ class AIAllocationService {
     const startTime = Date.now();
 
     try {
-      // Phase 1: Exhaustive extraction (high recall, minimal output)
-      const phase1Result = await this.extractAssetsPhase1(briefDescription);
-      const extractedAssets = phase1Result.assets;
-      if (!extractedAssets || extractedAssets.length === 0) {
-        throw new Error('Phase 1 returned no assets');
-      }
-      console.log(`[Two-Phase] Phase 1 extracted ${extractedAssets.length} assets`);
-
-      // Phase 2: Enrich with specs, supplier context, category
-      let phase2Success = false;
-      let enrichedAssets = [];
+      let assets;
       try {
-        const phase2Result = await this.enrichAssetsPhase2(extractedAssets, briefDescription, projectContext);
-        enrichedAssets = phase2Result.enriched_assets;
-        phase2Success = true;
-      } catch (phase2Error) {
-        console.warn('[Two-Phase] Phase 2 failed, retrying once:', phase2Error.message);
-        try {
-          const phase2Result = await this.enrichAssetsPhase2(extractedAssets, briefDescription, projectContext);
-          enrichedAssets = phase2Result.enriched_assets;
-          phase2Success = true;
-        } catch (retryError) {
-          console.warn('[Two-Phase] Phase 2 retry failed, using placeholder specs:', retryError.message);
-        }
+        assets = await this.runTwoPhaseFlow(briefDescription, projectContext);
+      } catch (firstError) {
+        console.warn('[Two-Phase] Flow failed, retrying once:', firstError.message);
+        assets = await this.runTwoPhaseFlow(briefDescription, projectContext);
       }
 
-      const merged = this.mergeExtractedAndEnriched(extractedAssets, enrichedAssets);
-      const assets = merged.map((a) => this.mapAssetToInternalSchema(a));
       const processingTime = Date.now() - startTime;
-
       await this.logAIProcessing('asset_creation', {
         briefDescription,
         projectContext
@@ -610,12 +615,10 @@ class AIAllocationService {
         success: true,
         assets,
         reasoning: 'Two-phase extraction: Phase 1 (exhaustive list) + Phase 2 (enrichment).',
-        confidence: phase2Success ? 0.95 : 0.8,
+        confidence: 0.95,
         processingTime,
         telemetry: {
-          total_assets: assets.length,
-          phase1_assets: extractedAssets.length,
-          phase2_success: phase2Success
+          total_assets: assets.length
         }
       };
     } catch (error) {
@@ -627,23 +630,10 @@ class AIAllocationService {
         projectContext
       }, null, processingTime, false, error.message);
 
-      let fallbackAssets = [];
-      try {
-        const rawContent = error.rawContent || '';
-        if (rawContent) {
-          fallbackAssets = this.extractAssetsFromMalformedJson(rawContent);
-          if (fallbackAssets.length > 0) {
-            console.log(`Extracted ${fallbackAssets.length} partial assets from malformed JSON`);
-          }
-        }
-      } catch (fallbackError) {
-        console.error('Failed to extract partial assets:', fallbackError);
-      }
-
       return {
         success: false,
-        error: error.message,
-        fallbackAssets: fallbackAssets.length > 0 ? fallbackAssets : this.getFallbackAssets(briefDescription)
+        error: 'Brief analysis failed. Please try again.',
+        fallbackAssets: []
       };
     }
   }
@@ -725,11 +715,27 @@ Event Brief:
     if (!content || content.trim().length === 0) {
       throw new Error('Phase 1 returned empty content');
     }
+    console.log('[Two-Phase] Phase 1 raw LLM output:', content);
     return this.parsePhase1Response(content);
   }
 
   /**
+   * Clean Phase 2 JSON response (trailing commas, escapes)
+   * Handles common malformed JSON from LLM (e.g. "Expected ',' or ']' after array element")
+   */
+  cleanPhase2JsonResponse(jsonString) {
+    if (!jsonString || typeof jsonString !== 'string') return jsonString;
+    let cleaned = jsonString;
+    // Remove trailing commas before ] or } (common LLM mistake)
+    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
+    // Sanitize string values (escapes, LaTeX, control chars)
+    cleaned = this.sanitizeJsonStringValues(cleaned);
+    return cleaned;
+  }
+
+  /**
    * Parse Phase 2 enrichment response (enriched_assets array)
+   * Applies JSON repair to handle malformed LLM output (trailing commas, truncation)
    */
   parsePhase2Response(content) {
     if (!content || typeof content !== 'string') {
@@ -747,6 +753,7 @@ Event Brief:
     if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
       cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
     }
+    cleaned = this.cleanPhase2JsonResponse(cleaned);
     const parsed = JSON.parse(cleaned);
     if (!parsed.enriched_assets && !parsed.assets) {
       throw new Error('Phase 2 response missing enriched_assets or assets array');
@@ -808,6 +815,7 @@ ${assetsJson}`;
     if (!content || content.trim().length === 0) {
       throw new Error('Phase 2 returned empty content');
     }
+    console.log('[Two-Phase] Phase 2 raw LLM output:', content);
     return this.parsePhase2Response(content);
   }
 
