@@ -683,7 +683,8 @@ class AIAllocationService {
 
 RULES:
 - Extract every bullet under ASSETS REQUIRED, STAFF & TALENT, MERCH & GIVEAWAYS, FURNITURE & DÉCOR. Do not miss a single item.
-- SPLIT items joined by "+", "and", or slashes (e.g., "6 Grill Chefs + kitchen assistants" → two items).
+- KEEP groupings as written: when items are joined by "+", "and", or slashes, keep them as ONE asset (e.g., "6 Grill Chefs + kitchen assistants" → one asset; "LED signage + lighting truss" → one asset).
+- Do NOT split composite items into separate assets. Preserve the brief's structure.
 - Do NOT deconstruct single systems (e.g., keep "Projection mapping system" as one item).
 - Do NOT invent support items (no cables, trash bags, lighting control system).
 
@@ -704,7 +705,7 @@ Event Brief:
       messages: [
         {
           role: 'system',
-          content: 'You are a meticulous Data Extraction Specialist. Your ONLY job is to read an event brief and extract an exhaustive list of every physical item, piece of equipment, service, or crew role. Respond with JSON only—no markdown, no code blocks.'
+          content: 'You are a meticulous Data Extraction Specialist. Your ONLY job is to read an event brief and extract an exhaustive list of every physical item, piece of equipment, service, or crew role. KEEP groupings as written—do not split items joined by +, and, or slashes into separate assets. Respond with JSON only—no markdown, no code blocks.'
         },
         { role: 'user', content: prompt }
       ],
