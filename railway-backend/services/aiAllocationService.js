@@ -579,7 +579,7 @@ class AIAllocationService {
         messages: [
           {
             role: "system",
-            content: "You are a Senior Production Controller with extensive experience in event production, brand activations, and procurement planning. Your responsibility is to translate creative production briefs into complete, procurement-ready asset lists suitable for vendor quoting, budgeting, and logistics planning. Respond with JSON only—do not use markdown, code blocks, or add explanations outside the JSON. STRICT JSON RULES: 1) Escape all string values: use \\ for backslashes, \" for quotes, \n for newlines. 2) Write all symbols in plain text (e.g., '360 degrees', not LaTeX). 3) Validate arrays/objects: all brackets/braces must close, no trailing commas. 4) No duplicate properties in any object. 5) Escape special characters according to JSON rules. 6) Each asset object must be separate within the assets array—never merge multiple assets. ASSET GUIDELINES: An asset is a physical item, piece of equipment, service, or crew role essential for production. Assets must be functionally distinct and independently procurable. When multiple items are listed together, split into separate assets unless: (a) they are a single pre-assembled kit/set, (b) they are functionally inseparable, or (c) described as a single unit. CREW/TALENT: Specify each individual crew/talent role as its own asset. Never use a generic 'Crew' asset—each distinct role (e.g., 'Event Manager', 'Brand Ambassador', 'DJ') is a separate asset due to their unique requirements."
+            content: "You are a Senior Production Controller with extensive experience in event production, brand activations, and procurement planning. Your responsibility is to translate creative production briefs into complete, procurement-ready asset lists suitable for vendor quoting, budgeting, and logistics planning. Respond with JSON only—do not use markdown, code blocks, or add explanations outside the JSON. STRICT JSON RULES: 1) Escape all string values: use \\ for backslashes, \" for quotes, \n for newlines. 2) Write all symbols in plain text (e.g., '360 degrees', not LaTeX). 3) Validate arrays/objects: all brackets/braces must close, no trailing commas. 4) No duplicate properties in any object. 5) Escape special characters according to JSON rules. 6) Each asset object must be separate within the assets array—never merge multiple assets. ASSET GUIDELINES: An asset is a physical item, piece of equipment, service, or crew role essential for production. Assets must be functionally distinct and independently procurable. CRITICAL: When source text uses '+' or 'and' to join items (e.g., 'LED signage + lighting truss', 'Wooden benches and low tables', '6 Grill Chefs + kitchen assistants', '1 Event Manager + Health & Safety Officer'), ALWAYS split into separate assets. Extract every bullet from structured sections (ASSETS REQUIRED, STAFF & TALENT, MERCH & GIVEAWAYS)—do not omit any. CREW/TALENT: Each role is a separate asset. Split 'X + Y' patterns: '6 Grill Chefs + kitchen assistants' → Grill Chefs (6) and Kitchen Assistants; '1 Event Manager + Health & Safety Officer' → Event Manager and Health & Safety Officer."
           },
           {
             role: "user",
@@ -805,6 +805,8 @@ You must extract and include:
 
 Tier 1 (Explicit): Extract every asset explicitly mentioned in the brief. Do not split or merge beyond the rules above.
 
+EXHAUSTIVE EXTRACTION: When the brief has structured sections (e.g., ASSETS REQUIRED, STAFF & TALENT, MERCH & GIVEAWAYS, FURNITURE & DÉCOR), every bullet point in those sections MUST be represented as at least one asset. Do not omit any bullet. If a bullet lists multiple items (comma, slash, +, and), split into separate assets per the atomization rules. Examples: Mini PERi sauce bottles, Drink coupons, Flame keychains, Tote bags, Art Curator, Health & Safety Officer — each must appear as an asset when listed in the brief.
+
 Tier 2 (Directly implied): Only add assets that are DIRECTLY required by another asset in the brief (e.g., LED screen implies rigging and power). Do NOT add speculative assets. Examples of what NOT to add:
 • Do NOT add "Lighting control system" when not mentioned in the brief
 • Do NOT add "Warm amber wash lighting fixtures" as a separate asset when the brief only describes "Warm amber wash over seating areas" — treat as part of general lighting
@@ -878,6 +880,9 @@ CRITICAL ATOMICITY REQUIREMENTS:
    - Example: 'LED Heatwave signage + lighting truss' → Create 2 separate assets: 'LED Heatwave signage', 'Lighting truss system'
    - Example: '6 Grill Chefs + kitchen assistants' → Create 2 separate assets: 'Grill Chefs' (quantity: 6), 'Kitchen Assistants'
    - Example: 'Woven loungers, fabric banners, and string lights' → Create 3 separate assets: 'Woven loungers', 'Fabric banners', 'String lights'
+   - Example: 'Wooden benches + low tables' → Create 2 separate assets: 'Wooden benches', 'Low tables' (NEVER omit low tables)
+   - Example: 'Nando\'s branded bandanas + fans' → Create 2 separate assets: 'Branded bandanas', 'Branded fans'
+   - Example: 'Flame keychains / tote bags' → Create 2 separate assets: 'Flame keychains', 'Tote bags'
    - Exception: Only group if brief explicitly describes as a 'set', 'package', or 'kit' (e.g., 'DJ booth package')
 
 2. CREW & TALENT GRANULARITY:
@@ -895,6 +900,12 @@ CRITICAL ATOMICITY REQUIREMENTS:
    - Example: '2 DJs + percussionist team' → Create 2 separate assets:
      * 'DJs' (quantity: 2)
      * 'Percussionist team' (quantity: 1)
+   - Example: '1 Art Curator + rotating muralists' → Create 2 separate assets:
+     * 'Art Curator' (quantity: 1)
+     * 'Rotating muralists' (quantity: 1 or Estimate)
+   - Example: '1 Event Manager + Health & Safety Officer' → Create 2 separate assets:
+     * 'Event Manager' (quantity: 1)
+     * 'Health & Safety Officer' (quantity: 1)
 
 3. JSON STRUCTURE REQUIREMENTS:
    - Each asset MUST be its own closed JSON object within the array
@@ -925,17 +936,22 @@ COMMON MISTAKES TO AVOID:
    }
 
 ❌ INCORRECT - Grouped items that should be split (DO NOT DO THIS):
+   - "LED Heatwave signage + lighting truss" as one asset (WRONG — always split into 2)
+   - "Wooden benches and low tables" as one asset (WRONG — split into Wooden benches, Low tables)
+   - "Industrial workbenches, stools, and racks" as one asset (WRONG — split into 3)
    {
-     "asset_name": "Industrial workbenches, stools, and racks",  // WRONG - should be 3 separate assets
+     "asset_name": "Industrial workbenches, stools, and racks",
      "quantity": 1,
      "technical_specifications": "...",
      "supplier_context": "...",
      "category_tag": "Furniture"
    }
 
-❌ INCORRECT - Generic crew grouping (DO NOT DO THIS):
+❌ INCORRECT - Crew/talent combined when + is used (DO NOT DO THIS):
+   - "6 Grill Chefs + kitchen assistants" as one asset (WRONG — split into Grill Chefs, Kitchen Assistants)
+   - "1 Event Manager + Health & Safety Officer" as one asset (WRONG — split into 2)
    {
-     "asset_name": "Event Staff",  // WRONG - should split into individual roles
+     "asset_name": "Event Staff",
      "quantity": 1,
      "technical_specifications": "Event Manager, Ambassadors, Workshop Leaders",
      "supplier_context": "...",
