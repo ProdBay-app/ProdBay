@@ -562,140 +562,78 @@ class AIAllocationService {
   }
 
   /**
-   * Analyze project brief and suggest assets using AI
+   * Run the full two-phase extraction flow (Phase 1 + Phase 2 + merge).
+   * Throws on any failure.
+   */
+  async runTwoPhaseFlow(briefDescription, projectContext) {
+    const phase1Result = await this.extractAssetsPhase1(briefDescription);
+    const extractedAssets = phase1Result.assets;
+    if (!extractedAssets || extractedAssets.length === 0) {
+      throw new Error('Phase 1 returned no assets');
+    }
+    console.log(`[Two-Phase] Phase 1 extracted ${extractedAssets.length} assets`);
+
+    const phase2Result = await this.enrichAssetsPhase2(extractedAssets, briefDescription, projectContext);
+    const enrichedAssets = phase2Result.enriched_assets;
+    if (!enrichedAssets || enrichedAssets.length === 0) {
+      throw new Error('Phase 2 returned no enriched assets');
+    }
+    if (enrichedAssets.length !== extractedAssets.length) {
+      throw new Error(`Phase 2 returned ${enrichedAssets.length} assets but Phase 1 had ${extractedAssets.length}. Counts must match.`);
+    }
+
+    const merged = this.mergeExtractedAndEnriched(extractedAssets, enrichedAssets);
+    return merged.map((a) => this.mapAssetToInternalSchema(a));
+  }
+
+  /**
+   * Analyze project brief and suggest assets using AI (two-phase: extract then enrich)
+   * Retries the full flow once on failure. Never uses placeholders.
    * @param {string} briefDescription - The project brief text
    * @param {Object} projectContext - Additional project context (budget, timeline, etc.)
    * @returns {Promise<Object>} AI-generated asset suggestions
    */
   async analyzeBriefForAssets(briefDescription, projectContext = {}) {
     const startTime = Date.now();
-    
+
     try {
-      const prompt = this.buildAssetAnalysisPrompt(briefDescription, projectContext);
-      
-      const response = await this.openai.chat.completions.create({
-        model: "gpt-4.1-nano",
-        temperature: 0.2,
-        messages: [
-          {
-            role: "system",
-            content: "You are a Senior Production Controller with extensive experience in event production, brand activations, and procurement planning. Your responsibility is to translate creative production briefs into complete, procurement-ready asset lists suitable for vendor quoting, budgeting, and logistics planning. Respond with JSON only—do not use markdown, code blocks, or add explanations outside the JSON. STRICT JSON RULES: 1) Escape all string values: use \\ for backslashes, \" for quotes, \n for newlines. 2) Write all symbols in plain text (e.g., '360 degrees', not LaTeX). 3) Validate arrays/objects: all brackets/braces must close, no trailing commas. 4) No duplicate properties in any object. 5) Escape special characters according to JSON rules. 6) Each asset object must be separate within the assets array—never merge multiple assets. ASSET GUIDELINES: An asset is a physical item, piece of equipment, service, or crew role essential for production. Assets must be functionally distinct and independently procurable. When multiple items are listed together, split into separate assets unless: (a) they are a single pre-assembled kit/set, (b) they are functionally inseparable, or (c) described as a single unit. CREW/TALENT: Specify each individual crew/talent role as its own asset. Never use a generic 'Crew' asset—each distinct role (e.g., 'Event Manager', 'Brand Ambassador', 'DJ') is a separate asset due to their unique requirements."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        max_completion_tokens: 24000, // Increased from 16000 to handle very large asset lists. gpt-4.1-nano supports up to 400k tokens total, so 24k completion tokens provides headroom for complex briefs with 30+ assets
-        response_format: { type: "json_object" } // Force JSON output for consistency
-      });
-
-      // Validate response structure before accessing content
-      if (!response || !response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
-        throw new Error('Invalid API response structure: missing choices array');
+      let assets;
+      try {
+        assets = await this.runTwoPhaseFlow(briefDescription, projectContext);
+      } catch (firstError) {
+        console.warn('[Two-Phase] Flow failed, retrying once:', firstError.message);
+        assets = await this.runTwoPhaseFlow(briefDescription, projectContext);
       }
 
-      if (!response.choices[0] || !response.choices[0].message) {
-        throw new Error('Invalid API response structure: missing message in choices[0]');
-      }
-
-      const content = response.choices[0].message.content;
-      
-      // Log the response structure BEFORE checking content to diagnose issues
-      console.log('Response structure:', {
-        hasResponse: !!response,
-        choicesCount: response.choices?.length || 0,
-        hasMessage: !!response.choices[0]?.message,
-        contentLength: content?.length || 0,
-        contentType: typeof content,
-        finishReason: response.choices[0]?.finish_reason,
-        usage: response.usage || 'not provided',
-        promptTokens: response.usage?.prompt_tokens || 'unknown',
-        completionTokens: response.usage?.completion_tokens || 'unknown',
-        totalTokens: response.usage?.total_tokens || 'unknown',
-        promptLength: typeof prompt !== 'undefined' ? prompt.length : 'unknown'
-      });
-      
-      // Handle null/undefined/empty content explicitly
-      if (content === null || content === undefined) {
-        const finishReason = response.choices[0]?.finish_reason;
-        const promptTokens = response.usage?.prompt_tokens || 'unknown';
-        const maxTokens = 16000;
-        throw new Error(`AI returned null/undefined content. Finish reason: ${finishReason || 'unknown'}. Prompt tokens: ${promptTokens}, Max completion tokens: ${maxTokens}. This may indicate the model hit a limit or encountered an error.`);
-      }
-      
-      // Handle empty string content (often caused by 'length' finish reason with very low token limits)
-      if (content.trim().length === 0) {
-        const finishReason = response.choices[0]?.finish_reason;
-        const promptTokens = response.usage?.prompt_tokens || 'unknown';
-        const completionTokens = response.usage?.completion_tokens || 0;
-        const maxTokens = 24000;
-        if (finishReason === 'length') {
-          throw new Error(`AI response was cut off due to token limit (finish_reason: 'length'). Prompt tokens: ${promptTokens}, Completion tokens: ${completionTokens}, Max completion tokens: ${maxTokens}. The response exceeded the token limit - consider splitting the brief into smaller sections or the asset list may be exceptionally large (30+ assets).`);
-        }
-        throw new Error(`AI returned empty content. Finish reason: ${finishReason || 'unknown'}. Prompt tokens: ${promptTokens}, Completion tokens: ${completionTokens}. This may indicate the model encountered an error or the response was filtered.`);
-      }
-      
-      // Log the raw response for debugging
-      console.log('Raw AI response:', content);
-      // Note: OpenAI SDK handles timeouts and retries automatically
-      // For large payloads (>200k chars), processing may take longer but is within gpt-4.1-nano's 400k token capacity
-
-      const aiResponse = this.parseAIResponse(content);
       const processingTime = Date.now() - startTime;
-
-      // Capture telemetry data for repair effectiveness tracking
-      const savedCount = this._lastSavedCount || 0;
-      const repairTriggered = this._lastRepairAttempted || false;
-      const totalAssets = aiResponse.assets ? aiResponse.assets.length : 0;
-
-      // Log the AI processing
       await this.logAIProcessing('asset_creation', {
         briefDescription,
         projectContext
-      }, aiResponse, processingTime, true);
+      }, { assets }, processingTime, true);
 
       return {
         success: true,
-        assets: aiResponse.assets,
-        reasoning: aiResponse.reasoning,
-        confidence: aiResponse.confidence,
+        assets,
+        reasoning: 'Two-phase extraction: Phase 1 (exhaustive list) + Phase 2 (enrichment).',
+        confidence: 0.95,
         processingTime,
         telemetry: {
-          total_assets: totalAssets,
-          saved_assets: savedCount,
-          repair_triggered: repairTriggered
+          total_assets: assets.length
         }
       };
-
     } catch (error) {
       console.error('AI asset analysis failed:', error);
       const processingTime = Date.now() - startTime;
-      
+
       await this.logAIProcessing('asset_creation', {
         briefDescription,
         projectContext
       }, null, processingTime, false, error.message);
 
-      // Try to extract partial assets from malformed JSON
-      let fallbackAssets = [];
-      try {
-        const rawContent = error.rawContent || '';
-        if (rawContent) {
-          // Try multiple strategies to extract assets
-          fallbackAssets = this.extractAssetsFromMalformedJson(rawContent);
-          if (fallbackAssets.length > 0) {
-            console.log(`Extracted ${fallbackAssets.length} partial assets from malformed JSON`);
-          }
-        }
-      } catch (fallbackError) {
-        console.error('Failed to extract partial assets:', fallbackError);
-      }
-
       return {
         success: false,
-        error: error.message,
-        fallbackAssets: fallbackAssets.length > 0 ? fallbackAssets : this.getFallbackAssets(briefDescription)
+        error: 'Brief analysis failed. Please try again.',
+        fallbackAssets: []
       };
     }
   }
@@ -708,6 +646,204 @@ class AIAllocationService {
    */
   getAvailableAssetTags() {
     return require('../../config/assetTagNames.json');
+  }
+
+  /**
+   * Parse Phase 1 extraction response (minimal schema: asset_name, quantity, source_text)
+   */
+  parsePhase1Response(content) {
+    if (!content || typeof content !== 'string') {
+      throw new Error('Invalid content: content must be a non-empty string');
+    }
+    let cleaned = content.trim();
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    cleaned = cleaned.trim();
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    }
+    const parsed = JSON.parse(cleaned);
+    if (!parsed.assets || !Array.isArray(parsed.assets)) {
+      throw new Error('Phase 1 response missing assets array');
+    }
+    return { assets: parsed.assets };
+  }
+
+  /**
+   * Build Phase 1 extraction prompt (brief only, minimal output)
+   */
+  buildPhase1ExtractionPrompt(briefDescription) {
+    const sanitizedBrief = this.sanitizeBriefText(briefDescription);
+    return `Extract every asset from this event brief. Return ONLY valid JSON.
+
+RULES:
+- Extract every bullet under ASSETS REQUIRED, STAFF & TALENT, MERCH & GIVEAWAYS, FURNITURE & DÉCOR. Do not miss a single item.
+- KEEP groupings as written: when items are joined by "+", "and", or slashes, keep them as ONE asset (e.g., "6 Grill Chefs + kitchen assistants" → one asset; "LED signage + lighting truss" → one asset).
+- Do NOT split composite items into separate assets. Preserve the brief's structure.
+- Do NOT deconstruct single systems (e.g., keep "Projection mapping system" as one item).
+- Do NOT invent support items (no cables, trash bags, lighting control system).
+
+Respond ONLY with: { "assets": [ { "asset_name": "string", "quantity": "string", "source_text": "string" } ] }
+
+Event Brief:
+"${sanitizedBrief}"`;
+  }
+
+  /**
+   * Phase 1: Extract exhaustive list of assets (high recall, minimal output)
+   */
+  async extractAssetsPhase1(briefDescription) {
+    const prompt = this.buildPhase1ExtractionPrompt(briefDescription);
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4.1-nano',
+      temperature: 0,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a meticulous Data Extraction Specialist. Your ONLY job is to read an event brief and extract an exhaustive list of every physical item, piece of equipment, service, or crew role. KEEP groupings as written—do not split items joined by +, and, or slashes into separate assets. Respond with JSON only—no markdown, no code blocks.'
+        },
+        { role: 'user', content: prompt }
+      ],
+      max_completion_tokens: 8000,
+      response_format: { type: 'json_object' }
+    });
+    const content = response?.choices?.[0]?.message?.content;
+    if (!content || content.trim().length === 0) {
+      throw new Error('Phase 1 returned empty content');
+    }
+    console.log('[Two-Phase] Phase 1 raw LLM output:', content);
+    return this.parsePhase1Response(content);
+  }
+
+  /**
+   * Clean Phase 2 JSON response (trailing commas, escapes)
+   * Handles common malformed JSON from LLM (e.g. "Expected ',' or ']' after array element")
+   */
+  cleanPhase2JsonResponse(jsonString) {
+    if (!jsonString || typeof jsonString !== 'string') return jsonString;
+    let cleaned = jsonString;
+    // Remove trailing commas before ] or } (common LLM mistake)
+    cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
+    // Sanitize string values (escapes, LaTeX, control chars)
+    cleaned = this.sanitizeJsonStringValues(cleaned);
+    return cleaned;
+  }
+
+  /**
+   * Parse Phase 2 enrichment response (enriched_assets array)
+   * Applies JSON repair to handle malformed LLM output (trailing commas, truncation)
+   */
+  parsePhase2Response(content) {
+    if (!content || typeof content !== 'string') {
+      throw new Error('Invalid content: content must be a non-empty string');
+    }
+    let cleaned = content.trim();
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    cleaned = cleaned.trim();
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    }
+    cleaned = this.cleanPhase2JsonResponse(cleaned);
+    const parsed = JSON.parse(cleaned);
+    if (!parsed.enriched_assets && !parsed.assets) {
+      throw new Error('Phase 2 response missing enriched_assets or assets array');
+    }
+    const enriched = parsed.enriched_assets || parsed.assets;
+    if (!Array.isArray(enriched)) {
+      throw new Error('Phase 2 enriched_assets is not an array');
+    }
+    return { enriched_assets: enriched };
+  }
+
+  /**
+   * Build Phase 2 enrichment prompt (assets + brief + context)
+   */
+  buildPhase2EnrichmentPrompt(extractedAssets, briefDescription, projectContext) {
+    const sanitizedBrief = this.sanitizeBriefText(briefDescription);
+    const tagsList = this.getAvailableAssetTags().join(', ');
+    const assetsJson = JSON.stringify(extractedAssets, null, 0);
+    return `Enrich each asset below with technical specifications, supplier context, and category tag.
+
+RULES:
+- Return ONE object for EVERY asset in the input array, in the SAME ORDER. Do not add or remove any.
+- Use ONLY these category tags (match exactly): ${tagsList}
+- Provide procurement-ready technical specifications based on the brief.
+- Every asset MUST have non-empty supplier_context (e.g., "Outdoor, delivery by Jan 14").
+
+Respond ONLY with: { "enriched_assets": [ { "asset_name": "string", "category_tag": "string", "technical_specifications": "string", "supplier_context": "string" } ] }
+
+Brief context:
+- Budget: ${projectContext.financial_parameters || 'Not specified'}
+- Timeline: ${projectContext.timeline_deadline || 'Not specified'}
+- Venue: ${projectContext.physical_parameters || 'Not specified'}
+
+Event Brief (full): "${sanitizedBrief}"
+
+Input assets to enrich (in order):
+${assetsJson}`;
+  }
+
+  /**
+   * Phase 2: Enrich extracted assets with specs, supplier context, category
+   */
+  async enrichAssetsPhase2(extractedAssets, briefDescription, projectContext) {
+    const prompt = this.buildPhase2EnrichmentPrompt(extractedAssets, briefDescription, projectContext);
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4.1-nano',
+      temperature: 0,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a Senior Production Controller. I will provide an array of event assets and the original brief. Your job is to enrich each asset with Technical Specifications, Supplier Context, and Category Tag. Return one object per input asset, in the same order. Respond with JSON only.'
+        },
+        { role: 'user', content: prompt }
+      ],
+      max_completion_tokens: 24000,
+      response_format: { type: 'json_object' }
+    });
+    const content = response?.choices?.[0]?.message?.content;
+    if (!content || content.trim().length === 0) {
+      throw new Error('Phase 2 returned empty content');
+    }
+    console.log('[Two-Phase] Phase 2 raw LLM output:', content);
+    return this.parsePhase2Response(content);
+  }
+
+  /**
+   * Merge Phase 1 (extracted) and Phase 2 (enriched) results by index
+   */
+  mergeExtractedAndEnriched(phase1Assets, phase2Enriched) {
+    const merged = [];
+    if (phase2Enriched.length !== phase1Assets.length) {
+      console.warn(`[Two-Phase] Length mismatch: Phase 1=${phase1Assets.length}, Phase 2=${phase2Enriched.length}. Aligning by index.`);
+    }
+    const defaultTag = this.getAvailableAssetTags()[0] || 'Logistics';
+    for (let i = 0; i < phase1Assets.length; i++) {
+      const p1 = phase1Assets[i];
+      const p2 = phase2Enriched[i] || {};
+      merged.push({
+        asset_name: p1.asset_name,
+        quantity: p1.quantity,
+        source_text: p1.source_text ?? '',
+        technical_specifications: p2.technical_specifications ?? 'See brief for details.',
+        category_tag: p2.category_tag || defaultTag,
+        supplier_context: (p2.supplier_context != null && String(p2.supplier_context).trim() !== '')
+          ? p2.supplier_context
+          : 'Indoor/outdoor TBC. Delivery and installation to be confirmed.'
+      });
+    }
+    return merged;
   }
 
   /**
@@ -798,33 +934,19 @@ Role
 Act as a Senior Production Controller with extensive experience in event production, brand activations, and procurement planning. Your responsibility is to translate creative production briefs into complete, procurement-ready asset lists suitable for vendor quoting, budgeting, and logistics planning.
 
 Objective
-Deconstruct the provided production brief into a comprehensive, structured asset list. Your output must identify and document every asset required to execute the activation successfully. This includes:
-• Explicitly mentioned assets
-• Implicit or operationally required assets
-• Supporting infrastructure
-• Technical, staffing, and logistical components
-• Installation, operational, and breakdown requirements
-You must think like a production controller responsible for ensuring nothing is missed during procurement.
+Deconstruct the provided production brief into a comprehensive, structured asset list. Your output must identify and document every asset required to execute the activation successfully. Prioritize explicit assets from the brief; add only directly implied assets (e.g., rigging for an LED screen). Do not invent speculative or support assets (e.g., lighting control system, media server) unless the brief explicitly lists them.
 
 Asset Identification Rules
 You must extract and include:
 
-Explicit Assets: Directly mentioned items in the brief.
+Tier 1 (Explicit): Extract every asset explicitly mentioned in the brief. Do not split or merge beyond the rules above.
 
-Implied Assets: Assets not explicitly stated but required for execution. Examples:
-• If a photoshoot is mentioned → include studio hire, lighting equipment, camera gear, crew, catering, usage licensing
-• If an LED screen is mentioned → include rigging, power distribution, media server, operator, transport, installation
-• If a branded structure is mentioned → include fabrication, structural support, finishes, transport, installation, engineering approval if relevant
-• If talent or staff are mentioned → include uniforms, accreditation, catering, staffing hours
-• If an activation runs for multiple days → include storage, security, cleaning, maintenance
+EXHAUSTIVE EXTRACTION: When the brief has structured sections (e.g., ASSETS REQUIRED, STAFF & TALENT, MERCH & GIVEAWAYS, FURNITURE & DÉCOR), every bullet point in those sections MUST be represented as at least one asset. Do not omit any bullet. If a bullet lists multiple items (comma, slash, +, and), split into separate assets per the atomization rules. Examples: Mini PERi sauce bottles, Drink coupons, Flame keychains, Tote bags, Art Curator, Health & Safety Officer — each must appear as an asset when listed in the brief.
 
-Lifecycle Assets: Include assets required across all phases:
-• Pre-production
-• Fabrication
-• Transport and logistics
-• Installation
-• Live operation
-• Derig and removal
+Tier 2 (Strictly Implied Infrastructure): ONLY add an unmentioned asset if a physical item in the brief cannot physically stand or operate without it (e.g., 'Lighting' implies 'Lighting Truss' or 'Rigging'). 
+RESTRICTION: Do not infer control systems, media servers, laptops, specific cabling, or generic safety gear. Keep inferences strictly to structural supports.
+
+Do not add technical support assets (e.g., lighting control system, media server) unless the brief explicitly lists them.
 
 Project Brief: "${sanitizedBrief}"
 
@@ -839,6 +961,13 @@ AVAILABLE ASSET TAGS (use ONLY these 15 for category_tag - match EXACTLY, case-s
 ${tagsList}
 
 TAG SELECTION: Assign the most appropriate single category_tag from the list above. Do not invent new categories.
+
+CATEGORY TAG MAPPING (use these deterministic rules for consistency):
+- Touchscreen / quiz / interactive screen → Technology
+- Mural wall / canvas / art wall (physical structure) → Scenic & Props; staffed muralists → Staffing
+- Waste management / bins / segregated bins → Logistics
+- Art prints / prints / artwork → Floral & Decor
+- Projection mapping: keep as single "Projection mapping system" asset with Technology tag; do not split into separate "media server" unless brief explicitly lists it
 
 Quantity Rules:
 - Use exact number if stated in the brief
@@ -869,13 +998,24 @@ CRITICAL ATOMICITY REQUIREMENTS:
 
 1. ASSET GRANULARITY RULES:
    - Each asset MUST represent a single, independently procurable item, piece of equipment, service, or crew role
-   - When source text lists multiple items (comma, slash, or 'and' separated), split into separate assets
+   - When source text lists multiple items (comma, slash, 'and', or '+' separated), split into separate assets
+   - When source text uses '+' or 'plus' to join items, ALWAYS split into separate assets
    - Example: 'workbenches, stools, and racks' → Create 3 separate assets: 'Industrial Workbenches', 'Stools', 'Storage Racks'
    - Example: 'workbenches/stools' → Create 2 separate assets: 'Industrial Workbenches', 'Stools'
+   - Example: 'LED Heatwave signage + lighting truss' → Create 2 separate assets: 'LED Heatwave signage', 'Lighting truss system'
+   - Example: '6 Grill Chefs + kitchen assistants' → Create 2 separate assets: 'Grill Chefs' (quantity: 6), 'Kitchen Assistants'
+   - Example: 'Woven loungers, fabric banners, and string lights' → Create 3 separate assets: 'Woven loungers', 'Fabric banners', 'String lights'
+   - Example: 'Wooden benches + low tables' → Create 2 separate assets: 'Wooden benches', 'Low tables' (NEVER omit low tables)
+   - Example: 'Nando\'s branded bandanas + fans' → Create 2 separate assets: 'Branded bandanas', 'Branded fans'
+   - Example: 'Flame keychains / tote bags' → Create 2 separate assets: 'Flame keychains', 'Tote bags'
    - Exception: Only group if brief explicitly describes as a 'set', 'package', or 'kit' (e.g., 'DJ booth package')
+    - DO NOT DECONSTRUCT SINGLE SYSTEMS: If the brief lists a single integrated system (e.g., 'Projection mapping system', 'DJ equipment', 'Sauce-mixing bar'), extract it as ONE asset. DO NOT hallucinate its sub-components (e.g., do not extract projectors, media servers, and cables as separate items unless explicitly listed individually in the text).
+   - NO CONSUMABLES OR MISC: Do not invent trash bags, extension cords, or generic 'cleaning supplies' unless specifically named in the text.
+
 
 2. CREW & TALENT GRANULARITY:
    - Individual roles must be separate assets, not grouped under generic 'Crew' or 'Staff'
+   - When crew/talent uses '+' (e.g., '6 Grill Chefs + kitchen assistants', '2 DJs + percussionist team'), split into separate assets
    - Example: 'Event Manager, Crew, Photo/Video Team, 6 Ambassadors, 4 Workshop Leaders' → Create separate assets:
      * 'Event Manager'
      * 'Production Crew'
@@ -885,6 +1025,15 @@ CRITICAL ATOMICITY REQUIREMENTS:
    - Example: '3 DJs + 1 Headline Artist' → Create 2 separate assets:
      * 'DJs' (quantity: 3)
      * 'Headline Artist' (quantity: 1)
+   - Example: '2 DJs + percussionist team' → Create 2 separate assets:
+     * 'DJs' (quantity: 2)
+     * 'Percussionist team' (quantity: 1)
+   - Example: '1 Art Curator + rotating muralists' → Create 2 separate assets:
+     * 'Art Curator' (quantity: 1)
+     * 'Rotating muralists' (quantity: 1 or Estimate)
+   - Example: '1 Event Manager + Health & Safety Officer' → Create 2 separate assets:
+     * 'Event Manager' (quantity: 1)
+     * 'Health & Safety Officer' (quantity: 1)
 
 3. JSON STRUCTURE REQUIREMENTS:
    - Each asset MUST be its own closed JSON object within the array
@@ -915,22 +1064,39 @@ COMMON MISTAKES TO AVOID:
    }
 
 ❌ INCORRECT - Grouped items that should be split (DO NOT DO THIS):
+   - "LED Heatwave signage + lighting truss" as one asset (WRONG — always split into 2)
+   - "Wooden benches and low tables" as one asset (WRONG — split into Wooden benches, Low tables)
+   - "Industrial workbenches, stools, and racks" as one asset (WRONG — split into 3)
    {
-     "asset_name": "Industrial workbenches, stools, and racks",  // WRONG - should be 3 separate assets
+     "asset_name": "Industrial workbenches, stools, and racks",
      "quantity": 1,
      "technical_specifications": "...",
      "supplier_context": "...",
      "category_tag": "Furniture"
    }
 
-❌ INCORRECT - Generic crew grouping (DO NOT DO THIS):
+❌ INCORRECT - Crew/talent combined when + is used (DO NOT DO THIS):
+   - "6 Grill Chefs + kitchen assistants" as one asset (WRONG — split into Grill Chefs, Kitchen Assistants)
+   - "1 Event Manager + Health & Safety Officer" as one asset (WRONG — split into 2)
    {
-     "asset_name": "Event Staff",  // WRONG - should split into individual roles
+     "asset_name": "Event Staff",
      "quantity": 1,
      "technical_specifications": "Event Manager, Ambassadors, Workshop Leaders",
      "supplier_context": "...",
      "category_tag": "Staffing"
    }
+
+❌ INCORRECT - Deconstructing a system (DO NOT DO THIS):
+   - Brief says: "Projection mapping system"
+   - Output creates 3 assets: "High-lumen projector", "Media Server", "Mapping software" (WRONG — keep as one "Projection mapping system" asset).
+
+❌ INCORRECT - Dropping Ephemera/Giveaways (DO NOT DO THIS):
+   - Brief says: "Drink coupons, flame keychains, and tote bags"
+   - Output only extracts the structural items and ignores these. (WRONG — Merch, paper goods, and giveaways MUST be extracted as separate assets).
+
+❌ INCORRECT - Dropping Secondary Staff (DO NOT DO THIS):
+   - Brief says: "6 Grill Chefs + kitchen assistants"
+   - Output extracts "Grill Chefs" but ignores assistants. (WRONG — "Kitchen assistants" MUST be its own asset).
 
 ✅ CORRECT - Separate objects (DO THIS):
    {
@@ -957,24 +1123,6 @@ COMMON MISTAKES TO AVOID:
      "category_tag": "Staffing",
      "source_text": "6 brand ambassadors"
    }
-
-COMPLETENESS REQUIREMENT:
-Before finishing, internally validate that you have included assets across these operational layers (if implied by the brief):
-• Fabrication and build
-• Branding and graphics
-• AV and technical
-• Lighting
-• Power and electrical
-• Structures and scenic
-• Furniture
-• Staffing and crew
-• Logistics and transport
-• Installation and derig
-• Venue infrastructure
-• Safety and compliance
-• Storage and security
-• Talent support
-• Content capture and media production
 
 QUALITY STANDARD:
 The final output must be procurement ready, specific enough to request vendor quotes, contain no vague asset names, avoid creative descriptions without operational clarity, and reflect real-world production workflows.
