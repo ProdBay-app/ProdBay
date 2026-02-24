@@ -788,7 +788,7 @@ Brief context:
 - Timeline: ${projectContext.timeline_deadline || 'Not specified'}
 - Venue: ${projectContext.physical_parameters || 'Not specified'}
 
-Event Brief (excerpt): "${sanitizedBrief.substring(0, 3000)}${sanitizedBrief.length > 3000 ? '...' : ''}"
+Event Brief (full): "${sanitizedBrief}"
 
 Input assets to enrich (in order):
 ${assetsJson}`;

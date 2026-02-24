@@ -8,6 +8,18 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     date: '2026-02-24',
+    version: 'v0.9.7',
+    title: 'Two-phase AI asset extraction and consistency improvements',
+    bulletPoints: [
+      'Refactored brief analysis into a two-phase pipeline: Phase 1 extracts an exhaustive asset list; Phase 2 enriches each asset with specs, supplier context, and category tags.',
+      'Addresses the "Lost in the Middle" problem—smaller items (e.g., Art Curator, Drink coupons) are no longer omitted when the model runs out of attention.',
+      'Asset groupings preserved as written: items joined by "+", "and", or slashes (e.g., "6 Grill Chefs + kitchen assistants", "LED signage + lighting truss") stay as single assets.',
+      'No placeholder fallbacks: analysis either succeeds or fails with a clear "Brief analysis failed. Please try again." message; full flow retries once on failure.',
+      'Full raw LLM outputs logged for both phases in deploy logs to support analysis and debugging.'
+    ]
+  },
+  {
+    date: '2026-02-24',
     version: 'v0.9.6',
     title: 'Global inline table editing for assets',
     bulletPoints: [
