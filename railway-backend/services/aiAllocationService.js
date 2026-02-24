@@ -579,8 +579,7 @@ class AIAllocationService {
         messages: [
           {
             role: "system",
-            content: "You are a Senior Production Controller with extensive experience in event production, brand activations, and procurement planning. Your responsibility is to translate creative production briefs into complete, procurement-ready asset lists suitable for vendor quoting, budgeting, and logistics planning. Respond with JSON only—do not use markdown, code blocks, or add explanations outside the JSON. STRICT JSON RULES: 1) Escape all string values: use \\ for backslashes, \" for quotes, \n for newlines. 2) Write all symbols in plain text (e.g., '360 degrees', not LaTeX). 3) Validate arrays/objects: all brackets/braces must close, no trailing commas. 4) No duplicate properties in any object. 5) Escape special characters according to JSON rules. 6) Each asset object must be separate within the assets array—never merge multiple assets. ASSET GUIDELINES: An asset is a physical item, piece of equipment, service, or crew role essential for production. Assets must be functionally distinct and independently procurable. CRITICAL: When source text uses '+' or 'and' to join items (e.g., 'LED signage + lighting truss', 'Wooden benches and low tables', '6 Grill Chefs + kitchen assistants', '1 Event Manager + Health & Safety Officer'), ALWAYS split into separate assets. Extract every bullet from structured sections (ASSETS REQUIRED, STAFF & TALENT, MERCH & GIVEAWAYS)—do not omit any. CREW/TALENT: Each role is a separate asset. Split 'X + Y' patterns: '6 Grill Chefs + kitchen assistants' → Grill Chefs (6) and Kitchen Assistants; '1 Event Manager + Health & Safety Officer' → Event Manager and Health & Safety Officer."
-          },
+            content: "You are a precise Data Extraction Specialist working in event production. Your SOLE responsibility is to extract explicit physical items, services, and crew roles from a creative brief into a structured JSON list. You are NOT planning the event; you are merely cataloging what is written. Respond with JSON only. STRICT JSON RULES: 1) Escape all string values properly. 2) Write symbols in plain text. 3) Validate arrays/objects perfectly. 4) Each asset must be a distinct object in the 'assets' array. CRITICAL: Never hallucinate sub-components of a system. If the text says 'A + B', split them into two assets. If the text says 'System C', leave it as one asset."          },
           {
             role: "user",
             content: prompt
@@ -807,21 +806,10 @@ Tier 1 (Explicit): Extract every asset explicitly mentioned in the brief. Do not
 
 EXHAUSTIVE EXTRACTION: When the brief has structured sections (e.g., ASSETS REQUIRED, STAFF & TALENT, MERCH & GIVEAWAYS, FURNITURE & DÉCOR), every bullet point in those sections MUST be represented as at least one asset. Do not omit any bullet. If a bullet lists multiple items (comma, slash, +, and), split into separate assets per the atomization rules. Examples: Mini PERi sauce bottles, Drink coupons, Flame keychains, Tote bags, Art Curator, Health & Safety Officer — each must appear as an asset when listed in the brief.
 
-Tier 2 (Directly implied): Only add assets that are DIRECTLY required by another asset in the brief (e.g., LED screen implies rigging and power). Do NOT add speculative assets. Examples of what NOT to add:
-• Do NOT add "Lighting control system" when not mentioned in the brief
-• Do NOT add "Warm amber wash lighting fixtures" as a separate asset when the brief only describes "Warm amber wash over seating areas" — treat as part of general lighting
-• Do NOT add "Projection mapping media server" as a standalone asset unless the brief explicitly lists it
-• Do not invent assets beyond what is explicitly stated or directly implied by another asset
+Tier 2 (Strictly Implied Infrastructure): ONLY add an unmentioned asset if a physical item in the brief cannot physically stand or operate without it (e.g., 'Lighting' implies 'Lighting Truss' or 'Rigging'). 
+RESTRICTION: Do not infer control systems, media servers, laptops, specific cabling, or generic safety gear. Keep inferences strictly to structural supports.
 
 Do not add technical support assets (e.g., lighting control system, media server) unless the brief explicitly lists them.
-
-Lifecycle Assets: Include assets required across all phases (only if implied by the brief):
-• Pre-production
-• Fabrication
-• Transport and logistics
-• Installation
-• Live operation
-• Derig and removal
 
 Project Brief: "${sanitizedBrief}"
 
@@ -884,6 +872,9 @@ CRITICAL ATOMICITY REQUIREMENTS:
    - Example: 'Nando\'s branded bandanas + fans' → Create 2 separate assets: 'Branded bandanas', 'Branded fans'
    - Example: 'Flame keychains / tote bags' → Create 2 separate assets: 'Flame keychains', 'Tote bags'
    - Exception: Only group if brief explicitly describes as a 'set', 'package', or 'kit' (e.g., 'DJ booth package')
+    - DO NOT DECONSTRUCT SINGLE SYSTEMS: If the brief lists a single integrated system (e.g., 'Projection mapping system', 'DJ equipment', 'Sauce-mixing bar'), extract it as ONE asset. DO NOT hallucinate its sub-components (e.g., do not extract projectors, media servers, and cables as separate items unless explicitly listed individually in the text).
+   - NO CONSUMABLES OR MISC: Do not invent trash bags, extension cords, or generic 'cleaning supplies' unless specifically named in the text.
+
 
 2. CREW & TALENT GRANULARITY:
    - Individual roles must be separate assets, not grouped under generic 'Crew' or 'Staff'
@@ -958,6 +949,18 @@ COMMON MISTAKES TO AVOID:
      "category_tag": "Staffing"
    }
 
+❌ INCORRECT - Deconstructing a system (DO NOT DO THIS):
+   - Brief says: "Projection mapping system"
+   - Output creates 3 assets: "High-lumen projector", "Media Server", "Mapping software" (WRONG — keep as one "Projection mapping system" asset).
+
+❌ INCORRECT - Dropping Ephemera/Giveaways (DO NOT DO THIS):
+   - Brief says: "Drink coupons, flame keychains, and tote bags"
+   - Output only extracts the structural items and ignores these. (WRONG — Merch, paper goods, and giveaways MUST be extracted as separate assets).
+
+❌ INCORRECT - Dropping Secondary Staff (DO NOT DO THIS):
+   - Brief says: "6 Grill Chefs + kitchen assistants"
+   - Output extracts "Grill Chefs" but ignores assistants. (WRONG — "Kitchen assistants" MUST be its own asset).
+
 ✅ CORRECT - Separate objects (DO THIS):
    {
      "asset_name": "Blueprint Photo Booth",
@@ -983,24 +986,6 @@ COMMON MISTAKES TO AVOID:
      "category_tag": "Staffing",
      "source_text": "6 brand ambassadors"
    }
-
-COMPLETENESS REQUIREMENT:
-Before finishing, internally validate that you have included assets across these operational layers (if implied by the brief):
-• Fabrication and build
-• Branding and graphics
-• AV and technical
-• Lighting
-• Power and electrical
-• Structures and scenic
-• Furniture
-• Staffing and crew
-• Logistics and transport
-• Installation and derig
-• Venue infrastructure
-• Safety and compliance
-• Storage and security
-• Talent support
-• Content capture and media production
 
 QUALITY STANDARD:
 The final output must be procurement ready, specific enough to request vendor quotes, contain no vague asset names, avoid creative descriptions without operational clarity, and reflect real-world production workflows.
