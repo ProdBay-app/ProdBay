@@ -575,7 +575,7 @@ class AIAllocationService {
       
       const response = await this.openai.chat.completions.create({
         model: "gpt-4.1-nano",
-        temperature: 0.2,
+        temperature: 0,
         messages: [
           {
             role: "system",
@@ -798,27 +798,22 @@ Role
 Act as a Senior Production Controller with extensive experience in event production, brand activations, and procurement planning. Your responsibility is to translate creative production briefs into complete, procurement-ready asset lists suitable for vendor quoting, budgeting, and logistics planning.
 
 Objective
-Deconstruct the provided production brief into a comprehensive, structured asset list. Your output must identify and document every asset required to execute the activation successfully. This includes:
-• Explicitly mentioned assets
-• Implicit or operationally required assets
-• Supporting infrastructure
-• Technical, staffing, and logistical components
-• Installation, operational, and breakdown requirements
-You must think like a production controller responsible for ensuring nothing is missed during procurement.
+Deconstruct the provided production brief into a comprehensive, structured asset list. Your output must identify and document every asset required to execute the activation successfully. Prioritize explicit assets from the brief; add only directly implied assets (e.g., rigging for an LED screen). Do not invent speculative or support assets (e.g., lighting control system, media server) unless the brief explicitly lists them.
 
 Asset Identification Rules
 You must extract and include:
 
-Explicit Assets: Directly mentioned items in the brief.
+Tier 1 (Explicit): Extract every asset explicitly mentioned in the brief. Do not split or merge beyond the rules above.
 
-Implied Assets: Assets not explicitly stated but required for execution. Examples:
-• If a photoshoot is mentioned → include studio hire, lighting equipment, camera gear, crew, catering, usage licensing
-• If an LED screen is mentioned → include rigging, power distribution, media server, operator, transport, installation
-• If a branded structure is mentioned → include fabrication, structural support, finishes, transport, installation, engineering approval if relevant
-• If talent or staff are mentioned → include uniforms, accreditation, catering, staffing hours
-• If an activation runs for multiple days → include storage, security, cleaning, maintenance
+Tier 2 (Directly implied): Only add assets that are DIRECTLY required by another asset in the brief (e.g., LED screen implies rigging and power). Do NOT add speculative assets. Examples of what NOT to add:
+• Do NOT add "Lighting control system" when not mentioned in the brief
+• Do NOT add "Warm amber wash lighting fixtures" as a separate asset when the brief only describes "Warm amber wash over seating areas" — treat as part of general lighting
+• Do NOT add "Projection mapping media server" as a standalone asset unless the brief explicitly lists it
+• Do not invent assets beyond what is explicitly stated or directly implied by another asset
 
-Lifecycle Assets: Include assets required across all phases:
+Do not add technical support assets (e.g., lighting control system, media server) unless the brief explicitly lists them.
+
+Lifecycle Assets: Include assets required across all phases (only if implied by the brief):
 • Pre-production
 • Fabrication
 • Transport and logistics
@@ -839,6 +834,13 @@ AVAILABLE ASSET TAGS (use ONLY these 15 for category_tag - match EXACTLY, case-s
 ${tagsList}
 
 TAG SELECTION: Assign the most appropriate single category_tag from the list above. Do not invent new categories.
+
+CATEGORY TAG MAPPING (use these deterministic rules for consistency):
+- Touchscreen / quiz / interactive screen → Technology
+- Mural wall / canvas / art wall (physical structure) → Scenic & Props; staffed muralists → Staffing
+- Waste management / bins / segregated bins → Logistics
+- Art prints / prints / artwork → Floral & Decor
+- Projection mapping: keep as single "Projection mapping system" asset with Technology tag; do not split into separate "media server" unless brief explicitly lists it
 
 Quantity Rules:
 - Use exact number if stated in the brief
@@ -869,13 +871,18 @@ CRITICAL ATOMICITY REQUIREMENTS:
 
 1. ASSET GRANULARITY RULES:
    - Each asset MUST represent a single, independently procurable item, piece of equipment, service, or crew role
-   - When source text lists multiple items (comma, slash, or 'and' separated), split into separate assets
+   - When source text lists multiple items (comma, slash, 'and', or '+' separated), split into separate assets
+   - When source text uses '+' or 'plus' to join items, ALWAYS split into separate assets
    - Example: 'workbenches, stools, and racks' → Create 3 separate assets: 'Industrial Workbenches', 'Stools', 'Storage Racks'
    - Example: 'workbenches/stools' → Create 2 separate assets: 'Industrial Workbenches', 'Stools'
+   - Example: 'LED Heatwave signage + lighting truss' → Create 2 separate assets: 'LED Heatwave signage', 'Lighting truss system'
+   - Example: '6 Grill Chefs + kitchen assistants' → Create 2 separate assets: 'Grill Chefs' (quantity: 6), 'Kitchen Assistants'
+   - Example: 'Woven loungers, fabric banners, and string lights' → Create 3 separate assets: 'Woven loungers', 'Fabric banners', 'String lights'
    - Exception: Only group if brief explicitly describes as a 'set', 'package', or 'kit' (e.g., 'DJ booth package')
 
 2. CREW & TALENT GRANULARITY:
    - Individual roles must be separate assets, not grouped under generic 'Crew' or 'Staff'
+   - When crew/talent uses '+' (e.g., '6 Grill Chefs + kitchen assistants', '2 DJs + percussionist team'), split into separate assets
    - Example: 'Event Manager, Crew, Photo/Video Team, 6 Ambassadors, 4 Workshop Leaders' → Create separate assets:
      * 'Event Manager'
      * 'Production Crew'
@@ -885,6 +892,9 @@ CRITICAL ATOMICITY REQUIREMENTS:
    - Example: '3 DJs + 1 Headline Artist' → Create 2 separate assets:
      * 'DJs' (quantity: 3)
      * 'Headline Artist' (quantity: 1)
+   - Example: '2 DJs + percussionist team' → Create 2 separate assets:
+     * 'DJs' (quantity: 2)
+     * 'Percussionist team' (quantity: 1)
 
 3. JSON STRUCTURE REQUIREMENTS:
    - Each asset MUST be its own closed JSON object within the array
